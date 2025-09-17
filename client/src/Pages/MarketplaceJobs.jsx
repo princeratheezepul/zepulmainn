@@ -1,0 +1,202 @@
+import React, { useState, useEffect } from 'react';
+import Sidebar from '../Components/marketplace/Sidebar';
+import Header from '../Components/marketplace/Header';
+import HomePage from '../Components/marketplace/HomePage';
+import JobsPage from '../Components/marketplace/JobsPage';
+import WalletPage from '../Components/marketplace/WalletPage';
+import SearchResults from '../Components/marketplace/SearchResults';
+import NotificationsSidebar from '../Components/marketplace/NotificationsSidebar';
+import ProfilePage from '../Components/Marketplace/ProfilePage';
+import BankDetailsSetup from '../Components/marketplace/BankDetailsSetup';
+import { useMarketplaceAuth } from '../context/MarketplaceAuthContext';
+import { jobListings, yourPicks, walletData } from '../Data/marketplaceData';
+
+const MarketplaceJobs = () => {
+  const { user, logout, fetchUserProfile, saveBankDetails } = useMarketplaceAuth();
+  const [activeFilter, setActiveFilter] = useState('All');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [activeSidebarItem, setActiveSidebarItem] = useState('Home');
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [activeJobsTab, setActiveJobsTab] = useState('Picked Jobs');
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isLoadingProfile, setIsLoadingProfile] = useState(true);
+  const [showBankSetup, setShowBankSetup] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
+
+  // Fetch user profile on component mount
+  useEffect(() => {
+    const loadUserProfile = async () => {
+      setIsLoadingProfile(true);
+      console.log('Loading user profile...');
+      
+      // First check if we already have user data from login
+      if (user && user.accountDetails !== undefined) {
+        console.log('Using existing user data:', user);
+        const hasAccountDetails = user.accountDetails && user.accountDetails.length > 0;
+        console.log('Has account details:', hasAccountDetails);
+        setShowBankSetup(!hasAccountDetails);
+        setIsLoadingProfile(false);
+        return;
+      }
+      
+      try {
+        const userData = await fetchUserProfile();
+        console.log('Fetched user data:', userData);
+        
+        if (userData) {
+          // Check if accountDetails is empty
+          const hasAccountDetails = userData.accountDetails && userData.accountDetails.length > 0;
+          console.log('Has account details:', hasAccountDetails);
+          setShowBankSetup(!hasAccountDetails);
+        } else {
+          console.log('No user data received');
+          setShowBankSetup(false);
+        }
+      } catch (error) {
+        console.error('Error loading profile:', error);
+        setShowBankSetup(false);
+      }
+      
+      setIsLoadingProfile(false);
+    };
+
+    // Only run once on mount
+    loadUserProfile();
+  }, []); // Empty dependency array
+
+  const handleBankSetupComplete = async (bankData) => {
+    console.log('Bank setup completed:', bankData);
+    
+    try {
+      const result = await saveBankDetails(bankData);
+      
+      if (result.success) {
+        console.log('Bank details saved successfully');
+        setShowBankSetup(false);
+        // User data is automatically updated in the context
+      } else {
+        console.error('Failed to save bank details:', result.error);
+        // You could show an error message to the user here
+      }
+    } catch (error) {
+      console.error('Error saving bank details:', error);
+      // You could show an error message to the user here
+    }
+  };
+
+  const handleBankSetupBack = () => {
+    // Go back to login or handle as needed
+    logout();
+  };
+
+  // Handle search functionality
+  const handleSearch = (query) => {
+    setSearchQuery(query);
+    if (query && query.trim() !== '') {
+      setIsSearching(true);
+      setActiveSidebarItem('Home'); // Reset to home when searching
+    } else {
+      setIsSearching(false);
+    }
+  };
+
+  // Handle back to home from search
+  const handleBackToHome = () => {
+    setSearchQuery('');
+    setIsSearching(false);
+  };
+
+  // Handle view all picks - navigate to Jobs page with Picked Jobs tab
+  const handleViewAllPicks = () => {
+    setActiveSidebarItem('Jobs');
+    setActiveJobsTab('Picked Jobs');
+  };
+
+  // Show loading state while fetching profile
+  if (isLoadingProfile) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  // Show bank setup if accountDetails is empty
+  if (showBankSetup) {
+    return (
+      <BankDetailsSetup 
+        onComplete={handleBankSetupComplete}
+        onBack={handleBankSetupBack}
+      />
+    );
+  }
+
+  // Show normal dashboard
+  return (
+    <div className="min-h-screen bg-gray-50 flex">
+      <Sidebar 
+        activeSidebarItem={activeSidebarItem}
+        setActiveSidebarItem={setActiveSidebarItem}
+        isSidebarOpen={isSidebarOpen}
+        setIsSidebarOpen={setIsSidebarOpen}
+      />
+
+      {/* Main Content Area */}
+      <div className="flex-1 lg:ml-64">
+        <Header 
+          searchQuery={searchQuery}
+          setSearchQuery={handleSearch}
+          setIsSidebarOpen={setIsSidebarOpen}
+          setIsNotificationsOpen={setIsNotificationsOpen}
+          setIsProfileOpen={setIsProfileOpen}
+          user={user}
+          logout={logout}
+        />
+
+        {/* Main Content */}
+        <div>
+          {isSearching ? (
+            <SearchResults 
+              searchQuery={searchQuery}
+              onBackToHome={handleBackToHome}
+            />
+          ) : (
+            <div className="p-6">
+              {activeSidebarItem === 'Home' ? (
+                <HomePage 
+                  activeFilter={activeFilter}
+                  setActiveFilter={setActiveFilter}
+                  onViewAllPicks={handleViewAllPicks}
+                />
+              ) : activeSidebarItem === 'Jobs' ? (
+                <JobsPage 
+                  activeJobsTab={activeJobsTab}
+                  setActiveJobsTab={setActiveJobsTab}
+                />
+              ) : (
+                <WalletPage />
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Notifications Sidebar */}
+      <NotificationsSidebar 
+        isOpen={isNotificationsOpen}
+        onClose={() => setIsNotificationsOpen(false)}
+      />
+
+        {/* Profile Page */}
+        <ProfilePage 
+          isOpen={isProfileOpen}
+          onClose={() => setIsProfileOpen(false)}
+          user={user}
+          logout={logout}
+        />
+    </div>
+  );
+};
+
+export default MarketplaceJobs;

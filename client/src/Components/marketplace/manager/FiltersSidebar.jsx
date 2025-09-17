@@ -1,0 +1,77 @@
+import React from 'react';
+
+const FiltersSidebar = ({ filters, onFilterChange }) => {
+  const filterSections = [
+    {
+      title: 'Company Category',
+      key: 'companyCategory',
+      options: [
+        { key: 'hiring', label: 'Hiring' },
+        { key: 'licensed', label: 'Licensed' }
+      ]
+    },
+    {
+      title: 'Location',
+      key: 'location',
+      options: [
+        { key: 'gurugram', label: 'Gurugram' },
+        { key: 'bangalore', label: 'Bangalore' },
+        { key: 'pune', label: 'Pune' },
+        { key: 'hyderabad', label: 'Hyderabad' },
+        { key: 'noida', label: 'Noida' }
+      ]
+    },
+    {
+      title: 'Industry',
+      key: 'industry',
+      options: [
+        { key: 'informationTechnology', label: 'Information Technology' },
+        { key: 'telecommunications', label: 'Telecommunications' },
+        { key: 'ecommerce', label: 'E-commerce' },
+        { key: 'educationEdtech', label: 'Education & EdTech' },
+        { key: 'consultingServices', label: 'Consulting Services' }
+      ]
+    },
+    {
+      title: 'Company Type',
+      key: 'companyType',
+      options: [
+        { key: 'private', label: 'Private' },
+        { key: 'startup', label: 'Startup' },
+        { key: 'public', label: 'Public' }
+      ]
+    }
+  ];
+
+  return (
+    <div className="space-y-8">
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-semibold text-gray-900">Filters</h2>
+        <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+        </svg>
+      </div>
+
+      {filterSections.map((section) => (
+        <div key={section.key} className="space-y-4">
+          <h3 className="text-sm font-medium text-gray-700">{section.title}</h3>
+          <div className="space-y-3">
+            {section.options.map((option) => (
+              <label key={option.key} className="flex items-center space-x-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={filters[section.key][option.key]}
+                  onChange={(e) => onFilterChange(section.key, option.key, e.target.checked)}
+                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                />
+                <span className="text-sm text-gray-600">{option.label}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+export default FiltersSidebar;
