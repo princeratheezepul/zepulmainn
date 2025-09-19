@@ -15,6 +15,7 @@ import {
   Profile,
   Notification
 } from '../marketplace/manager';
+import PaymentOverview from '../marketplace/manager/PaymentOverview';
 import SearchResults from '../marketplace/manager/SearchResults';
 import JobDetailsForm from '../marketplace/manager/JobDetailsForm';
 
@@ -213,12 +214,7 @@ const MarketplaceDashboard = ({ onBack }) => {
         }
         return <CompaniesPage onViewJobs={setSelectedCompany} />;
       case 'payments':
-        return (
-          <div className="p-6">
-            <h1 className="text-3xl font-bold text-gray-900 mb-8">Payments</h1>
-            <p className="text-gray-600">Payments page coming soon...</p>
-          </div>
-        );
+        return <PaymentOverview />;
       default:
         return null;
     }

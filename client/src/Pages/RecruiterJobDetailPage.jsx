@@ -125,15 +125,15 @@ const RecruiterJobDetailPage = () => {
       {activeComponent === 'Settings' ? (
         <Settings />
       ) : showResumeUpload ? (
-        <div className="flex-1 ml-20 flex flex-col items-center py-0 px-0 bg-gray-50">
+        <div className="flex-1 flex flex-col items-center py-0 px-0 bg-gray-50">
           <ResumeUpload onBack={() => setShowResumeUpload(false)} jobDetails={job} />
         </div>
       ) : showSavedResumes ? (
-        <div className="flex-1 ml-20 flex flex-col items-center py-0 px-0 bg-gray-50">
+        <div className="flex-1 flex flex-col items-center py-0 px-0 bg-gray-50">
           <SavedResumes onBack={() => setShowSavedResumes(false)} jobId={jobId} jobtitle={job.jobtitle} />
         </div>
       ) : (
-        <div className="flex-1 ml-20 flex flex-col items-center py-0 px-0 bg-gray-50">
+        <div className="flex-1 flex flex-col items-center py-0 px-0 bg-gray-50">
           <div className="w-full max-w-6xl bg-gray-50">
             {/* Improved Header Row */}
             <div className="bg-gray-50 border-b border-gray-200 w-full px-4 md:px-0 pt-6 pb-2 flex flex-col gap-2">
