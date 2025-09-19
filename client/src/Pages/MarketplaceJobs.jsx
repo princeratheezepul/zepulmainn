@@ -5,7 +5,6 @@ import HomePage from '../Components/marketplace/HomePage';
 import JobsPage from '../Components/marketplace/JobsPage';
 import WalletPage from '../Components/marketplace/WalletPage';
 import SearchResults from '../Components/marketplace/SearchResults';
-import NotificationsSidebar from '../Components/marketplace/NotificationsSidebar';
 import ProfilePage from '../Components/Marketplace/ProfilePage';
 import BankDetailsSetup from '../Components/marketplace/BankDetailsSetup';
 import { useMarketplaceAuth } from '../context/MarketplaceAuthContext';
@@ -18,7 +17,6 @@ const MarketplaceJobs = () => {
   const [activeSidebarItem, setActiveSidebarItem] = useState('Home');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activeJobsTab, setActiveJobsTab] = useState('Picked Jobs');
-  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
   const [showBankSetup, setShowBankSetup] = useState(false);
@@ -148,7 +146,6 @@ const MarketplaceJobs = () => {
           searchQuery={searchQuery}
           setSearchQuery={handleSearch}
           setIsSidebarOpen={setIsSidebarOpen}
-          setIsNotificationsOpen={setIsNotificationsOpen}
           setIsProfileOpen={setIsProfileOpen}
           user={user}
           logout={logout}
@@ -182,11 +179,6 @@ const MarketplaceJobs = () => {
         </div>
       </div>
 
-      {/* Notifications Sidebar */}
-      <NotificationsSidebar 
-        isOpen={isNotificationsOpen}
-        onClose={() => setIsNotificationsOpen(false)}
-      />
 
         {/* Profile Page */}
         <ProfilePage 

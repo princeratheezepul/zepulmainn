@@ -1,11 +1,12 @@
 import express from "express";
-import { marketplaceLogin, getMarketplaceProfile, updateMarketplaceProfile, createTestUser, saveBankDetails, getMarketplaceBankDetails, deleteMarketplaceBankDetails, getAllJobs, searchJobs, toggleBookmark, getBookmarkedJobs, getJobDetails, pickJob, withdrawJob, saveMarketplaceResume, saveMarketplaceInterviewEvaluation, getMarketplaceCandidates, getMarketplaceResumeDetails, getPickedJobs, updateMarketplaceResume } from "../controllers/marketplace.controller.js";
+import { marketplaceLogin, marketplaceRegister, getMarketplaceProfile, updateMarketplaceProfile, createTestUser, saveBankDetails, getMarketplaceBankDetails, deleteMarketplaceBankDetails, getAllJobs, searchJobs, toggleBookmark, getBookmarkedJobs, getJobDetails, pickJob, withdrawJob, saveMarketplaceResume, saveMarketplaceInterviewEvaluation, getMarketplaceCandidates, getMarketplaceResumeDetails, getPickedJobs, updateMarketplaceResume } from "../controllers/marketplace.controller.js";
 import { authenticateMarketplace } from "../middleware/marketplace.auth.middleware.js";
 
 const router = express.Router();
 
 // Public routes
 router.post("/create-test-user", createTestUser);
+router.post("/register", marketplaceRegister);
 router.post("/login", marketplaceLogin);
 
 // Protected routes

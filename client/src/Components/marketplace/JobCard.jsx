@@ -60,7 +60,7 @@ const JobCard = ({ job, showSubmitButton = false, onBookmarkToggle, isBookmarkin
     >
       <div className="flex items-start justify-between mb-6">
         <div className="flex items-center space-x-4">
-          <div className="w-16 h-16 bg-gradient-to-br from-red-400 via-yellow-400 to-blue-500 rounded-full flex items-center justify-center">
+          <div className="w-16 h-16 bg-gray-500 rounded-full flex items-center justify-center">
             <span className="text-white font-bold text-2xl">{job.company?.charAt(0)?.toUpperCase() || 'C'}</span>
           </div>
           <div>

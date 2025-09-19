@@ -101,6 +101,10 @@ const userSchema = new Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Company',
     }],
+    accessToMPDashboard: {
+        type: Boolean,
+        default: false
+    },
 }, { timestamps: true });
 
 userSchema.pre("save", 

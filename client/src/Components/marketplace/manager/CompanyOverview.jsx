@@ -6,8 +6,8 @@ const CompanyOverview = ({ company }) => {
       {/* Company Header with Logo and Tags */}
       <div className="flex items-start justify-between mb-6">
         <div className="flex items-start space-x-6">
-          <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-red-500 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-3xl">{company.name.charAt(0)}</span>
+          <div className="w-20 h-20 bg-gray-500 rounded-lg flex items-center justify-center">
+            <span className="text-white font-bold text-3xl">{company.name?.charAt(0)?.toUpperCase() || 'C'}</span>
           </div>
           <div className="flex-1">
             <h1 className="text-3xl font-bold text-gray-900 mb-4">{company.name}</h1>

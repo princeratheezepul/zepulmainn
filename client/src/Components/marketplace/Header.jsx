@@ -1,7 +1,7 @@
 import React from 'react';
-import { Search, Bell, Menu, Grid3X3 } from 'lucide-react';
+import { Search, Menu } from 'lucide-react';
 
-const Header = ({ searchQuery, setSearchQuery, setIsSidebarOpen, setIsNotificationsOpen, setIsProfileOpen, user, logout }) => {
+const Header = ({ searchQuery, setSearchQuery, setIsSidebarOpen, setIsProfileOpen, user, logout }) => {
   const handleSearchSubmit = (e) => {
     e.preventDefault();
     if (searchQuery && searchQuery.trim() !== '') {
@@ -45,32 +45,24 @@ const Header = ({ searchQuery, setSearchQuery, setIsSidebarOpen, setIsNotificati
           </div>
 
           {/* Right side icons */}
-          <div className="flex items-center space-x-4 ml-6">
-            <Grid3X3 className="h-5 w-5 text-gray-600 cursor-pointer hover:text-gray-800 transition-colors" />
-                      <div className="relative">
-            <Bell 
-              className="h-5 w-5 text-gray-600 hover:text-gray-800 cursor-pointer transition-colors" 
-              onClick={() => setIsNotificationsOpen(true)}
-            />
-            <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></div>
-          </div>
-                      <div 
-            className="w-8 h-8 rounded-full overflow-hidden border-2 border-gray-200 cursor-pointer hover:border-gray-300 transition-colors"
-            onClick={() => setIsProfileOpen(true)}
-          >
-            <img 
-              src="/api/placeholder/32/32" 
-              alt="Profile"
-              className="w-full h-full object-cover"
-              onError={(e) => {
-                e.target.style.display = 'none';
-                e.target.nextSibling.style.display = 'flex';
-              }}
-            />
-            <div className="w-full h-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white text-sm font-semibold">
-              {user ? user.firstName?.charAt(0)?.toUpperCase() || 'U' : 'U'}
+          <div className="flex items-center ml-6">
+            <div 
+              className="w-8 h-8 rounded-full overflow-hidden border-2 border-gray-200 cursor-pointer hover:border-gray-300 transition-colors"
+              onClick={() => setIsProfileOpen(true)}
+            >
+              <img 
+                src="/api/placeholder/32/32" 
+                alt="Profile"
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                  e.target.nextSibling.style.display = 'flex';
+                }}
+              />
+              <div className="w-full h-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white text-sm font-semibold">
+                {user ? user.firstName?.charAt(0)?.toUpperCase() || 'U' : 'U'}
+              </div>
             </div>
-          </div>
           </div>
         </div>
       </div>

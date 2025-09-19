@@ -6,10 +6,8 @@ const CompanyCard = ({ company, onViewJobs }) => {
       <div className="flex items-start space-x-4">
         {/* Company Icon */}
         <div className="flex-shrink-0">
-          <div className="w-12 h-12 bg-gray-900 rounded-lg flex items-center justify-center">
-            <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
-            </svg>
+          <div className="w-12 h-12 bg-gray-500 rounded-lg flex items-center justify-center">
+            <span className="text-white font-bold text-xl">{company.name?.charAt(0)?.toUpperCase() || 'C'}</span>
           </div>
         </div>
 

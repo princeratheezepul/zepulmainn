@@ -19,3 +19,6 @@ export { default as CandidateListPage } from './CandidateListPage';
 export { default as CandidateListHeader } from './CandidateListHeader';
 export { default as CandidateTable } from './CandidateTable';
 export { default as CandidateRow } from './CandidateRow';
+export { default as Profile } from './Profile';
+export { default as Notification } from './Notification';
+export { default as SettingsSidebar } from './SettingsSidebar';

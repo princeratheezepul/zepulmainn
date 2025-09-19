@@ -70,6 +70,7 @@ import UnifiedLogin from "../Pages/UnifiedLogin";
 import AdminLogin from "../Pages/Admin/Login.jsx";
 import MarketplaceJobs from "../Pages/MarketplaceJobs";
 import MarketplaceLogin from "../Pages/MarketplaceLogin";
+import MarketplaceSignup from "../Pages/MarketplaceSignup";
 
 
 
@@ -142,6 +143,11 @@ const Router = () => {
             <Route path="/marketplace/login" element={
               <MarketplaceAuthProvider>
                 <MarketplaceLogin />
+              </MarketplaceAuthProvider>
+            } />
+            <Route path="/marketplace/signup" element={
+              <MarketplaceAuthProvider>
+                <MarketplaceSignup />
               </MarketplaceAuthProvider>
             } />
             <Route path="/marketplace/dashboard" element={

@@ -1,4 +1,5 @@
 import mongoose, { Schema } from "mongoose";
+import bcrypt from 'bcryptjs';
 
 const mpuserSchema = new Schema({
     firstName: {
@@ -17,6 +18,10 @@ const mpuserSchema = new Schema({
         type: String,
         required: true,
         unique: true
+    },
+    password: {
+        type: String,
+        required: true
     },
     phone: {
         type: String,
@@ -54,5 +59,18 @@ const mpuserSchema = new Schema({
         ref: 'Job'
     }]
 }, { timestamps: true });
+
+// Hash password before saving
+mpuserSchema.pre("save", async function(next) {
+    if (this.isModified("password")) {
+        this.password = await bcrypt.hash(this.password, 8);
+    }
+    next();
+});
+
+// Compare password method
+mpuserSchema.methods.isPasswordCorrect = async function (password) {
+    return await bcrypt.compare(password, this.password);
+};
 
 export const MpUser = mongoose.models.MpUser || mongoose.model('MpUser', mpuserSchema);

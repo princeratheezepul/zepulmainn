@@ -14,7 +14,7 @@ const JobDetailsSection = ({ jobData }) => {
   };
 
   const getCompanyInitial = (companyName) => {
-    return companyName ? companyName.charAt(0).toUpperCase() : 'C';
+    return companyName?.charAt(0)?.toUpperCase() || 'C';
   };
 
   const getCompanyAvatarColor = (companyName) => {

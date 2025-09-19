@@ -118,8 +118,19 @@ export default function MarketplaceLogin() {
             </span>
           </div>
           
-          {/* Back to home link */}
+          {/* Signup link */}
           <div className="mt-4 text-center">
+            <span className="text-gray-600 text-sm">Don't have an account? </span>
+            <button
+              onClick={() => navigate('/marketplace/signup')}
+              className="text-blue-600 hover:underline text-sm font-medium"
+            >
+              Sign up here
+            </button>
+          </div>
+          
+          {/* Back to home link */}
+          <div className="mt-2 text-center">
             <button
               onClick={() => navigate('/')}
               className="text-blue-600 hover:underline text-sm"

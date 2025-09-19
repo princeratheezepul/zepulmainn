@@ -21,6 +21,74 @@ const generateMarketplaceToken = (userId) => {
   );
 };
 
+// Register new marketplace user
+export const marketplaceRegister = async (req, res) => {
+  try {
+    const { firstName, lastName, email, password, DOB, phone } = req.body;
+    
+    // Validate required fields
+    if (!firstName || !lastName || !email || !password || !DOB || !phone) {
+      return res.status(400).json(
+        new ApiResponse(400, null, "All fields are required")
+      );
+    }
+
+    // Check if user already exists
+    const existingUser = await MpUser.findOne({ emailid: email });
+    if (existingUser) {
+      return res.status(409).json(
+        new ApiResponse(409, null, "User with this email already exists")
+      );
+    }
+
+    // Create new MP user
+    const mpUser = new MpUser({
+      firstName,
+      lastName,
+      DOB: new Date(DOB),
+      emailid: email,
+      password,
+      phone,
+      userRole: "User", // Default role for marketplace users
+      totalEarnings: 0,
+      pendingEarnings: 0,
+      transactions: [],
+      accountDetails: [],
+      bookmarkedJobs: [],
+      pickedJobs: [],
+      myJobs: []
+    });
+    
+    const savedUser = await mpUser.save();
+    
+    // Generate token
+    const token = generateMarketplaceToken(savedUser._id);
+
+    // Return user data without password
+    const userData = {
+      _id: savedUser._id,
+      firstName: savedUser.firstName,
+      lastName: savedUser.lastName,
+      emailid: savedUser.emailid,
+      userRole: savedUser.userRole,
+      totalEarnings: savedUser.totalEarnings,
+      pendingEarnings: savedUser.pendingEarnings
+    };
+
+    res.status(201).json(
+      new ApiResponse(201, {
+        user: userData,
+        token
+      }, "User registered successfully")
+    );
+  } catch (error) {
+    console.error("Registration error:", error);
+    res.status(500).json(
+      new ApiResponse(500, null, "Internal server error")
+    );
+  }
+};
+
 // Create test MP user (for development)
 export const createTestUser = async (req, res) => {
   try {
@@ -38,6 +106,7 @@ export const createTestUser = async (req, res) => {
       lastName: "user",
       DOB: new Date("2004-08-26"),
       emailid: "test@gmail.com",
+      password: "test123", // This will be hashed by the pre-save middleware
       phone: "9384789467",
       userRole: "Manager",
       totalEarnings: 0,
@@ -84,10 +153,9 @@ export const marketplaceLogin = async (req, res) => {
       );
     }
 
-    // For now, we'll use a simple password check
-    // In production, you should hash passwords
-    console.log("Password check:", password, "Expected: test123");
-    if (password !== "test123") { // Default password for test user
+    // Check password using bcrypt
+    const isPasswordValid = await user.isPasswordCorrect(password);
+    if (!isPasswordValid) {
       console.log("Password mismatch");
       return res.status(401).json(
         new ApiResponse(401, null, "Invalid credentials")

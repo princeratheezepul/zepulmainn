@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Search, Bell, Grid, Plus } from 'lucide-react';
 
-const TopNavigation = ({ onSearch, onCreateJob }) => {
+const TopNavigation = ({ onSearch, onCreateJob, onProfileClick }) => {
   const [searchQuery, setSearchQuery] = useState('');
 
   const handleSearch = (e) => {
@@ -48,7 +48,8 @@ const TopNavigation = ({ onSearch, onCreateJob }) => {
             <img
               src="https://randomuser.me/api/portraits/men/32.jpg"
               alt="Profile"
-              className="w-8 h-8 rounded-full cursor-pointer"
+              className="w-8 h-8 rounded-full cursor-pointer hover:opacity-80 transition-opacity"
+              onClick={onProfileClick}
             />
           </div>
         </div>

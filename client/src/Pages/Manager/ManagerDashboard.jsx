@@ -1699,18 +1699,20 @@ export default function ManagerDashboard() {
                   <div className="text-xl font-bold text-gray-900">Manager Overview</div>
                 </div>
                 <div className="flex items-center">
-                  <button 
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium shadow-lg transition-all duration-200"
-                    style={{
-                      boxShadow: '0 0 0 2px rgba(59, 130, 246, 0.3), 0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-                      textShadow: '0 0 8px rgba(147, 197, 253, 0.8)'
-                    }}
-                    onClick={() => {
-                      setShowMarketplaceDashboard(true);
-                    }}
-                  >
-                    Marketplace Dashboard
-                  </button>
+                  {(userInfo?.data?.user?.accessToMPDashboard === true) && (
+                    <button 
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium shadow-lg transition-all duration-200"
+                      style={{
+                        boxShadow: '0 0 0 2px rgba(59, 130, 246, 0.3), 0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                        textShadow: '0 0 8px rgba(147, 197, 253, 0.8)'
+                      }}
+                      onClick={() => {
+                        setShowMarketplaceDashboard(true);
+                      }}
+                    >
+                      Marketplace Dashboard
+                    </button>
+                  )}
                 </div>
               </div>
               <hr className="my-2 border-gray-200" />

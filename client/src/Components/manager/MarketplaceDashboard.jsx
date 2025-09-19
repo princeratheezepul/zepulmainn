@@ -1,4 +1,7 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
+import { logoutUser } from '../../utils/authUtils';
 import {
   TopNavigation,
   Sidebar,
@@ -8,21 +11,50 @@ import {
   CandidateStatusBreakdown,
   PerformanceTable,
   CompaniesPage,
-  JobsPage
+  JobsPage,
+  Profile,
+  Notification
 } from '../marketplace/manager';
 import SearchResults from '../marketplace/manager/SearchResults';
 import JobDetailsForm from '../marketplace/manager/JobDetailsForm';
 
 const MarketplaceDashboard = ({ onBack }) => {
+  const navigate = useNavigate();
+  const { logout, user } = useAuth();
   const [activeTab, setActiveTab] = useState('home');
   const [selectedCompany, setSelectedCompany] = useState(null);
   const [searchQuery, setSearchQuery] = useState(null);
   const [showCreateJob, setShowCreateJob] = useState(false);
   const [selectedCompanyForJob, setSelectedCompanyForJob] = useState(null);
+  const [showProfile, setShowProfile] = useState(false);
+  const [showNotification, setShowNotification] = useState(false);
 
   const handleSearch = (query) => {
     setSearchQuery(query);
     setActiveTab('search');
+  };
+
+  const handleTabChange = (tab) => {
+    // Close profile and notification components when navigating to main tabs
+    setShowProfile(false);
+    setShowNotification(false);
+    setActiveTab(tab);
+  };
+
+  const handleLogout = async () => {
+    try {
+      // Call the logout utility function with user type for proper redirection
+      await logoutUser(navigate, user?.type || 'manager');
+      
+      // Update the auth context
+      logout();
+      
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Even if server logout fails, clear client state and redirect
+      logout();
+      navigate('/manager/login');
+    }
   };
 
   const handleBackFromSearch = () => {
@@ -104,6 +136,34 @@ const MarketplaceDashboard = ({ onBack }) => {
   };
 
   const renderContent = () => {
+    // If showing notification, render it
+    if (showNotification) {
+      return (
+        <Notification 
+          onClose={() => setShowNotification(false)} 
+          onNavigateToProfile={() => {
+            setShowNotification(false);
+            setShowProfile(true);
+          }}
+          onLogout={handleLogout}
+        />
+      );
+    }
+
+    // If showing profile, render it
+    if (showProfile) {
+      return (
+        <Profile 
+          onClose={() => setShowProfile(false)} 
+          onNavigateToNotification={() => {
+            setShowProfile(false);
+            setShowNotification(true);
+          }}
+          onLogout={handleLogout}
+        />
+      );
+    }
+
     // If showing create job form, render it
     if (showCreateJob) {
       return (
@@ -166,10 +226,14 @@ const MarketplaceDashboard = ({ onBack }) => {
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
-      <Sidebar activeTab={activeTab} onTabChange={setActiveTab} />
+      <Sidebar activeTab={activeTab} onTabChange={handleTabChange} />
       
       <div className="flex-1 flex flex-col lg:ml-64">
-        <TopNavigation onSearch={handleSearch} onCreateJob={handleCreateJobClick} />
+        <TopNavigation 
+          onSearch={handleSearch} 
+          onCreateJob={handleCreateJobClick} 
+          onProfileClick={() => setShowProfile(true)}
+        />
         
         <div className="flex-1 overflow-y-auto">
           {renderContent()}

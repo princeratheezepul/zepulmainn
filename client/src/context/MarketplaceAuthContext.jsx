@@ -63,6 +63,39 @@ export const MarketplaceAuthProvider = ({ children }) => {
     }
   };
 
+  const register = async (userData) => {
+    try {
+      const response = await fetch(`${config.backendUrl}/api/marketplace/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(userData),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Registration failed');
+      }
+
+      const { user: newUser, token: userToken } = data.data;
+      
+      // Store in localStorage
+      localStorage.setItem('marketplace_token', userToken);
+      localStorage.setItem('marketplace_user', JSON.stringify(newUser));
+      
+      // Update state
+      setUser(newUser);
+      setToken(userToken);
+      
+      return { success: true, user: newUser };
+    } catch (error) {
+      console.error('Registration error:', error);
+      return { success: false, error: error.message };
+    }
+  };
+
   const logout = () => {
     localStorage.removeItem('marketplace_token');
     localStorage.removeItem('marketplace_user');
@@ -90,9 +123,8 @@ export const MarketplaceAuthProvider = ({ children }) => {
     
     try {
       console.log('Fetching profile with token:', token.substring(0, 20) + '...');
-      const response = await fetch(`${config.backendUrl}/api/marketplace/profile`, {
+      const response = await apiCall(`${config.backendUrl}/api/marketplace/profile`, {
         method: 'GET',
-        headers: getAuthHeaders(),
       });
 
       console.log('Profile response status:', response.status);
@@ -125,9 +157,8 @@ export const MarketplaceAuthProvider = ({ children }) => {
     
     try {
       console.log('Updating profile:', profileData);
-      const response = await fetch(`${config.backendUrl}/api/marketplace/profile`, {
+      const response = await apiCall(`${config.backendUrl}/api/marketplace/profile`, {
         method: 'PUT',
-        headers: getAuthHeaders(),
         body: JSON.stringify(profileData),
       });
 
@@ -161,9 +192,8 @@ export const MarketplaceAuthProvider = ({ children }) => {
     
     try {
       console.log('Saving bank details:', bankData);
-      const response = await fetch(`${config.backendUrl}/api/marketplace/bank-details`, {
+      const response = await apiCall(`${config.backendUrl}/api/marketplace/bank-details`, {
         method: 'POST',
-        headers: getAuthHeaders(),
         body: JSON.stringify(bankData),
       });
 
@@ -258,9 +288,8 @@ export const MarketplaceAuthProvider = ({ children }) => {
     
     try {
       console.log('Fetching jobs for page:', page, 'limit:', limit);
-      const response = await fetch(`${config.backendUrl}/api/marketplace/jobs?page=${page}&limit=${limit}`, {
+      const response = await apiCall(`${config.backendUrl}/api/marketplace/jobs?page=${page}&limit=${limit}`, {
         method: 'GET',
-        headers: getAuthHeaders(),
       });
 
       console.log('Fetch jobs response status:', response.status);
@@ -289,9 +318,8 @@ export const MarketplaceAuthProvider = ({ children }) => {
     
     try {
       console.log('Searching jobs with query:', query, 'page:', page, 'limit:', limit);
-      const response = await fetch(`${config.backendUrl}/api/marketplace/jobs/search?query=${encodeURIComponent(query)}&page=${page}&limit=${limit}`, {
+      const response = await apiCall(`${config.backendUrl}/api/marketplace/jobs/search?query=${encodeURIComponent(query)}&page=${page}&limit=${limit}`, {
         method: 'GET',
-        headers: getAuthHeaders(),
       });
 
       console.log('Search jobs response status:', response.status);
@@ -320,9 +348,8 @@ export const MarketplaceAuthProvider = ({ children }) => {
     
     try {
       console.log('Fetching bookmarked jobs with limit:', limit);
-      const response = await fetch(`${config.backendUrl}/api/marketplace/bookmarked-jobs?limit=${limit}`, {
+      const response = await apiCall(`${config.backendUrl}/api/marketplace/bookmarked-jobs?limit=${limit}`, {
         method: 'GET',
-        headers: getAuthHeaders(),
       });
 
       console.log('Fetch bookmarked jobs response status:', response.status);
@@ -351,9 +378,8 @@ export const MarketplaceAuthProvider = ({ children }) => {
     
     try {
       console.log('Fetching picked jobs with limit:', limit);
-      const response = await fetch(`${config.backendUrl}/api/marketplace/picked-jobs?limit=${limit}`, {
+      const response = await apiCall(`${config.backendUrl}/api/marketplace/picked-jobs?limit=${limit}`, {
         method: 'GET',
-        headers: getAuthHeaders(),
       });
 
       console.log('Fetch picked jobs response status:', response.status);
@@ -382,9 +408,8 @@ export const MarketplaceAuthProvider = ({ children }) => {
     
     try {
       console.log('Fetching job details for job:', jobId);
-      const response = await fetch(`${config.backendUrl}/api/marketplace/jobs/${jobId}`, {
+      const response = await apiCall(`${config.backendUrl}/api/marketplace/jobs/${jobId}`, {
         method: 'GET',
-        headers: getAuthHeaders(),
       });
 
       console.log('Fetch job details response status:', response.status);
@@ -413,9 +438,8 @@ export const MarketplaceAuthProvider = ({ children }) => {
     
     try {
       console.log('Toggling bookmark for job:', jobId);
-      const response = await fetch(`${config.backendUrl}/api/marketplace/bookmark`, {
+      const response = await apiCall(`${config.backendUrl}/api/marketplace/bookmark`, {
         method: 'POST',
-        headers: getAuthHeaders(),
         body: JSON.stringify({ jobId }),
       });
 
@@ -453,9 +477,8 @@ export const MarketplaceAuthProvider = ({ children }) => {
     
     try {
       console.log('Picking job:', jobId);
-      const response = await fetch(`${config.backendUrl}/api/marketplace/pick-job`, {
+      const response = await apiCall(`${config.backendUrl}/api/marketplace/pick-job`, {
         method: 'POST',
-        headers: getAuthHeaders(),
         body: JSON.stringify({ jobId }),
       });
 
@@ -489,9 +512,8 @@ export const MarketplaceAuthProvider = ({ children }) => {
     
     try {
       console.log('Withdrawing job:', jobId);
-      const response = await fetch(`${config.backendUrl}/api/marketplace/withdraw-job`, {
+      const response = await apiCall(`${config.backendUrl}/api/marketplace/withdraw-job`, {
         method: 'POST',
-        headers: getAuthHeaders(),
         body: JSON.stringify({ jobId }),
       });
 
@@ -575,6 +597,7 @@ export const MarketplaceAuthProvider = ({ children }) => {
     token,
     isLoading,
     login,
+    register,
     logout,
     isAuthenticated,
     getAuthHeaders,
