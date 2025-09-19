@@ -68,14 +68,15 @@ export default function JobRolesChart() {
   return (
     <div
       style={{
-        backgroundColor: "#ffffff",
-        borderRadius: "24px",
-        padding: "32px",
-        boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
-        maxWidth: "800px",
-        margin: "0 auto",
-        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+        // backgroundColor: "#ffffff",
+        // borderRadius: "24px",
+        // padding: "32px",
+        // boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+      
+        // margin: "0 auto",
+         fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
       }}
+      className="bg-white rounded-lg border border-gray-200 px-4 py-4 shadow-sm"
     >
       {/* Header */}
       <div
@@ -85,22 +86,19 @@ export default function JobRolesChart() {
           alignItems: "center",
           marginBottom: "40px",
         }}
-      >
-        <div className="text-2xl font-bold text-gray-900 mr-4">
-         
         
+      >
+        <div className="text-md font-bold text-gray-900 mr-4">       
           Most Picked Job Roles
         </div>
 
         {/* Custom Dropdown */}
         <div style={{ position: "relative" }}>
           <button
+             className="px-4 py-1 bg-white shadow-sm border"
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-            style={{
-              backgroundColor: "#f9fafb",
-              border: "1px solid #e5e7eb",
+            style={{             
               borderRadius: "12px",
-              padding: "12px 16px",
               fontSize: "16px",
               fontWeight: "500",
               color: "#374151",
@@ -150,7 +148,7 @@ export default function JobRolesChart() {
                   onClick={() => handleCompanyChange(company)}
                   style={{
                     width: "100%",
-                    padding: "12px 16px",
+                    padding: "8px 18px",
                     textAlign: "left",
                     backgroundColor: company === selectedCompany ? "#f3f4f6" : "transparent",
                     border: "none",
@@ -245,9 +243,9 @@ export default function JobRolesChart() {
               <div
                 style={{
                   flex: "1",
-                  height: "32px",
+                  height: "18px",
                   backgroundColor: "#f3f4f6",
-                  borderRadius: "6px",
+                  borderRadius: "25px",
                   overflow: "hidden",
                   position: "relative",
                 }}
@@ -258,7 +256,7 @@ export default function JobRolesChart() {
                     height: "100%",
                     backgroundColor: role.color,
                     width: `${role.percentage}%`,
-                    borderRadius: "6px",
+                    borderRadius: "25px",
                     transition: "width 0.8s ease-out",
                     animation: `fillBar${index} 0.8s ease-out`,
                   }}

@@ -461,7 +461,7 @@ export default function CompanyStatistics() {
   return (
     <div className="max-w-6xl mx-auto p-8 bg-white rounded-lg border border-gray-200 shadow-sm">
       <div className="flex items-center justify-between mb-8">
-        <div className="text-3xl font-bold text-gray-900">Company Statistics</div>
+        <div className="text-md font-bold text-gray-900">Company Statistics</div>
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 rounded-full bg-blue-500" />

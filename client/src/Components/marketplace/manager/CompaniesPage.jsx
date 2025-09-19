@@ -79,28 +79,29 @@ const CompaniesPage = ({ onViewJobs }) => {
   }
 
   return (
-    <div className="p-6">
+    <div className="px-4 py-3">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <div className="text-3xl font-bold text-gray-900">Companies</div>
-        <div 
-          className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium flex items-center space-x-2 cursor-pointer"
+      <div className="flex items-center justify-between mb-3">
+        <div className="text-xl font-bold text-gray-900">Companies</div>
+        {/* <div 
+          className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg font-medium flex items-center space-x-2 cursor-pointer"
           onClick={() => setShowCreateCompany(true)}
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
           </svg>
           <span>Add company</span>
-        </div>
+        </div> */}
       </div>
 
       {/* Filter Tabs */}
-      <div className="flex space-x-1 mb-8">
-        {filters.map((filter) => (
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex space-x-1">
+          {filters.map((filter) => (
           <div
             key={filter}
             onClick={() => setActiveFilter(filter)}
-            className={`px-6 py-3 rounded-lg font-medium transition-colors cursor-pointer ${
+            className={`px-3 py-1 rounded-lg border text-sm transition-colors cursor-pointer ${
               activeFilter === filter
                 ? 'bg-gray-900 text-white'
                 : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
@@ -109,6 +110,18 @@ const CompaniesPage = ({ onViewJobs }) => {
             {filter}
           </div>
         ))}
+        </div>
+
+        {/* Add company */}
+        <div 
+          className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg font-medium flex items-center space-x-2 cursor-pointer"
+          onClick={() => setShowCreateCompany(true)}
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+          </svg>
+          <span className="mb-0.5">Add company</span>
+        </div>
       </div>
 
       {/* Loading State */}
@@ -144,7 +157,7 @@ const CompaniesPage = ({ onViewJobs }) => {
 
       {/* Companies Grid */}
       {!loading && !error && (
-        <div className="space-y-6">
+        <div className="space-y-4">
           {filteredCompanies.length === 0 ? (
             <div className="text-center py-12">
               <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -158,7 +171,7 @@ const CompaniesPage = ({ onViewJobs }) => {
               </p>
               {activeFilter === 'All' && (
                 <div className="mt-6">
-                  <button
+                  <button 
                     onClick={() => setShowCreateCompany(true)}
                     className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
                   >

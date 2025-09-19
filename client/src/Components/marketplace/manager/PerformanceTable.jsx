@@ -85,8 +85,8 @@ const PerformanceTable = () => {
   };
 
   return (
-    <div className="bg-grey-200 rounded-xl shadow-sm border border-gray-200 mx-8">
-      <div className="p-6 border-b border-gray-200">
+    <div className="bg-white bg-grey-200 rounded-lg shadow-sm border border-gray-200 mx-4 mb-2">
+      <div className="px-4 py-3 border-b border-gray-200">
         <div className="flex items-center justify-between">
           <div className="text-lg font-semibold text-gray-900">Performance Summary</div>
           

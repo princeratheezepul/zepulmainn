@@ -185,7 +185,7 @@ const MarketplaceDashboard = ({ onBack }) => {
         return (
           <>
             {/* Header */}
-            <div className="flex items-center justify-between mb-4 mx-8">
+            <div className="flex items-center justify-between mx-4 my-3">
               <div>
                 <div className="text-xl font-semibold text-gray-900">Manager Overview</div>
               </div>
@@ -194,12 +194,12 @@ const MarketplaceDashboard = ({ onBack }) => {
             <MetricsCards />
 
             {/* Charts Section */}
-            <div className="mb-8">
+            <div className="mx-4 my-2">
               <CompanyStatisticsChart />
             </div>
 
             {/* Bottom Charts */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <div className="mx-4 my-3 grid grid-cols-1 lg:grid-cols-2 gap-3">
               <MostPickedJobRoles />
               <CandidateStatusBreakdown />
             </div>
