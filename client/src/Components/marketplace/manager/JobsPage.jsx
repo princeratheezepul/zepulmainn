@@ -233,18 +233,18 @@ const JobsPage = ({ company, onBack }) => {
 
       {/* Jobs Section */}
       <div className="mb-8">
-        <div className="text-3xl font-bold text-gray-900 mb-6">
+        <div className="text-2xl font-bold text-gray-900 mb-2">
           Jobs at {companyData?.name || 'Company'}
         </div>
         
         {/* Filter Tabs */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-2">
           <div className="flex space-x-1">
             {filters.map((filter) => (
               <div
                 key={filter}
                 onClick={() => setActiveFilter(filter)}
-                className={`px-6 py-3 rounded-lg font-medium transition-colors cursor-pointer ${
+                className={`px-3 py-1 rounded-md text-sm transition-colors cursor-pointer ${
                   activeFilter === filter
                     ? 'bg-gray-900 text-white'
                     : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
@@ -257,7 +257,7 @@ const JobsPage = ({ company, onBack }) => {
           
           {/* Add Job Button */}
           <div 
-            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium flex items-center space-x-2 cursor-pointer"
+            className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg font-medium flex items-center space-x-2 cursor-pointer"
             onClick={() => setShowCreateJob(true)}
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
