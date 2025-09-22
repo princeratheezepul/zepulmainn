@@ -175,10 +175,9 @@ const JobDetailsForm = ({ onClose, onSave, companyData }) => {
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-8">
             {/* Job Details Section */}
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-6">Job Details</h2>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="bg-white rounded-lg border border-gray-200 px-4 py-3">
+              <div className="text-xl font-bold text-gray-900 mb-2">Job Details</div>              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-5 gap-y-3">
                 <FormInput
                   label="Job Title"
                   value={formData.jobTitle}
