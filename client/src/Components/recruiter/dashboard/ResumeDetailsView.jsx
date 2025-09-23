@@ -70,7 +70,7 @@ const CircularProgress = ({ percentage, size = 160, strokeWidth = 14 }) => {
   );
 };
 
-const ResumeDetailsView = ({ resumeData, onBack, isMarketplace = false, marketplaceJobDetails = null }) => {
+const ResumeDetailsView = ({ resumeData, onBack, onResumeUpdate, isMarketplace = false, marketplaceJobDetails = null }) => {
   const navigate = useNavigate();
   const [pdfLoading, setPdfLoading] = useState(false);
   
@@ -247,9 +247,9 @@ const ResumeDetailsView = ({ resumeData, onBack, isMarketplace = false, marketpl
 
   if (showInterviewQuestions) {
     if (isMarketplace) {
-      return <MarketplaceAIInterviewQuestions onBack={() => setShowInterviewQuestions(false)} jobDetails={marketplaceJobDetails || resumeData.applicationDetails} resumeData={resumeData} />;
+      return <MarketplaceAIInterviewQuestions onBack={() => setShowInterviewQuestions(false)} jobDetails={marketplaceJobDetails || resumeData.applicationDetails} resumeData={resumeData} onResumeUpdate={onResumeUpdate} />;
     } else {
-      return <AIInterviewQuestions onBack={() => setShowInterviewQuestions(false)} jobDetails={resumeData.applicationDetails} resumeData={resumeData} />;
+      return <AIInterviewQuestions onBack={() => setShowInterviewQuestions(false)} jobDetails={resumeData.applicationDetails} resumeData={resumeData} onResumeUpdate={onResumeUpdate} />;
     }
   }
 

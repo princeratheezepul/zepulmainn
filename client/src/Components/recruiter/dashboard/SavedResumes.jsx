@@ -23,9 +23,9 @@ const STATUS_COLORS = {
   rejected: 'bg-red-100 text-red-800',
 };
 
-const SavedResumes = ({ jobId, onBack, jobtitle }) => {
-  const [resumes, setResumes] = useState([]);
-  const [loading, setLoading] = useState(true);
+const SavedResumes = ({ jobId, onBack, jobtitle, preloadedResumes = [], resumesLoading = false, onShowResumeUpload }) => {
+  const [resumes, setResumes] = useState(preloadedResumes);
+  const [loading, setLoading] = useState(resumesLoading);
   const [selectedResume, setSelectedResume] = useState(null);
   const [filter, setFilter] = useState('all');
   const [noteSidebar, setNoteSidebar] = useState({ open: false, resume: null });
@@ -34,8 +34,15 @@ const SavedResumes = ({ jobId, onBack, jobtitle }) => {
   const [noteMsg, setNoteMsg] = useState('');
 
   useEffect(() => {
-    fetchResumes();
-  }, [jobId]);
+    // Only fetch if we don't have preloaded data
+    if (preloadedResumes.length === 0 && !resumesLoading) {
+      fetchResumes();
+    } else if (preloadedResumes.length > 0) {
+      // Use preloaded data and set loading to false
+      setResumes(preloadedResumes);
+      setLoading(false);
+    }
+  }, [jobId, preloadedResumes, resumesLoading]);
 
   const fetchResumes = async () => {
     try {
@@ -123,7 +130,27 @@ const SavedResumes = ({ jobId, onBack, jobtitle }) => {
     str ? str.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ') : '';
 
   if (selectedResume) {
-    return <ResumeDetailsView resumeData={selectedResume} onBack={() => setSelectedResume(null)} />;
+    return (
+      <ResumeDetailsView 
+        resumeData={selectedResume} 
+        onBack={() => setSelectedResume(null)}
+        onResumeUpdate={async (resumeId) => {
+          // Refresh the specific resume data
+          try {
+            const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/resumes/${resumeId}`);
+            if (response.ok) {
+              const updatedResume = await response.json();
+              // Update the selected resume with fresh data
+              setSelectedResume(updatedResume);
+              // Also update it in the resumes list
+              setResumes(prev => prev.map(r => r._id === resumeId ? updatedResume : r));
+            }
+          } catch (error) {
+            console.error('Error refreshing resume data:', error);
+          }
+        }}
+      />
+    );
   }
 
   if (loading) {
@@ -136,6 +163,27 @@ const SavedResumes = ({ jobId, onBack, jobtitle }) => {
 
   return (
     <div className="min-h-screen w-screen flex flex-col bg-white p-4 relative">
+      {/* Back Button and Submit Resume Button */}
+      <div className="w-full max-w-6xl mx-auto mb-4 flex justify-between items-center">
+        <button
+          onClick={onBack}
+          className="text-black hover:text-gray-700 font-medium text-sm flex items-center gap-2"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+          </svg>
+          Back to Job Details
+        </button>
+        {/* Submit Resume Button */}
+        {onShowResumeUpload && (
+          <button 
+            onClick={onShowResumeUpload}
+            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-lg text-base cursor-pointer transition-colors"
+          >
+            Submit Resume
+          </button>
+        )}
+      </div>
       {/* Sidebar overlay */}
       {noteSidebar.open && (
         <div className="fixed inset-0 z-40 flex">
@@ -173,13 +221,13 @@ const SavedResumes = ({ jobId, onBack, jobtitle }) => {
         </div>
       )}
       <div className="w-full max-w-6xl mx-auto">
-        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2 mb-2">
+        <div className="mb-2">
           <div>
             <div className="text-2xl font-bold text-gray-900 leading-tight">Candidate List</div>
             <div className="text-gray-500 text-sm mt-1">Managing candidate for {capitalizeFirstLetter(jobtitle || '')}</div>
           </div>
           {/* Filter Tabs */}
-          <div className="flex gap-2 mt-2 sm:mt-0">
+          <div className="flex gap-2 mt-4">
             {Object.entries(STATUS_LABELS).map(([key, label]) => (
               <button
                 key={key}

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Plus, RefreshCw, HelpCircle, Edit2, ArrowLeft, Upload } from 'lucide-react';
+import { Plus, RefreshCw, HelpCircle, Edit2, ArrowLeft, Upload, Copy } from 'lucide-react';
 import { format, addDays } from 'date-fns';
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import toast from 'react-hot-toast';
@@ -7,7 +7,7 @@ import AddAnswersPage from './AddAnswersPage';
 
 const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API);
 
-const AIInterviewQuestions = ({ onBack, jobDetails, resumeData }) => {
+const AIInterviewQuestions = ({ onBack, jobDetails, resumeData, onResumeUpdate }) => {
   const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [scheduling, setScheduling] = useState(false);
@@ -45,22 +45,31 @@ const AIInterviewQuestions = ({ onBack, jobDetails, resumeData }) => {
     try {
         const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
         const prompt = `
-            Based on the following job and resume, generate 4 distinct interview questions.
+            Based on the following job description and candidate profile, generate 4 distinct interview questions.
             
-            Job Title: ${jobDetails.position}
-            Candidate's Name: ${resumeData.name}
-            Candidate's Key Skills: ${resumeData.skills.join(", ")}
-            Candidate's Experience: ${resumeData.aiSummary.technicalExperience}
+            Job Details:
+            - Title: ${jobDetails.position}
+            - Description: ${jobDetails.description || 'Not provided'}
+            - Required Skills: ${jobDetails.requiredSkills ? jobDetails.requiredSkills.join(", ") : 'Not specified'}
+            - Experience Required: ${jobDetails.experience || 'Not specified'}
+            - Responsibilities: ${jobDetails.responsibilities ? jobDetails.responsibilities.join(", ") : 'Not specified'}
+            
+            Candidate Profile:
+            - Name: ${resumeData.name}
+            - Current Skills: ${resumeData.skills.join(", ")}
+            - Experience Level: ${resumeData.experience || 'Not specified'}
+
+            IMPORTANT: For the "Technical Experience" question, focus specifically on the job's required skills, technologies, and experience level rather than the candidate's current background. The question should assess whether the candidate can meet the job's technical requirements and responsibilities.
 
             Return the questions in a pure JSON array format like this: 
             [
-                {"category": "Technical Experience", "text": "Question text here..."},
+                {"category": "Technical Experience", "text": "Question focused on job's required technical skills and experience level..."},
                 {"category": "Problem Solving", "text": "Question text here..."},
                 {"category": "Team Collaboration", "text": "Question text here..."},
                 {"category": "Critical Thinking", "text": "Question text here..."}
             ]
 
-            Do not repeat questions you have generated before. Ensure the questions are insightful and relevant to the candidate's profile and the job role.
+            Do not repeat questions you have generated before. Ensure the questions are insightful and relevant to the job requirements and the candidate's potential fit for the role.
         `;
 
         const result = await model.generateContent(prompt);
@@ -74,10 +83,10 @@ const AIInterviewQuestions = ({ onBack, jobDetails, resumeData }) => {
         console.error("Failed to fetch AI questions:", error);
         // Fallback to mock questions on error
         const mockQuestions = [
-            { category: 'Technical Experience', text: `Describe your experience with React.js and modern frontend technologies. Can you share a specific project where you built reusable components?` },
+            { category: 'Technical Experience', text: `Based on the job requirements for ${jobDetails.position}, can you walk me through your experience with the key technologies and skills mentioned in the job description? How would you apply these skills to the specific responsibilities outlined?` },
             { category: 'Problem Solving', text: `Describe a complex technical challenge you faced and how you approached solving it. What was the outcome?` },
             { category: 'Team Collaboration', text: `How do you handle disagreements with team members or stakeholders regarding technical decisions?` },
-            { category: 'Critical Thinking', text: `How do you stay updated with the latest trends and best practices in frontend development?` }
+            { category: 'Critical Thinking', text: `How do you stay updated with the latest trends and best practices in your field?` }
         ];
         setQuestions(mockQuestions);
     } finally {
@@ -241,6 +250,16 @@ const AIInterviewQuestions = ({ onBack, jobDetails, resumeData }) => {
     setShowAnswersPage(false);
   };
 
+  const copyQuestionToClipboard = async (questionText) => {
+    try {
+      await navigator.clipboard.writeText(questionText);
+      toast.success('Question copied to clipboard!');
+    } catch (err) {
+      console.error('Failed to copy question:', err);
+      toast.error('Failed to copy question');
+    }
+  };
+
   // Show answers page if it's active
   if (showAnswersPage) {
     // Filter out placeholder questions before passing to AddAnswersPage
@@ -252,10 +271,11 @@ const AIInterviewQuestions = ({ onBack, jobDetails, resumeData }) => {
     
     return (
       <AddAnswersPage
-        onBack={handleBackFromAnswers}
+        onBack={onBack}
         questions={filteredQuestions}
         jobDetails={jobDetails}
         resumeData={resumeData}
+        onResumeUpdate={onResumeUpdate}
       />
     );
   }
@@ -295,7 +315,7 @@ const AIInterviewQuestions = ({ onBack, jobDetails, resumeData }) => {
             ) : (
                 <div className="space-y-4">
                     {questions.map((q, index) => (
-                        <div key={index} className="flex items-start gap-4 p-4 rounded-lg hover:bg-gray-50/80">
+                        <div key={index} className="flex items-start gap-4 p-4 rounded-lg hover:bg-gray-50/80 relative">
                              <HelpCircle size={20} className="text-gray-400 mt-1 flex-shrink-0" />
                              <div className="flex-grow">
                                 <div className="font-semibold text-gray-800">{q.category}</div>
@@ -317,7 +337,14 @@ const AIInterviewQuestions = ({ onBack, jobDetails, resumeData }) => {
                                   />
                                 )}
                              </div>
-                             
+                             {/* Clipboard Copy Button */}
+                             <button
+                               onClick={() => copyQuestionToClipboard(q.text)}
+                               className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
+                               title="Copy question"
+                             >
+                               <Copy size={16} />
+                             </button>
                         </div>
                     ))}
                 </div>
