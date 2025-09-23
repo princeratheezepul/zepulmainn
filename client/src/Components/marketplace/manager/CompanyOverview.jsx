@@ -2,15 +2,15 @@ import React from 'react';
 
 const CompanyOverview = ({ company }) => {
   return (
-    <div className="bg-gray-100 rounded-lg border border-gray-200 px-4 py-3 mb-4">
+    <div className="bg-gray-100 rounded-lg border border-gray-200 px-4 py-3 mb-3">
       {/* Company Header with Logo and Tags */}
       <div className="flex items-start justify-between mb-2">
         <div className="flex items-start space-x-6">
           <div class="flex items-center space-x-2">
-            <div class="w-16 h-16 bg-gray-500 text-white flex items-center justify-center rounded-full">
+            <div class="w-12 h-12 bg-gray-500 text-white flex items-center justify-center rounded-full">
               <span class="text-white font-bold text-3xl">{company.name?.charAt(0)?.toUpperCase() || 'C'}</span>
             </div>            
-            <span class="text-3xl font-bold text-gray-900">{company.name}</span>
+            <span class="text-2xl font-bold text-gray-900">{company.name}</span>
           </div>
         </div>
         
@@ -28,7 +28,7 @@ const CompanyOverview = ({ company }) => {
         </div>
       </div>
       <div className="flex-1">
-        <p className="text-gray-700 text-md leading-relaxed">
+        <p className="text-gray-700 text-md leading-relaxed mb-1">
           {company.description}          
         </p>
       </div>

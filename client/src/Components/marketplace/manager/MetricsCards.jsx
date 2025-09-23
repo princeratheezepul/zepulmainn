@@ -149,7 +149,7 @@ const MetricsCards = () => {
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 w-full max-w-6xl px-4 py-2.5">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 w-full max-w-6xl px-3 py-2">
       {metricsData.map((metric, index) => (
         <div key={index} className="bg-white rounded-lg p-3 shadow-sm border-gray-200 border">
           <div className="flex items-center justify-between mb-2">
@@ -158,7 +158,8 @@ const MetricsCards = () => {
               {metric.icon}
             </div>
           </div>
-          <div className="text-2xl font-semibold text-gray-900">{metric.value}</div>
+          <div className="flex text-2xl font-semibold text-gray-900 justify-between">
+            <div>{metric.value}</div>
             <div className="text-sm text-gray-500 flex items-center mt-2">
               View more
               <span className="ml-1.5 mt-0.5">
@@ -167,6 +168,7 @@ const MetricsCards = () => {
                 <path d="M2.91699 10H16.942" stroke="black" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
               </span>
+              </div>
             </div>
         </div>
       ))}

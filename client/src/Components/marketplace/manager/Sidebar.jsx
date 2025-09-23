@@ -5,7 +5,7 @@ const Sidebar = ({ activeTab, onTabChange }) => {
     <div className="w-64 bg-white border-r border-gray-200 h-screen py-6 fixed top-0 left-0 overflow-y-auto z-10 hidden lg:block">
       <div className="flex flex-col px-6">
         {/* ZEPUL Logo */}
-        <div className="flex items-center space-x-3 mb-12">
+        <div className="flex items-center space-x-3 mb-3">
         
         <img src="/zepul_trademark.jpg" alt="" className="w-30 h-15" />
         </div>

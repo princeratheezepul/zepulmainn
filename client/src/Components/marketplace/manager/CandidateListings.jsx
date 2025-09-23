@@ -75,9 +75,9 @@ const CandidateListings = ({
     <div className="space-y-6">
       {/* Search Results Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-gray-900">
+        <h3 className="text-2xl font-semibold text-gray-900">
           Candidates Found for "{searchQuery}"
-        </h1>
+        </h3>
       </div>
 
       {/* Sort By */}

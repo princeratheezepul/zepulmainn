@@ -185,21 +185,21 @@ const MarketplaceDashboard = ({ onBack }) => {
         return (
           <>
             {/* Header */}
-            <div className="flex items-center justify-between mx-4 my-3">
+            <div className="flex items-center justify-between mx-3 my-2">
               <div>
-                <div className="text-xl font-semibold text-gray-900">Manager Overview</div>
+                <div className="text-xl font-bold text-gray-900">Manager Overview</div>
               </div>
             </div>
 
             <MetricsCards />
 
             {/* Charts Section */}
-            <div className="mx-4 my-2">
+            <div className="mx-3 my-2">
               <CompanyStatisticsChart />
-            </div>
+            </div>            
 
             {/* Bottom Charts */}
-            <div className="mx-4 my-3 grid grid-cols-1 lg:grid-cols-2 gap-3">
+            <div className="mx-3 my-2 grid grid-cols-1 lg:grid-cols-2 gap-2">
               <MostPickedJobRoles />
               <CandidateStatusBreakdown />
             </div>
@@ -209,7 +209,7 @@ const MarketplaceDashboard = ({ onBack }) => {
         );
       case 'jobs':
         if (selectedCompany) {
-          return <div className="h-screen"><JobsPage company={selectedCompany} onBack={() => setSelectedCompany(null)} /></div>;
+          return <div className=""><JobsPage company={selectedCompany} onBack={() => setSelectedCompany(null)} /></div>;
         }
         return <CompaniesPage onViewJobs={setSelectedCompany} />;
       case 'payments':

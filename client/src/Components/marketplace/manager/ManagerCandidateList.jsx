@@ -177,10 +177,10 @@ const ManagerCandidateList = ({ job, onBack }) => {
 
   return (
     <>
-      <div className="bg-white p-8 rounded-lg shadow-sm">
-        <div className="flex justify-between items-start mb-8">
+      <div className="mx-3 my-3 bg-white p-4 rounded-lg shadow-sm">
+        <div className="flex justify-between items-start mb-2">
           <div>
-            <div className="text-3xl font-bold text-gray-900">Candidate List</div>
+            <div className="text-2xl font-bold text-gray-900">Candidate List</div>
             <p className="text-gray-600 mt-1">Managing candidates for {job?.title || job?.jobTitle || 'this job'}</p>
           </div>
           <button onClick={onBack} className="text-blue-600 hover:underline flex items-center gap-2">
@@ -189,7 +189,7 @@ const ManagerCandidateList = ({ job, onBack }) => {
           </button>
         </div>
         
-        <div className="flex items-center space-x-2 mb-6">
+        <div className="flex items-center space-x-2 mb-2">
           <button 
             onClick={() => setFilter('all')}
             className={`px-4 py-2 rounded-md text-sm font-semibold ${
@@ -269,11 +269,11 @@ const ManagerCandidateList = ({ job, onBack }) => {
             <table className="w-full text-left">
               <thead>
                 <tr className="border-b border-gray-200">
-                  <th className="py-4 px-4 font-semibold text-gray-500 text-sm">Candidate</th>
-                  <th className="py-4 px-4 font-semibold text-gray-500 text-sm">Applied date</th>
-                  <th className="py-4 px-4 font-semibold text-gray-500 text-sm">Score</th>
-                  <th className="py-4 px-4 font-semibold text-gray-500 text-sm">Status</th>
-                  <th className="py-4 px-4 font-semibold text-gray-500 text-sm">Notes</th>
+                  <th className="py-3 px-2 font-semibold text-gray-500 text-sm">Candidate</th>
+                  <th className="py-3 px-2 font-semibold text-gray-500 text-sm">Applied date</th>
+                  <th className="py-3 px-2 font-semibold text-gray-500 text-sm">Score</th>
+                  <th className="py-3 px-2 font-semibold text-gray-500 text-sm">Status</th>
+                  <th className="py-3 px-2 font-semibold text-gray-500 text-sm">Notes</th>
                 </tr>
               </thead>
               <tbody>
@@ -287,7 +287,7 @@ const ManagerCandidateList = ({ job, onBack }) => {
                       handleCandidateClick(candidate);
                     }}
                   >
-                    <td className="py-4 px-4">
+                    <td className="py-2 px-2">
                       <div className="flex items-center">
                         <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center mr-4">
                           <span className="text-blue-600 font-semibold text-sm">
@@ -300,16 +300,16 @@ const ManagerCandidateList = ({ job, onBack }) => {
                         </div>
                       </div>
                     </td>
-                    <td className="py-4 px-4 text-gray-600">{candidate.appliedDate || 'N/A'}</td>
-                    <td className="py-4 px-4 font-semibold text-gray-800">
+                    <td className="py-2 px-2 text-gray-600">{candidate.appliedDate || 'N/A'}</td>
+                    <td className="py-2 px-2 font-semibold text-gray-800">
                       {candidate.score ? `${Math.round(candidate.score)}%` : 'N/A'}
                     </td>
-                    <td className="py-4 px-4">
+                    <td className="py-2 px-2">
                       <span className={`px-3 py-1 text-xs font-semibold rounded-full ${statusColors[candidate.status] || 'bg-gray-100 text-gray-800'}`}>
                         {candidate.status ? candidate.status.charAt(0).toUpperCase() + candidate.status.slice(1) : 'N/A'}
                       </span>
                     </td>
-                    <td className="py-4 px-4">
+                    <td className="py-2 px-2">
                       <button 
                         onClick={() => handleOpenSidebar(candidate)} 
                         className="notes-btn text-gray-500 hover:text-gray-800 p-2 rounded-md hover:bg-gray-100 transition-colors"

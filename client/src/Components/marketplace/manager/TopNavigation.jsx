@@ -12,18 +12,18 @@ const TopNavigation = ({ onSearch, onCreateJob, onProfileClick }) => {
   };
 
   return (
-    <div className="bg-white border-b border-gray-200 px-6 py-4">
+    <div className="bg-white border-b border-gray-200 py-2.5 px-4 ">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-6">
           {/* Search Bar */}
           <form onSubmit={handleSearch} className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
             <input
               type="text"
               placeholder="Search"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 pr-12 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-64"
+              className="pl-10 pr-12 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-70"
             />
             <button
               type="submit"
@@ -37,7 +37,7 @@ const TopNavigation = ({ onSearch, onCreateJob, onProfileClick }) => {
         <div className="flex items-center space-x-4">
           <div 
             onClick={onCreateJob}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg font-medium flex items-center space-x-2"
+            className="text-sm bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg font-medium flex items-center space-x-2"
           >
             <Plus className="w-4 h-4" />
             <span className="mb-0.5">Create Job</span>

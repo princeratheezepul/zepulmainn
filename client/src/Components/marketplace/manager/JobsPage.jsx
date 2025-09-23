@@ -226,19 +226,19 @@ const JobsPage = ({ company, onBack }) => {
   }
 
   return (
-    <div className="h-screen flex flex-col">
+    <div className="flex flex-col">
       <div className="flex-1 overflow-y-auto p-6">
       {/* Company Overview */}
       {companyData && <CompanyOverview company={companyData} />}
 
       {/* Jobs Section */}
       <div className="mb-8">
-        <div className="text-2xl font-bold text-gray-900 mb-2">
+        <div className="text-2xl font-bold text-gray-900 mb-3">
           Jobs at {companyData?.name || 'Company'}
         </div>
         
         {/* Filter Tabs */}
-        <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center justify-between mb-2 text-sm ">
           <div className="flex space-x-1">
             {filters.map((filter) => (
               <div
@@ -257,7 +257,7 @@ const JobsPage = ({ company, onBack }) => {
           
           {/* Add Job Button */}
           <div 
-            className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg font-medium flex items-center space-x-2 cursor-pointer"
+            className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-2xl font-medium flex items-center space-x-2 cursor-pointer"
             onClick={() => setShowCreateJob(true)}
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

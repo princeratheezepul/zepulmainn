@@ -54,9 +54,9 @@ const CompanyListings = ({
     <div className="space-y-6">
       {/* Search Results Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-gray-900">
+        <div className="text-2xl font-semibold text-gray-900">
           8 Companies Found for "{searchQuery}"
-        </h1>
+        </div>
       </div>
 
       {/* Tabs and Sort */}
@@ -64,10 +64,10 @@ const CompanyListings = ({
         {/* Tabs */}
         <div className="flex space-x-1">
           {tabs.map((tab) => (
-            <button
+            <button style={{ borderRadius: "12px" }}
               key={tab}
               onClick={() => onTabChange(tab)}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              className={`px-4 py-2 mx-1 rounded-lg font-medium transition-colors ${
                 activeTab === tab
                   ? 'bg-gray-900 text-white'
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'

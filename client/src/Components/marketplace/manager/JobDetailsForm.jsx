@@ -170,7 +170,7 @@ const JobDetailsForm = ({ onClose, onSave, companyData }) => {
         </div>
       )}
 
-      <div className="h-full overflow-y-auto p-6">
+      <div className="h-full p-3 mb-6">
         <div className="w-full">
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-8">
@@ -234,11 +234,11 @@ const JobDetailsForm = ({ onClose, onSave, companyData }) => {
                   required
                 />
               </div>
-            </div>
+            
 
             {/* Job Description & Skills Section */}
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-6">Job Description & Skills</h2>
+           
+              <div className="text-xl font-bold text-gray-900 mb-3 mt-4">Job Description & Skills</div>
               
               <div className="space-y-6">
                 <FormTextarea
@@ -292,11 +292,11 @@ const JobDetailsForm = ({ onClose, onSave, companyData }) => {
                   />
                 </div>
               </div>
-            </div>
+            
 
             {/* Job Settings Section */}
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-6">Job Settings</h2>
+            
+              <div className="text-xl font-bold text-gray-900 mb-3 mt-4">Job Settings</div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <PrioritySelect
@@ -335,23 +335,22 @@ const JobDetailsForm = ({ onClose, onSave, companyData }) => {
                   />
                 </div>
               </div>
-            </div>
 
             {/* Action Buttons */}
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
-              <div className="flex justify-end space-x-4">
-                <button
+            
+              <div className="flex justify-between space-x-4 mt-4">
+                <button style={{borderRadius:12}}
                   type="button"
                   onClick={handleCancel}
                   disabled={loading}
-                  className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-3 py-1 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Cancel
                 </button>
-                <button
+                <button style={{borderRadius:12}}
                   type="submit"
                   disabled={loading}
-                  className="px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+                  className="px-3 py-1 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
                 >
                   {loading ? (
                     <>

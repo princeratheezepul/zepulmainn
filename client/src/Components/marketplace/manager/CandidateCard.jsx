@@ -2,21 +2,29 @@ import React from 'react';
 
 const CandidateCard = ({ candidate }) => {
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
+    <div className="bg-white border border-gray-200 rounded-lg p-3 hover:shadow-md transition-shadow">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4 flex-1">
           {/* Profile Image */}
-          <div className="flex-shrink-0">
+          {/* <div className="flex-shrink-0">
             <img
               src={candidate.profileImage}
               alt={candidate.name}
               className="w-12 h-12 rounded-full object-cover"
             />
-          </div>
+          </div> */}
 
           {/* Candidate Details */}
           <div className="flex-1 min-w-0">
-            <div className="flex items-start justify-between mb-3">
+            <div className="flex items-start gap-4 mb-1">
+              {/* Profile Image */}
+              <div className="flex-shrink-0">
+                <img
+                  src={candidate.profileImage}
+                  alt={candidate.name}
+                  className="w-12 h-12 rounded-full object-cover"
+                />
+              </div>
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-1">
                   {candidate.name}
@@ -26,7 +34,7 @@ const CandidateCard = ({ candidate }) => {
             </div>
 
             {/* Contact Information */}
-            <div className="flex items-center space-x-6 mb-3">
+            <div className="flex items-center space-x-6 mb-2">
               <div className="flex items-center text-sm text-gray-600">
                 <svg className="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
@@ -43,7 +51,7 @@ const CandidateCard = ({ candidate }) => {
             </div>
 
             {/* Experience and Location */}
-            <div className="flex items-center space-x-6 mb-4">
+            <div className="flex items-center space-x-6 mb-2">
               <div className="flex items-center text-sm text-gray-600">
                 <svg className="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0V6a2 2 0 012 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2V8a2 2 0 012-2V6" />

@@ -324,8 +324,8 @@ export default function CompanyStatistics() {
 
   // Chart dimensions and calculations
   const chartWidth = 900
-  const chartHeight = 400
-  const padding = { top: 40, right: 60, bottom: 60, left: 80 }
+  const chartHeight = 300
+  const padding = { top: 30, right: 0, bottom: 30, left: 40 }
   const innerWidth = chartWidth - padding.left - padding.right
   const innerHeight = chartHeight - padding.top - padding.bottom
 
@@ -459,27 +459,27 @@ export default function CompanyStatistics() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto p-8 bg-white rounded-lg border border-gray-200 shadow-sm">
-      <div className="flex items-center justify-between mb-8">
+    <div className="max-w-6xl mx-auto p-4 bg-white rounded-lg border border-gray-200 shadow-sm">
+      <div className="flex items-center justify-between mb-2">
         <div className="text-md font-bold text-gray-900">Company Statistics</div>
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 rounded-full bg-blue-500" />
-            <span className="text-gray-600">Jobs Posted</span>
+            <span className="text-md text-gray-600">Jobs Posted</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 rounded-full bg-slate-700" />
-            <span className="text-gray-600">Jobs Picked</span>
+            <span className="text-md text-gray-600">Jobs Picked</span>
           </div>
         </div>
       </div>
 
       {/* Data Correction Notice */}
       {dataCorrections.length > 0 && (
-        <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+        <div className="mb-6 p-1 bg-yellow-50 border border-yellow-200 rounded-lg">
           <div className="flex items-start">
             <div className="flex-shrink-0">
-              <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+              <svg className="h-3 w-3 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
                 <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
               </svg>
             </div>
@@ -621,17 +621,17 @@ export default function CompanyStatistics() {
 
         {/* Tooltip box */}
         {displayData && (
-          <div className="absolute top-4 right-4 bg-white border border-gray-200 rounded-lg p-4 shadow-lg">
-            <div className="font-semibold text-lg mb-2">{displayData.month}</div>
+          <div className="absolute top-4 right-4 bg-white border border-gray-200 rounded-lg p-3 shadow-lg">
+            <div className="font-semibold text-md mb-2">{displayData.month}</div>
             <div className="flex items-center gap-2 mb-1">
               <div className="w-3 h-3 rounded-full bg-blue-500" />
-              <span className="text-gray-600">No of Jobs Posted</span>
-              <span className="font-medium ml-auto">{displayData.jobsPosted}</span>
+              <span className="text-sm text-gray-600">No of Jobs Posted</span>
+              <span className="text-sm font-medium ml-auto">{displayData.jobsPosted}</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded-full bg-slate-700" />
-              <span className="text-gray-600">No of Jobs Picked</span>
-              <span className="font-medium ml-auto">{displayData.jobsPicked}</span>
+              <span className="text-sm text-gray-600">No of Jobs Picked</span>
+              <span className="text-sm font-medium ml-auto">{displayData.jobsPicked}</span>
             </div>
           </div>
         )}

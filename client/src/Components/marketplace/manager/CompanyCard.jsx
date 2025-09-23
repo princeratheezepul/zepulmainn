@@ -2,7 +2,7 @@ import React from 'react';
 
 const CompanyCard = ({ company, onViewJobs }) => {
   return (
-    <div className="bg-white border border-gray-200 rounded-lg px-3 py-3 hover:shadow-md transition-shadow relative">
+    <div className="bg-white border border-gray-200 rounded-lg px-3 py-2 mb-2.5 hover:shadow-md transition-shadow relative">
       <div className="flex items-start space-x-4">
         {/* Company Icon */}
         <div className="flex-shrink-0">
@@ -15,9 +15,9 @@ const CompanyCard = ({ company, onViewJobs }) => {
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between">
             <div className="flex-1">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              <h5 className="text-sm font-semibold text-gray-900 mb-2">
                 {company.name}
-              </h3>
+              </h5>
               
               {/* Location */}
               <div className="flex items-center text-gray-600 mb-2">
@@ -34,7 +34,7 @@ const CompanyCard = ({ company, onViewJobs }) => {
               </p>
 
               {/* Tags */}
-              <div className="flex flex-wrap gap-2 mb-3">
+              <div className="flex flex-wrap gap-2 mb-2">
                 <span className="bg-white text-gray-900 rounded-xl border border-gray-300 px-3 py-1 text-xs">
                   {company.industry}
                 </span>
@@ -61,14 +61,12 @@ const CompanyCard = ({ company, onViewJobs }) => {
       </div>
 
       {/* View Jobs Button - Bottom Right */}
-      <div className="absolute bottom-6 right-6">
+      <div className="absolute bottom-6 right-6 text-sm">
         <button style={{ borderRadius: "10px" }}
-          className="px-4 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors cursor-pointer"
-          onClick={() => onViewJobs && onViewJobs(company)}
-          
-        >
+          className="px-4 py-1 border-1 border-blue-500 font-semibold text-blue-500 rounded-lg hover:bg-blue-700 hover:text-white transition-colors cursor-pointer"
+          onClick={() => onViewJobs && onViewJobs(company)}>
           View Jobs
-        </button>
+        </button>        
       </div>
     </div>
   );
