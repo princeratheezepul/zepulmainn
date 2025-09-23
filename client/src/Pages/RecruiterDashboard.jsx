@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import Header from '../Components/recruiter/dashboard/Header';
 import StatsGroup from '../Components/recruiter/dashboard/StatsGroup';
 import CandidateSubmissionChart from '../Components/recruiter/dashboard/CandidateSubmissionChart';
@@ -13,6 +14,14 @@ import ZepDB from '../Components/recruiter/dashboard/ZepDB';
 
 const RecruiterDashboard = () => {
   const [activeComponent, setActiveComponent] = useState('Dashboard');
+  const location = useLocation();
+
+  // Handle navigation state to set active component
+  useEffect(() => {
+    if (location.state?.activeComponent) {
+      setActiveComponent(location.state.activeComponent);
+    }
+  }, [location.state]);
 
   return (
     <div className="flex bg-gray-100 min-h-screen">

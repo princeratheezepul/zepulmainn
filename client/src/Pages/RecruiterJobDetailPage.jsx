@@ -15,7 +15,10 @@ const RecruiterJobDetailPage = () => {
   const { jobId } = useParams();
   const [showResumeUpload, setShowResumeUpload] = useState(false);
   const [showSavedResumes, setShowSavedResumes] = useState(false);
+  const [resumeUploadFromCandidateList, setResumeUploadFromCandidateList] = useState(false);
   const [resumeCount, setResumeCount] = useState(0);
+  const [preloadedResumes, setPreloadedResumes] = useState([]);
+  const [resumesLoading, setResumesLoading] = useState(false);
   // Handle sidebar navigation
   const handleSidebarNavigation = (component) => {
     if (component === 'Dashboard') {
@@ -57,11 +60,28 @@ const RecruiterJobDetailPage = () => {
     }
   };
 
+  // Preload resumes data for faster candidate list loading
+  const preloadResumes = async () => {
+    setResumesLoading(true);
+    try {
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/resumes/job/${jobId}`);
+      if (!response.ok) return;
+      const data = await response.json();
+      setPreloadedResumes(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error('Error preloading resumes:', err);
+      setPreloadedResumes([]);
+    } finally {
+      setResumesLoading(false);
+    }
+  };
+
   useEffect(() => {
 
     if (jobId) {
       fetchJob();
       fetchResumeCount();
+      preloadResumes(); // Preload resumes for faster candidate list loading
     }
   }, [jobId]);
 
@@ -126,17 +146,48 @@ const RecruiterJobDetailPage = () => {
         <Settings />
       ) : showResumeUpload ? (
         <div className="flex-1 flex flex-col items-center py-0 px-0 bg-gray-50">
-          <ResumeUpload onBack={() => setShowResumeUpload(false)} jobDetails={job} />
+          <ResumeUpload 
+            onBack={() => {
+              setShowResumeUpload(false);
+              if (resumeUploadFromCandidateList) {
+                setResumeUploadFromCandidateList(false);
+                setShowSavedResumes(true);
+              }
+            }} 
+            jobDetails={job} 
+          />
         </div>
       ) : showSavedResumes ? (
         <div className="flex-1 flex flex-col items-center py-0 px-0 bg-gray-50">
-          <SavedResumes onBack={() => setShowSavedResumes(false)} jobId={jobId} jobtitle={job.jobtitle} />
+          <SavedResumes 
+            onBack={() => setShowSavedResumes(false)} 
+            jobId={jobId} 
+            jobtitle={job.jobtitle}
+            preloadedResumes={preloadedResumes}
+            resumesLoading={resumesLoading}
+            onShowResumeUpload={() => {
+              setResumeUploadFromCandidateList(true);
+              setShowResumeUpload(true);
+            }}
+          />
         </div>
       ) : (
         <div className="flex-1 flex flex-col items-center py-0 px-0 bg-gray-50">
           <div className="w-full max-w-6xl bg-gray-50">
+            {/* Back Button */}
+            <div className="bg-gray-50 w-full px-4 md:px-0 pt-6 pb-2">
+              <button
+                onClick={() => navigate('/recruiter/dashboard', { state: { activeComponent: 'Jobs' } })}
+                className="text-black hover:text-gray-700 font-medium text-sm flex items-center gap-2 mb-4"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                </svg>
+                Back to Jobs
+              </button>
+            </div>
             {/* Improved Header Row */}
-            <div className="bg-gray-50 border-b border-gray-200 w-full px-4 md:px-0 pt-6 pb-2 flex flex-col gap-2">
+            <div className="bg-gray-50 border-b border-gray-200 w-full px-4 md:px-0 pt-2 pb-2 flex flex-col gap-2">
               <div className="flex items-center justify-between w-full">
                 <div>
                   <div className="text-xs text-blue-600 font-semibold mb-1">JOB DETAILS</div>
