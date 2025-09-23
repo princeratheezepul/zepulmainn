@@ -88,8 +88,7 @@ const PerformanceTable = () => {
     <div className="bg-white bg-grey-200 rounded-lg shadow-sm border border-gray-200 mx-3 mb-2">
       <div className="px-4 py-3 border-b border-gray-200">
         <div className="flex items-center justify-between">
-          <div className="text-lg font-semibold text-gray-900">Performance Summary</div>
-          
+          <div className="text-lg font-semibold text-gray-900">Performance Summary</div>          
         </div>
       </div>
       <div className="overflow-x-auto">
@@ -124,25 +123,25 @@ const PerformanceTable = () => {
           <table className="w-full">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Company</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jobs Picked</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Candidates</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Selected</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rejected</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Placement Rate</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Company</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jobs Picked</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Candidates</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Selected</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rejected</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Placement Rate</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {performanceData.map((row, index) => (
                 <tr key={index} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{row.partner}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.jobsPicked}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.candidates}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.selected}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.rejected}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.placementRate}%</td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">{row.partner}</td>
+                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">{row.jobsPicked}</td>
+                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">{row.candidates}</td>
+                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">{row.selected}</td>
+                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">{row.rejected}</td>
+                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">{row.placementRate}%</td>
+                  <td className="px-4 py-3 whitespace-nowrap">
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                       row.status === 'High' 
                         ? 'bg-green-100 text-green-800' 

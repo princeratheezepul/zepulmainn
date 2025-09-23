@@ -167,7 +167,7 @@ const SearchResults = ({ searchQuery, onBack }) => {
           </div>
 
           {/* Main Content */}
-          <div className="flex-1 p-6">
+          <div className="flex-1 ml-1 mr-2 my-4">
             {/* Tabs */}
             <div className="flex items-center justify-between mb-6">
               <div className="flex space-x-1">
@@ -175,7 +175,7 @@ const SearchResults = ({ searchQuery, onBack }) => {
                   <button style={{ borderRadius: "12px" }}
                     key={tab}
                     onClick={() => setActiveTab(tab)}
-                    className={`px-4 py-2 mx-1 rounded-lg font-medium transition-colors ${
+                    className={`px-3 py-1 mx-1 rounded-lg font-medium transition-colors ${
                       activeTab === tab
                         ? 'bg-gray-900 text-white'
                         : 'bg-gray-100 text-gray-600 hover:bg-gray-200'

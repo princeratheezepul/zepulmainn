@@ -48,10 +48,9 @@ const CandidateCard = ({ candidate }) => {
                 </svg>
                 {candidate.phone}
               </div>
-            </div>
-
+           
             {/* Experience and Location */}
-            <div className="flex items-center space-x-6 mb-2">
+            
               <div className="flex items-center text-sm text-gray-600">
                 <svg className="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0V6a2 2 0 012 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2V8a2 2 0 012-2V6" />
@@ -69,30 +68,31 @@ const CandidateCard = ({ candidate }) => {
             </div>
 
             {/* Skills */}
-            <div className="flex flex-wrap gap-2">
-              {candidate.skills.map((skill, index) => (
-                <span
-                  key={index}
-                  className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
-                >
-                  {skill}
-                </span>
-              ))}
-              {candidate.additionalSkills > 0 && (
-                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
-                  +{candidate.additionalSkills}
-                </span>
-              )}
-            </div>
+            <div className='flex justify-between'>
+              <div className="flex flex-wrap gap-2">
+                {candidate.skills.map((skill, index) => (
+                  <span
+                    key={index}
+                    className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                  >
+                    {skill}
+                  </span>
+                ))}
+                {candidate.additionalSkills > 0 && (
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
+                    +{candidate.additionalSkills}
+                  </span>
+                )}
+              </div>
+               {/* View Scorecard Button */}
+                <div className="flex-shrink-0 ml-4 text-sm">
+                  <button style={{borderRadius:10}} className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg text-sm font-medium transition-colors">
+                    View Scorecard
+                  </button>
+                </div>
+              </div>
           </div>
-        </div>
-
-        {/* View Scorecard Button */}
-        <div className="flex-shrink-0 ml-4">
-          <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
-            View Scorecard
-          </button>
-        </div>
+        </div>       
       </div>
     </div>
   );

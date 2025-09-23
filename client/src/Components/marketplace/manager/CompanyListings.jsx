@@ -67,7 +67,7 @@ const CompanyListings = ({
             <button style={{ borderRadius: "12px" }}
               key={tab}
               onClick={() => onTabChange(tab)}
-              className={`px-4 py-2 mx-1 rounded-lg font-medium transition-colors ${
+              className={`px-3 py-1 mx-1 rounded-lg font-medium transition-colors ${
                 activeTab === tab
                   ? 'bg-gray-900 text-white'
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
@@ -84,7 +84,7 @@ const CompanyListings = ({
           <select
             value={sortBy}
             onChange={(e) => onSortChange(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="px-2 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           >
             {sortOptions.map((option) => (
               <option key={option} value={option}>

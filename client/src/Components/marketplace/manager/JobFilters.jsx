@@ -65,7 +65,7 @@ const JobFilters = ({ filters, onFilterChange }) => {
       </div>
 
       {filterSections.map((section) => (
-        <div key={section.key} className="space-y-4 mb-3">
+        <div key={section.key} className="space-y-4 mb-3 space-y-4 mb-3 border-b border-gray-200 pb-2 mb-2 last:border-b-0">
           <h5 className="text-sm font-medium text-gray-700">{section.title}</h5>
           <div className="grid flex items-center">
             {section.options.map((option) => (

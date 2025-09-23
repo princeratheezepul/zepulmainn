@@ -197,7 +197,7 @@ const CreateCompany = ({ onClose, onSave }) => {
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* First Row */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-2">
               <FormInput
                 label="Company Name"
                 value={formData.companyName}
@@ -219,7 +219,7 @@ const CreateCompany = ({ onClose, onSave }) => {
             </div>
 
             {/* Second Row */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-2">
               <FormSelect
                 label="Industry"
                 value={formData.industryType}
@@ -242,7 +242,7 @@ const CreateCompany = ({ onClose, onSave }) => {
             </div>
 
             {/* Third Row */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-2">
               <FormInput
                 label="Location"
                 value={formData.location}
@@ -264,7 +264,7 @@ const CreateCompany = ({ onClose, onSave }) => {
             </div>
 
             {/* Fourth Row */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-2">
               <FormInput
                 label="Website URL"
                 value={formData.websiteUrl}
@@ -289,7 +289,7 @@ const CreateCompany = ({ onClose, onSave }) => {
             />
 
             {/* Fifth Row */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-2">
               <FormSelect
                 label="Hiring Domains"
                 value={formData.hiringDomains}
