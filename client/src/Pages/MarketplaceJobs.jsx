@@ -5,7 +5,7 @@ import HomePage from '../Components/marketplace/HomePage';
 import JobsPage from '../Components/marketplace/JobsPage';
 import WalletPage from '../Components/marketplace/WalletPage';
 import SearchResults from '../Components/marketplace/SearchResults';
-import ProfilePage from '../Components/Marketplace/ProfilePage';
+import ProfilePage from '../Components/marketplace/ProfilePage';
 import BankDetailsSetup from '../Components/marketplace/BankDetailsSetup';
 import { useMarketplaceAuth } from '../context/MarketplaceAuthContext';
 import { jobListings, yourPicks, walletData } from '../Data/marketplaceData';
