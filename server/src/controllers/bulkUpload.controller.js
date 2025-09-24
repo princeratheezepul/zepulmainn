@@ -35,25 +35,44 @@ const genAI = GEMINI_API_KEY ? new GoogleGenerativeAI(GEMINI_API_KEY) : null;
 // Initialize Google Drive API (optional - only if credentials are available)
 let drive = null;
 try {
-  const credentialsPath = path.join(__dirname, '../../google-credentials.json');
-  if (fs.existsSync(credentialsPath)) {
+  // Check if we have Google credentials from environment variables
+  const googleCredentials = process.env.GOOGLE_CREDENTIALS;
+  
+  if (googleCredentials) {
+    // Parse the JSON string from environment variable
+    const credentials = JSON.parse(googleCredentials);
+    
     drive = google.drive({
       version: 'v3',
       auth: new google.auth.GoogleAuth({
-        keyFile: credentialsPath,
+        credentials: credentials,
         scopes: ['https://www.googleapis.com/auth/drive.readonly'],
       }),
     });
-    console.log('✅ Google Drive API initialized successfully');
+    console.log('✅ Google Drive API initialized successfully from environment variables');
     console.log('📁 Ready to process Google Drive folders automatically');
   } else {
-    console.log('⚠️  Google Drive credentials not found');
-    console.log('📋 Please follow the setup guide in GOOGLE_DRIVE_API_SETUP.md');
-    console.log('🔗 For now, users can use manual download method');
+    // Fallback to file-based credentials for local development
+    const credentialsPath = path.join(__dirname, '../../google-credentials.json');
+    if (fs.existsSync(credentialsPath)) {
+      drive = google.drive({
+        version: 'v3',
+        auth: new google.auth.GoogleAuth({
+          keyFile: credentialsPath,
+          scopes: ['https://www.googleapis.com/auth/drive.readonly'],
+        }),
+      });
+      console.log('✅ Google Drive API initialized successfully from file');
+      console.log('📁 Ready to process Google Drive folders automatically');
+    } else {
+      console.log('⚠️  Google Drive credentials not found');
+      console.log('📋 Please follow the setup guide in GOOGLE_DRIVE_API_SETUP.md');
+      console.log('🔗 For now, users can use manual download method');
+    }
   }
 } catch (error) {
   console.log('❌ Failed to initialize Google Drive API:', error.message);
-  console.log('📋 Please check your google-credentials.json file');
+  console.log('📋 Please check your Google credentials configuration');
 }
 
 // @desc Start bulk upload process
