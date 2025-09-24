@@ -65,3 +65,6 @@ Desktop.ini
 # Temporary files
 tmp/
 temp/
+
+# Google credentials (sensitive)
+google-credentials.json
