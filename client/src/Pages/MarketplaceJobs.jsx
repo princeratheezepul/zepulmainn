@@ -16,6 +16,7 @@ const MarketplaceJobs = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeSidebarItem, setActiveSidebarItem] = useState('Home');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [activeJobsTab, setActiveJobsTab] = useState('Picked Jobs');
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
@@ -138,10 +139,14 @@ const MarketplaceJobs = () => {
         setActiveSidebarItem={setActiveSidebarItem}
         isSidebarOpen={isSidebarOpen}
         setIsSidebarOpen={setIsSidebarOpen}
+        isCollapsed={isSidebarCollapsed}
+        onToggle={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
       />
 
       {/* Main Content Area */}
-      <div className="flex-1 lg:ml-64">
+      <div className={`flex-1 transition-all duration-300 ease-in-out ${
+        isSidebarCollapsed ? 'lg:ml-16' : 'lg:ml-64'
+      }`}>
         <Header 
           searchQuery={searchQuery}
           setSearchQuery={handleSearch}

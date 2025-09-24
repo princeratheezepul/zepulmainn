@@ -157,9 +157,9 @@ export const jobsListings = [
 
 // Wallet data
 export const walletData = {
-  totalEarnings: '₹1,60,000',
-  pendingEarnings: '₹50,000',
-  profitPercentage: '20%',
+  totalEarnings: '₹0',
+  pendingEarnings: '₹0',
+  profitPercentage: '0%',
   currentDate: '08 May, 2025',
   accounts: [
     {

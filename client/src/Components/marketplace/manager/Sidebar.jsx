@@ -1,55 +1,69 @@
 import React from 'react';
+import { ChevronLeft, Menu } from 'lucide-react';
 
-const Sidebar = ({ activeTab, onTabChange }) => {
+const Sidebar = ({ activeTab, onTabChange, isCollapsed, onToggle }) => {
   return (
-    <div className="w-64 bg-white border-r border-gray-200 h-screen py-6 fixed top-0 left-0 overflow-y-auto z-10 hidden lg:block">
-      <div className="flex flex-col px-6">
-        {/* ZEPUL Logo */}
-        <div className="flex items-center space-x-3 mb-3">
-        
-        <img src="/zepul_trademark.jpg" alt="" className="w-30 h-15" />
-        </div>
-
-        {/* Navigation Items */}
-        <div className="space-y-2">
-          {/* Home */}
-          <div
-            className={`flex items-center space-x-3 px-2.5 py-2.5 rounded-lg cursor-pointer ${activeTab === 'home'
-                ? 'bg-blue-600'
-                : 'hover:bg-gray-50'
-              }`}
-            onClick={() => onTabChange('home')}
+    <div className={`bg-white h-screen fixed top-0 left-0 z-10 hidden lg:block transition-all duration-300 ease-in-out ${
+      isCollapsed 
+        ? 'w-16 border-none shadow-none' 
+        : 'w-64 py-6 border-r border-gray-200 overflow-y-auto'
+    }`}>
+      {isCollapsed ? (
+        /* Collapsed State - Only Hamburger Button */
+        <div className="flex justify-center pt-4">
+          <button
+            onClick={onToggle}
+            className="w-12 h-12 rounded-full bg-blue-600 hover:bg-blue-700 shadow-lg transition-all duration-200 border-2 border-blue-700 flex items-center justify-center"
+            title="Expand sidebar"
           >
-            {/* <svg className={`w-5 h-5 ${activeTab === 'home' ? 'text-white fill-current' : 'text-gray-600'
-              }`} fill={activeTab === 'home' ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-            </svg> */}
+            <Menu className="h-5 w-5 text-white" />
+          </button>
+        </div>
+      ) : (
+        /* Expanded State - Full Sidebar */
+        <div className="flex flex-col px-6">
+          {/* ZEPUL Logo and Toggle Button */}
+          <div className="flex items-center justify-between mb-3">
+            <img src="/zepul_trademark.jpg" alt="" className="w-30 h-15" />
+            <button
+              onClick={onToggle}
+              className="p-1.5 rounded-lg hover:bg-gray-100 transition-all duration-200"
+              title="Collapse sidebar"
+            >
+              <ChevronLeft className="h-5 w-5 text-gray-600" />
+            </button>
+          </div>
 
+          {/* Navigation Items */}
+          <div className="space-y-2">
+            {/* Home */}
+            <div
+              className="flex items-center space-x-3 px-2.5 py-2.5 rounded-lg cursor-pointer hover:bg-gray-50"
+              onClick={() => onTabChange('home')}
+              style={{
+                backgroundColor: activeTab === 'home' ? '#2563eb' : 'transparent'
+              }}
+            >
             <svg  viewBox="0 0 28 28" className={`w-5 h-5 ${activeTab === 'home' ? 'text-white fill-current' : 'text-gray-600'
               }`} fill={activeTab === 'home' ? 'currentColor' : 'none'} stroke="currentColor" xmlns="http://www.w3.org/2000/svg">
               <path d="M10.524 3.31344L4.23565 8.21344C3.18565 9.03011 2.33398 10.7684 2.33398 12.0868V20.7318C2.33398 23.4384 4.53898 25.6551 7.24565 25.6551H20.7557C23.4623 25.6551 25.6673 23.4384 25.6673 20.7434V12.2501C25.6673 10.8384 24.7223 9.03011 23.5673 8.22511L16.3573 3.17344C14.724 2.03011 12.099 2.08844 10.524 3.31344Z" stroke="black" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
               <path d="M14 20.9883V17.4883" stroke="black" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
 
-            <span className={`${activeTab === 'home'
-                ? 'text-white font-bold'
-                : 'text-gray-700 font-medium'
-              }`}>Home</span>
+              <span className={`${activeTab === 'home'
+                  ? 'text-white font-bold'
+                  : 'text-gray-700 font-medium'
+                }`}>Home</span>
           </div>
 
-          {/* Jobs */}
-          <div
-            className={`flex items-center space-x-3 px-2.5 py-2.5 rounded-lg cursor-pointer ${activeTab === 'jobs'
-                ? 'bg-blue-600'
-                : 'hover:bg-gray-50'
-              }`}
-            onClick={() => onTabChange('jobs')}
-          >
-            {/* <svg className={`w-5 h-5 ${activeTab === 'jobs' ? 'text-white fill-current' : 'text-gray-600'
-              }`} fill={activeTab === 'jobs' ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 6h-3V4a2 2 0 00-2-2H9a2 2 0 00-2 2v2H4a1 1 0 000 2h1v10a2 2 0 002 2h10a2 2 0 002-2V8h1a1 1 0 000-2zM9 4h6v2H9V4zm7 14H8V8h8v10z" />
-            </svg> */}
-
+            {/* Jobs */}
+            <div
+              className="flex items-center space-x-3 px-2.5 py-2.5 rounded-lg cursor-pointer hover:bg-gray-50"
+              onClick={() => onTabChange('jobs')}
+              style={{
+                backgroundColor: activeTab === 'jobs' ? '#2563eb' : 'transparent'
+              }}
+            >
               <svg  viewBox="0 0 28 28" className={`w-5 h-5 ${activeTab === 'jobs' ? 'text-white fill-current' : 'text-gray-600'
               }`} fill={activeTab === 'jobs' ? 'currentColor' : 'none'} stroke="currentColor" xmlns="http://www.w3.org/2000/svg">
                 <path d="M9.33329 25.6667H18.6666C23.3566 25.6667 24.1966 23.7883 24.4416 21.5017L25.3166 12.1683C25.6316 9.32167 24.815 7 19.8333 7H8.16663C3.18496 7 2.36829 9.32167 2.68329 12.1683L3.55829 21.5017C3.80329 23.7883 4.64329 25.6667 9.33329 25.6667Z" stroke="black" stroke-opacity="0.7" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
@@ -59,25 +73,20 @@ const Sidebar = ({ activeTab, onTabChange }) => {
                 <path d="M3.05664 13.1484C5.68164 14.9451 8.64497 16.0301 11.6666 16.3684" stroke="black" stroke-opacity="0.7" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
 
-
-            <span className={`${activeTab === 'jobs'
-                ? 'text-white font-bold'
-                : 'text-gray-700 font-medium'
-              }`}>Jobs</span>
+              <span className={`${activeTab === 'jobs'
+                  ? 'text-white font-bold'
+                  : 'text-gray-700 font-medium'
+                }`}>Jobs</span>
           </div>
 
-          {/* Payments */}
-          <div
-            className={`flex items-center space-x-3 px-2.5 py-2.5 rounded-lg cursor-pointer ${activeTab === 'payments'
-                ? 'bg-blue-600'
-                : 'hover:bg-gray-50'
-              }`}
-            onClick={() => onTabChange('payments')}
-          >
-            {/* <svg className={`w-5 h-5 ${activeTab === 'payments' ? 'text-white fill-current' : 'text-gray-600'
-              }`} fill={activeTab === 'payments' ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-            </svg> */}
+            {/* Payments */}
+            <div
+              className="flex items-center space-x-3 px-2.5 py-2.5 rounded-lg cursor-pointer hover:bg-gray-50"
+              onClick={() => onTabChange('payments')}
+              style={{
+                backgroundColor: activeTab === 'payments' ? '#2563eb' : 'transparent'
+              }}
+            >
             <svg className={`w-5 h-5 ${activeTab === 'payments' ? 'text-white fill-current' : 'text-gray-600'
               }`} fill={activeTab === 'payments' ? 'currentColor' : 'none'}  viewBox="0 0 28 28" xmlns="http://www.w3.org/2000/svg">
               <path d="M4.58496 18.5257L18.5266 4.58398" stroke="black" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
@@ -87,14 +96,14 @@ const Sidebar = ({ activeTab, onTabChange }) => {
               <path d="M2.33301 25.665H25.6663" stroke="black" strokeWidth="1.5" strokeLinecap="round" stroke-LineJoin="round"/>
             </svg>
 
-            <span className={`${activeTab === 'payments'
-                ? 'text-white font-bold'
-                : 'text-gray-700 font-medium'
-              }`}>Payments</span>
+              <span className={`${activeTab === 'payments'
+                  ? 'text-white font-bold'
+                  : 'text-gray-700 font-medium'
+                }`}>Payments</span>
+            </div>
           </div>
         </div>
-
-      </div>
+      )}
     </div>
   );
 };

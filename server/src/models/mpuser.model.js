@@ -21,7 +21,8 @@ const mpuserSchema = new Schema({
     },
     password: {
         type: String,
-        required: true
+        required: true,
+        select: true
     },
     phone: {
         type: String,
@@ -58,7 +59,15 @@ const mpuserSchema = new Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Job'
     }]
-}, { timestamps: true });
+}, { 
+    timestamps: true,
+    toJSON: {
+        transform: function(doc, ret) {
+            delete ret.password;
+            return ret;
+        }
+    }
+});
 
 // Hash password before saving
 mpuserSchema.pre("save", async function(next) {
@@ -70,7 +79,23 @@ mpuserSchema.pre("save", async function(next) {
 
 // Compare password method
 mpuserSchema.methods.isPasswordCorrect = async function (password) {
-    return await bcrypt.compare(password, this.password);
+    // Check if password is provided and user has a password
+    if (!password) {
+        console.log("No password provided for comparison");
+        return false;
+    }
+    
+    if (!this.password) {
+        console.log("User has no password stored");
+        return false;
+    }
+    
+    try {
+        return await bcrypt.compare(password, this.password);
+    } catch (error) {
+        console.error("Error comparing password:", error);
+        return false;
+    }
 };
 
 export const MpUser = mongoose.models.MpUser || mongoose.model('MpUser', mpuserSchema);

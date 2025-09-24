@@ -29,6 +29,7 @@ const MarketplaceDashboard = ({ onBack }) => {
   const [selectedCompanyForJob, setSelectedCompanyForJob] = useState(null);
   const [showProfile, setShowProfile] = useState(false);
   const [showNotification, setShowNotification] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   const handleSearch = (query) => {
     setSearchQuery(query);
@@ -222,9 +223,16 @@ const MarketplaceDashboard = ({ onBack }) => {
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
-      <Sidebar activeTab={activeTab} onTabChange={handleTabChange} />
+      <Sidebar 
+        activeTab={activeTab} 
+        onTabChange={handleTabChange}
+        isCollapsed={isSidebarCollapsed}
+        onToggle={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+      />
       
-      <div className="flex-1 flex flex-col lg:ml-64">
+      <div className={`flex-1 flex flex-col transition-all duration-300 ease-in-out ${
+        isSidebarCollapsed ? 'lg:ml-16' : 'lg:ml-64'
+      }`}>
         <TopNavigation 
           onSearch={handleSearch} 
           onCreateJob={handleCreateJobClick} 
