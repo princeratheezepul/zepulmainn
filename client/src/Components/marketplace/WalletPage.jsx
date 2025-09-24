@@ -2,7 +2,7 @@ import React from 'react';
 import { Info, TrendingUp, ChevronLeft, ChevronRight } from 'lucide-react';
 import { walletData } from '../../Data/marketplaceData';
 import CreditCard from '../marketplace/credit-card';
-import TransactionsTable from '../marketplace/transactions-table';
+import TransactionsTable from '../marketplace/Transactions-table';
 import RevenueChart from '../marketplace/RevenueChart';
 const WalletPage = () => {
   return (
