@@ -409,7 +409,7 @@ export default function CompanyStatistics() {
 
   if (loading) {
     return (
-      <div className="max-w-6xl mx-auto p-8 bg-white rounded-lg border border-gray-200 shadow-sm">
+      <div className="max-w-8xl mx-auto p-8 bg-white rounded-lg border border-gray-200 shadow-sm">
         <div className="flex items-center justify-center h-96">
           <div className="flex items-center space-x-2">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
@@ -422,7 +422,7 @@ export default function CompanyStatistics() {
 
   if (error) {
     return (
-      <div className="max-w-6xl mx-auto p-8 bg-white rounded-lg border border-gray-200 shadow-sm">
+      <div className="max-w-8xl mx-auto p-8 bg-white rounded-lg border border-gray-200 shadow-sm">
         <div className="flex items-center justify-center h-96">
           <div className="text-center">
             <div className="text-red-600 mb-2">Error loading statistics</div>
@@ -441,7 +441,7 @@ export default function CompanyStatistics() {
 
   if (data.length === 0) {
     return (
-      <div className="max-w-6xl mx-auto p-8 bg-white rounded-lg border border-gray-200 shadow-sm">
+      <div className="max-w-8xl mx-auto p-8 bg-white rounded-lg border border-gray-200 shadow-sm">
         <div className="flex items-center justify-center h-96">
           <div className="text-center text-gray-500">
             <div className="text-lg font-medium mb-2">No statistics data available</div>
@@ -459,7 +459,7 @@ export default function CompanyStatistics() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto p-4 bg-white rounded-lg border border-gray-200 shadow-sm">
+    <div className="max-w-8xl mx-auto p-4 bg-white rounded-lg border border-gray-200 shadow-sm">
       <div className="flex items-center justify-between mb-2">
         <div className="text-md font-bold text-gray-900">Company Statistics</div>
         <div className="flex items-center gap-6">
