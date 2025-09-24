@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
 /* Candidate pipeline segment: rectangle with left and right triangles */
+
 .pipeline-segment-shape {
   position: relative;
   background: inherit;

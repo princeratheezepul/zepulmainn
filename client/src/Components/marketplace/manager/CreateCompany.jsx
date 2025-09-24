@@ -164,7 +164,7 @@ const CreateCompany = ({ onClose, onSave }) => {
   };
 
   return (
-    <div className="h-screen flex flex-col">
+    <div className="flex flex-col">
       {/* Toast Notification */}
       {toast.show && (
         <div className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg transition-all duration-300 ${
@@ -187,17 +187,17 @@ const CreateCompany = ({ onClose, onSave }) => {
         </div>
       )}
 
-      <div className="flex-1 overflow-y-auto p-6">
-        <div className="max-w-4xl mx-auto">
+      <div className="flex-1 p-3">
+        <div className="bg-white rounded-lg border border-gray-200 p-4 mx-auto">
           {/* Header */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">Create New Company</h1>
+          <div className="mb-3">
+            <div className="text-lg font-bold text-gray-900">Create New Company</div>
           </div>
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* First Row */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-2">
               <FormInput
                 label="Company Name"
                 value={formData.companyName}
@@ -219,7 +219,7 @@ const CreateCompany = ({ onClose, onSave }) => {
             </div>
 
             {/* Second Row */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-2">
               <FormSelect
                 label="Industry"
                 value={formData.industryType}
@@ -242,7 +242,7 @@ const CreateCompany = ({ onClose, onSave }) => {
             </div>
 
             {/* Third Row */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-2">
               <FormInput
                 label="Location"
                 value={formData.location}
@@ -264,7 +264,7 @@ const CreateCompany = ({ onClose, onSave }) => {
             </div>
 
             {/* Fourth Row */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-2">
               <FormInput
                 label="Website URL"
                 value={formData.websiteUrl}
@@ -289,7 +289,7 @@ const CreateCompany = ({ onClose, onSave }) => {
             />
 
             {/* Fifth Row */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-2">
               <FormSelect
                 label="Hiring Domains"
                 value={formData.hiringDomains}
@@ -335,19 +335,19 @@ const CreateCompany = ({ onClose, onSave }) => {
             </div>
 
             {/* Action Buttons */}
-            <div className="flex justify-end space-x-4 pt-6">
-              <button
+            <div className="flex justify-between space-x-4 pt-6">
+              <button style={{borderRadius:12}}
                 type="button"
                 onClick={handleCancel}
                 disabled={loading}
-                className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-3 py-1 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Cancel
               </button>
-              <button
+              <button style={{borderRadius:12}}
                 type="submit"
                 disabled={loading}
-                className="px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+                className="px-3 py-1 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
               >
                 {loading ? (
                   <>

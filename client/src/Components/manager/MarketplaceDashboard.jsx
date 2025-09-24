@@ -29,6 +29,7 @@ const MarketplaceDashboard = ({ onBack }) => {
   const [selectedCompanyForJob, setSelectedCompanyForJob] = useState(null);
   const [showProfile, setShowProfile] = useState(false);
   const [showNotification, setShowNotification] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   const handleSearch = (query) => {
     setSearchQuery(query);
@@ -186,21 +187,21 @@ const MarketplaceDashboard = ({ onBack }) => {
         return (
           <>
             {/* Header */}
-            <div className="flex items-center justify-between mb-4 mx-8">
+            <div className="flex items-center justify-between mx-3 my-2">
               <div>
-                <div className="text-xl font-semibold text-gray-900">Manager Overview</div>
+                <div className="text-xl font-bold text-gray-900">Manager Overview</div>
               </div>
             </div>
 
             <MetricsCards />
 
             {/* Charts Section */}
-            <div className="mb-8">
+            <div className="mx-3 my-2">
               <CompanyStatisticsChart />
-            </div>
+            </div>            
 
             {/* Bottom Charts */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <div className="mx-3 my-2 grid grid-cols-1 lg:grid-cols-2 gap-2">
               <MostPickedJobRoles />
               <CandidateStatusBreakdown />
             </div>
@@ -210,7 +211,7 @@ const MarketplaceDashboard = ({ onBack }) => {
         );
       case 'jobs':
         if (selectedCompany) {
-          return <div className="h-screen"><JobsPage company={selectedCompany} onBack={() => setSelectedCompany(null)} /></div>;
+          return <div className=""><JobsPage company={selectedCompany} onBack={() => setSelectedCompany(null)} /></div>;
         }
         return <CompaniesPage onViewJobs={setSelectedCompany} />;
       case 'payments':
@@ -222,9 +223,16 @@ const MarketplaceDashboard = ({ onBack }) => {
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
-      <Sidebar activeTab={activeTab} onTabChange={handleTabChange} />
+      <Sidebar 
+        activeTab={activeTab} 
+        onTabChange={handleTabChange}
+        isCollapsed={isSidebarCollapsed}
+        onToggle={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+      />
       
-      <div className="flex-1 flex flex-col lg:ml-64">
+      <div className={`flex-1 flex flex-col transition-all duration-300 ease-in-out ${
+        isSidebarCollapsed ? 'lg:ml-16' : 'lg:ml-64'
+      }`}>
         <TopNavigation 
           onSearch={handleSearch} 
           onCreateJob={handleCreateJobClick} 

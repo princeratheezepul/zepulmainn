@@ -33,17 +33,18 @@ const chartData = [
   { month: "Jul", value: 100 },
 ];
 
+// Empty transaction data - can be populated in the future
 const transactionData = [
-  { id: 1, company: "ABC Tech Ltd.", date: "08-05-25", status: "Sent", amount: "₹41,216" },
-  { id: 2, company: "ABC Tech Ltd.", date: "08-05-25", status: "Sent", amount: "₹41,216" },
-  { id: 3, company: "ABC Tech Ltd.", date: "08-05-25", status: "Sent", amount: "₹41,216" },
-  { id: 4, company: "ABC Tech Ltd.", date: "08-05-25", status: "Sent", amount: "₹41,216" },
-  { id: 5, company: "ABC Tech Ltd.", date: "08-05-25", status: "Sent", amount: "₹41,216" },
-  { id: 6, company: "ABC Tech Ltd.", date: "08-05-25", status: "Sent", amount: "₹41,216" },
-  { id: 7, company: "ABC Tech Ltd.", date: "08-05-25", status: "Sent", amount: "₹41,216" },
-  { id: 8, company: "ABC Tech Ltd.", date: "08-05-25", status: "Sent", amount: "₹41,216" },
-  { id: 9, company: "ABC Tech Ltd.", date: "08-05-25", status: "Sent", amount: "₹41,216" },
-  { id: 10, company: "ABC Tech Ltd.", date: "08-05-25", status: "Sent", amount: "₹41,216" },
+  // { id: 1, company: "ABC Tech Ltd.", date: "08-05-25", status: "Sent", amount: "₹41,216" },
+  // { id: 2, company: "ABC Tech Ltd.", date: "08-05-25", status: "Sent", amount: "₹41,216" },
+  // { id: 3, company: "ABC Tech Ltd.", date: "08-05-25", status: "Sent", amount: "₹41,216" },
+  // { id: 4, company: "ABC Tech Ltd.", date: "08-05-25", status: "Sent", amount: "₹41,216" },
+  // { id: 5, company: "ABC Tech Ltd.", date: "08-05-25", status: "Sent", amount: "₹41,216" },
+  // { id: 6, company: "ABC Tech Ltd.", date: "08-05-25", status: "Sent", amount: "₹41,216" },
+  // { id: 7, company: "ABC Tech Ltd.", date: "08-05-25", status: "Sent", amount: "₹41,216" },
+  // { id: 8, company: "ABC Tech Ltd.", date: "08-05-25", status: "Sent", amount: "₹41,216" },
+  // { id: 9, company: "ABC Tech Ltd.", date: "08-05-25", status: "Sent", amount: "₹41,216" },
+  // { id: 10, company: "ABC Tech Ltd.", date: "08-05-25", status: "Sent", amount: "₹41,216" },
 ];
 
 export default function PaymentOverview() {
@@ -67,7 +68,7 @@ export default function PaymentOverview() {
             {/* Total Payouts */}
             <div className="p-4 bg-white shadow rounded-lg">
               <h3 className="text-sm font-medium text-gray-500">Total Payouts</h3>
-              <div className="text-2xl font-bold mt-2">₹1,60,000</div>
+              <div className="text-2xl font-bold mt-2">₹0</div>
               <p className="text-xs text-gray-400 mt-1">Paid to License Partners</p>
             </div>
 
@@ -76,14 +77,14 @@ export default function PaymentOverview() {
               <h3 className="text-sm font-medium text-gray-500">
                 Revenue from Hiring Companies
               </h3>
-              <div className="text-2xl font-bold mt-2">₹1,25,000</div>
+              <div className="text-2xl font-bold mt-2">₹0</div>
               <div className="flex items-center gap-2 mt-1">
                 <p className="text-xs text-gray-400">
                   Your earnings from job postings and hires.
                 </p>
                 <div className="flex items-center gap-1 text-green-600">
                   <TrendingUp className="h-3 w-3" />
-                  <span className="text-xs font-medium">+20%</span>
+                  <span className="text-xs font-medium">+0%</span>
                 </div>
               </div>
             </div>
@@ -163,16 +164,25 @@ export default function PaymentOverview() {
                 </tr>
               </thead>
               <tbody>
-                {transactionData.map((t) => (
-                  <tr key={t.id} className="border-b">
-                    <td className="py-3 px-4 text-sm font-medium">{t.company}</td>
-                    <td className="py-3 px-4 text-sm text-gray-500">{t.date}</td>
-                    <td className="py-3 px-4">
-                      <Badge variant="secondary">{t.status}</Badge>
+                {transactionData.length > 0 ? (
+                  transactionData.map((t) => (
+                    <tr key={t.id} className="border-b">
+                      <td className="py-3 px-4 text-sm font-medium">{t.company}</td>
+                      <td className="py-3 px-4 text-sm text-gray-500">{t.date}</td>
+                      <td className="py-3 px-4">
+                        <Badge variant="secondary">{t.status}</Badge>
+                      </td>
+                      <td className="py-3 px-4 text-sm font-medium text-right">{t.amount}</td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="4" className="py-12 text-center">
+                      <div className="text-gray-500 text-lg font-medium mb-2">No Transactions</div>
+                      <div className="text-gray-400 text-sm">Your transaction history will appear here</div>
                     </td>
-                    <td className="py-3 px-4 text-sm font-medium text-right">{t.amount}</td>
                   </tr>
-                ))}
+                )}
               </tbody>
             </table>
           </div>

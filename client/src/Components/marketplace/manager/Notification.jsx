@@ -64,9 +64,9 @@ const NotificationPage = ({ onClose, onNavigateToProfile, onLogout }) => {
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col">
         {/* Header */}
-        <div className="bg-white border-b border-gray-200 px-6 py-4">
+        <div className="bg-white border-b border-gray-200 px-4 py-3">
           <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold text-gray-900">Notification</h1>
+            <div className="text-xl font-bold text-gray-900">Notification</div>
             <button
               onClick={onClose}
               className="text-gray-500 hover:text-gray-700 transition-colors"
@@ -79,9 +79,9 @@ const NotificationPage = ({ onClose, onNavigateToProfile, onLogout }) => {
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 p-6">
+        <div className="flex-1 p-4">
           {/* Description */}
-          <div className="mb-8">
+          <div className="mb-3">
             <div className="text-gray-600 leading-relaxed">
               Lorem ipsum dolor sit amet, consectetur adipiscing elit.
               Pellentesque at velit. Ipsum turpis scelerisque facilisi nisl.
@@ -94,12 +94,12 @@ const NotificationPage = ({ onClose, onNavigateToProfile, onLogout }) => {
             {notificationItems.map((item) => (
               <div
                 key={item.id}
-                className="border-b border-gray-100 pb-8 last:border-b-0"
+                className="border-b border-gray-200 pb-2 mb-2 last:border-b-0"
               >
                 <div className="flex items-start justify-between">
                   {/* Left Side - Notification from us */}
                   <div className="flex-1 max-w-md">
-                    <div className="text-lg font-semibold text-gray-900 mb-3">
+                    <div className="text-lg font-semibold text-gray-900 mb-1">
                       Notification from us
                     </div>
                     <div className="text-gray-600 leading-relaxed text-sm">
@@ -115,7 +115,7 @@ const NotificationPage = ({ onClose, onNavigateToProfile, onLogout }) => {
                     <div className="flex items-center space-x-2">
                       <div
                         onClick={() => handleToggle(item.id)}
-                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                        className={`relative inline-flex h-5 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
                           notifications[item.id]
                             ? "bg-blue-600"
                             : "bg-gray-300"

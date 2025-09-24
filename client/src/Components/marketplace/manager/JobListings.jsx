@@ -75,9 +75,9 @@ const JobListings = ({
     <div className="space-y-6">
       {/* Search Results Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-gray-900">
+        <h3 className="text-2xl font-semibold text-gray-900">
           16 Jobs Found for "{searchQuery}"
-        </h1>
+        </h3>
       </div>
 
       {/* Sort By */}
@@ -87,7 +87,7 @@ const JobListings = ({
           <select
             value={sortBy}
             onChange={(e) => onSortChange(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           >
             {sortOptions.map((option) => (
               <option key={option} value={option}>

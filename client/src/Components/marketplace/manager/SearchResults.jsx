@@ -157,24 +157,25 @@ const SearchResults = ({ searchQuery, onBack }) => {
   };
 
   return (
-    <div className="h-screen flex flex-col bg-white">
-      <div className="flex-1 overflow-y-auto">
+    <div className="flex flex-col bg-white">
+      <div className="flex-1">
         <div className="flex h-full">
           {/* Filters Sidebar */}
-          <div className="w-80 bg-gray-50 border-r border-gray-200 p-6">
+          {/* <div className="w-70 bg-gray-50 border-r border-gray-200 p-6"> */}
+          <div className="w-60 bg-white border border-gray-200 rounded-lg px-3 py-3 m-3">
             {renderFilters()}
           </div>
 
           {/* Main Content */}
-          <div className="flex-1 p-6">
+          <div className="flex-1 ml-1 mr-2 my-4">
             {/* Tabs */}
             <div className="flex items-center justify-between mb-6">
               <div className="flex space-x-1">
                 {tabs.map((tab) => (
-                  <button
+                  <button style={{ borderRadius: "12px" }}
                     key={tab}
                     onClick={() => setActiveTab(tab)}
-                    className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                    className={`px-3 py-1 mx-1 rounded-lg font-medium transition-colors ${
                       activeTab === tab
                         ? 'bg-gray-900 text-white'
                         : 'bg-gray-100 text-gray-600 hover:bg-gray-200'

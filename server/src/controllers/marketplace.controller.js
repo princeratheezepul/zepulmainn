@@ -134,6 +134,7 @@ export const marketplaceLogin = async (req, res) => {
   try {
     const { email, password } = req.body;
     console.log("Login attempt:", { email, password });
+    console.log("MpUser model collection name:", MpUser.collection.name);
 
     if (!email || !password) {
       console.log("Missing email or password");
@@ -145,6 +146,14 @@ export const marketplaceLogin = async (req, res) => {
     // Find user by email
     const user = await MpUser.findOne({ emailid: email });
     console.log("User found:", user ? "Yes" : "No");
+    console.log("User data:", user ? {
+      _id: user._id,
+      emailid: user.emailid,
+      hasPassword: !!user.password,
+      passwordLength: user.password ? user.password.length : 0,
+      firstName: user.firstName,
+      lastName: user.lastName
+    } : "No user found");
     
     if (!user) {
       console.log("User not found for email:", email);
@@ -153,10 +162,19 @@ export const marketplaceLogin = async (req, res) => {
       );
     }
 
+    // Check if user has a password stored
+    if (!user.password) {
+      console.log("User has no password stored for email:", email);
+      console.log("User object keys:", Object.keys(user.toObject()));
+      return res.status(401).json(
+        new ApiResponse(401, null, "Invalid credentials")
+      );
+    }
+
     // Check password using bcrypt
     const isPasswordValid = await user.isPasswordCorrect(password);
     if (!isPasswordValid) {
-      console.log("Password mismatch");
+      console.log("Password mismatch for email:", email);
       return res.status(401).json(
         new ApiResponse(401, null, "Invalid credentials")
       );

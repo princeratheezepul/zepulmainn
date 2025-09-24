@@ -143,47 +143,31 @@ export default function CandidateStatusChart() {
   return (
     <div
       style={{
-        backgroundColor: "#ffffff",
-        borderRadius: "24px",
-        padding: "32px",
-        boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
-        maxWidth: "800px",
-        width: "100%",
-        fontFamily: "system-ui, -apple-system, sans-serif",
+        // backgroundColor: "#ffffff",
+        // borderRadius: "24px",
+        // padding: "32px",
+        // boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+        // maxWidth: "800px",
+        // width: "100%",
+        // fontFamily: "system-ui, -apple-system, sans-serif",
       }}
+      className="bg-white rounded-lg border border-gray-200 px-4 py-4 shadow-sm"
     >
       {/* Header */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: "40px",
-        }}
-      >
-        <h2
-          style={{
-            fontSize: "28px",
-            fontWeight: "600",
-            color: "#1f2937",
-            margin: "0",
-          }}
-        >
+      <div className="flex justify-between items-center">
+        <div className="text-md font-bold text-gray-900 mr-4">
           Candidate Status Breakdown
-        </h2>
+        </div>
 
         {/* Company Dropdown */}
         <div style={{ position: "relative" }}>
-          <button
+          <button className="px-4 py-1 bg-white shadow-sm border"
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
             disabled={loading}
             style={{
               display: "flex",
               alignItems: "center",
-              gap: "8px",
-              padding: "12px 20px",
-              backgroundColor: "#ffffff",
-              border: "2px solid #e5e7eb",
+              gap: "8px", 
               borderRadius: "12px",
               fontSize: "16px",
               fontWeight: "500",
@@ -250,7 +234,7 @@ export default function CandidateStatusChart() {
                   style={{
                     display: "block",
                     width: "100%",
-                    padding: "12px 20px",
+                    padding: "8px 18px",
                     textAlign: "left",
                     backgroundColor: company._id === selectedCompany?._id ? "#f3f4f6" : "transparent",
                     border: "none",
@@ -285,13 +269,8 @@ export default function CandidateStatusChart() {
       </div>
 
       {/* Chart Container */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "60px",
-        }}
-      >
+      <div className="flex items-center gap-10"
+        >
         {loading ? (
           <div style={{ 
             display: "flex", 
@@ -320,7 +299,7 @@ export default function CandidateStatusChart() {
           <>
             {/* Pie Chart */}
             <div style={{ flexShrink: 0 }}>
-              <svg width="300" height="300" viewBox="0 0 300 300" style={{ transform: "rotate(-90deg)" }}>
+              <svg width="200" height="200" viewBox="0 0 300 300" style={{ transform: "rotate(-90deg)" }}>
                 {pieSegments.map((segment) => (
                   <path
                     key={segment.label}
@@ -349,7 +328,7 @@ export default function CandidateStatusChart() {
               style={{
                 display: "flex",
                 flexDirection: "column",
-                gap: "24px",
+                gap: "20px",
                 flex: 1,
               }}
             >
@@ -371,8 +350,8 @@ export default function CandidateStatusChart() {
                   >
                     <div
                       style={{
-                        width: "16px",
-                        height: "16px",
+                        width: "10px",
+                        height: "10px",
                         borderRadius: "50%",
                         backgroundColor: item.color,
                         flexShrink: 0,
@@ -380,7 +359,7 @@ export default function CandidateStatusChart() {
                     />
                     <span
                       style={{
-                        fontSize: "18px",
+                        fontSize: "14px",
                         fontWeight: "500",
                         color: "#374151",
                       }}
@@ -392,9 +371,9 @@ export default function CandidateStatusChart() {
                     style={{
                       backgroundColor: item.color,
                       color: "#ffffff",
-                      padding: "6px 16px",
+                      padding: "4px 10px",
                       borderRadius: "20px",
-                      fontSize: "16px",
+                      fontSize: "12px",
                       fontWeight: "600",
                       minWidth: "60px",
                       textAlign: "center",

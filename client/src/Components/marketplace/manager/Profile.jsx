@@ -80,9 +80,9 @@ const Profile = ({ onClose, onNavigateToNotification, onLogout }) => {
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col">
         {/* Header */}
-        <div className="bg-white border-b border-gray-200 px-6 py-4">
+        <div className="bg-white border-b border-gray-200 px-4 py-3">
           <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold text-gray-900">Profile</h1>
+            <div className="text-xl font-bold text-gray-900">Profile</div>
             <button
               onClick={onClose}
               className="text-gray-500 hover:text-gray-700 transition-colors"
@@ -95,11 +95,11 @@ const Profile = ({ onClose, onNavigateToNotification, onLogout }) => {
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 p-6">
+        <div className="flex-1 p-2.5">
           {/* Personal Information Card */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
             <div className="mb-6">
-              <h2 className="text-lg font-semibold text-gray-900">Personal Information</h2>
+              <div className="text-2xl font-semibold text-gray-900">Personal Information</div>
             </div>
 
             {/* Loading State */}
@@ -129,59 +129,59 @@ const Profile = ({ onClose, onNavigateToNotification, onLogout }) => {
 
             {/* Profile Fields */}
             {!loading && !error && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* First Name */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700 flex items-center">
+              <div className="flex items-center text-sm font-medium text-gray-400 space-x-2">
                 <User className="w-4 h-4 mr-2" />
-                First Name
-              </label>
-              <p className="text-gray-900 font-medium">{profileData.firstName}</p>
-            </div>
+                <span className="text-gray-400">First Name</span>
+              </div>
+              <p className="text-gray-900 font-medium mb-1">{profileData.firstName}</p>
+            </div>              
 
             {/* Last Name */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700 flex items-center">
+              <div className="text-sm font-medium text-gray-400 flex items-center">
                 <User className="w-4 h-4 mr-2" />
-                Last Name
-              </label>
-              <p className="text-gray-900 font-medium">{profileData.lastName}</p>
+                <span className="text-gray-400">Last Name</span>
+              </div>
+              <p className="text-gray-900 font-medium mb-1">{profileData.lastName}</p>
             </div>
 
             {/* Email */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700 flex items-center">
+              <div className="text-sm font-medium text-gray-400 flex items-center">
                 <Mail className="w-4 h-4 mr-2" />
-                Email Id
-              </label>
-              <p className="text-gray-900 font-medium">{profileData.email}</p>
+                <span className="text-gray-400">Email Id</span>
+              </div>
+              <p className="text-gray-900 font-medium mb-1">{profileData.email}</p>
             </div>
 
             {/* Phone */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700 flex items-center">
+              <div className="text-sm font-medium text-gray-400 flex items-center">
                 <Phone className="w-4 h-4 mr-2" />
-                Phone
-              </label>
-              <p className="text-gray-900 font-medium">{profileData.phone}</p>
+                <span className="text-gray-400">Phone</span>
+              </div>
+              <p className="text-gray-900 font-medium mb-1">{profileData.phone}</p>
             </div>
 
             {/* Date of Birth */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700 flex items-center">
+              <div className="text-sm font-medium text-gray-400 flex items-center">
                 <Calendar className="w-4 h-4 mr-2" />
-                D.O.B (Date of Birth)
-              </label>
-              <p className="text-gray-900 font-medium">{profileData.dateOfBirth}</p>
+                <span className="text-gray-400">D.O.B (Date of Birth)</span>
+              </div>
+              <p className="text-gray-900 font-medium mb-1">{profileData.dateOfBirth}</p>
             </div>
 
             {/* User Role */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700 flex items-center">
+              <div className="text-sm font-medium text-gray-400 flex items-center">
                 <Shield className="w-4 h-4 mr-2" />
-                User Role
-              </label>
-              <p className="text-gray-900 font-medium">{profileData.userRole}</p>
+                <span className="text-gray-400">User Role</span>
+              </div>
+              <p className="text-gray-900 font-medium mb-1">{profileData.userRole}</p>
             </div>
           </div>
             )}

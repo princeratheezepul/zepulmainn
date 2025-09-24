@@ -2,48 +2,52 @@ import React from 'react';
 
 const CompanyOverview = ({ company }) => {
   return (
-    <div className="bg-gray-100 rounded-lg border border-gray-200 p-8 mb-8">
+    <div className="bg-gray-100 rounded-lg border border-gray-200 px-4 py-3 mb-3">
       {/* Company Header with Logo and Tags */}
-      <div className="flex items-start justify-between mb-6">
+      <div className="flex items-start justify-between mb-2">
         <div className="flex items-start space-x-6">
-          <div className="w-20 h-20 bg-gray-500 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-3xl">{company.name?.charAt(0)?.toUpperCase() || 'C'}</span>
-          </div>
-          <div className="flex-1">
-            <h1 className="text-3xl font-bold text-gray-900 mb-4">{company.name}</h1>
-            <p className="text-gray-700 text-lg leading-relaxed">
-              {company.description}
-            </p>
+          <div class="flex items-center space-x-2">
+            <div class="w-12 h-12 bg-gray-500 text-white flex items-center justify-center rounded-full">
+              <span class="text-white font-bold text-3xl">{company.name?.charAt(0)?.toUpperCase() || 'C'}</span>
+            </div>            
+            <span class="text-2xl font-bold text-gray-900">{company.name}</span>
           </div>
         </div>
         
         {/* Tags on the right - Horizontal */}
-        <div className="flex gap-3">
-          <span className="px-4 py-2 bg-white text-gray-900 text-sm font-medium rounded-full border border-gray-300">
+        <div className="flex gap-2">
+          <span className="px-3 py-1 bg-white text-gray-900 text-sm font-medium rounded-full border border-gray-300">
             {company.industry}
           </span>
-          <span className="px-4 py-2 bg-white text-gray-900 text-sm font-medium rounded-full border border-gray-300">
+          <span className="px-4 py-1 bg-white text-gray-900 text-sm font-medium rounded-full border border-gray-300">
             {company.hiresMade} Hires Made
           </span>
-          <span className="px-4 py-2 bg-blue-500 text-white text-sm font-medium rounded-full">
+          <span className="px-4 py-1 bg-blue-500 text-white text-sm font-medium rounded-full">
             {company.activeJobs} Active Jobs
           </span>
         </div>
       </div>
+      <div className="flex-1">
+        <p className="text-gray-700 text-md leading-relaxed mb-1">
+          {company.description}          
+        </p>
+      </div>
 
       {/* Company Details */}
-      <div className="space-y-4">
-        <div className="flex items-center space-x-3">
-          <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9v-9m0-9v9" />
+      <div className="space-y-2">
+        
+        <div className="flex items-center space-x-3">        
+          <svg className="w-5 h-5 text-gray-500" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M0 8C-1.56548e-08 9.05058 0.206926 10.0909 0.608964 11.0615C1.011 12.0321 1.60028 12.914 2.34315 13.6569C3.08601 14.3997 3.96793 14.989 4.93853 15.391C5.90914 15.7931 6.94943 16 8 16C9.05058 16 10.0909 15.7931 11.0615 15.391C12.0321 14.989 12.914 14.3997 13.6569 13.6569C14.3997 12.914 14.989 12.0321 15.391 11.0615C15.7931 10.0909 16 9.05058 16 8C16 5.87827 15.1571 3.84344 13.6569 2.34315C12.1566 0.842855 10.1217 0 8 0C5.87827 0 3.84344 0.842855 2.34315 2.34315C0.842855 3.84344 3.16163e-08 5.87827 0 8ZM15.0588 8C15.0588 9.87212 14.3151 11.6676 12.9913 12.9913C11.6676 14.3151 9.87212 15.0588 8 15.0588C6.12788 15.0588 4.33244 14.3151 3.00866 12.9913C1.68487 11.6676 0.941176 9.87212 0.941176 8C0.941176 6.12788 1.68487 4.33244 3.00866 3.00866C4.33244 1.68487 6.12788 0.941176 8 0.941176C9.87212 0.941176 11.6676 1.68487 12.9913 3.00866C14.3151 4.33244 15.0588 6.12788 15.0588 8Z"  fill-opacity="0.8"/>
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M4.70703 8.00011C4.70703 12.1375 6.06421 15.5295 8.00115 15.5295C9.93809 15.5295 11.2953 12.1375 11.2953 8.00011C11.2953 3.8627 9.93809 0.470703 8.00115 0.470703C6.06421 0.470703 4.70703 3.8627 4.70703 8.00011ZM10.3541 8.00011C10.3541 11.6603 9.18233 14.5884 8.00115 14.5884C6.81997 14.5884 5.64821 11.6603 5.64821 8.00011C5.64821 4.33988 6.81997 1.41188 8.00115 1.41188C9.18233 1.41188 10.3541 4.33988 10.3541 8.00011Z" fill-opacity="0.8"/>
+            <path d="M2.10364 3.58776L2.73423 2.8894C2.83463 2.97976 2.94223 3.06791 3.05706 3.15387C4.29753 4.08376 6.25517 4.65035 8.38882 4.65035C10.2081 4.65035 11.906 4.23905 13.1465 3.53035C13.4322 3.36859 13.7023 3.18048 13.9531 2.96846L14.5648 3.68376C14.2837 3.92407 13.9669 4.14493 13.6142 4.34635C12.2241 5.14164 10.3653 5.59152 8.38882 5.59152C6.06412 5.59152 3.90694 4.96752 2.49235 3.90682C2.35809 3.80598 2.22839 3.70015 2.10364 3.58776ZM2.10364 12.4235L2.73423 13.12C2.83463 13.029 2.94223 12.9412 3.05706 12.8565C4.29753 11.9266 6.25517 11.36 8.38882 11.36C10.2081 11.36 11.906 11.7703 13.1465 12.48C13.4489 12.6538 13.7178 12.8408 13.9531 13.0409L14.5648 12.3256C14.2693 12.0756 13.951 11.8538 13.6142 11.6631C12.2241 10.8687 10.3653 10.4188 8.38882 10.4188C6.06412 10.4188 3.90694 11.0428 2.49235 12.1026C2.35431 12.2061 2.22474 12.3137 2.10364 12.4235ZM0.470703 8.47058V7.5294H15.5295V8.47058H0.470703Z"  fill-opacity="0.8"/>
           </svg>
           <span className="text-gray-700 underline">{company.website}</span>
         </div>
         
-        <div className="flex items-center space-x-3">
-          <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+        <div className="flex items-center space-x-3">         
+          <svg className="w-5 h-5 text-gray-500" viewBox="0 0 13 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M6.5 0C8.22391 0 9.87721 0.693765 11.0962 1.92867C12.3152 3.16358 13 4.83848 13 6.58491C13 9.36745 11.07 12.3999 7.26 15.7146C7.04815 15.899 6.77804 16.0002 6.49875 16C6.21947 15.9998 5.94953 15.898 5.738 15.7133L5.486 15.4917C1.84467 12.2635 0 9.30532 0 6.58491C0 4.83848 0.68482 3.16358 1.90381 1.92867C3.12279 0.693765 4.77609 0 6.5 0ZM6.5 1.01306C5.04131 1.01306 3.64236 1.60009 2.61091 2.64502C1.57946 3.68994 1 5.10716 1 6.58491C1 8.95007 2.69867 11.6752 6.14267 14.7279L6.39133 14.946C6.42157 14.9724 6.46012 14.9869 6.5 14.9869C6.53988 14.9869 6.57843 14.9724 6.60867 14.946C10.2193 11.8042 12 9.00612 12 6.58491C12 5.8532 11.8577 5.12866 11.5813 4.45265C11.3049 3.77665 10.8998 3.16241 10.3891 2.64502C9.87837 2.12762 9.27205 1.71721 8.60476 1.43719C7.93747 1.15718 7.22227 1.01306 6.5 1.01306ZM6.5 4.05225C7.16304 4.05225 7.79893 4.31908 8.26777 4.79405C8.73661 5.26901 9 5.9132 9 6.58491C9 7.25661 8.73661 7.9008 8.26777 8.37576C7.79893 8.85073 7.16304 9.11756 6.5 9.11756C5.83696 9.11756 5.20107 8.85073 4.73223 8.37576C4.26339 7.9008 4 7.25661 4 6.58491C4 5.9132 4.26339 5.26901 4.73223 4.79405C5.20107 4.31908 5.83696 4.05225 6.5 4.05225ZM6.5 5.06531C6.10218 5.06531 5.72064 5.22541 5.43934 5.51039C5.15804 5.79537 5 6.18188 5 6.58491C5 6.98793 5.15804 7.37444 5.43934 7.65942C5.72064 7.9444 6.10218 8.1045 6.5 8.1045C6.89782 8.1045 7.27936 7.9444 7.56066 7.65942C7.84196 7.37444 8 6.98793 8 6.58491C8 6.18188 7.84196 5.79537 7.56066 5.51039C7.27936 5.22541 6.89782 5.06531 6.5 5.06531Z" fill="black" fill-opacity="0.8"/>
           </svg>
           <span className="text-gray-700">{company.headquarters}</span>
         </div>
@@ -54,6 +58,7 @@ const CompanyOverview = ({ company }) => {
           </svg>
           <span className="text-gray-700">{company.offices}</span>
         </div>
+
       </div>
     </div>
   );

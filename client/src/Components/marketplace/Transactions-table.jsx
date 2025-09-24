@@ -1,19 +1,20 @@
 export default function TransactionsTable() {
+    // Empty transactions array - can be populated in the future
     const transactions = [
-      { id: 1, activity: "ABC Tech Ltd.", date: "08-05-25", status: "Received", amount: "₹41,216" },
-      { id: 2, activity: "PQR Tech Ltd.", date: "08-05-25", status: "Deducted", amount: "-₹41,216" },
-      { id: 3, activity: "ABC Tech Ltd.", date: "08-05-25", status: "Withdrawn", amount: "-₹41,216" },
-      { id: 4, activity: "ABC Tech Ltd.", date: "08-05-25", status: "Received", amount: "₹41,216" },
-      { id: 5, activity: "ABC Tech Ltd.", date: "08-05-25", status: "Received", amount: "₹41,216" },
-      { id: 6, activity: "ABC Tech Ltd.", date: "08-05-25", status: "Received", amount: "₹41,216" },
-      { id: 7, activity: "ABC Tech Ltd.", date: "08-05-25", status: "Withdrawn", amount: "-₹41,216" },
-      { id: 8, activity: "ABC Tech Ltd.", date: "08-05-25", status: "Received", amount: "₹41,216" },
-      { id: 9, activity: "ABC Tech Ltd.", date: "08-05-25", status: "Withdrawn", amount: "-₹41,216" },
-      { id: 10, activity: "ABC Tech Ltd.", date: "08-05-25", status: "Received", amount: "₹41,216" },
-      { id: 11, activity: "ABC Tech Ltd.", date: "08-05-25", status: "Deducted", amount: "-₹41,216" },
-      { id: 12, activity: "ABC Tech Ltd.", date: "08-05-25", status: "Received", amount: "₹41,216" },
-      { id: 13, activity: "ABC Tech Ltd.", date: "08-05-25", status: "Deducted", amount: "-₹41,216" },
-      { id: 14, activity: "ABC Tech Ltd.", date: "08-05-25", status: "Withdrawn", amount: "-₹41,216" },
+      // { id: 1, activity: "ABC Tech Ltd.", date: "08-05-25", status: "Received", amount: "₹41,216" },
+      // { id: 2, activity: "PQR Tech Ltd.", date: "08-05-25", status: "Deducted", amount: "-₹41,216" },
+      // { id: 3, activity: "ABC Tech Ltd.", date: "08-05-25", status: "Withdrawn", amount: "-₹41,216" },
+      // { id: 4, activity: "ABC Tech Ltd.", date: "08-05-25", status: "Received", amount: "₹41,216" },
+      // { id: 5, activity: "ABC Tech Ltd.", date: "08-05-25", status: "Received", amount: "₹41,216" },
+      // { id: 6, activity: "ABC Tech Ltd.", date: "08-05-25", status: "Received", amount: "₹41,216" },
+      // { id: 7, activity: "ABC Tech Ltd.", date: "08-05-25", status: "Withdrawn", amount: "-₹41,216" },
+      // { id: 8, activity: "ABC Tech Ltd.", date: "08-05-25", status: "Received", amount: "₹41,216" },
+      // { id: 9, activity: "ABC Tech Ltd.", date: "08-05-25", status: "Withdrawn", amount: "-₹41,216" },
+      // { id: 10, activity: "ABC Tech Ltd.", date: "08-05-25", status: "Received", amount: "₹41,216" },
+      // { id: 11, activity: "ABC Tech Ltd.", date: "08-05-25", status: "Deducted", amount: "-₹41,216" },
+      // { id: 12, activity: "ABC Tech Ltd.", date: "08-05-25", status: "Received", amount: "₹41,216" },
+      // { id: 13, activity: "ABC Tech Ltd.", date: "08-05-25", status: "Deducted", amount: "-₹41,216" },
+      // { id: 14, activity: "ABC Tech Ltd.", date: "08-05-25", status: "Withdrawn", amount: "-₹41,216" },
     ];
   
     const getStatusBadgeColor = (status) => {
@@ -43,22 +44,29 @@ export default function TransactionsTable() {
   
         {/* Table Rows */}
         <div className="space-y-4">
-          {transactions.map((transaction) => (
-            <div key={transaction.id} className="grid grid-cols-4 gap-4 items-center">
-              <div className="text-sm font-medium text-gray-900">{transaction.activity}</div>
-              <div className="text-sm text-gray-600">{transaction.date}</div>
-              <div>
-                <span
-                  className={`px-3 py-1 text-xs font-medium rounded-full ${getStatusBadgeColor(
-                    transaction.status
-                  )}`}
-                >
-                  {transaction.status}
-                </span>
+          {transactions.length > 0 ? (
+            transactions.map((transaction) => (
+              <div key={transaction.id} className="grid grid-cols-4 gap-4 items-center">
+                <div className="text-sm font-medium text-gray-900">{transaction.activity}</div>
+                <div className="text-sm text-gray-600">{transaction.date}</div>
+                <div>
+                  <span
+                    className={`px-3 py-1 text-xs font-medium rounded-full ${getStatusBadgeColor(
+                      transaction.status
+                    )}`}
+                  >
+                    {transaction.status}
+                  </span>
+                </div>
+                <div className="text-sm font-medium text-gray-900">{transaction.amount}</div>
               </div>
-              <div className="text-sm font-medium text-gray-900">{transaction.amount}</div>
+            ))
+          ) : (
+            <div className="text-center py-12">
+              <div className="text-gray-500 text-lg font-medium mb-2">No transactions as of now</div>
+              <div className="text-gray-400 text-sm">Your transaction history will appear here</div>
             </div>
-          ))}
+          )}
         </div>
       </div>
     );
