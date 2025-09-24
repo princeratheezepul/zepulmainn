@@ -149,7 +149,7 @@ const MetricsCards = () => {
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 w-full max-w-6xl px-3 py-2">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 w-full max-w-8xl px-3 py-2">
       {metricsData.map((metric, index) => (
         <div key={index} className="bg-white rounded-lg p-3 shadow-sm border-gray-200 border">
           <div className="flex items-center justify-between mb-2">
