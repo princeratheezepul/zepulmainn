@@ -49,40 +49,40 @@ const transactionData = [
 
 export default function PaymentOverview() {
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
+    <div className="min-h-screen bg-gray-50 p-3">
+      <div className="max-w-7xl mx-auto space-y-4">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-semibold text-gray-900">
+        <div className="flex items-center justify-between mb-2.5">
+          <div className="text-xl font-bold text-gray-900">
             Payment Overview
-          </h1>
-          <div className="flex items-center gap-2 text-sm text-gray-500">
+          </div>
+          <div className="flex items-center bg-white border border-2-black p-1.5 rounded gap-2 text-xs text-back-200">
             <Calendar className="h-4 w-4" />
             May, 2025
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
           {/* Left Column */}
-          <div className="space-y-4">
+          <div className="space-y-3">
             {/* Total Payouts */}
-            <div className="p-4 bg-white shadow rounded-lg">
-              <h3 className="text-sm font-medium text-gray-500">Total Payouts</h3>
-              <div className="text-2xl font-bold mt-2">₹0</div>
-              <p className="text-xs text-gray-400 mt-1">Paid to License Partners</p>
+            <div className="px-3 py-3 bg-white border hover:shadow-md rounded-lg">
+              <div className="text-lg font-medium text-gray-500">Total Payouts</div>
+              <div className="text-2xl font-bold mt-1">₹0</div>
+              <p className="text-xs text-black-400 mt-2 mb-0">Paid to License Partners</p>
             </div>
 
             {/* Revenue */}
-            <div className="p-4 bg-white shadow rounded-lg">
-              <h3 className="text-sm font-medium text-gray-500">
+            <div className="px-3 py-3 bg-white border hover:shadow-md rounded-lg">
+              <div className="text-lg font-medium text-gray-500">
                 Revenue from Hiring Companies
-              </h3>
+              </div>
               <div className="text-2xl font-bold mt-2">₹0</div>
               <div className="flex items-center gap-2 mt-1">
-                <p className="text-xs text-gray-400">
+                <p className="text-xs text-black-400 mt-1 mb-0">
                   Your earnings from job postings and hires.
                 </p>
-                <div className="flex items-center gap-1 text-green-600">
+                <div className="flex items-center gap-1 bg-green-100 px-1 py-0.5 rounded-full text-green-600 mt-1">
                   <TrendingUp className="h-3 w-3" />
                   <span className="text-xs font-medium">+0%</span>
                 </div>
@@ -91,9 +91,9 @@ export default function PaymentOverview() {
           </div>
 
           {/* Right Column - Chart */}
-          <div className="lg:col-span-2 bg-white shadow rounded-lg p-4">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-lg font-semibold text-gray-900">Payouts</h3>
+          <div className="lg:col-span-2 bg-white border hover:shadow-md rounded-lg p-3">
+            <div className="flex items-center justify-between mb-1">
+              <div className="text-lg font-semibold text-gray-900">Payouts</div>
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded-full bg-slate-700"></div>
                 <span className="text-sm font-medium text-gray-900">Payouts</span>
@@ -101,16 +101,16 @@ export default function PaymentOverview() {
             </div>
             <div className="h-80">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
+                <LineChart data={chartData} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
                   <XAxis dataKey="month" axisLine={false} tickLine={false} />
                   <YAxis axisLine={false} tickLine={false} domain={[0, 100]} ticks={[0, 20, 40, 60, 80, 100]} />
                   <Tooltip
                     content={({ active, payload, label }) => {
                       if (active && payload && payload.length) {
                         return (
-                          <div className="bg-white border border-gray-200 rounded-lg p-3 shadow-lg">
-                            <p className="text-lg font-medium text-gray-600">{label}</p>
-                            <div className="flex items-center gap-2 mt-1">
+                          <div className="bg-white border border-gray-200 rounded-lg px-3 py-2 shadow-lg">
+                            <p className="text-md font-medium text-gray-600 mb-1">{label}</p>
+                            <div className="flex items-center gap-2 mb-1">
                               <div className="w-2 h-2 rounded-full bg-slate-700"></div>
                               <span className="text-sm font-medium">
                                 Payouts {payload[0].value}k
@@ -151,8 +151,8 @@ export default function PaymentOverview() {
         </div>
 
         {/* Transaction History */}
-        <div className="bg-white shadow rounded-lg p-4">
-          <h3 className="text-lg font-semibold mb-3">Transaction History</h3>
+        <div className="bg-white border hover:shadow-md rounded-lg px-3 py-3 mt-0">
+          <div className="text-lg font-semibold mb-1">Transaction History</div>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
