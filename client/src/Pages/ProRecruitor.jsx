@@ -302,17 +302,7 @@ const ProRecruitor = () => {
         <img src="/assets/prorecruit3.png" alt="Final Visual" className="flex-1 max-w-full object-contain w-80  h-80" />
       </section>
 
-      <section className="bg-blue-700 text-white px-6 md:px-20 py-6">
-        <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-          <div>
-            <p className="text-lg md:text-xl font-semibold">Make Smarter Hiring Decisions with Zep Pro Recruiter</p>
-            <p className="text-sm opacity-80">Say goodbye to hiring inefficiencies and hello to Higher quality time</p>
-          </div>
-          <button className="bg-white text-black w-46 h-10 font-medium px-6 py-2 rounded hover:bg-gray-100 transition">
-            Try Zepul
-          </button>
-        </div>
-      </section>
+     
     </div>
   );
 };
