@@ -231,7 +231,7 @@ const MarketplaceDashboard = ({ onBack }) => {
       />
       
       <div className={`flex-1 flex flex-col transition-all duration-300 ease-in-out ${
-        isSidebarCollapsed ? 'lg:ml-16' : 'lg:ml-64'
+        isSidebarCollapsed ? 'lg:ml-20' : 'lg:ml-64'
       }`}>
         <TopNavigation 
           onSearch={handleSearch} 
