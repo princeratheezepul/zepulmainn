@@ -143,7 +143,7 @@ function CreditCardContent() {
   }
 
     return (
-      <div className="bg-white rounded-lg border p-6">
+      <div className="bg-white rounded-lg border p-3 hover:shadow-md">
         <div className="text-lg font-semibold text-gray-900 mb-6">Accounts</div>
   
       {/* Bank Details Cards */}
@@ -189,8 +189,8 @@ function CreditCardContent() {
       {/* Add New Account Button */}
       <button
         onClick={() => setIsModalOpen(true)}
-        className="w-full bg-white border border-gray-200 rounded-lg px-4 py-3 text-blue-600 hover:text-blue-700 font-medium hover:bg-gray-50 transition-colors"
-      >
+        className="w-full bg-gray-50 border border-gray-200 px-3 py-1 text-blue-600 hover:text-blue-700 font-small hover:bg-gray-50 transition-colors"
+      style={{borderRadius:15, fontSize:14}}>
         + Add Bank Details
       </button>
 

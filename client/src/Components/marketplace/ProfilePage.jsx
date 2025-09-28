@@ -228,23 +228,23 @@ const ProfilePage = ({ isOpen, onClose, user, logout }) => {
             // Show Profile Settings when no sidebar item is selected
             <div className="flex h-full">
               {/* Settings Sidebar */}
-              <div className="w-64 bg-gray-50 border-r border-gray-200 p-6">
-                <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">
+              <div className="w-64 bg-white bg-gray-50 border-r border-gray-200 p-6">
+                <div className="px-3 py-2 text-md font-semibold tracking-wide mb-1">
                   SETTINGS
-                </h3>
+                </div>
                 <nav className="space-y-2">
                   {settingsTabs.map((tab) => (
                     <button
                       key={tab.id}
                       onClick={() => setActiveSettingsTab(tab.id)}
-                      className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-left transition-colors ${
+                      className={`w-full flex items-center space-x-3 px-3 py-2 text-left transition-colors mb-2 ${
                         activeSettingsTab === tab.id
-                          ? 'text-blue-600 hover:bg-gray-100'
+                          ? 'cursor-pointer bg-blue-50 text-blue-600 hover:bg-gray-100'
                           : 'text-gray-700 hover:bg-gray-200'
-                      }`}
+                      }`} style={{borderRadius:10}}
                     >
-                      {tab.icon}
-                      <span className="text-sm font-medium">{tab.label}</span>
+                      {tab.icon} 
+                      <span className=" font-medium">{tab.label}</span>
                     </button>
                   ))}
                 </nav>
@@ -253,11 +253,15 @@ const ProfilePage = ({ isOpen, onClose, user, logout }) => {
               {/* Content Area */}
               <div className="flex-1 overflow-hidden">
                 {activeSettingsTab === 'Profile' && (
-                  <div className="h-full overflow-y-auto p-6">
-                    <h1 className="text-2xl font-bold text-gray-900 mb-6">Profile</h1>
-                    
+                  <div className="h-full overflow-y-auto">
+                    {/* <div className="bg-white text-2xl font-bold text-gray-900 mb-3">Profile</div> */}
+                    <div class="bg-white border-b border-gray-200 px-4 py-3">
+                      <div class="flex items-center justify-between">
+                        <div class="text-xl font-bold text-gray-900">Profile</div>                        
+                      </div>
+                    </div>
                     {/* Personal Information Card */}
-                    <div className="bg-white rounded-lg border p-6 relative">
+                    <div className="bg-white rounded-lg border p-6 m-2 relative">
                       <div className="flex items-center justify-between mb-6">
                         <h2 className="text-lg font-semibold text-gray-900">Personal Information</h2>
                         {!isEditingProfile ? (

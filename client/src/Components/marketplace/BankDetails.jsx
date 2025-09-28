@@ -158,10 +158,10 @@ export default function BankDetails() {
   }
 
   return (
-    <div className="w-full h-full overflow-y-auto">
-      <div className="w-full p-6 bg-white min-h-full">
-        <div className="mb-8">
-          <div className="text-3xl font-bold text-gray-900 mb-4">Bank Details</div>
+    <div className="w-full overflow-y-auto">
+      <div className="w-full p-6 min-h-full">
+        <div className="mb-3">
+          <div className="text-3xl font-bold text-gray-900 mb-3">Bank Details</div>
           <div className="text-gray-600 leading-relaxed">
             Manage your bank account details for receiving payments and transactions.
           </div>

@@ -145,7 +145,7 @@ const MarketplaceJobs = () => {
 
       {/* Main Content Area */}
       <div className={`flex-1 transition-all duration-300 ease-in-out ${
-        isSidebarCollapsed ? 'lg:ml-16' : 'lg:ml-64'
+        isSidebarCollapsed ? 'lg:ml-20' : 'lg:ml-64'
       }`}>
         <Header 
           searchQuery={searchQuery}
@@ -164,7 +164,7 @@ const MarketplaceJobs = () => {
               onBackToHome={handleBackToHome}
             />
           ) : (
-            <div className="p-6">
+            <div className="px-3 py-3">
               {activeSidebarItem === 'Home' ? (
                 <HomePage 
                   activeFilter={activeFilter}

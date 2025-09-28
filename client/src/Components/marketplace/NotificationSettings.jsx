@@ -53,17 +53,21 @@ export default function NotificationSettings() {
 
   return (
     <div className="w-full h-full overflow-y-auto">
-      <div className="max-w-4xl mx-auto p-8 bg-white min-h-full">
-        <div className="mb-8">
-          <div className="text-3xl font-bold text-gray-900 mb-4">Notification</div>
-          <div className="text-gray-600 leading-relaxed">
+      <div className="mx-auto bg-white min-h-full">
+        <div className="mb-1">
+          <div class="bg-white border-b border-gray-200 px-4 py-3">
+            <div class="flex items-center justify-between">
+              <div class="text-xl font-bold text-gray-900">Notification</div>
+            </div>
+          </div>
+          <div className="text-gray-600 leading-relaxed p-6">
             Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque
             at velit, ipsum turpis scelerisque facilisi nisl. Arcu ullamcorper a
             in molestie et risus pulvinar orci vel...
           </div>
         </div>
 
-        <div className="space-y-6">
+        <div className="space-y-6 px-6">
           {notifications.map((notification) => (
             <div key={notification.id} className="border-b border-gray-200 pb-6">
               <div className="flex items-start justify-between gap-8">

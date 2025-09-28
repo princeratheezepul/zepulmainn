@@ -389,7 +389,7 @@ const MarketplaceResumeUpload = ({ onBack, jobDetails }) => {
       <div className="flex-grow w-full flex items-center justify-center">
         <div
           {...getRootProps()}
-          className={`w-full max-w-4xl min-h-[320px] border-2 border-dashed rounded-xl p-8 sm:p-10 md:p-12 text-center cursor-pointer transition-all duration-300 ease-in-out flex flex-col items-center justify-center bg-gray-50 ${
+          className={`w-full max-w-4xl min-h-[320px] border-2 border-dashed rounded-xl p-8 sm:p-10 md:p-12 text-center cursor-pointer transition-all duration-300 ease-in-out flex flex-col items-center justify-center bg-white ${
             isDragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-gray-400'
           } ${loading ? 'cursor-wait' : ''}`}
         >
@@ -408,7 +408,7 @@ const MarketplaceResumeUpload = ({ onBack, jobDetails }) => {
                 </div>
                 <p className="text-xl font-semibold text-gray-800">Select your file or drag and drop</p>
                 <p className="text-sm text-gray-500 mt-1">PDF or DOCX files accepted</p>
-                <button className="mt-6 inline-block bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors">
+                <button className="rounded-full mt-6 inline-block bg-blue-600 text-white px-6 py-2 font-semibold hover:bg-blue-700 transition-colors">
                   Browse
                 </button>
               </div>

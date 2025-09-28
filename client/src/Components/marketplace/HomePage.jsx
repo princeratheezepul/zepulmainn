@@ -110,12 +110,12 @@ const HomePage = ({
   });
 
   return (
-    <div className="flex gap-8">
+    <div className="flex gap-6">
       {/* Job Listings Area */}
       <div className="flex-1">
         {/* Hero Section */}
         <div 
-          className="rounded-xl p-8 mb-6 text-white border"
+          className="rounded-xl p-8 mb-3 text-white border"
           style={{
             background: 'linear-gradient(135deg, #1F1F1F 0%, #0066FE 82%, #0E4598 90.25%)',
             borderColor: '#D0D0D8'
@@ -126,12 +126,12 @@ const HomePage = ({
         </div>
 
         {/* Filters */}
-        <div className="flex flex-wrap gap-3 mb-6">
+        <div className="flex flex-wrap gap-2 mb-3">
           {filters.map((filter) => (
             <div
               key={filter}
               onClick={() => setActiveFilter(filter)}
-              className={`px-6 py-3 rounded-lg transition-colors cursor-pointer font-medium ${
+              className={`px-3 py-1 rounded-2xl transition-colors border cursor-pointer font-medium ${
                 activeFilter === filter
                   ? 'bg-black text-white'
                   : 'bg-white text-gray-800 hover:bg-gray-50'

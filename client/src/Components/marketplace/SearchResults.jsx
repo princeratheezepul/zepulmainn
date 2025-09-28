@@ -243,8 +243,8 @@ const SearchResults = ({ searchQuery, onBackToHome }) => {
   return (
     <div className="flex-1">
       {/* Search Results Header */}
-      <div className="p-6 pb-4">
-        <div className="mb-4">
+      <div className="px-3 py-1">
+        <div className="mb-1">
           <div className="text-2xl font-bold text-gray-900">
             {filteredJobs.length} Jobs Found for "{searchQuery}"
             {filteredJobs.length !== pagination.totalJobs && (
@@ -256,20 +256,20 @@ const SearchResults = ({ searchQuery, onBackToHome }) => {
         </div>
       </div>
 
-      <div className="flex">
+      <div className="flex h-full">
         {/* Filters Sidebar */}
-        <div className="w-96 bg-white border-r border-gray-200 p-8 h-fit">
-          <div className="flex items-center justify-between mb-4">
+        <div className="w-60 bg-white border border-gray-200  rounded-lg px-3 py-3 m-3">
+          <div className="flex items-center justify-between mb-2">
             <div className="font-semibold text-gray-900">Filters</div>
             <Info className="h-4 w-4 text-gray-400" />
           </div>
 
           {/* Location Filter */}
-          <div className="mb-8">
-            <div className="font-medium text-gray-700 mb-4">Location</div>
-            <div className="space-y-4">
+          <div className="mb-2 border-b border-gray-200">
+            <div className="font-medium text-gray-700 mb-1.5">Location</div>
+            <div className="grid space-y-4 mb-3">
               {['Any', 'Remote', 'Onsite', 'Hybrid'].map((option) => (
-                <label key={option} className="flex items-center mx-2">
+                <label key={option} className="flex items-center mb-0">
                   <input
                     type="radio"
                     name="location"
@@ -278,7 +278,7 @@ const SearchResults = ({ searchQuery, onBackToHome }) => {
                     onChange={(e) => setFilters(prev => ({ ...prev, location: e.target.value }))}
                     className="mr-3"
                   />
-                  <span className="text-sm text-gray-600">{option}</span>
+                  <span className="text-sm ml-2 text-gray-600">{option}</span>
                 </label>
               ))}
             </div>
@@ -287,11 +287,11 @@ const SearchResults = ({ searchQuery, onBackToHome }) => {
           
 
           {/* Date Posted Filter */}
-          <div className="mb-8">
-            <div className="font-medium text-gray-700 mb-4">Date of Posting</div>
-            <div className="space-y-4">
+          <div className="mb-2 border-b border-gray-200">
+            <div className="font-medium text-gray-700 mb-1.5">Date of Posting</div>
+            <div className="grid space-y-4 mb-3">
               {['All Time', 'Less than 24 hour', 'Last 3 days', 'Last 7 days'].map((period) => (
-                <label key={period} className="flex items-center mx-2">
+                <label key={period} className="flex items-center mb-0">
                   <input
                     type="radio"
                     name="datePosted"
@@ -300,18 +300,18 @@ const SearchResults = ({ searchQuery, onBackToHome }) => {
                     onChange={(e) => setFilters(prev => ({ ...prev, datePosted: e.target.value }))}
                     className="mr-3"
                   />
-                  <span className="text-sm text-gray-600">{period}</span>
+                  <span className="text-sm ml-2 text-gray-600">{period}</span>
                 </label>
               ))}
             </div>
           </div>
 
           {/* Work Experience Filter */}
-          <div className="mb-8">
-            <div className="font-medium text-gray-700 mb-4">Work Experience</div>
-            <div className="space-y-4">
+          <div className="mb-2 border-b border-gray-200">
+            <div className="font-medium text-gray-700 mb-1.5">Work Experience</div>
+            <div className="grid space-y-4 mb-3">
               {['No Experience', 'Any Experience'].map((exp) => (
-                <label key={exp} className="flex items-center mx-2">
+                <label key={exp} className="flex items-center mb-0">
                   <input
                     type="radio"
                     name="experience"
@@ -320,18 +320,18 @@ const SearchResults = ({ searchQuery, onBackToHome }) => {
                     onChange={(e) => setFilters(prev => ({ ...prev, experience: e.target.value }))}
                     className="mr-3"
                   />
-                  <span className="text-sm text-gray-600">{exp}</span>
+                  <span className="text-sm ml-2 text-gray-600">{exp}</span>
                 </label>
               ))}
             </div>
           </div>
 
           {/* Employment Type Filter */}
-          <div className="mb-8">
-            <div className="font-medium text-gray-700 mb-4">Type of Employment</div>
-            <div className="space-y-4">
+          <div className="mb-2 border-gray-200">
+            <div className="font-medium text-gray-700 mb-1.5">Type of Employment</div>
+            <div className="grid space-y-4 mb-3">
               {['Any', 'Full-time', 'Contract', 'Part-time'].map((type) => (
-                <label key={type} className="flex items-center mx-2">
+                <label key={type} className="flex items-center mb-0">
                   <input
                     type="radio"
                     name="employmentType"
@@ -340,7 +340,7 @@ const SearchResults = ({ searchQuery, onBackToHome }) => {
                     onChange={(e) => setFilters(prev => ({ ...prev, employmentType: type }))}
                     className="mr-3"
                   />
-                  <span className="text-sm text-gray-600">{type}</span>
+                  <span className="text-sm ml-2 text-gray-600">{type}</span>
                 </label>
               ))}
             </div>
@@ -348,7 +348,7 @@ const SearchResults = ({ searchQuery, onBackToHome }) => {
         </div>
 
         {/* Search Results */}
-        <div className="flex-1 p-6">
+        <div className="flex-1 px-1 py-3">
           {isLoading ? (
             <div className="flex justify-center items-center py-12">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
