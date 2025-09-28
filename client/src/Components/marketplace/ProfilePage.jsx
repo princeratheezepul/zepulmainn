@@ -253,7 +253,7 @@ const ProfilePage = ({ isOpen, onClose, user, logout }) => {
               {/* Content Area */}
               <div className="flex-1 overflow-hidden">
                 {activeSettingsTab === 'Profile' && (
-                  <div className="h-full overflow-y-auto">
+                  <div className="overflow-y-auto">
                     {/* <div className="bg-white text-2xl font-bold text-gray-900 mb-3">Profile</div> */}
                     <div class="bg-white border-b border-gray-200 px-4 py-3">
                       <div class="flex items-center justify-between">
@@ -412,13 +412,13 @@ const ProfilePage = ({ isOpen, onClose, user, logout }) => {
                     </div>
 
                     {/* Logout Button */}
-                    <div className="mt-6">
+                    <div className="mt-6 ml-3">
                       <div
                         onClick={() => {
                           onClose();
                           logout();
                         }}
-                        className="w-[6rem] cursor-pointer bg-red-600 hover:bg-red-700 text-white py-3 px-4 rounded-lg font-medium transition-colors"
+                        className="w-[6rem] cursor-pointer bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-lg font-medium transition-colors"
                       >
                         Logout
                       </div>

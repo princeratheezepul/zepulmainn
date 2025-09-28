@@ -65,7 +65,10 @@ const Header = ({ searchQuery, setSearchQuery, setIsSidebarOpen, setIsProfileOpe
               <path d="M20.0273 25.6516C20.0273 27.8516 18.2273 29.6516 16.0273 29.6516C14.934 29.6516 13.9207 29.1983 13.2007 28.4783C12.4807 27.7583 12.0273 26.7449 12.0273 25.6516" stroke="black" stroke-opacity="0.7" stroke-width="1.5" stroke-miterlimit="10"/>
               <circle cx="25" cy="7.23828" r="6" fill="#F24F4F"/>
               <path d="M25.528 10.2383V8.88828H22.333V8.30328L25.393 3.93828H26.275V8.22228H27.211V8.88828H26.275V10.2383H25.528ZM23.17 8.22228H25.564V4.77528L23.17 8.22228Z" fill="white"/>
-            </svg> 
+              </svg> 
+              
+
+              
           </div>
 
 
