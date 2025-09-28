@@ -58,18 +58,6 @@ const Header = ({ searchQuery, setSearchQuery, setIsSidebarOpen, setIsProfileOpe
             </svg> 
           </div>
           
-          <div className="flex items-center space-x-3">
-            <svg width="28" height="28" viewBox="0 0 32 33" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M16.0268 4.11865C11.6135 4.11865 8.02678 7.70532 8.02678 12.1187V15.972C8.02678 16.7853 7.68012 18.0253 7.26678 18.7187L5.73345 21.2653C4.78678 22.8387 5.44012 24.5853 7.17345 25.172C12.9201 27.092 19.1201 27.092 24.8668 25.172C26.4801 24.6387 27.1868 22.732 26.3068 21.2653L24.7734 18.7187C24.3734 18.0253 24.0268 16.7853 24.0268 15.972V12.1187C24.0268 7.71865 20.4268 4.11865 16.0268 4.11865Z" stroke="black" stroke-opacity="0.7" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round"/>
-              <path d="M18.4939 4.50495C18.0805 4.38495 17.6539 4.29162 17.2139 4.23828C15.9339 4.07828 14.7072 4.17162 13.5605 4.50495C13.9472 3.51828 14.9072 2.82495 16.0272 2.82495C17.1472 2.82495 18.1072 3.51828 18.4939 4.50495Z" stroke="black" stroke-opacity="0.7" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M20.0273 25.6516C20.0273 27.8516 18.2273 29.6516 16.0273 29.6516C14.934 29.6516 13.9207 29.1983 13.2007 28.4783C12.4807 27.7583 12.0273 26.7449 12.0273 25.6516" stroke="black" stroke-opacity="0.7" stroke-width="1.5" stroke-miterlimit="10"/>
-              <circle cx="25" cy="7.23828" r="6" fill="#F24F4F"/>
-              <path d="M25.528 10.2383V8.88828H22.333V8.30328L25.393 3.93828H26.275V8.22228H27.211V8.88828H26.275V10.2383H25.528ZM23.17 8.22228H25.564V4.77528L23.17 8.22228Z" fill="white"/>
-              </svg> 
-              
-
-              
-          </div>
 
 
             <div 
