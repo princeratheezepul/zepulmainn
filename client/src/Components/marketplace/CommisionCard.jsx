@@ -3,10 +3,10 @@ export function CommissionCard({ job }) {
     const commissionRate = job?.commissionRate || 0;
     
     return (
-      <div className="rounded-2xl p-8 flex flex-col items-center bg-gray-50 shadow-sm border border-gray-200 max-w-md">
-        <div className="text-2xl font-bold mb-8 text-black">Commission & Payout</div>
+      <div className="rounded-2xl p-3 flex flex-col items-center bg-white shadow-sm border border-gray-200 max-w-md">
+        <div className="text-xl items-left font-bold mb-4 text-black">Commission & Payout</div>
   
-        <div className="relative w-56 h-32 mb-8">
+        <div className="relative w-56 h-32">
           <svg className="w-56 h-32" viewBox="0 0 200 100">
             {/* Background semi-circle - gray */}
             <path 
@@ -33,7 +33,7 @@ export function CommissionCard({ job }) {
           </div>
         </div>
   
-        <div className="text-center text-black text-base font-medium">You earn Upto {commissionRate}% for this Hire</div>
+        <div className="text-center text-black text-base font-medium mb-2">You earn Upto {commissionRate}% for this Hire</div>
       </div>
     )
   }

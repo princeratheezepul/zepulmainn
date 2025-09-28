@@ -51,10 +51,10 @@ const YourPicks = ({ onViewAll }) => {
     <div className="w-80 hidden lg:block">
       <div className="space-y-4">
         <div className="flex items-center justify-between mb-6">
-          <div className="text-xl font-semibold text-gray-900">Your Picks</div>
+          <div className="text-xl font-bold text-gray-900">Your Picks</div>
           <div 
             onClick={onViewAll}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors cursor-pointer"
+            className="bg-blue-600 text-white px-3 py-1 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors cursor-pointer"
           >
             View All
           </div>
@@ -72,9 +72,9 @@ const YourPicks = ({ onViewAll }) => {
             </div>
           ) : (
             pickedJobs.map((job) => (
-              <div key={job._id} className="bg-gray-50 rounded-2xl border border-gray-200 p-6 hover:shadow-lg transition-all duration-300 hover:border-gray-300 max-w-md">
+              <div key={job._id} className="bg-white rounded-2xl border border-gray-200 p-3 hover:shadow-lg transition-all duration-300 hover:border-gray-300 max-w-md">
                 {/* Header with logo, title and time */}
-                <div className="flex items-start justify-between mb-6">
+                <div className="flex items-start justify-between mb-2">
                   <div className="flex items-center space-x-3 flex-1">
                     <div className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0">
                       <div className="w-full h-full bg-gray-500 flex items-center justify-center">
@@ -82,8 +82,8 @@ const YourPicks = ({ onViewAll }) => {
                       </div>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="font-semibold text-gray-900 text-xs leading-tight whitespace-nowrap">{job.title}</div>
-                      <div className="text-gray-600 text-sm mt-1">{job.company}</div>
+                      <div className="font-semibold text-gray-900 text-md leading-tight whitespace-nowrap">{job.title}</div>
+                      <div className="text-gray-600 text-sm mt-0">{job.company}</div>
                     </div>
                   </div>
                   <div className="flex items-center space-x-2 ml-4">
@@ -92,7 +92,7 @@ const YourPicks = ({ onViewAll }) => {
                 </div>
 
               {/* Location and Job Type */}
-              <div className="space-y-3 mb-6">
+              <div className="space-y-3 mb-1">
                 <div className="flex items-center text-gray-700">
                   <MapPin className="h-4 w-4 mr-3 text-gray-500" />
                   <span className="text-sm font-medium">{job.location}</span>
@@ -104,14 +104,14 @@ const YourPicks = ({ onViewAll }) => {
               </div>
 
               {/* Bottom section with submitted count and submit button */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center px-4 py-2 bg-gray-50 rounded-full border border-gray-200">
+              <div className="flex items-center justify-between mt-2">
+                <div className="flex items-center px-3 py-1 bg-gray-50 rounded-full border border-gray-200">
                   <Users className="h-4 w-4 mr-2 text-gray-500" />
                   <span className="text-sm font-medium text-gray-700">{job.totalApplications}</span>
                 </div>
                 <div 
                   onClick={() => handleSubmit(job._id)}
-                  className="px-6 py-2.5 bg-white border-2 border-blue-600 text-blue-600 text-sm font-semibold rounded-full  transition-all duration-200 hover:shadow-md cursor-pointer"
+                  className="px-3 py-1 bg-white border-1 border-blue-600 text-blue-600 text-sm font-semibold rounded-full  transition-all duration-200 hover:shadow-md cursor-pointer"
                 >
                   Submit
                 </div>

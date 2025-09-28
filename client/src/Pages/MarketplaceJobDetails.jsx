@@ -253,7 +253,7 @@ const MarketplaceJobDetails = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center py-0 px-0">
+    <div className="min-h-screen bg-white flex flex-col items-center py-0 px-0">
       {showResumeUpload ? (
         <div className="w-full max-w-6xl bg-gray-50">
             <MarketplaceResumeUpload 
@@ -281,7 +281,7 @@ const MarketplaceJobDetails = () => {
       ) : (
         <div className="w-full max-w-6xl bg-gray-50">
         {/* Improved Header Row */}
-        <div className="bg-gray-50 border-b border-gray-200 w-full px-4 md:px-0 pt-6 pb-2 flex flex-col gap-2">
+        <div className="bg-white border-b border-gray-200 w-full px-4 md:px-0 pt-6 pb-2 flex flex-col gap-2">
           {/* Back Button */}
           <div className="mb-2">
             <button
@@ -371,28 +371,28 @@ const MarketplaceJobDetails = () => {
                 {job.company}
               </span>
               <span className="h-5 w-px bg-gray-200 mx-1 hidden md:inline-block"></span>
-              <span className="flex items-center gap-1 px-3 py-1 rounded-full bg-gray-100 text-sm font-medium text-gray-700">
+              <span className="flex items-center gap-1 px-3 py-1 rounded-full bg-gray-100 text-sm font-medium text-gray-700 border">
                 <MapPin size={16} className="text-gray-500" />
                 {job.location}
               </span>
-              <span className="flex items-center gap-1 px-3 py-1 rounded-full bg-gray-100 text-sm font-medium text-gray-700">
+              <span className="flex items-center gap-1 px-3 py-1 rounded-full bg-gray-100 text-sm font-medium text-gray-700 border">
                 <Briefcase size={16} className="text-gray-500" />
                 {job.type}
               </span>
-              <span className="flex items-center gap-1 px-3 py-1 rounded-full bg-gray-100 text-sm font-medium text-gray-700">
+              <span className="flex items-center gap-1 px-3 py-1 rounded-full bg-gray-100 text-sm font-medium text-gray-700 border">
                 <Calendar size={16} className="text-gray-500" />
                 {job.experience}
               </span>
-              <span className="flex items-center gap-1 px-3 py-1 rounded-full bg-gray-100 text-sm font-medium text-gray-700">
+              <span className="flex items-center gap-1 px-3 py-1 rounded-full bg-gray-100 text-sm font-medium text-gray-700 border">
                 <IndianRupee size={16} className="text-gray-500" />
                 {job.salary}
               </span>
-              <span className="flex items-center gap-1 px-3 py-1 rounded-full bg-green-100 text-sm font-medium text-green-700">
+              <span className="flex items-center gap-1 px-3 py-1 rounded-full bg-green-100 text-sm font-medium text-green-700 border">
                 <img src="/money.png" alt="" className="w-4 h-4" />
                 {job.commissionRate || 0}% Commission
               </span>
               <span className="h-5 w-px bg-gray-200 mx-1 hidden md:inline-block"></span>
-              <span className="flex items-center gap-1 px-3 py-1 rounded-full bg-gray-100 text-sm font-medium text-gray-700">
+              <span className="flex items-center gap-1 px-3 py-1 rounded-full bg-gray-100 text-sm font-medium text-gray-700 border">
                 <CalendarDays size={16} className="text-gray-500" />
                 Posted {formatDate(job.postedDate)}
               </span>
@@ -411,9 +411,9 @@ const MarketplaceJobDetails = () => {
         </div>
         
         {/* Main Content Row */}
-        <div className="flex flex-col lg:flex-row gap-8 w-full mt-8">
+        <div className="flex flex-col lg:flex-row gap-3 w-full py-3 px-3 bg-gray-50">
           {/* Left: Job Description Card */}
-          <div className="flex-1 rounded-xl p-6 md:p-10 mb-6 lg:mb-0 bg-gray-50">
+          <div className="flex-1 rounded-xl p-6 md:p-10 mb-6 lg:mb-0 bg-white border">
             <div className="text-xl font-bold mb-4">Job Description:</div>
             <p className="text-gray-700 mb-6 whitespace-pre-line">{job.description}</p>
             
@@ -446,11 +446,11 @@ const MarketplaceJobDetails = () => {
             <CommissionCard job={job} />
 
             {/* Application Statistics Component */}
-            <div className="rounded-2xl p-6 flex flex-col items-center bg-gray-50 shadow-sm border border-gray-200">
-              <h4 className="text-2xl font-bold mb-4 text-black">Application Statistics</h4>
+            <div className="rounded-2xl p-4 flex flex-col items-center bg-white shadow-sm border border-gray-200">
+              <div className="text-xl font-bold mb-2 text-black">Application Statistics</div>
               {/* Donut Chart and Legend (replicated from recruiter design) */}
               <div className="flex flex-col items-center w-full">
-                <div className="relative w-72 h-72 mb-4">
+                <div className="relative w-72 h-72 mb-3">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie
@@ -481,16 +481,16 @@ const MarketplaceJobDetails = () => {
                     <div className="text-gray-500 text-lg mt-2">Total Applications</div>
                   </div>
                 </div>
-                <ul className="list-none p-0 m-0 flex flex-col gap-4 w-full">
+                <ul className="list-none p-0 m-0 flex flex-col gap-2 w-full">
                   {[
                     { name: 'Total Application', value: job.totalApplications || 0, color: '#1E75FF' },
                     { name: 'Shortlisted', value: job.shortlisted || 0, color: '#0F172A' },
                     { name: 'Interviewed', value: job.interviewed || 0, color: '#64748B' },
                     { name: '2nd Round Interviewed', value: job.secondRoundInterviewed || 0, color: '#003A8D' },
                   ].map((entry, index) => (
-                    <li key={`item-${index}`} className="flex items-center gap-3">
+                    <li key={`item-${index}`} className="flex items-center gap-2">
                       <span className="w-3 h-3 rounded-full" style={{ backgroundColor: entry.color }}></span>
-                      <span className="flex-grow text-base text-gray-700">{entry.name}</span>
+                      <span className="flex-grow text-sm font-semibold text-gray-700">{entry.name}</span>
                       <span className="bg-gray-800 text-white py-1 px-3 rounded-2xl text-sm font-medium">{entry.value}</span>
                     </li>
                   ))}

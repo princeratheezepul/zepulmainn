@@ -16,7 +16,7 @@ export default function RevenueChart() {
   const [selectedMonthIndex, setSelectedMonthIndex] = useState(4) // Default to May (index 4)
   const maxRevenue = 100000
   const chartHeight = 300
-  const padding = { top: 40, right: 0, bottom: 60, left: 0 }
+  const padding = { top: 0, right: 0, bottom: 50, left: 50 }
 
   // Calculate positions for data points
   const chartWidth = 600 // Fixed width for viewBox calculations
@@ -69,14 +69,14 @@ export default function RevenueChart() {
   }
 
   return (
-    <div className="bg-white rounded-lg border">
-      <h3 className="text-lg font-semibold text-gray-900 p-6 pb-4">Revenue</h3>
+    <div className="bg-white rounded-lg border hover:shadow-md mb-2">
+      <div className="text-lg font-semibold text-gray-900 p-3">Revenue</div>
 
-      <div className="relative w-full">
+      <div className="relative w-full mb-0">
         <svg
           width="100%"
           height={chartHeight}
-          viewBox="0 0 600 300"
+          viewBox="0 0 650 200"
           className="overflow-visible"
           onMouseMove={handleMouseMove}
         >

@@ -63,12 +63,12 @@ const JobsPage = ({ activeJobsTab, setActiveJobsTab }) => {
   return (
     <div>
       {/* Jobs Page Header */}
-      <div className="mb-8">
+      <div className="mb-3">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-gray-900">
+          <div className="text-2xl font-bold text-gray-900">
             {activeJobsTab === 'Picked Jobs' && 'Jobs picked by you'}
             {activeJobsTab === 'Saved Jobs' && 'Jobs saved by you'}
-          </h1>
+          </div>
           
           {/* Jobs Tabs */}
           <div className="flex gap-3">
@@ -76,7 +76,7 @@ const JobsPage = ({ activeJobsTab, setActiveJobsTab }) => {
               <div
                 key={tab.id}
                 onClick={() => setActiveJobsTab(tab.id)}
-                className={`px-4 py-2 rounded-lg transition-colors cursor-pointer font-medium text-sm ${
+                className={`px-3 py-1 rounded-lg transition-colors cursor-pointer font-medium text-sm ${
                   activeJobsTab === tab.id
                     ? 'bg-black text-white'
                     : 'bg-white text-gray-800 border border-gray-200 hover:bg-gray-50'
