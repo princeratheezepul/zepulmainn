@@ -114,15 +114,15 @@ const HomePage = ({
       {/* Job Listings Area */}
       <div className="flex-1">
         {/* Hero Section */}
-        <div 
-          className="rounded-xl p-8 mb-3 text-white border"
+        <div  
+          className="rounded-xl px-8 py-[1.2rem] mb-3 text-white border"
           style={{
             background: 'linear-gradient(135deg, #1F1F1F 0%, #0066FE 82%, #0E4598 90.25%)',
             borderColor: '#D0D0D8'
           }}
         >
-          <div className="text-3xl font-bold mb-2">Explore the best hiring opportunities</div>
-          <div className="text-gray-100 opacity-90">Browse through verified jobs from trusted recruiters and companies across industries.</div>
+          <div className="text-2xl font-bold mb-1">Explore the best hiring opportunities</div>
+          <div className="text-gray-100 opacity-90 text-sm">Browse through verified jobs from trusted recruiters and companies across industries.</div>
         </div>
 
         {/* Filters */}

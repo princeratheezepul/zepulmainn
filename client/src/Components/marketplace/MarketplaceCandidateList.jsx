@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { FileText, X, ArrowLeft } from 'lucide-react';
+import { FileText, X, ArrowLeft, Upload } from 'lucide-react';
 import { useMarketplaceAuth } from '../../context/MarketplaceAuthContext';
 import ResumeDetailsView from '../recruiter/dashboard/ResumeDetailsView';
+import MarketplaceResumeUpload from './MarketplaceResumeUpload';
 import toast from 'react-hot-toast';
 
 const statusColors = {
@@ -21,6 +22,9 @@ const MarketplaceCandidateList = ({ job, onBack }) => {
   const [selectedCandidate, setSelectedCandidate] = useState(null);
   const [selectedResume, setSelectedResume] = useState(null);
   const [notes, setNotes] = useState('');
+  const [showResumeUpload, setShowResumeUpload] = useState(false);
+  const [isRefreshingResume, setIsRefreshingResume] = useState(false);
+  const [resumeUpdateKey, setResumeUpdateKey] = useState(0);
   const { apiCall } = useMarketplaceAuth();
 
   useEffect(() => {
@@ -92,6 +96,37 @@ const MarketplaceCandidateList = ({ job, onBack }) => {
     }
   };
 
+  // Handle resume update after evaluation
+  const handleResumeUpdate = async (resumeId) => {
+    try {
+      console.log('Fetching updated resume data for ID:', resumeId);
+      
+      // Set loading state
+      setIsRefreshingResume(true);
+      
+      // Re-fetch the resume data to get updated evaluation results
+      const response = await apiCall(`${import.meta.env.VITE_BACKEND_URL}/api/marketplace/resumes/${resumeId}`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch updated resume details');
+      }
+
+      const result = await response.json();
+      console.log('Updated resume data received:', result.data);
+      console.log('Interview evaluation:', result.data.interviewEvaluation);
+      
+      // Update the resume data and increment the key to force complete remount
+      setSelectedResume(result.data);
+      setResumeUpdateKey(prev => prev + 1);
+      setIsRefreshingResume(false);
+      console.log('Resume data updated after evaluation with new key');
+    } catch (error) {
+      console.error('Error updating resume data:', error);
+      toast.error('Failed to refresh resume data');
+      setIsRefreshingResume(false);
+    }
+  };
+
   const getStatusCounts = () => {
     const counts = {
       all: candidates.length,
@@ -132,14 +167,44 @@ const MarketplaceCandidateList = ({ job, onBack }) => {
     );
   }
 
+  // If resume upload is shown, show the upload component
+  if (showResumeUpload) {
+    return (
+      <MarketplaceResumeUpload 
+        job={job} 
+        onBack={() => {
+          setShowResumeUpload(false);
+          fetchCandidates(); // Refresh candidates after upload
+        }} 
+      />
+    );
+  }
+
+  // Show loading state while refreshing resume data
+  if (isRefreshingResume) {
+    return (
+      <div className="bg-white p-8 rounded-lg shadow-sm min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Updating candidate information...</p>
+        </div>
+      </div>
+    );
+  }
+
   // If a resume is selected, show the resume details view
   if (selectedResume) {
     return (
       <ResumeDetailsView 
+        key={`resume-${selectedResume._id}-${resumeUpdateKey}`}
         resumeData={selectedResume} 
-        onBack={() => setSelectedResume(null)} 
+        onBack={() => {
+          setSelectedResume(null);
+          setResumeUpdateKey(0);
+        }} 
         isMarketplace={true}
         marketplaceJobDetails={job}
+        onResumeUpdate={handleResumeUpdate}
       />
     );
   }
@@ -158,24 +223,34 @@ const MarketplaceCandidateList = ({ job, onBack }) => {
           </button>
         </div>
         
-        <div className="flex items-center space-x-2 mb-6">
-          <button className="bg-gray-900 text-white px-4 py-2 rounded-md text-sm font-semibold">
-            All ({statusCounts.all})
-          </button>
-          <button className="bg-white text-gray-700 px-4 py-2 rounded-md text-sm font-semibold border">
-            Submitted ({statusCounts.submitted})
-          </button>
-          <button className="bg-white text-gray-700 px-4 py-2 rounded-md text-sm font-semibold border">
-            Screening ({statusCounts.screening})
-          </button>
-          <button className="bg-white text-gray-700 px-4 py-2 rounded-md text-sm font-semibold border">
-            Scheduled ({statusCounts.scheduled})
-          </button>
-          <button className="bg-white text-gray-700 px-4 py-2 rounded-md text-sm font-semibold border">
-            Shortlisted ({statusCounts.shortlisted})
-          </button>
-          <button className="bg-white text-gray-700 px-4 py-2 rounded-md text-sm font-semibold border">
-            Rejected ({statusCounts.rejected})
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center space-x-2">
+            <button className="bg-gray-900 text-white px-4 py-2 rounded-md text-sm font-semibold">
+              All ({statusCounts.all})
+            </button>
+            <button className="bg-white text-gray-700 px-4 py-2 rounded-md text-sm font-semibold border">
+              Submitted ({statusCounts.submitted})
+            </button>
+            <button className="bg-white text-gray-700 px-4 py-2 rounded-md text-sm font-semibold border">
+              Screening ({statusCounts.screening})
+            </button>
+            <button className="bg-white text-gray-700 px-4 py-2 rounded-md text-sm font-semibold border">
+              Scheduled ({statusCounts.scheduled})
+            </button>
+            <button className="bg-white text-gray-700 px-4 py-2 rounded-md text-sm font-semibold border">
+              Shortlisted ({statusCounts.shortlisted})
+            </button>
+            <button className="bg-white text-gray-700 px-4 py-2 rounded-md text-sm font-semibold border">
+              Rejected ({statusCounts.rejected})
+            </button>
+          </div>
+          
+          <button 
+            onClick={() => setShowResumeUpload(true)}
+            className="bg-blue-600 text-white px-6 py-2 rounded-md text-sm font-semibold hover:bg-blue-700 transition-colors flex items-center gap-2"
+          >
+            <Upload size={16} />
+            Submit Resume
           </button>
         </div>
 

@@ -7,7 +7,7 @@ import MarketplaceAddAnswersPage from './MarketplaceAddAnswersPage';
 
 const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API);
 
-const MarketplaceAIInterviewQuestions = ({ onBack, jobDetails, resumeData }) => {
+const MarketplaceAIInterviewQuestions = ({ onBack, jobDetails, resumeData, onEvaluationComplete }) => {
   const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [scheduling, setScheduling] = useState(false);
@@ -242,6 +242,7 @@ const MarketplaceAIInterviewQuestions = ({ onBack, jobDetails, resumeData }) => 
         questions={filteredQuestions}
         jobDetails={jobDetails}
         resumeData={resumeData}
+        onEvaluationComplete={onEvaluationComplete || onBack}
       />
     );
   }
@@ -396,13 +397,21 @@ const MarketplaceAIInterviewQuestions = ({ onBack, jobDetails, resumeData }) => 
                   Transcript
               </button>
             ) : (
-              <button 
-                onClick={handleScheduleInterview}
-                disabled={scheduling}
-                className="w-full md:w-auto px-6 py-2 border-2 border-gray-300 rounded-lg font-semibold text-gray-700 hover:bg-gray-100 transition-colors disabled:opacity-50"
-              >
-                {scheduling ? 'Scheduling...' : 'Continue'}
-              </button>
+              <div className="flex flex-col md:flex-row gap-3 md:justify-between">
+                <button 
+                  onClick={handleScheduleInterview}
+                  disabled={scheduling}
+                  className="w-full md:w-auto px-6 py-2 border-2 border-gray-300 rounded-lg font-semibold text-gray-700 hover:bg-gray-100 transition-colors disabled:opacity-50"
+                >
+                  {scheduling ? 'Scheduling...' : 'Continue'}
+                </button>
+                <button 
+                  onClick={onBack}
+                  className="w-full md:w-auto px-6 py-2 border-2 border-gray-300 rounded-lg font-semibold text-gray-700 hover:bg-gray-100 transition-colors"
+                >
+                  Skip
+                </button>
+              </div>
             )}
         </div>
       </div>

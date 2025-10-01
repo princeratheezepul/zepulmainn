@@ -246,8 +246,22 @@ const ResumeDetailsView = ({ resumeData, onBack, onResumeUpdate, isMarketplace =
   };
 
   if (showInterviewQuestions) {
+    const handleEvaluationComplete = () => {
+      setShowInterviewQuestions(false);
+      // Trigger resume update if callback is provided
+      if (onResumeUpdate) {
+        onResumeUpdate(resumeData._id);
+      }
+    };
+    
     if (isMarketplace) {
-      return <MarketplaceAIInterviewQuestions onBack={() => setShowInterviewQuestions(false)} jobDetails={marketplaceJobDetails || resumeData.applicationDetails} resumeData={resumeData} onResumeUpdate={onResumeUpdate} />;
+      return <MarketplaceAIInterviewQuestions 
+        onBack={() => setShowInterviewQuestions(false)} 
+        jobDetails={marketplaceJobDetails || resumeData.applicationDetails} 
+        resumeData={resumeData} 
+        onResumeUpdate={onResumeUpdate}
+        onEvaluationComplete={handleEvaluationComplete}
+      />;
     } else {
       return <AIInterviewQuestions onBack={() => setShowInterviewQuestions(false)} jobDetails={resumeData.applicationDetails} resumeData={resumeData} onResumeUpdate={onResumeUpdate} />;
     }

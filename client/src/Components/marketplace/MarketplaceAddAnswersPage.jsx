@@ -7,7 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { geminiQueue } from '../../utils/apiQueue';
 import { useMarketplaceAuth } from '../../context/MarketplaceAuthContext';
 
-const MarketplaceAddAnswersPage = ({ onBack, questions, jobDetails, resumeData }) => {
+const MarketplaceAddAnswersPage = ({ onBack, questions, jobDetails, resumeData, onEvaluationComplete }) => {
   const [completeText, setCompleteText] = useState('');
   const [wordCount, setWordCount] = useState(0);
   const [submitting, setSubmitting] = useState(false);
@@ -244,8 +244,16 @@ const MarketplaceAddAnswersPage = ({ onBack, questions, jobDetails, resumeData }
 
       toast.success('Interview evaluation completed successfully!');
       
-      // Navigate to marketplace dashboard
-      navigate('/marketplace/dashboard');
+      // Call the completion callback to navigate back to scorecard view
+      if (onEvaluationComplete) {
+        onEvaluationComplete();
+      } else if (onBack) {
+        // Fallback to onBack if completion callback is not provided
+        onBack();
+      } else {
+        // Fallback to dashboard if neither callback is provided
+        navigate('/marketplace/dashboard');
+      }
 
     } catch (error) {
       console.error('Error submitting answers:', error);
