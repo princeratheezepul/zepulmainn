@@ -9,6 +9,7 @@ import SavedResumes from '../Components/recruiter/dashboard/SavedResumes';
 
 const RecruiterJobDetailPage = () => {
   const [activeComponent, setActiveComponent] = useState('Jobs');
+  const [isCollapsed, setIsCollapsed] = useState(true); // Lifted state
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const [jobData, setJobData] = useState(null);
@@ -141,7 +142,13 @@ const RecruiterJobDetailPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-row">
-      <Sidebar activeComponent={activeComponent} setActiveComponent={handleSidebarNavigation} />
+      <Sidebar activeComponent={activeComponent} setActiveComponent={handleSidebarNavigation} isCollapsed={isCollapsed}
+        setIsCollapsed={setIsCollapsed} />
+      <div
+        className={`flex-1 h-screen overflow-y-auto transition-all duration-300 ${
+          isCollapsed ? "ml-20" : "ml-52"
+        }`}
+      >
       {activeComponent === 'Settings' ? (
         <Settings />
       ) : showResumeUpload ? (
@@ -158,7 +165,7 @@ const RecruiterJobDetailPage = () => {
           />
         </div>
       ) : showSavedResumes ? (
-        <div className="flex-1 flex flex-col items-center py-0 px-0 bg-gray-50">
+        <div className="flex-1 flex-col items-center py-0 px-0 bg-gray-50">
           <SavedResumes 
             onBack={() => setShowSavedResumes(false)} 
             jobId={jobId} 
@@ -173,12 +180,12 @@ const RecruiterJobDetailPage = () => {
         </div>
       ) : (
         <div className="flex-1 flex flex-col items-center py-0 px-0 bg-gray-50">
-          <div className="w-full max-w-6xl bg-gray-50">
+          {/* <div className="w-full max-w-6xl bg-white"> */}
             {/* Back Button */}
-            <div className="bg-gray-50 w-full px-4 md:px-0 pt-6 pb-2">
+            <div className="bg-white w-full px-4 md:px-0 pt-3">
               <button
                 onClick={() => navigate('/recruiter/dashboard', { state: { activeComponent: 'Jobs' } })}
-                className="text-black hover:text-gray-700 font-medium text-sm flex items-center gap-2 mb-4"
+                className="text-black hover:text-gray-700 font-medium text-sm flex items-center gap-2 mb-0 "
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
@@ -187,66 +194,66 @@ const RecruiterJobDetailPage = () => {
               </button>
             </div>
             {/* Improved Header Row */}
-            <div className="bg-gray-50 border-b border-gray-200 w-full px-4 md:px-0 pt-2 pb-2 flex flex-col gap-2">
+            <div className="bg-white border-b border-gray-200 w-full px-4 md:px-0 pt-2 pb-2 flex flex-col gap-0">
               <div className="flex items-center justify-between w-full">
                 <div>
                   <div className="text-xs text-blue-600 font-semibold mb-1">JOB DETAILS</div>
                   <div className="flex items-center gap-2 mb-1">
-                    <div className="text-2xl md:text-3xl font-bold text-gray-900">{job.jobtitle}</div>
+                    <div className="text-2xl md:text-xl font-bold text-gray-900">{job.jobtitle}</div>
                     {/* {job.isNew && <s  pan className="ml-2 px-2 py-0.5 rounded-full bg-green-100 text-green-700 text-xs font-semibold">New</span>} */}
                   </div>
                 </div>
                 <div className="flex gap-3">
                   {/* Remove 'View Applications' button. Candidate List button below triggers SavedResumes. */}
-                  <button className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-lg text-base cursor-pointer" onClick={() => setShowResumeUpload(true)}>Submit Resume</button>
+                  <div className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-3 py-2 rounded-full text-sm cursor-pointer hover:shadow-md" onClick={() => setShowResumeUpload(true)}>Submit Resume</div>
                 </div>
               </div>
               <div className="flex items-center justify-between w-full gap-2 flex-wrap mt-1">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="flex items-center gap-1 text-sm text-gray-700 font-medium">
+                  <span className="flex items-center gap-1 text-xs text-gray-700 font-medium">
                     <div className={`w-5 h-5 ${getCompanyAvatarColor(job.company)} text-white rounded-full flex items-center justify-center text-xs font-semibold`}>
                       {job.company ? job.company.charAt(0).toUpperCase() : 'C'}
                     </div>
                     {job.company}
                   </span>
                   <span className="h-5 w-px bg-gray-200 mx-1 hidden md:inline-block"></span>
-                  <span className="flex items-center gap-1 px-3 py-1 rounded-full bg-gray-100 text-sm font-medium text-gray-700"><MapPin size={16} className="text-gray-500" />{job.location}</span>
-                  <span className="flex items-center gap-1 px-3 py-1 rounded-full bg-gray-100 text-sm font-medium text-gray-700"><Briefcase size={16} className="text-gray-500" />{job.employmentType}</span>
-                  <span className="flex items-center gap-1 px-3 py-1 rounded-full bg-gray-100 text-sm font-medium text-gray-700"><Calendar size={16} className="text-gray-500" />{job.experience}</span>
-                  <span className="flex items-center gap-1 px-3 py-1 rounded-full bg-gray-100 text-sm font-medium text-gray-700"><IndianRupee size={16} className="text-gray-500" />{job.salary}</span>
-                  <span className="h-5 w-px bg-gray-200 mx-1 hidden md:inline-block"></span>
-                  <span className="flex items-center gap-1 px-3 py-1 rounded-full bg-gray-100 text-sm font-medium text-gray-700"><CalendarDays size={16} className="text-gray-500" />Posted {job.posted}</span>
+                  <span className="flex items-center gap-1 px-2 py-1 rounded-full bg-gray-100 text-xs font-medium text-gray-700"><MapPin size={16} className="text-gray-500" />{job.location}</span>
+                  <span className="flex items-center gap-1 px-2 py-1 rounded-full bg-gray-100 text-xs font-medium text-gray-700"><Briefcase size={16} className="text-gray-500" />{job.employmentType}</span>
+                  <span className="flex items-center gap-1 px-2 py-1 rounded-full bg-gray-100 text-xs font-medium text-gray-700"><Calendar size={16} className="text-gray-500" />{job.experience}</span>
+                  <span className="flex items-center gap-1 px-2 py-1 rounded-full bg-gray-100 text-xs font-medium text-gray-700"><IndianRupee size={16} className="text-gray-500" />{job.salary}</span>
+                  <span className="h-5 w-px bg-gray-200 hidden md:inline-block"></span>
+                  <span className="flex items-center gap-1 px-2 py-1 rounded-full bg-gray-100 text-xs font-medium text-gray-700"><CalendarDays size={16} className="text-gray-500" />Posted {job.posted}</span>
                 </div>
-                <button className="flex items-center gap-2 bg-black text-white px-5 py-2 rounded-full text-sm font-semibold hover:bg-gray-900 transition-colors cursor-pointer" onClick={() => setShowSavedResumes(true)}><Users size={18} className="text-white" />{resumeCount} Candidate List <svg xmlns='http://www.w3.org/2000/svg' className='inline ml-1' width='18' height='18' fill='none' viewBox='0 0 24 24' stroke='currentColor'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M9 5l7 7-7 7' /></svg></button>
+                <div className="flex items-center gap-2 bg-black text-white px-3 py-2 rounded-full text-sm font-semibold hover:bg-gray-900 transition-colors cursor-pointer" onClick={() => setShowSavedResumes(true)}><Users size={18} className="text-white" />{resumeCount} Candidate List <svg xmlns='http://www.w3.org/2000/svg' className='inline ml-1' width='18' height='18' fill='none' viewBox='0 0 24 24' stroke='currentColor'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M9 5l7 7-7 7' /></svg></div>
               </div>
             </div>
             {/* Main Content Row */}
-            <div className="flex flex-col lg:flex-row gap-8 w-full mt-8">
+            <div className="flex flex-col lg:flex-row gap-2 my-2 mx-3">
               {/* Left: Job Description Card */}
-              <div className="flex-1 rounded-xl p-6 md:p-10 mb-6 lg:mb-0 bg-gray-50">
-                <div className="text-xl font-bold mb-4">Job Description:</div>
-                <p className="text-gray-700 mb-6 whitespace-pre-line">{job.description}</p>
-                <div className="text-lg font-semibold mb-2">Key Responsibilities:</div>
-                <ul className="list-disc pl-6 mb-6 text-gray-700">
+              <div className="flex-1 rounded-xl p-3 md:p-10 mb-6 lg:mb-0 bg-white border hover:shadow-md">
+                <div className="text-base font-bold">Job Description:</div>
+                <p className="text-gray-700 text-sm mb-6 whitespace-pre-line">{job.description}</p>
+                <div className="text-base font-bold mb-2">Key Responsibilities:</div>
+                <ul className="list-disc text-sm pl-6 mb-6 text-gray-700">
                   {job.responsibilities.map((item, idx) => (
                     <li key={idx}>{item}</li>
                   ))}
                 </ul>
-                <div className="text-lg font-semibold mb-2">Required Skills & Experience:</div>
-                <ul className="list-disc pl-6 mb-6 text-gray-700">
+                <div className="text-base font-bold mb-2">Required Skills & Experience:</div>
+                <ul className="list-disc text-sm pl-6 mb-6 text-gray-700">
                   {job.requiredSkills.map((item, idx) => (
                     <li key={idx}>{item}</li>
                   ))}
                 </ul>
-                <div className="text-lg font-semibold mb-2">Preferred Qualifications (Nice to Have):</div>
-                <ul className="list-disc pl-6 mb-6 text-gray-700">
+                <div className="text-base font-bold mb-2">Preferred Qualifications (Nice to Have):</div>
+                <ul className="list-disc text-sm pl-6 mb-1 text-gray-700">
                   {job.preferredQualifications.map((item, idx) => (
                     <li key={idx}>{item}</li>
                   ))}
                 </ul>
               </div>
               {/* Right: Application Statistics */}
-              <div className="w-full lg:w-80 flex-shrink-0 rounded-2xl p-6 flex flex-col items-center bg-gray-50" style={{ minWidth: 320 }}>
+              <div className="w-full lg:w-80 flex-shrink-0 rounded-2xl p-6 flex flex-col items-center hover:shadow-md bg-white border" style={{ minWidth: 320 }}>
                 <h4 className="text-2xl font-bold mb-4 text-black">Application Statistics</h4>
                 {/* Donut Chart and Legend (replicated from dashboard, now with 4 segments) */}
                 <div className="flex flex-col items-center w-full">
@@ -298,9 +305,10 @@ const RecruiterJobDetailPage = () => {
                 </div>
               </div>
             </div>
-          </div>
-        </div>
+          {/* </div> */}
+        </div>        
       )}
+    </div>
     </div>
   );
 };
