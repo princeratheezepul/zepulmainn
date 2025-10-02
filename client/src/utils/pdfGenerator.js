@@ -176,7 +176,7 @@ const generatePDFContent = (resumeData, note = '') => {
 
   // Interview Transcript section
   const interviewTranscriptHTML = resumeData.interviewEvaluation && resumeData.interviewEvaluation.evaluationResults && resumeData.interviewEvaluation.evaluationResults.length > 0
-          ? `<div class="w-[80vw] mx-auto p-4 md:p-6 border rounded-xl bg-white">
+          ? `<div class="w-full p-4 md:p-6 border rounded-xl bg-white">
         <div class="text-lg md:text-xl font-bold text-gray-800 mb-4 md:mb-6">Interview Transcript</div>
         <div class="space-y-4 md:space-y-6">
           ${resumeData.interviewEvaluation.evaluationResults.map((result, index) => `
@@ -200,7 +200,7 @@ const generatePDFContent = (resumeData, note = '') => {
 
   // Application Details section
   const applicationDetailsHTML = `
-          <div class="w-[80vw] mx-auto mt-8 p-4 md:p-6 border rounded-xl bg-white">
+          <div class="w-full mt-8 p-4 md:p-6 border rounded-xl bg-white">
       <div class="text-xl font-bold text-gray-900 mb-6">Application Details</div>
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-5 mb-8">
         <div class="application-detail-item">
@@ -240,7 +240,7 @@ const generatePDFContent = (resumeData, note = '') => {
     : '';
 
   return `
-    <div class="bg-white p-4 md:p-6 lg:p-8">
+    <div class="bg-white p-2 md:p-3 lg:p-4">
       <div class="max-w-7xl mx-auto">
         <div class="border-b border-gray-200 py-1 mb-2">
           <div class="flex flex-col items-center text-center gap-1 mb-0">
@@ -297,9 +297,9 @@ const generatePDFContent = (resumeData, note = '') => {
             </div>
           </div>
         </div>
-        ${applicationDetailsHTML}
-        ${interviewTranscriptHTML}
       </div>
+      ${applicationDetailsHTML}
+      ${interviewTranscriptHTML}
     </div>
   `;
 };
@@ -376,7 +376,7 @@ const getComprehensiveCSS = () => `
   
   /* Remove default print headers/footers and set proper margins */
   @page {
-    margin: 0.5in !important;
+    margin: 0.3in !important;
     size: A4 !important;
   }
   
@@ -389,7 +389,7 @@ const getComprehensiveCSS = () => `
     
     /* Remove default browser print headers */
     @page {
-      margin: 0.5in !important;
+      margin: 0.3in !important;
     }
   }
   
@@ -514,7 +514,6 @@ const getComprehensiveCSS = () => `
   .w-full { width: 100% !important; }
   .w-8 { width: 32px !important; }
   .w-20 { width: 80px !important; }
-  .w-\\[80vw\\] { width: 80vw !important; }
   .h-2 { height: 8px !important; }
   .h-3 { height: 12px !important; }
   .h-8 { height: 32px !important; }
@@ -582,7 +581,7 @@ const getComprehensiveCSS = () => `
     max-width: 100% !important;
     overflow: hidden !important;
     background: #ffffff !important;
-    padding: 24px !important;
+    padding: 12px !important;
   }
   
   @media print {
@@ -592,7 +591,7 @@ const getComprehensiveCSS = () => `
     }
     
     @page {
-      margin: 0.4in !important;
+      margin: 0.3in !important;
     }
     
     body {
