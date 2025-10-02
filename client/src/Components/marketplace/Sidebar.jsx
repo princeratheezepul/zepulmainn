@@ -110,20 +110,20 @@ import { X, ChevronLeft, Menu } from "lucide-react";
 // Reusable Menu Item
 const MenuItem = memo(({ icon, text, isActive, isCollapsed, onClick }) => (
   <div
-    className={`flex items-center cursor-pointer px-3 py-2.5 rounded-lg transition-all duration-200
+    className={`flex items-center cursor-pointer px-2 py-2 rounded-lg transition-all duration-200
       ${isActive ? "bg-blue-600 text-white font-bold" : "hover:bg-gray-50 text-gray-700 font-medium"}
       ${isCollapsed ? "justify-center" : ""}
     `}
     onClick={onClick}
   >
     <div
-      className={`w-6 h-6 flex-shrink-0 ${
+      className={`w-5 h-5 flex-shrink-0 ${
         isActive ? "text-white [&_path]:stroke-white [&_path]:stroke-[2.2]" : "text-gray-600"
       }`}
     >
       {icon}
     </div>
-    {!isCollapsed && <span className="ml-3">{text}</span>}
+    {!isCollapsed && <span className="ml-2 text-base">{text}</span>}
   </div>
 ));
 
@@ -239,16 +239,16 @@ const Sidebar = ({
       {/* Sidebar */}
       <div
         className={`bg-white h-screen fixed top-0 left-0 z-50 flex flex-col transition-all duration-300 ease-in-out
-        ${isCollapsed ? "w-20" : "w-64"} ${
+        ${isCollapsed ? "w-14" : "w-40"} ${
           isSidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         } border-r border-gray-200`}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-2 relative">
+        <div className="flex items-center justify-between px-2 py-2 relative">
           {isCollapsed ? (
-            <img src="/assets/favicon.png" alt="Logo" className="w-8 h-8 object-contain" />
+            <img src="/assets/favicon.png" alt="Logo" className="w-7 h-7 object-contain" />
           ) : (
-            <img src="/zepul_trademark.jpg" alt="Logo" className="w-28 h-10 object-contain" />
+            <img src="/zepul_trademark.jpg" alt="Logo" className="w-20 h-8 object-contain" />
           )}
 
           {/* Toggle Button */}
@@ -275,7 +275,7 @@ const Sidebar = ({
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 px-2 py-4 space-y-1 overflow-y-auto">
+        <nav className="flex-1 px-1.5 py-3 space-y-1 overflow-y-auto">
           {sidebarItems.map((item) => (
             <MenuItem
               key={item.id}
@@ -289,15 +289,15 @@ const Sidebar = ({
         </nav>
 
         {/* Bottom Profile + Logout */}
-        <div className="px-3 py-2">
+        <div className="px-2 py-2">
           <div className={`flex items-center ${isCollapsed ? "justify-center" : ""}`}>
             <img
               src="https://randomuser.me/api/portraits/men/32.jpg"
               alt="Profile"
-              className="w-10 h-10 rounded-full object-cover border"
+              className="w-8 h-8 rounded-full object-cover border"
             />
             {!isCollapsed && (
-              <div className="ml-3">
+              <div className="ml-1.5">
                 <button className="text-sm font-semibold text-gray-600 mb-0">Logout</button>
               </div>
             )}

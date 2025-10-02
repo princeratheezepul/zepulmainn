@@ -158,18 +158,9 @@ const MetricsCards = () => {
               {metric.icon}
             </div>
           </div>
-          <div className="flex text-2xl font-semibold text-gray-900 justify-between">
-            <div>{metric.value}</div>
-            <div className="text-sm text-gray-500 flex items-center mt-2">
-              View more
-              <span className="ml-1.5 mt-0.5">
-                <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12.0254 4.94165L17.0837 9.99998L12.0254 15.0583" stroke="black" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M2.91699 10H16.942" stroke="black" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-              </span>
-              </div>
-            </div>
+          <div className="text-2xl font-semibold text-gray-900">
+            {metric.value}
+          </div>
         </div>
       ))}
     </div>

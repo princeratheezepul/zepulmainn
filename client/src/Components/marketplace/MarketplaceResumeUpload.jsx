@@ -368,7 +368,7 @@ const MarketplaceResumeUpload = ({ onBack, jobDetails }) => {
   });
 
   if (parsedData) {
-    return <ResumeDetailsView resumeData={parsedData} onBack={onBack} isMarketplace={true} marketplaceJobDetails={jobDetails} />;
+    return <ResumeDetailsView resumeData={parsedData} onBack={onBack} isMarketplace={true} marketplaceJobDetails={jobDetails} onResumeUpdate={() => {}} />;
   }
 
   return (
