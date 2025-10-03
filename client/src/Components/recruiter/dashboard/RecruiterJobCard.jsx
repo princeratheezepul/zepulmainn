@@ -87,7 +87,7 @@ const RecruiterJobCard = ({ job, onClick }) => {
   const jobStatus = getJobStatus();
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 mb-4 flex flex-col relative cursor-pointer" onClick={() => onClick && onClick(job)}>
+    <div className="bg-white p-3 rounded-lg hover:shadow-sm border border-gray-100 mb-2 flex flex-col relative cursor-pointer" onClick={() => onClick && onClick(job)}>
       <div className="absolute top-4 right-4">
         {jobStatus && (
           <span className={`text-xs font-semibold px-3 py-1 rounded-full ${jobStatus.className}`}>
@@ -96,8 +96,8 @@ const RecruiterJobCard = ({ job, onClick }) => {
         )}
       </div>
       <div className="pr-16">
-        <div className="text-xl font-bold text-gray-800">{job.jobtitle}</div>
-        <p className="text-gray-600 mt-2 text-sm max-w-2xl whitespace-pre-line" style={{ 
+        <div className="text-md font-bold text-gray-800">{job.jobtitle}</div>
+        <p className="text-gray-600 text-sm max-w-2xl whitespace-pre-line mb-1" style={{ 
           display: '-webkit-box',
           WebkitLineClamp: 3,
           WebkitBoxOrient: 'vertical',
@@ -106,9 +106,9 @@ const RecruiterJobCard = ({ job, onClick }) => {
           {truncateDescription(job.description)}
         </p>
       </div>
-      <div className="mt-4 pt-4 flex justify-between items-end">
+      <div className="flex justify-between items-end">
         <div className="flex items-center flex-wrap gap-x-4 gap-y-2 text-sm text-gray-600">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 text-xs">
             {companyInfo.type === 'logo' && job.companyLogo ? (
               <img src={job.companyLogo} alt={companyInfo.name} className="w-5 h-5" />
             ) : (
@@ -118,15 +118,15 @@ const RecruiterJobCard = ({ job, onClick }) => {
             )}
             <span className="font-medium text-gray-700">{companyInfo.name}</span>
           </div>
-          <div className="flex items-center gap-1.5 border border-gray-200 rounded-md px-2 py-1">
+          <div className="flex text-xs items-center gap-1.5 border border-gray-200 rounded-md px-2 py-1">
             <MapPin size={16} className="text-gray-400" />
             <span>{job.type} - {job.location}</span>
           </div>
-          <div className="flex items-center gap-1.5 border border-gray-200 rounded-md px-2 py-1">
+          <div className="flex text-xs items-center gap-1.5 border border-gray-200 rounded-md px-2 py-1">
             <Briefcase size={16} className="text-gray-400" />
             <span>{job.employmentType || 'Full-time'} • {job.openpositions || 1} opening{job.openpositions !== 1 ? 's' : ''}</span>
           </div>
-          <div className="flex items-center gap-1.5 border border-gray-200 rounded-md px-2 py-1">
+          <div className="flex text-xs items-center gap-1.5 border border-gray-200 rounded-md px-2 py-1">
             <Calendar size={16} className="text-gray-400" />
             <span>Posted {job.createdAt ? new Date(job.createdAt).toLocaleDateString('en-US', { 
               year: 'numeric', 
@@ -135,15 +135,15 @@ const RecruiterJobCard = ({ job, onClick }) => {
             }) : 'N/A'}</span>
           </div>
         </div>
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2 text-sm text-gray-600 bg-gray-100 font-medium px-3 py-2 rounded-lg">
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 text-xs text-gray-600 bg-gray-100 font-medium px-3 py-2 rounded-full">
             <Users size={18} className="text-gray-500"/>
             <span>{job.totalApplication_number || 0} Applicants Submitted</span>
           </div>
           {!job.isClosed && !isDeadlinePassed() && (
-            <button className="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors text-sm">
+            <div className="bg-blue-600 text-white px-3 py-2 rounded-full font-semibold hover:bg-blue-700 transition-colors text-xs">
               Submit Resume
-            </button>
+            </div>
           )}
         </div>
       </div>

@@ -89,8 +89,8 @@ const AverageScore = () => {
   }
 
   return (
-    <div className="bg-white p-2 md:p-3 rounded-lg shadow-sm flex flex-col h-full">
-      <div className="text-xs md:text-sm font-semibold text-gray-800 mb-2">Average Score</div>
+    <div className="bg-white border p-3 md:p-3 rounded-lg hover:shadow-sm flex flex-col h-full">
+      <div className="text-xs md:text-sm font-bold text-gray-800 mb-2">Average Score</div>
       
       <div className="flex-grow flex items-center justify-center">
         <div className="relative w-full h-full max-w-[85%] md:max-w-[95%]">
@@ -130,10 +130,10 @@ const AverageScore = () => {
       </div>
 
       <div className="flex flex-col sm:flex-row justify-between items-center sm:items-end text-center sm:text-left mt-2 md:mt-4">
-        <p className="text-xs md:text-sm text-gray-500 mb-2 sm:mb-0 max-w-[200px]">
+        <p className="text-xs md:text-xs text-gray-500 mb-2 sm:mb-0 max-w-[200px] text-left">
           Reflects average score across submitted candidates
         </p>
-        <span className="bg-gray-900 text-white text-xs font-semibold py-1 px-2 md:px-3 rounded-md">
+        <span className="bg-gray-900 text-white text-xs font-semibold py-1 px-3 md:px-3 rounded-full">
           Score: {scoreData.totalScore}/{scoreData.totalTotalScore}
         </span>
       </div>

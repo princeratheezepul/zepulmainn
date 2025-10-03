@@ -1,6 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import StatCard from './StatCard';
 import { useApi } from '../../../hooks/useApi';
+
+// Cache for stats data to prevent re-fetching
+let statsCache = null;
+let cacheTimestamp = null;
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
 const StatsGroup = () => {
   const { get } = useApi();
@@ -13,14 +18,41 @@ const StatsGroup = () => {
     { title: 'Success Ratio', value: '48%', percentage: '16.76', since: 'since last week' },
   ]);
   const [loading, setLoading] = useState(true);
+  const hasFetched = useRef(false);
+
+  // Function to manually refresh stats (bypasses cache)
+  const refreshStats = () => {
+    statsCache = null;
+    cacheTimestamp = null;
+    fetchStats();
+  };
+
+  // Expose refresh function globally for other components
+  useEffect(() => {
+    window.refreshStatsGroup = refreshStats;
+    return () => {
+      delete window.refreshStatsGroup;
+    };
+  }, []);
 
   useEffect(() => {
-    fetchStats();
+    // Check if we have valid cached data
+    if (statsCache && cacheTimestamp && (Date.now() - cacheTimestamp) < CACHE_DURATION) {
+      setStats(statsCache);
+      setLoading(false);
+      return;
+    }
+
+    // Only fetch if we haven't fetched before or cache is expired
+    if (!hasFetched.current || !statsCache || (Date.now() - cacheTimestamp) >= CACHE_DURATION) {
+      fetchStats();
+    }
   }, []);
 
   const fetchStats = async () => {
     try {
       setLoading(true);
+      hasFetched.current = true;
       
       // Fetch jobs, resumes, and recruiter stats data using useApi hook
       const [jobsResponse, resumesResponse, recruiterStatsResponse] = await Promise.all([
@@ -72,15 +104,22 @@ const StatsGroup = () => {
         offersMade = recruiterStatsData.stats?.offersMade || 0;
       }
 
-      // Update stats with real data
-      setStats([
+      // Create new stats data
+      const newStats = [
         { title: 'Total Jobs', value: totalJobs.toString(), percentage: '16.76', since: 'since last week' },
         { title: 'Candidates in Process', value: screenedCount.toString(), percentage: '16.76', since: 'since last week' },
         { title: 'Interviews Scheduled', value: scheduledCount.toString(), percentage: '16.76', since: 'since last week' },
         { title: 'Feedback Pending', value: submittedCount.toString(), percentage: '16.76', since: 'since last week' },
         { title: 'Offers Made', value: offersMade.toString(), percentage: '16.76', since: 'since last week' },
         { title: 'Success Ratio', value: '48%', percentage: '16.76', since: 'since last week' }, // Keep dummy value as requested
-      ]);
+      ];
+
+      // Update cache
+      statsCache = newStats;
+      cacheTimestamp = Date.now();
+
+      // Update stats with real data
+      setStats(newStats);
 
     } catch (error) {
       console.error('Error fetching stats:', error);

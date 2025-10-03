@@ -14,6 +14,7 @@ import ZepDB from '../Components/recruiter/dashboard/ZepDB';
 
 const RecruiterDashboard = () => {
   const [activeComponent, setActiveComponent] = useState('Dashboard');
+  const [isCollapsed, setIsCollapsed] = useState(true); // Lifted state
   const location = useLocation();
 
   // Handle navigation state to set active component
@@ -25,8 +26,15 @@ const RecruiterDashboard = () => {
 
   return (
     <div className="flex bg-gray-100 min-h-screen">
-      <Sidebar activeComponent={activeComponent} setActiveComponent={setActiveComponent} />
-      {activeComponent === 'Settings' ? (
+      <Sidebar activeComponent={activeComponent} setActiveComponent={setActiveComponent} isCollapsed={isCollapsed}
+        setIsCollapsed={setIsCollapsed} />
+      
+      <div
+        className={`flex-1 h-screen overflow-y-auto transition-all duration-300 ${
+          isCollapsed ? "ml-20" : "ml-52"
+        }`}
+      >
+      {activeComponent === 'Profile' ? (
         <div className="flex-1">
           <Settings />
         </div>
@@ -35,24 +43,24 @@ const RecruiterDashboard = () => {
           <ZepDB />
         </div>
       ) : (
-        <main className="flex-1 p-4 md:p-6 pt-2 md:pt-4">
+        <main className="bg-white flex-1 p-4 md:p-6 pt-3 md:pt-4 ">
           {activeComponent === 'Dashboard' && (
-            <div className="flex flex-col space-y-4 md:space-y-8 md:h-[calc(100vh-16px)]">
-              <div className="md:h-[5vh]">
+            <div className="flex flex-col space-y-2 md:space-y-3">
+              <div className="">
                 <Header />
               </div>
               <div className="md:h-[16vh]">
                 <StatsGroup />
               </div>
-              <div className="grid grid-cols-1 lg:grid-cols-[3fr_2fr] gap-6 md:gap-8 md:h-[38vh]">
-                <div className="h-[300px] md:h-full">
+              <div className="grid grid-cols-1 lg:grid-cols-[2fr_2fr] gap-1 md:gap-8 md:h-[50vh]">
+                <div className="h-[500px] md:h-full">
                   <CandidateSubmissionChart />
                 </div>
                 <div className="h-[300px] md:h-full">
                   <TotalApplications />
                 </div>
               </div>
-              <div className="flex flex-col lg:flex-row gap-6 md:gap-8 md:h-[35vh]">
+              <div className="flex flex-col lg:flex-row gap-2 md:gap-8 md:h-[50vh]">
                 <div className="h-[250px] md:h-full lg:w-2/5">
                   <AverageScore />
                 </div>
@@ -65,6 +73,7 @@ const RecruiterDashboard = () => {
           {activeComponent === 'Jobs' && <RecruiterJobs />}
         </main>
       )}
+    </div>
     </div>
   );
 };

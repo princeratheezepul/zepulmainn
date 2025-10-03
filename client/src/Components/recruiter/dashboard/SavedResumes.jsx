@@ -162,26 +162,27 @@ const SavedResumes = ({ jobId, onBack, jobtitle, preloadedResumes = [], resumesL
   }
 
   return (
-    <div className="min-h-screen w-screen flex flex-col bg-white p-4 relative">
+    <>
+    <div className="min-h-screen flex flex-col bg-white p-3 relative">
       {/* Back Button and Submit Resume Button */}
-      <div className="w-full max-w-6xl mx-auto mb-4 flex justify-between items-center">
-        <button
+      <div className="w-full max-w-6xl mx-auto flex justify-between items-center">
+        <div
           onClick={onBack}
-          className="text-black hover:text-gray-700 font-medium text-sm flex items-center gap-2"
+          className="text-black hover:text-gray-700 font-medium text-sm flex items-center gap-1"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
           </svg>
           Back to Job Details
-        </button>
+        </div>
         {/* Submit Resume Button */}
         {onShowResumeUpload && (
-          <button 
+          <div 
             onClick={onShowResumeUpload}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-lg text-base cursor-pointer transition-colors"
+            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-3 py-2 rounded-full text-sm cursor-pointer transition-colors"
           >
             Submit Resume
-          </button>
+          </div>
         )}
       </div>
       {/* Sidebar overlay */}
@@ -191,30 +192,30 @@ const SavedResumes = ({ jobId, onBack, jobtitle, preloadedResumes = [], resumesL
           <div className="fixed inset-0 bg-transparent transition-opacity" onClick={closeNoteSidebar}></div>
           {/* Sidebar */}
           <div className="relative ml-auto w-full max-w-md h-full bg-white shadow-xl z-50 flex flex-col">
-            <div className="flex items-center justify-between p-6 border-b">
-              <div className="font-semibold text-lg">Add Notes for {noteSidebar.resume?.name}</div>
+            <div className="flex items-center justify-between p-3 border-b border-gray-200">
+              <div className="font-semibold text-sm">Add Notes for {noteSidebar.resume?.name}</div>
               <button onClick={closeNoteSidebar} className="text-gray-400 hover:text-gray-700 cursor-pointer"><X size={22} /></button>
             </div>
-            <div className="flex-1 p-6">
+            <div className="flex-1 p-3">
               <textarea
-                className="w-full border border-gray-200 rounded-lg p-3 text-sm min-h-[120px]"
+                className="w-full border border-gray-200 rounded-lg p-3 text-sm min-h-[160px]"
                 placeholder="Write your note"
                 value={note}
                 onChange={e => setNote(e.target.value)}
                 disabled={noteSaving}
               ></textarea>
             </div>
-            <div className="p-6 border-t">
-              <button
+            <div className="p-3 border-t border-gray-200">
+              <div
                 className={`w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center cursor-pointer ${noteSaving ? 'opacity-70 cursor-not-allowed' : ''}`}
                 onClick={handleSaveNote}
                 disabled={noteSaving}
               >
                 {noteSaving ? (
-                  <svg className="animate-spin h-5 w-5 mr-2 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path></svg>
+                  <svg className="animate-spin h-4 w-4 mr-2 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path></svg>
                 ) : null}
                 {noteSaving ? 'Saving...' : 'Add'}
-              </button>
+              </div>
               {noteMsg && <div className="text-green-600 text-sm mt-2 text-center">{noteMsg}</div>}
             </div>
           </div>
@@ -223,24 +224,23 @@ const SavedResumes = ({ jobId, onBack, jobtitle, preloadedResumes = [], resumesL
       <div className="w-full max-w-6xl mx-auto">
         <div className="mb-2">
           <div>
-            <div className="text-2xl font-bold text-gray-900 leading-tight">Candidate List</div>
-            <div className="text-gray-500 text-sm mt-1">Managing candidate for {capitalizeFirstLetter(jobtitle || '')}</div>
+            <div className="text-lg font-bold text-gray-900 leading-tight">Candidate List</div>
+            <div className="text-gray-500 text-xs mt-1">Managing candidate for {capitalizeFirstLetter(jobtitle || '')}</div>
           </div>
           {/* Filter Tabs */}
           <div className="flex gap-2 mt-4">
             {Object.entries(STATUS_LABELS).map(([key, label]) => (
-              <button
+              <div
                 key={key}
-                className={`px-4 py-1.5 rounded-full border text-sm font-medium transition-colors focus:outline-none ${
+                className={`px-3 py-1 rounded-lg border text-sm font-medium transition-colors focus:outline-none ${
                   filter === key
                     ? 'bg-black text-white border-black'
                     : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-100'
                 } cursor-pointer`}
-                style={{ minWidth: 110 }}
                 onClick={() => setFilter(key)}
               >
                 {label} ({statusCounts[key]})
-              </button>
+              </div>
             ))}
           </div>
         </div>
@@ -284,16 +284,16 @@ const SavedResumes = ({ jobId, onBack, jobtitle, preloadedResumes = [], resumesL
                         className="w-10 h-10 rounded-full border-2 border-gray-200"
                       />
                       <div>
-                        <div className="font-semibold text-gray-900 leading-tight">{resume.name}</div>
+                        <div className="font-semibold text-sm text-gray-900 leading-tight">{resume.name}</div>
                         <div className="text-gray-500 text-sm">{resume.email}</div>
                       </div>
                     </td>
                     {/* Applied date */}
-                    <td className="px-6 py-4 whitespace-nowrap text-gray-700">
+                    <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-700">
                       {resume.applicationDetails?.date || '-'}
                     </td>
                     {/* Score */}
-                    <td className="px-6 py-4 whitespace-nowrap text-gray-900 font-semibold">
+                    <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-900 font-semibold">
                       {resume.overallScore ? `${resume.overallScore}%` : '-'}
                     </td>
                     {/* Status */}
@@ -319,7 +319,8 @@ const SavedResumes = ({ jobId, onBack, jobtitle, preloadedResumes = [], resumesL
           </table>
         </div>
       </div>
-    </div>
+      </div>
+      </>
   );
 };
 
