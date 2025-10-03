@@ -19,7 +19,6 @@ const ZepDB = () => {
   const [results, setResults] = useState(null);
   const [error, setError] = useState('');
   const [selectedCandidate, setSelectedCandidate] = useState(null);
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!prompt.trim()) return;
@@ -144,8 +143,7 @@ const ZepDB = () => {
                   onChange={(e) => setPrompt(e.target.value)}
                   placeholder="Ask anything..."
                   className="w-full bg-white text-gray-900 placeholder-gray-500 border border-gray-300 rounded-xl px-4 py-3 md:py-4 pr-12 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm md:text-base"
-                />
-                
+                />                
                 {/* Send button */}
                 <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
                   <button
@@ -273,7 +271,7 @@ const ZepDB = () => {
                         </tr>
                       </thead>
                       <tbody>
-                                              {results.candidates.map((candidate) => (
+                        {results.candidates.map((candidate) => (
                         <tr 
                           key={candidate.id} 
                           className="border-b border-gray-200 hover:bg-gray-50 cursor-pointer"

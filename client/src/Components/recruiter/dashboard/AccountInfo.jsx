@@ -301,8 +301,8 @@ const AccountInfoContent = () => {
 
   return (
     <>
-      <h1 className="text-2xl sm:text-3xl font-bold mb-2">Account Info</h1>
-      <p className="text-gray-500 mb-6 text-sm sm:text-base">
+      <div className="text-2xl sm:text-lg font-bold mb-2">Account Info</div>
+      <p className="text-gray-500 mb-6 text-sm">
         Update your personal information and account details. Your email and onboarded by information cannot be changed.
       </p>
       <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6 w-full">

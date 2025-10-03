@@ -154,47 +154,47 @@ const RecruiterJobs = () => {
   };
 
   return (
-    <div className="bg-gray-50 w-full px-2 sm:px-4 md:px-8 lg:px-16 py-0 min-h-screen relative">
+    <div className="bg-white py-0 min-h-screen relative">
       {/* Jobs List Header and Filters */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between pb-8 pt-8 border-b border-gray-200 mb-8 gap-4">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-betweenborder-gray-200 gap-4">
         <div className="flex flex-col justify-center">
-          <div className="text-3xl font-bold text-black mb-1">Jobs</div>
-          <p className="text-base text-gray-500">Manage and track all your job posting here</p>
+          <div className="text-lg font-bold text-black mb-0">Jobs</div>
+          <p className="text-xs text-gray-500">Manage and track all your job posting here</p>
         </div>
-        <div className="flex-1 flex justify-center">
-          <div className="flex gap-4 flex-wrap">
-            <button 
-              className={`rounded-lg px-6 py-2 text-base font-semibold shadow border border-black cursor-pointer transition-colors ${
+        <div className="flex-1 flex justify-end">
+          <div className="flex gap-2 flex-wrap">
+            <div 
+              className={`rounded-lg px-3 py-1 mb-0 text-xs font-semibold border hover:shadow border-black cursor-pointer transition-colors ${
                 activeFilter === 'all' ? 'bg-black text-white' : 'bg-white text-black hover:bg-gray-100'
               }`}
               onClick={() => handleFilterChange('all')}
             >
               All Jobs ({filterCounts.all})
-            </button>
-            <button 
-              className={`rounded-lg px-6 py-2 text-base font-semibold border border-black cursor-pointer transition-colors ${
+            </div>
+            <div 
+              className={`rounded-lg px-3 py-1 text-xs font-semibold border hover:shadow border-black cursor-pointer transition-colors ${
                 activeFilter === 'opened' ? 'bg-black text-white' : 'bg-white text-black hover:bg-gray-100'
               }`}
               onClick={() => handleFilterChange('opened')}
             >
               Opened Jobs ({filterCounts.opened})
-            </button>
-            <button 
-              className={`rounded-lg px-6 py-2 text-base font-semibold border border-black cursor-pointer transition-colors ${
+            </div>
+            <div 
+              className={`rounded-lg px-3 py-1 text-xs font-semibold border hover:shadow border-black cursor-pointer transition-colors ${
                 activeFilter === 'urgent' ? 'bg-black text-white' : 'bg-white text-black hover:bg-gray-100'
               }`}
               onClick={() => handleFilterChange('urgent')}
             >
               Urgent ({filterCounts.urgent})
-            </button>
-            <button 
-              className={`rounded-lg px-6 py-2 text-base font-semibold border border-black cursor-pointer transition-colors ${
+            </div>
+            <div 
+              className={`rounded-lg px-3 py-1 text-xs font-semibold border hover:shadow border-black cursor-pointer transition-colors ${
                 activeFilter === 'closed' ? 'bg-black text-white' : 'bg-white text-black hover:bg-gray-100'
               }`}
               onClick={() => handleFilterChange('closed')}
             >
               Closed Jobs ({filterCounts.closed})
-            </button>
+            </div>
           </div>
         </div>
       </div>

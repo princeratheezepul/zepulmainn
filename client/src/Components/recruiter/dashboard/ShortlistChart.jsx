@@ -140,9 +140,9 @@ const ShortlistChart = () => {
     }
 
     return (
-            <div className="bg-white p-2 md:p-3 rounded-lg shadow-sm h-full flex flex-col">
+    <div className="bg-white p-3 md:p-3 border rounded-lg hover:shadow-sm h-full flex flex-col">
       <div className="flex justify-between items-start mb-2">
-        <div className="text-xs md:text-sm font-semibold text-gray-800">Candidate Shortlist VS Not Shortlist</div>
+        <div className="text-xs md:text-sm font-bold text-gray-800">Candidate Shortlist VS Not Shortlist</div>
         <Legend content={<CustomLegend />} verticalAlign="top" align="right" />
       </div>
       <div className="flex-grow -mt-2">
@@ -176,10 +176,10 @@ const ShortlistChart = () => {
                     <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 12, fill: '#6B7280' }} />
                     <Tooltip cursor={false} content={<></>} />
                     
-                    <Bar dataKey="Shortlist" fill="#2563EB" barSize={30} shape={(props) => <CustomBar {...props} hovered={hoveredMonth === props.payload.name} />}>
+                    <Bar dataKey="Shortlist" fill="#2563EB" barSize={18} shape={(props) => <CustomBar {...props} hovered={hoveredMonth === props.payload.name} />}>
                         <LabelList dataKey="Shortlist" content={(props) => renderCustomizedLabel({ ...props, hoveredMonth })} />
                     </Bar>
-                    <Bar dataKey="Not Shortlist" fill="#9CA3AF" barSize={30} shape={(props) => <CustomBar {...props} hovered={hoveredMonth === props.payload.name} />}>
+                    <Bar dataKey="Not Shortlist" fill="#9CA3AF" barSize={18} shape={(props) => <CustomBar {...props} hovered={hoveredMonth === props.payload.name} />}>
                         <LabelList dataKey="Not Shortlist" content={(props) => renderCustomizedLabel({ ...props, hoveredMonth })} />
                     </Bar>
                 </BarChart>

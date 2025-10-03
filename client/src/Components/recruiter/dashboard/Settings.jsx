@@ -146,13 +146,13 @@ const Settings = () => {
   };
 
   return (
-    <div className="flex w-full min-h-screen bg-gray-50 ml-20">
+    <div className="flex w-full min-h-screen bg-gray-50">
       <Toaster position="top-center" />
       {/* Sidebar Navigation */}
-      <aside className="w-full max-w-xs md:w-64 bg-white border-r border-gray-200 flex-shrink-0 min-h-screen px-4 py-8 hidden sm:block">
-        <div className="text-xs text-gray-400 font-semibold mb-6 tracking-widest">SETTINGS</div>
+      <aside className="w-full max-w-xs md:w-64 bg-white border-r border-gray-200 flex-shrink-0 min-h-screen px-4 py-4 hidden sm:block">
+        <div className="text-xs text-black-400 font-semibold mb-4 tracking-widest">SETTINGS</div>
         <nav>
-          <ul className="flex flex-col gap-2">
+          <ul className="flex flex-col m-0">
             {settingsNav.map((item) => (
               <li key={item.name}>
                 <button

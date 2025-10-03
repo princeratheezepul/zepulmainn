@@ -115,8 +115,8 @@ const CandidateSubmissionChart = () => {
   const maxValue = Math.max(...data.map(item => item.uv), 10); // Minimum of 10 for better visualization
 
   return (
-    <div className="bg-white p-2 rounded-lg shadow-md h-full">
-      <div className="text-xs md:text-sm font-bold text-gray-800 mb-1">Candidate Submission</div>
+    <div className="bg-white p-3 border rounded-lg hover:shadow-md h-full">
+      <div className="text-xs md:text-sm font-bold text-gray-800 mb-2.5">Candidate Submission</div>
       <ResponsiveContainer width="100%" height="90%">
         <AreaChart
           data={data}
