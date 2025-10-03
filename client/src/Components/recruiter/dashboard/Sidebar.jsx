@@ -121,7 +121,7 @@ const Sidebar = ({ activeComponent, setActiveComponent, isCollapsed, setIsCollap
   return (
     <>
       <div
-        className={`bg-white h-screen fixed top-0 left-0 z-10 hidden lg:flex flex-col justify-between top-0 left-0 transition-all duration-300 border-r border-gray-200 ease-in-out ${
+        className={`bg-white h-screen fixed top-0 left-0 z-10 hidden lg:flex flex-col justify-between transition-all duration-300 border-r border-gray-200 ease-in-out ${
           isCollapsed ? "w-20 items-center" : "w-52"
         }`}
         
@@ -161,7 +161,7 @@ const Sidebar = ({ activeComponent, setActiveComponent, isCollapsed, setIsCollap
           {navItems.map((item) => (
             <div
               key={item.name}
-              className={`flex items-center w-full px-3 py-2.5 text-sm transition-colors duration-200 mb-1 ${
+              className={`flex items-center w-full px-3 py-2.5 text-sm transition-colors duration-200 mb-1 cursor-pointer ${
                 activeComponent === item.name
                   ? "bg-blue-600 text-white font-medium rounded-lg"
                   : "hover:bg-gray-100 font-medium text-gray-700 rounded-lg"
@@ -185,16 +185,19 @@ const Sidebar = ({ activeComponent, setActiveComponent, isCollapsed, setIsCollap
           <img
             src="https://randomuser.me/api/portraits/men/32.jpg"
             alt="User avatar"
-            className="w-10 h-10 rounded-full border object-cover"
+            className="w-10 h-10 rounded-full border object-cover cursor-pointer"
+            onClick={() => setActiveComponent("Profile")}
+            onMouseEnter={(e) => handleMouseEnter("Profile", e)}
+            onMouseLeave={handleMouseLeave}
           />
           {!isCollapsed && (
             <div className="ml-3">
-              <div className="text-sm hover:font-blue-600 font-semibold"              
-              onClick={() => setActiveComponent("Settings")}     
-              onMouseEnter={(e) => handleMouseEnter("Settings", e)}
+              <div className="text-sm hover:font-blue-600 font-semibold cursor-pointer"              
+              onClick={() => setActiveComponent("Profile")}     
+              onMouseEnter={(e) => handleMouseEnter("Profile", e)}
               onMouseLeave={handleMouseLeave}                
               >
-                Settings
+                Profile
               </div>
             </div>
           )}

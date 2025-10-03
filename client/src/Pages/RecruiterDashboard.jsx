@@ -34,7 +34,7 @@ const RecruiterDashboard = () => {
           isCollapsed ? "ml-20" : "ml-52"
         }`}
       >
-      {activeComponent === 'Settings' ? (
+      {activeComponent === 'Profile' ? (
         <div className="flex-1">
           <Settings />
         </div>

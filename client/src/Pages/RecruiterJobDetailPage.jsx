@@ -149,7 +149,7 @@ const RecruiterJobDetailPage = () => {
           isCollapsed ? "ml-20" : "ml-52"
         }`}
       >
-      {activeComponent === 'Settings' ? (
+      {activeComponent === 'Profile' ? (
         <Settings />
       ) : showResumeUpload ? (
         <div className="flex-1 flex flex-col items-center py-0 px-0 bg-gray-50">
