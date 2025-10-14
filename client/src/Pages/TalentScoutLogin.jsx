@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import toast, { Toaster } from "react-hot-toast";
 import { useMarketplaceAuth } from "../context/MarketplaceAuthContext";
 
-export default function MarketplaceLogin() {
+export default function TalentScoutLogin() {
   const navigate = useNavigate();
   const { login, isAuthenticated, isLoading: authLoading } = useMarketplaceAuth();
 
@@ -15,7 +15,7 @@ export default function MarketplaceLogin() {
   // Redirect if already authenticated
   useEffect(() => {
     if (!authLoading && isAuthenticated()) {
-      navigate('/partnerlead/marketplace/dashboard', { replace: true });
+      navigate('/talentscout/marketplace/dashboard', { replace: true });
     }
   }, [authLoading, isAuthenticated, navigate]);
 
@@ -28,7 +28,7 @@ export default function MarketplaceLogin() {
       
       if (result.success) {
         toast.success("Login successful!");
-        navigate('/partnerlead/marketplace/dashboard', { replace: true });
+        navigate('/talentscout/marketplace/dashboard', { replace: true });
       } else {
         toast.error(result.error || "Login failed");
       }
@@ -136,7 +136,7 @@ export default function MarketplaceLogin() {
           <div className="mt-4 text-center">
             <span className="text-gray-600 text-sm">Don't have an account? </span>
             <button
-              onClick={() => navigate('/partnerlead/marketplace/signup')}
+              onClick={() => navigate('/talentscout/marketplace/signup')}
               className="text-blue-600 hover:underline text-sm font-medium"
             >
               Sign up here
@@ -157,3 +157,4 @@ export default function MarketplaceLogin() {
     </div>
   );
 }
+

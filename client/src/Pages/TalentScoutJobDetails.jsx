@@ -14,13 +14,13 @@ import {
 } from 'lucide-react';
 import { useMarketplaceAuth } from '../context/MarketplaceAuthContext';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
-import { CommissionCard } from '../Components/marketplace/CommisionCard';
-import MarketplaceResumeUpload from '../Components/marketplace/MarketplaceResumeUpload';
+import { CommissionCard } from '../Components/talentscout/marketplace/CommisionCard';
+import MarketplaceResumeUpload from '../Components/talentscout/marketplace/MarketplaceResumeUpload';
 import SavedResumes from '../Components/recruiter/dashboard/SavedResumes';
-import MarketplaceCandidateList from '../Components/marketplace/MarketplaceCandidateList';
+import MarketplaceCandidateList from '../Components/talentscout/marketplace/MarketplaceCandidateList';
 import toast from 'react-hot-toast';
 
-const MarketplaceJobDetails = () => {
+const TalentScoutJobDetails = () => {
   const { jobId } = useParams();
   const navigate = useNavigate();
   const { fetchJobDetails, toggleJobBookmark, pickJob, withdrawJob, user } = useMarketplaceAuth();
@@ -242,7 +242,7 @@ const MarketplaceJobDetails = () => {
           <div className="text-red-600 mb-4">Error loading job details</div>
           <div className="text-gray-500 mb-4">{error || 'Job not found'}</div>
           <button
-            onClick={() => navigate('/partnerlead/marketplace/dashboard')}
+            onClick={() => navigate('/talentscout/marketplace/dashboard')}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
             Back to Dashboard
@@ -285,7 +285,7 @@ const MarketplaceJobDetails = () => {
           {/* Back Button */}
           <div className="mb-2">
             <button
-              onClick={() => navigate('/partnerlead/marketplace/dashboard')}
+              onClick={() => navigate('/talentscout/marketplace/dashboard')}
               className="flex items-center text-gray-600 hover:text-gray-900 transition-colors"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
@@ -505,4 +505,5 @@ const MarketplaceJobDetails = () => {
   );
 };
 
-export default MarketplaceJobDetails;
+export default TalentScoutJobDetails;
+

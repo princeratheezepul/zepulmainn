@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { MapPin, Briefcase, Users } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useMarketplaceAuth } from '../../context/MarketplaceAuthContext';
+import { useMarketplaceAuth } from '../../../context/MarketplaceAuthContext';
 
 const YourPicks = ({ onViewAll }) => {
   const { fetchPickedJobs } = useMarketplaceAuth();
@@ -31,7 +31,7 @@ const YourPicks = ({ onViewAll }) => {
 
   // Handle submit button click - navigate to job details
   const handleSubmit = (jobId) => {
-    navigate(`/partnerlead/marketplace/jobs/${jobId}`);
+    navigate(`/talentscout/marketplace/jobs/${jobId}`);
   };
 
   // Helper function to format date

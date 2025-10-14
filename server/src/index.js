@@ -17,6 +17,7 @@ import adminRoutes from "./routes/admin.route.js";
 import accountmanagerRoutes from "./routes/accountmanager.route.js";
 import zepdbRoutes from "./routes/zepdb.route.js";
 import marketplaceRoutes from "./routes/marketplace.route.js";
+import { cleanupExpiredSessions } from "./utils/sessionManager.js";
 const app = express();
 
 // Debug environment variables
@@ -80,3 +81,15 @@ app.listen(ServerConfig.PORT, async () => {
 });
 
 connectDB();
+
+// Set up periodic session cleanup (every hour)
+setInterval(async () => {
+  try {
+    const cleanedCount = await cleanupExpiredSessions();
+    if (cleanedCount > 0) {
+      console.log(`Session cleanup: Removed ${cleanedCount} expired sessions`);
+    }
+  } catch (error) {
+    console.error('Session cleanup error:', error);
+  }
+}, 60 * 60 * 1000); // Run every hour

@@ -3,9 +3,9 @@ import { useNavigate } from "react-router-dom";
 import toast, { Toaster } from "react-hot-toast";
 import { useMarketplaceAuth } from "../context/MarketplaceAuthContext";
 
-export default function MarketplaceSignup() {
+export default function TalentScoutSignup() {
   const navigate = useNavigate();
-  const { register, isAuthenticated, isLoading: authLoading } = useMarketplaceAuth();
+  const { isAuthenticated, isLoading: authLoading } = useMarketplaceAuth();
 
   const [formData, setFormData] = useState({
     firstName: "",
@@ -21,7 +21,7 @@ export default function MarketplaceSignup() {
   // Redirect if already authenticated
   useEffect(() => {
     if (!authLoading && isAuthenticated()) {
-      navigate('/partnerlead/marketplace/dashboard', { replace: true });
+      navigate('/talentscout/marketplace/dashboard', { replace: true });
     }
   }, [authLoading, isAuthenticated, navigate]);
 
@@ -80,15 +80,32 @@ export default function MarketplaceSignup() {
     
     try {
       const { confirmPassword, ...registrationData } = formData;
-      const result = await register(registrationData);
       
-      if (result.success) {
-        toast.success("Registration successful! Welcome to Marketplace!");
-        navigate('/partnerlead/marketplace/dashboard', { replace: true });
+      // Call TalentScout-specific registration endpoint
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/marketplace/talentscout/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(registrationData),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        // Store token in localStorage
+        localStorage.setItem('marketplace_token', data.data.token);
+        
+        toast.success("Registration successful! Welcome to TalentScout!");
+        navigate('/talentscout/marketplace/dashboard', { replace: true });
+        
+        // Reload to update auth context
+        window.location.reload();
       } else {
-        toast.error(result.error || "Registration failed");
+        toast.error(data.message || "Registration failed");
       }
     } catch (error) {
+      console.error("Registration error:", error);
       toast.error("An error occurred during registration");
     } finally {
       setIsLoading(false);
@@ -259,7 +276,7 @@ export default function MarketplaceSignup() {
           <div className="mt-4 text-center">
             <span className="text-gray-600 text-sm">Already have an account? </span>
             <button
-              onClick={() => navigate('/partnerlead/marketplace/login')}
+              onClick={() => navigate('/talentscout/marketplace/login')}
               className="text-blue-600 hover:underline text-sm font-medium"
             >
               Login here
@@ -280,3 +297,4 @@ export default function MarketplaceSignup() {
     </div>
   );
 }
+
