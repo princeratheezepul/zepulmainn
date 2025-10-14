@@ -1,5 +1,5 @@
 import express from "express";
-import { marketplaceLogin, marketplaceRegister, getMarketplaceProfile, updateMarketplaceProfile, createTestUser, saveBankDetails, getMarketplaceBankDetails, deleteMarketplaceBankDetails, getAllJobs, searchJobs, toggleBookmark, getBookmarkedJobs, getJobDetails, pickJob, withdrawJob, saveMarketplaceResume, saveMarketplaceInterviewEvaluation, getMarketplaceCandidates, getMarketplaceResumeDetails, getPickedJobs, updateMarketplaceResume } from "../controllers/marketplace.controller.js";
+import { marketplaceLogin, marketplaceRegister, talentScoutRegister, createTalentScoutByManager, marketplaceLogout, validateSession, getMarketplaceProfile, updateMarketplaceProfile, createTestUser, saveBankDetails, getMarketplaceBankDetails, deleteMarketplaceBankDetails, getAllJobs, searchJobs, toggleBookmark, getBookmarkedJobs, getJobDetails, pickJob, withdrawJob, saveMarketplaceResume, saveMarketplaceInterviewEvaluation, getMarketplaceCandidates, getMarketplaceResumeDetails, getPickedJobs, updateMarketplaceResume } from "../controllers/marketplace.controller.js";
 import { authenticateMarketplace } from "../middleware/marketplace.auth.middleware.js";
 
 const router = express.Router();
@@ -7,9 +7,15 @@ const router = express.Router();
 // Public routes
 router.post("/create-test-user", createTestUser);
 router.post("/register", marketplaceRegister);
+router.post("/talentscout/register", talentScoutRegister);
 router.post("/login", marketplaceLogin);
 
 // Protected routes
+router.post("/create-talent-scout", authenticateMarketplace, createTalentScoutByManager);
+
+// Protected routes
+router.post("/logout", authenticateMarketplace, marketplaceLogout);
+router.get("/validate-session", authenticateMarketplace, validateSession);
 router.get("/profile", authenticateMarketplace, getMarketplaceProfile);
 router.put("/profile", authenticateMarketplace, updateMarketplaceProfile);
 router.get("/bank-details", authenticateMarketplace, getMarketplaceBankDetails);

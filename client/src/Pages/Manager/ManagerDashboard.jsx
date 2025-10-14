@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import AddRecruiter from "../../Components/manager/AddRecruiter";
 import ManagerAccountSettings from '../../Components/manager/ManagerAccountSettings';
 import MarketplaceDashboard from '../../Components/manager/MarketplaceDashboard';
+import ManagerSidebar from '../../Components/manager/dashboard/ManagerSidebar';
 import toast from 'react-hot-toast';
 import Jobs from '../../Components/recruiter/dashboard/Jobs';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, ResponsiveContainer, ReferenceLine } from 'recharts';
@@ -1228,14 +1229,13 @@ export default function ManagerDashboard() {
   const offsetReviewed = gapLength / 2;
   const offsetPending = reviewedLength + gapLength / 2;
 
-  const [selectedSidebar, setSelectedSidebar] = useState(0);
-  const [showAccountInfo, setShowAccountInfo] = useState(false);
+  const [activeComponent, setActiveComponent] = useState('Dashboard');
+  const [isCollapsed, setIsCollapsed] = useState(true);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [detailRecruiterId, setDetailRecruiterId] = useState(null);
   const [recruiters, setRecruiters] = useState([]);
   const [recruitersLoading, setRecruitersLoading] = useState(true);
   const [recruitersError, setRecruitersError] = useState(null);
-  const [hoveredIcon, setHoveredIcon] = useState(null);
   const [showMarketplaceDashboard, setShowMarketplaceDashboard] = useState(false);
 
   // Fetch recruiters once for the whole dashboard
@@ -1260,28 +1260,12 @@ export default function ManagerDashboard() {
   const userInfo = JSON.parse(localStorage.getItem("userInfo"));
   const token = userInfo?.data?.accessToken;
 
-  // Sidebar icons (SVGs)
-  const icons = [
-    // Dashboard (selected)
-   <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path d="M1.55556 15.5556H10.8889C11.7444 15.5556 12.4444 14.8556 12.4444 14V1.55556C12.4444 0.7 11.7444 0 10.8889 0H1.55556C0.7 0 0 0.7 0 1.55556V14C0 14.8556 0.7 15.5556 1.55556 15.5556ZM1.55556 28H10.8889C11.7444 28 12.4444 27.3 12.4444 26.4444V20.2222C12.4444 19.3667 11.7444 18.6667 10.8889 18.6667H1.55556C0.7 18.6667 0 19.3667 0 20.2222V26.4444C0 27.3 0.7 28 1.55556 28ZM17.1111 28H26.4444C27.3 28 28 27.3 28 26.4444V14C28 13.1444 27.3 12.4444 26.4444 12.4444H17.1111C16.2556 12.4444 15.5556 13.1444 15.5556 14V26.4444C15.5556 27.3 16.2556 28 17.1111 28ZM15.5556 1.55556V7.77778C15.5556 8.63333 16.2556 9.33333 17.1111 9.33333H26.4444C27.3 9.33333 28 8.63333 28 7.77778V1.55556C28 0.7 27.3 0 26.4444 0H17.1111C16.2556 0 15.5556 0.7 15.5556 1.55556Z" fill="black" fill-opacity="0.7"/>
-</svg>
-,
-    // Team
-    <svg key="team" className="w-7 h-7" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" stroke="currentColor" /><path d="M2 20c0-4 8-4 8 0" stroke="currentColor" /><path d="M14 20c0-4 8-4 8 0" stroke="currentColor" /></svg>,
-    // List
-<svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path d="M10.4997 19.8327H22.1663M10.4997 13.9993H22.1663M10.4997 8.16602H22.1663M5.83529 19.8327V19.835L5.83301 19.835V19.8327H5.83529ZM5.83529 13.9993V14.0017L5.83301 14.0016V13.9993H5.83529ZM5.83529 8.16602V8.16835L5.83301 8.16829V8.16602H5.83529Z" stroke="black" stroke-opacity="0.7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-</svg>
-,
-
-  ];
 
 
 
   function getStatusColor(status) {
-    if (status === "Active") return "text-green-600 font-semibold";
-    if (status === "Inactive") return "text-red-600 font-semibold";
+    if (status === "Active") return "text-green-600";
+    if (status === "Inactive") return "text-red-600";
     return "text-gray-500";
   }
 
@@ -1497,9 +1481,9 @@ export default function ManagerDashboard() {
             <thead>
               <tr className="text-gray-500 border-b">
                 <th className="py-3 px-4 font-medium text-left">Name</th>
-                <th className="py-3 px-4 font-medium text-left">Email ID</th>
+                <th className="py-3 px-4 text-sm font-medium text-left">Email ID</th>
                 <th className="py-3 px-4 font-medium text-left">Location</th>
-                <th className="py-3 px-4 font-medium text-center">Status</th>
+                <th className="py-3 px-4 text-sm font-medium text-center">Status</th>
                 <th className="py-3 px-4 font-medium text-left">Action</th>
               </tr>
             </thead>
@@ -1518,9 +1502,9 @@ export default function ManagerDashboard() {
                     onClick={() => handleRowClick(rec)}
                   >
                     <td className="py-3 px-4 font-semibold text-gray-900">{rec.fullname || "N/A"}</td>
-                    <td className="py-3 px-4 text-gray-700">{rec.email}</td>
+                    <td className="py-3 px-4 text-sm font-medium text-gray-700">{rec.email}</td>
                     <td className="py-3 px-4 font-semibold text-gray-900">{rec.location || "N/A"}</td>
-                    <td className={`py-3 px-4 text-center ${getStatusColor(rec.status || "Inactive")}`}>
+                    <td className={`py-3 px-4 text-center text-sm font-medium ${getStatusColor(rec.status || "Inactive")}`}>
                       {rec.status || "Inactive"}
                     </td>
                     <td className="py-3 px-4 flex gap-3 items-center" onClick={(e) => e.stopPropagation()}>
@@ -1626,71 +1610,35 @@ export default function ManagerDashboard() {
   }
 
   return (
-    <div className="flex min-h-screen bg-[#F7F8FA]">
-      {/* Sidebar */}
-      <aside className="flex flex-col justify-between items-center bg-white w-20 py-6 sticky top-0 left-0 h-screen z-20">
-        <div className="flex flex-col items-center w-full gap-6">
-          {/* Logo */}
-          <div className="mb-8">
-            <img src="/zepul_sidebar_logo.png" alt="Logo" className="h-6 w-6 filter brightness-0" />
+    <div className="flex bg-gray-100 min-h-screen">
+      <ManagerSidebar 
+        activeComponent={activeComponent} 
+        setActiveComponent={setActiveComponent} 
+        isCollapsed={isCollapsed}
+        setIsCollapsed={setIsCollapsed} 
+      />
+      
+      <div
+        className={`flex-1 h-screen overflow-y-auto transition-all duration-300 ${
+          isCollapsed ? "ml-20" : "ml-52"
+        }`}
+      >
+        {activeComponent === 'Profile' ? (
+          <div className="flex-1">
+            <ManagerAccountSettings />
           </div>
-          <hr className="w-10 border-gray-700 mb-8" />
-          {/* Icons */}
-          <nav className="flex flex-col items-center justify-center gap-8 w-full">
-            {icons.map((icon, idx) => {
-              const tooltipLabels = ["Dashboard", "Recruiter", "Jobs"];
-              return (
-                <div key={idx} className="relative">
-                  <button 
-                    onClick={() => { setSelectedSidebar(idx); setShowAccountInfo(false); }} 
-                    className={`cursor-pointer ${idx === selectedSidebar ? "bg-blue-600 rounded-lg p-2" : "p-2"}`}
-                    onMouseEnter={() => setHoveredIcon(idx)}
-                    onMouseLeave={() => setHoveredIcon(null)}
-                  >
-                    <span className={idx === selectedSidebar ? "text-black" : "text-black"}>{icon}</span>
-                  </button>
-                  {/* Tooltip */}
-                  {hoveredIcon === idx && (
-                    <div 
-                      className="absolute left-full top-1/2 transform -translate-y-1/2 ml-2 bg-gray-800 text-white px-2 py-1 rounded text-sm whitespace-nowrap"
-                      style={{ zIndex: 9999 }}
-                    >
-                      {tooltipLabels[idx]}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </nav>
-        </div>
-        {/* Avatar */}
-        <div className="mb-2">
-          <img
-            src="https://randomuser.me/api/portraits/men/32.jpg"
-            alt="User Avatar"
-            className="w-12 h-12 rounded-full border-2 border-blue-600 object-cover cursor-pointer"
-            onClick={() => setShowAccountInfo(true)}
-          />
-        </div>
-      </aside>
-      {/* Main Content */}
-      <main className="flex-1 ml-20 bg-[#F7F8FA] h-screen">
-        {showAccountInfo ? (
-          <div className="h-screen flex items-start overflow-y-auto">
-            <div className="w-full max-w-[90vw]">
-              <ManagerAccountSettings />
-            </div>
-          </div>
-        ) : selectedSidebar === 1 ? (
-          <div className="h-screen overflow-y-auto">
+        ) : activeComponent === 'Recruiter' ? (
+          <div className="flex-1">
             <MyRecruiters selectedRecruiter={selectedRecruiter} setSelectedRecruiter={setSelectedRecruiter} />
           </div>
-        ) : selectedSidebar === 2 ? (
-          <div className="h-screen overflow-y-auto p-2 md:p-6">
+        ) : activeComponent === 'Jobs' ? (
+          <div className="flex-1">
             <Jobs />
           </div>
         ) : (
-          <div className="h-screen overflow-y-auto p-2 md:p-4">
+          <main className="bg-white flex-1 p-4 md:p-6 pt-3 md:pt-4">
+            {activeComponent === 'Dashboard' && (
+              <div className="flex flex-col space-y-2 md:space-y-3">
             {/* Header */}
             <div className="bg-transparent">
               <div className="flex items-start justify-between">
@@ -1934,9 +1882,12 @@ export default function ManagerDashboard() {
                 )}
               </div>
             </div>
-          </div>
+              </div>
+            )}
+          </main>
         )}
-      </main>
+      </div>
+      
       {showDetailModal && (
         <RecruiterDetailPage
           recruiterId={detailRecruiterId}

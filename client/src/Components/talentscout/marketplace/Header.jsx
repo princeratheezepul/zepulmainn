@@ -1,0 +1,87 @@
+import React from 'react';
+import { Search, Menu } from 'lucide-react';
+
+const Header = ({ searchQuery, setSearchQuery, setIsSidebarOpen, setIsProfileOpen, user, logout }) => {
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    if (searchQuery && searchQuery.trim() !== '') {
+      setSearchQuery(searchQuery.trim());
+    }
+  };
+
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value);
+  };
+
+  return (
+    <header className="bg-white border-b border-gray-200 py-2.5 px-4">
+      <div className="">
+        <div className="flex justify-between items-center">
+          {/* Mobile Menu Button */}
+          <div 
+            onClick={() => setIsSidebarOpen(true)}
+            className="lg:hidden p-2 rounded-lg hover:bg-gray-50 mr-4"
+          >
+            <Menu className="h-5 w-5 text-gray-600" />
+          </div>
+          
+          {/* Search Bar */}
+          <div className="flex-1 max-w-2xl">
+            <form onSubmit={handleSearchSubmit} className="relative">
+              <input
+                type="text"
+                placeholder="Search"
+                // className="w-full pl-10 pr-12 py-1 bg-gray-100 border rounded-lg text-gray-700 placeholder-gray-500 focus:outline-none focus:ring-0 focus:bg-gray-100 text-sm"
+                className="w-full pl-10 pr-12 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                value={searchQuery}
+                onChange={handleSearchChange}
+              />
+              <button
+                type="submit"
+                className="absolute right-1.5 top-1/2 transform -translate-y-1/2 bg-gray-800 text-white p-1.5 rounded-md hover:bg-gray-900 transition-colors"
+              >
+                <Search className="h-3 w-3" />
+              </button>
+            </form>
+            
+          </div>
+
+          {/* Right side icons */}
+          <div className="flex items-center space-x-3">
+
+            <div className="flex items-center space-x-3">
+            <svg width="28" height="28" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M6.66602 13.3334H9.33268C11.9993 13.3334 13.3327 12.0001 13.3327 9.33341V6.66675C13.3327 4.00008 11.9993 2.66675 9.33268 2.66675H6.66602C3.99935 2.66675 2.66602 4.00008 2.66602 6.66675V9.33341C2.66602 12.0001 3.99935 13.3334 6.66602 13.3334Z" stroke="black" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M22.666 13.3334H25.3327C27.9993 13.3334 29.3327 12.0001 29.3327 9.33341V6.66675C29.3327 4.00008 27.9993 2.66675 25.3327 2.66675H22.666C19.9993 2.66675 18.666 4.00008 18.666 6.66675V9.33341C18.666 12.0001 19.9993 13.3334 22.666 13.3334Z" stroke="black" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M22.666 29.3334H25.3327C27.9993 29.3334 29.3327 28.0001 29.3327 25.3334V22.6667C29.3327 20.0001 27.9993 18.6667 25.3327 18.6667H22.666C19.9993 18.6667 18.666 20.0001 18.666 22.6667V25.3334C18.666 28.0001 19.9993 29.3334 22.666 29.3334Z" stroke="black" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M6.66602 29.3334H9.33268C11.9993 29.3334 13.3327 28.0001 13.3327 25.3334V22.6667C13.3327 20.0001 11.9993 18.6667 9.33268 18.6667H6.66602C3.99935 18.6667 2.66602 20.0001 2.66602 22.6667V25.3334C2.66602 28.0001 3.99935 29.3334 6.66602 29.3334Z" stroke="black" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg> 
+          </div>
+          
+
+
+            <div 
+              className="w-8 h-8 rounded-full overflow-hidden border-2 border-gray-200 cursor-pointer hover:border-gray-300 transition-colors"
+              onClick={() => setIsProfileOpen(true)}
+            >
+              <img 
+                src="/api/placeholder/32/32" 
+                alt="Profile"
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                  e.target.nextSibling.style.display = 'flex';
+                }}
+              />
+              <div className="w-full h-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white text-sm font-semibold">
+                {user ? user.firstName?.charAt(0)?.toUpperCase() || 'U' : 'U'}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+  );
+};
+
+export default Header;

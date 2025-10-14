@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useMarketplaceAuth } from '../context/MarketplaceAuthContext';
 
-const MarketplaceProtectedRoute = ({ children }) => {
+const TalentScoutProtectedRoute = ({ children }) => {
   const { isAuthenticated, isLoading } = useMarketplaceAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -11,13 +11,13 @@ const MarketplaceProtectedRoute = ({ children }) => {
     if (!isLoading) {
       if (!isAuthenticated()) {
         // If not authenticated, redirect to login
-        navigate('/partnerlead/marketplace/login', { 
+        navigate('/talentscout/marketplace/login', { 
           state: { from: location.pathname },
           replace: true 
         });
-      } else if (location.pathname === '/partnerlead/marketplace/login') {
+      } else if (location.pathname === '/talentscout/marketplace/login') {
         // If already authenticated and trying to access login, redirect to dashboard
-        navigate('/partnerlead/marketplace/dashboard', { replace: true });
+        navigate('/talentscout/marketplace/dashboard', { replace: true });
       }
     }
   }, [isAuthenticated, isLoading, navigate, location]);
@@ -40,4 +40,5 @@ const MarketplaceProtectedRoute = ({ children }) => {
   return children;
 };
 
-export default MarketplaceProtectedRoute;
+export default TalentScoutProtectedRoute;
+

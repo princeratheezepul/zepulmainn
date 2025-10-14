@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { config } from '../config/config';
+import toast from 'react-hot-toast';
 
 const MarketplaceAuthContext = createContext();
 
@@ -16,19 +17,94 @@ export const MarketplaceAuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [sessionId, setSessionId] = useState(null);
+  const [sessionExpired, setSessionExpired] = useState(false);
   const navigate = useNavigate();
 
   // Check for existing token on mount
   useEffect(() => {
     const storedToken = localStorage.getItem('marketplace_token');
     const storedUser = localStorage.getItem('marketplace_user');
+    const storedSessionId = localStorage.getItem('marketplace_sessionId');
     
     if (storedToken && storedUser) {
       setToken(storedToken);
       setUser(JSON.parse(storedUser));
+      setSessionId(storedSessionId);
+      
+      // Start session monitoring
+      startSessionMonitoring();
     }
     setIsLoading(false);
   }, []);
+
+  // Session monitoring function
+  const startSessionMonitoring = () => {
+    // Check session validity every 30 seconds
+    const sessionCheckInterval = setInterval(async () => {
+      if (token && sessionId && !sessionExpired) {
+        try {
+          const response = await fetch(`${config.backendUrl}/api/marketplace/validate-session`, {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+          });
+
+          if (!response.ok) {
+            // Session is invalid, logout user
+            console.log('Session validation failed, logging out user');
+            handleSessionExpired();
+            clearInterval(sessionCheckInterval);
+          }
+        } catch (error) {
+          console.error('Session validation error:', error);
+          // On error, assume session is still valid to avoid unnecessary logouts
+        }
+      }
+    }, 30000); // Check every 30 seconds
+
+    // Store interval ID for cleanup
+    return sessionCheckInterval;
+  };
+
+  // Handle session expiration
+  const handleSessionExpired = () => {
+    // Prevent duplicate session expiration handling
+    if (sessionExpired) {
+      return;
+    }
+    
+    setSessionExpired(true);
+    
+    // Clear all stored data
+    localStorage.removeItem('marketplace_token');
+    localStorage.removeItem('marketplace_user');
+    localStorage.removeItem('marketplace_sessionId');
+    
+    // Reset state
+    setUser(null);
+    setToken(null);
+    setSessionId(null);
+    
+    // Show toast notification
+    toast.error('Your session has expired or another user has logged in with your credentials. Please login again.', {
+      duration: 5000,
+      position: 'top-center',
+      style: {
+        background: '#ff4b4b',
+        color: '#fff',
+        fontSize: '14px',
+        fontWeight: '500',
+      },
+    });
+    
+    // Navigate to login after a short delay to allow toast to show
+    setTimeout(() => {
+      navigate('/marketplace/login');
+    }, 1000);
+  };
 
   const login = async (email, password) => {
     try {
@@ -48,13 +124,30 @@ export const MarketplaceAuthProvider = ({ children }) => {
 
       const { user: userData, token: userToken } = data.data;
       
+      // Extract session ID from token (decode JWT)
+      let sessionId = null;
+      try {
+        const tokenPayload = JSON.parse(atob(userToken.split('.')[1]));
+        sessionId = tokenPayload.sessionId;
+      } catch (error) {
+        console.error('Error extracting session ID from token:', error);
+      }
+      
       // Store in localStorage
       localStorage.setItem('marketplace_token', userToken);
       localStorage.setItem('marketplace_user', JSON.stringify(userData));
+      if (sessionId) {
+        localStorage.setItem('marketplace_sessionId', sessionId);
+      }
       
       // Update state
       setUser(userData);
       setToken(userToken);
+      setSessionId(sessionId);
+      setSessionExpired(false); // Reset session expired state
+      
+      // Start session monitoring
+      startSessionMonitoring();
       
       return { success: true, user: userData };
     } catch (error) {
@@ -81,13 +174,30 @@ export const MarketplaceAuthProvider = ({ children }) => {
 
       const { user: newUser, token: userToken } = data.data;
       
+      // Extract session ID from token (decode JWT)
+      let sessionId = null;
+      try {
+        const tokenPayload = JSON.parse(atob(userToken.split('.')[1]));
+        sessionId = tokenPayload.sessionId;
+      } catch (error) {
+        console.error('Error extracting session ID from token:', error);
+      }
+      
       // Store in localStorage
       localStorage.setItem('marketplace_token', userToken);
       localStorage.setItem('marketplace_user', JSON.stringify(newUser));
+      if (sessionId) {
+        localStorage.setItem('marketplace_sessionId', sessionId);
+      }
       
       // Update state
       setUser(newUser);
       setToken(userToken);
+      setSessionId(sessionId);
+      setSessionExpired(false); // Reset session expired state
+      
+      // Start session monitoring
+      startSessionMonitoring();
       
       return { success: true, user: newUser };
     } catch (error) {
@@ -96,11 +206,35 @@ export const MarketplaceAuthProvider = ({ children }) => {
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
+    try {
+      // Call logout endpoint to invalidate session on server
+      if (token) {
+        await fetch(`${config.backendUrl}/api/marketplace/logout`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+      }
+    } catch (error) {
+      console.error('Logout API call failed:', error);
+      // Continue with local logout even if API call fails
+    }
+    
+    // Clear all stored data
     localStorage.removeItem('marketplace_token');
     localStorage.removeItem('marketplace_user');
+    localStorage.removeItem('marketplace_sessionId');
+    
+    // Reset state
     setUser(null);
     setToken(null);
+    setSessionId(null);
+    setSessionExpired(false); // Reset session expired state
+    
+    // Navigate to login
     navigate('/marketplace/login');
   };
 
@@ -556,25 +690,12 @@ export const MarketplaceAuthProvider = ({ children }) => {
     const response = await fetch(url, { ...defaultOptions, ...options });
     
     if (response.status === 401) {
-      // Token expired, try to refresh
-      console.log('Token expired, attempting to refresh...');
-      const refreshResult = await refreshToken();
-      if (refreshResult.success) {
-        // Retry the original request with new token
-        const retryOptions = {
-          ...defaultOptions,
-          headers: {
-            ...defaultOptions.headers,
-            'Authorization': `Bearer ${refreshResult.token}`,
-          },
-          ...options,
-        };
-        return await fetch(url, retryOptions);
-      } else {
-        // Refresh failed, redirect to login
-        logout();
-        throw new Error('Session expired. Please login again');
+      // Session invalid or expired
+      console.log('Session invalid or expired, logging out user');
+      if (!sessionExpired) {
+        handleSessionExpired();
       }
+      throw new Error('Session expired. Please login again');
     }
 
     return response;
@@ -595,6 +716,8 @@ export const MarketplaceAuthProvider = ({ children }) => {
   const value = {
     user,
     token,
+    sessionId,
+    sessionExpired,
     isLoading,
     login,
     register,
@@ -615,6 +738,7 @@ export const MarketplaceAuthProvider = ({ children }) => {
     pickJob,
     withdrawJob,
     apiCall,
+    handleSessionExpired,
   };
 
   return (

@@ -12,7 +12,12 @@ import { AuthProvider } from "../context/AuthContext";
 import { MarketplaceAuthProvider } from "../context/MarketplaceAuthContext";
 import ProtectedRoute from "../Components/ProtectedRoute";
 import MarketplaceProtectedRoute from "../Components/MarketplaceProtectedRoute";
+import TalentScoutProtectedRoute from "../Components/TalentScoutProtectedRoute";
 import MarketplaceJobDetails from "../Pages/MarketplaceJobDetails";
+import TalentScoutLogin from "../Pages/TalentScoutLogin";
+import TalentScoutSignup from "../Pages/TalentScoutSignup";
+import TalentScoutJobs from "../Pages/TalentScoutJobs";
+import TalentScoutJobDetails from "../Pages/TalentScoutJobDetails";
 
 
 import Recruiter from "../Pages/Recruiter";
@@ -140,28 +145,54 @@ const Router = () => {
             </Route>
 
             {/* Marketplace Routes - No Header/Footer */}
-            <Route path="/marketplace/login" element={
+            <Route path="/partnerlead/marketplace/login" element={
               <MarketplaceAuthProvider>
                 <MarketplaceLogin />
               </MarketplaceAuthProvider>
             } />
-            <Route path="/marketplace/signup" element={
+            <Route path="/partnerlead/marketplace/signup" element={
               <MarketplaceAuthProvider>
                 <MarketplaceSignup />
               </MarketplaceAuthProvider>
             } />
-            <Route path="/marketplace/dashboard" element={
+            <Route path="/partnerlead/marketplace/dashboard" element={
               <MarketplaceAuthProvider>
                 <MarketplaceProtectedRoute>
                   <MarketplaceJobs />
                 </MarketplaceProtectedRoute>
               </MarketplaceAuthProvider>
             } />
-            <Route path="/marketplace/jobs/:jobId" element={
+            <Route path="/partnerlead/marketplace/jobs/:jobId" element={
               <MarketplaceAuthProvider>
                 <MarketplaceProtectedRoute>
                   <MarketplaceJobDetails />
                 </MarketplaceProtectedRoute>
+              </MarketplaceAuthProvider>
+            } />
+
+            {/* TalentScout Marketplace Routes - No Header/Footer */}
+            <Route path="/talentscout/marketplace/login" element={
+              <MarketplaceAuthProvider>
+                <TalentScoutLogin />
+              </MarketplaceAuthProvider>
+            } />
+            <Route path="/talentscout/marketplace/signup" element={
+              <MarketplaceAuthProvider>
+                <TalentScoutSignup />
+              </MarketplaceAuthProvider>
+            } />
+            <Route path="/talentscout/marketplace/dashboard" element={
+              <MarketplaceAuthProvider>
+                <TalentScoutProtectedRoute>
+                  <TalentScoutJobs />
+                </TalentScoutProtectedRoute>
+              </MarketplaceAuthProvider>
+            } />
+            <Route path="/talentscout/marketplace/jobs/:jobId" element={
+              <MarketplaceAuthProvider>
+                <TalentScoutProtectedRoute>
+                  <TalentScoutJobDetails />
+                </TalentScoutProtectedRoute>
               </MarketplaceAuthProvider>
             } />
 

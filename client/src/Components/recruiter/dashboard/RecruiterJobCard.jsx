@@ -87,7 +87,7 @@ const RecruiterJobCard = ({ job, onClick }) => {
   const jobStatus = getJobStatus();
 
   return (
-    <div className="bg-white p-3 rounded-lg hover:shadow-sm border border-gray-100 mb-2 flex flex-col relative cursor-pointer" onClick={() => onClick && onClick(job)}>
+    <div className="bg-white p-2 rounded-lg hover:shadow-sm border border-gray-100 mb-1 flex flex-col relative cursor-pointer" onClick={() => onClick && onClick(job)}>
       <div className="absolute top-4 right-4">
         {jobStatus && (
           <span className={`text-xs font-semibold px-3 py-1 rounded-full ${jobStatus.className}`}>
@@ -97,9 +97,9 @@ const RecruiterJobCard = ({ job, onClick }) => {
       </div>
       <div className="pr-16">
         <div className="text-md font-bold text-gray-800">{job.jobtitle}</div>
-        <p className="text-gray-600 text-sm max-w-2xl whitespace-pre-line mb-1" style={{ 
+        <p className="text-gray-600 text-sm max-w-2xl whitespace-pre-line mb-0" style={{ 
           display: '-webkit-box',
-          WebkitLineClamp: 3,
+          WebkitLineClamp: 2,
           WebkitBoxOrient: 'vertical',
           overflow: 'hidden'
         }}>
@@ -107,7 +107,7 @@ const RecruiterJobCard = ({ job, onClick }) => {
         </p>
       </div>
       <div className="flex justify-between items-end">
-        <div className="flex items-center flex-wrap gap-x-4 gap-y-2 text-sm text-gray-600">
+        <div className="flex items-center flex-wrap gap-x-3 gap-y-1 text-sm text-gray-600">
           <div className="flex items-center gap-2 text-xs">
             {companyInfo.type === 'logo' && job.companyLogo ? (
               <img src={job.companyLogo} alt={companyInfo.name} className="w-5 h-5" />

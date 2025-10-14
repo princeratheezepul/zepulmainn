@@ -1,17 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import Sidebar from '../Components/marketplace/Sidebar';
-import Header from '../Components/marketplace/Header';
-import HomePage from '../Components/marketplace/HomePage';
-import JobsPage from '../Components/marketplace/JobsPage';
-import WalletPage from '../Components/marketplace/WalletPage';
-import SearchResults from '../Components/marketplace/SearchResults';
-import ProfilePage from '../Components/marketplace/ProfilePage';
-import BankDetailsSetup from '../Components/marketplace/BankDetailsSetup';
-import TalentScoutPage from '../Components/marketplace/TalentScoutPage';
+import Sidebar from '../Components/talentscout/marketplace/Sidebar';
+import Header from '../Components/talentscout/marketplace/Header';
+import HomePage from '../Components/talentscout/marketplace/HomePage';
+import JobsPage from '../Components/talentscout/marketplace/JobsPage';
+import WalletPage from '../Components/talentscout/marketplace/WalletPage';
+import SearchResults from '../Components/talentscout/marketplace/SearchResults';
+import ProfilePage from '../Components/talentscout/marketplace/ProfilePage';
+import BankDetailsSetup from '../Components/talentscout/marketplace/BankDetailsSetup';
 import { useMarketplaceAuth } from '../context/MarketplaceAuthContext';
 import { jobListings, yourPicks, walletData } from '../Data/marketplaceData';
 
-const MarketplaceJobs = () => {
+const TalentScoutJobs = () => {
   const { user, logout, fetchUserProfile, saveBankDetails } = useMarketplaceAuth();
   const [activeFilter, setActiveFilter] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
@@ -177,10 +176,6 @@ const MarketplaceJobs = () => {
                   activeJobsTab={activeJobsTab}
                   setActiveJobsTab={setActiveJobsTab}
                 />
-              ) : activeSidebarItem === 'Wallet' ? (
-                <WalletPage />
-              ) : activeSidebarItem === 'Talent Scout' ? (
-                <TalentScoutPage />
               ) : (
                 <WalletPage />
               )}
@@ -201,4 +196,5 @@ const MarketplaceJobs = () => {
   );
 };
 
-export default MarketplaceJobs;
+export default TalentScoutJobs;
+

@@ -8,12 +8,14 @@ import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { determineResumeTag } from "../utils/tagHelper.js";
+import { createUserSession, invalidateUserSession } from "../utils/sessionManager.js";
 
-// Generate JWT token for marketplace user
-const generateMarketplaceToken = (userId) => {
+// Generate JWT token for marketplace user with session ID
+const generateMarketplaceToken = (userId, sessionId) => {
   return jwt.sign(
     { 
       userId,
+      sessionId,
       type: 'marketplace'
     },
     process.env.ACCESS_TOKEN_SECRET || "marketplace_secret_key",
@@ -49,7 +51,7 @@ export const marketplaceRegister = async (req, res) => {
       emailid: email,
       password,
       phone,
-      userRole: "User", // Default role for marketplace users
+      userRole: "Manager", // Default role for marketplace users
       totalEarnings: 0,
       pendingEarnings: 0,
       transactions: [],
@@ -61,8 +63,9 @@ export const marketplaceRegister = async (req, res) => {
     
     const savedUser = await mpUser.save();
     
-    // Generate token
-    const token = generateMarketplaceToken(savedUser._id);
+    // Create session and generate token
+    const sessionData = await createUserSession(savedUser._id);
+    const token = generateMarketplaceToken(savedUser._id, sessionData.sessionId);
 
     // Return user data without password
     const userData = {
@@ -83,6 +86,171 @@ export const marketplaceRegister = async (req, res) => {
     );
   } catch (error) {
     console.error("Registration error:", error);
+    res.status(500).json(
+      new ApiResponse(500, null, "Internal server error")
+    );
+  }
+};
+
+// Register new TalentScout user (recruiter role)
+export const talentScoutRegister = async (req, res) => {
+  try {
+    const { firstName, lastName, email, password, DOB, phone } = req.body;
+    
+    // Validate required fields
+    if (!firstName || !lastName || !email || !password || !DOB || !phone) {
+      return res.status(400).json(
+        new ApiResponse(400, null, "All fields are required")
+      );
+    }
+
+    // Check if user already exists
+    const existingUser = await MpUser.findOne({ emailid: email });
+    if (existingUser) {
+      return res.status(409).json(
+        new ApiResponse(409, null, "User with this email already exists")
+      );
+    }
+
+    // Create new TalentScout user (recruiter role)
+    const mpUser = new MpUser({
+      firstName,
+      lastName,
+      DOB: new Date(DOB),
+      emailid: email,
+      password,
+      phone,
+      userRole: "recruiter", // TalentScout users get recruiter role
+      totalEarnings: 0,
+      pendingEarnings: 0,
+      transactions: [],
+      accountDetails: [],
+      bookmarkedJobs: [],
+      pickedJobs: [],
+      myJobs: []
+    });
+    
+    const savedUser = await mpUser.save();
+    
+    // Create session and generate token
+    const sessionData = await createUserSession(savedUser._id);
+    const token = generateMarketplaceToken(savedUser._id, sessionData.sessionId);
+
+    // Return user data without password
+    const userData = {
+      _id: savedUser._id,
+      firstName: savedUser.firstName,
+      lastName: savedUser.lastName,
+      emailid: savedUser.emailid,
+      userRole: savedUser.userRole,
+      totalEarnings: savedUser.totalEarnings,
+      pendingEarnings: savedUser.pendingEarnings
+    };
+
+    res.status(201).json(
+      new ApiResponse(201, {
+        user: userData,
+        token
+      }, "TalentScout user registered successfully")
+    );
+  } catch (error) {
+    console.error("TalentScout registration error:", error);
+    res.status(500).json(
+      new ApiResponse(500, null, "Internal server error")
+    );
+  }
+};
+
+// Create TalentScout by Manager (adds to manager's recruiterList)
+export const createTalentScoutByManager = async (req, res) => {
+  try {
+    const { firstName, lastName, email, DOB, phone, password } = req.body;
+    const managerId = req.user.userId; // Get manager ID from auth middleware
+    
+    console.log("Creating talent scout by manager:", managerId);
+    console.log("Talent scout data:", { firstName, lastName, email, DOB, phone });
+    
+    // Validate required fields
+    if (!firstName || !lastName || !email || !DOB || !phone || !password) {
+      return res.status(400).json(
+        new ApiResponse(400, null, "All fields are required")
+      );
+    }
+
+    // Verify the creator is a Manager
+    const manager = await MpUser.findById(managerId);
+    if (!manager) {
+      return res.status(404).json(
+        new ApiResponse(404, null, "Manager not found")
+      );
+    }
+
+    if (manager.userRole !== "Manager") {
+      return res.status(403).json(
+        new ApiResponse(403, null, "Only users with Manager role can create talent scouts")
+      );
+    }
+
+    // Check if user already exists
+    const existingUser = await MpUser.findOne({ emailid: email });
+    if (existingUser) {
+      return res.status(409).json(
+        new ApiResponse(409, null, "User with this email already exists")
+      );
+    }
+
+    // Create new TalentScout user (recruiter role)
+    const talentScout = new MpUser({
+      firstName,
+      lastName,
+      DOB: new Date(DOB),
+      emailid: email,
+      password: password, // Use password from request
+      phone,
+      userRole: "recruiter", // Talent Scout users get recruiter role
+      manager: managerId, // Set the manager reference
+      totalEarnings: 0,
+      pendingEarnings: 0,
+      transactions: [],
+      accountDetails: [],
+      bookmarkedJobs: [],
+      pickedJobs: [],
+      myJobs: [],
+      recruiterList: []
+    });
+    
+    const savedTalentScout = await talentScout.save();
+    console.log("Talent scout created:", savedTalentScout._id);
+
+    // Add the talent scout to manager's recruiterList
+    if (!manager.recruiterList.includes(savedTalentScout._id)) {
+      manager.recruiterList.push(savedTalentScout._id);
+      await manager.save();
+      console.log("Talent scout added to manager's recruiterList");
+    }
+
+    // Return talent scout data without password
+    const talentScoutData = {
+      _id: savedTalentScout._id,
+      firstName: savedTalentScout.firstName,
+      lastName: savedTalentScout.lastName,
+      emailid: savedTalentScout.emailid,
+      phone: savedTalentScout.phone,
+      DOB: savedTalentScout.DOB,
+      userRole: savedTalentScout.userRole,
+      manager: savedTalentScout.manager,
+      totalEarnings: savedTalentScout.totalEarnings,
+      pendingEarnings: savedTalentScout.pendingEarnings
+    };
+
+    res.status(201).json(
+      new ApiResponse(201, {
+        talentScout: talentScoutData,
+        message: `Talent scout created successfully. Password has been generated and should be sent to ${email}`
+      }, "Talent scout created successfully")
+    );
+  } catch (error) {
+    console.error("Create talent scout by manager error:", error);
     res.status(500).json(
       new ApiResponse(500, null, "Internal server error")
     );
@@ -180,8 +348,9 @@ export const marketplaceLogin = async (req, res) => {
       );
     }
 
-    // Generate token
-    const token = generateMarketplaceToken(user._id);
+    // Create session and generate token (this will invalidate any existing sessions)
+    const sessionData = await createUserSession(user._id);
+    const token = generateMarketplaceToken(user._id, sessionData.sessionId);
 
     // Return user data without sensitive information
     const userData = {
@@ -203,6 +372,47 @@ export const marketplaceLogin = async (req, res) => {
 
   } catch (error) {
     console.error("Marketplace login error:", error);
+    res.status(500).json(
+      new ApiResponse(500, null, "Internal server error")
+    );
+  }
+};
+
+// Marketplace logout
+export const marketplaceLogout = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    
+    // Invalidate the user's session
+    await invalidateUserSession(userId);
+    
+    res.status(200).json(
+      new ApiResponse(200, null, "Logged out successfully")
+    );
+  } catch (error) {
+    console.error("Marketplace logout error:", error);
+    res.status(500).json(
+      new ApiResponse(500, null, "Internal server error")
+    );
+  }
+};
+
+// Validate session endpoint
+export const validateSession = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const sessionId = req.user.sessionId;
+    
+    // Session is already validated by middleware, just return success
+    res.status(200).json(
+      new ApiResponse(200, { 
+        valid: true,
+        userId: userId,
+        sessionId: sessionId
+      }, "Session is valid")
+    );
+  } catch (error) {
+    console.error("Session validation error:", error);
     res.status(500).json(
       new ApiResponse(500, null, "Internal server error")
     );

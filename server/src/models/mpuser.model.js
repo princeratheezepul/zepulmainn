@@ -32,6 +32,10 @@ const mpuserSchema = new Schema({
         type: String,
         required: true
     },
+    isActive: {
+        type: Boolean,
+        default: true
+    },
     totalEarnings: {
         type: Number,
         default: 0
@@ -58,7 +62,31 @@ const mpuserSchema = new Schema({
     myJobs: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Job'
-    }]
+    }],
+    // Manager reference - stores ObjectId of mpUser with userRole "Manager"
+    manager: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'MpUser',
+        default: null
+    },
+    // Recruiter List - stores array of mpUser ObjectIds with userRole "recruiter"
+    recruiterList: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'MpUser'
+    }],
+    // Session management fields
+    currentSessionId: {
+        type: String,
+        default: null
+    },
+    lastLoginAt: {
+        type: Date,
+        default: null
+    },
+    sessionExpiresAt: {
+        type: Date,
+        default: null
+    }
 }, { 
     timestamps: true,
     toJSON: {
@@ -96,6 +124,51 @@ mpuserSchema.methods.isPasswordCorrect = async function (password) {
         console.error("Error comparing password:", error);
         return false;
     }
+};
+
+// Method to add a recruiter to recruiterList (validates userRole)
+mpuserSchema.methods.addRecruiter = async function (recruiterId) {
+    const MpUser = mongoose.model('MpUser');
+    const recruiter = await MpUser.findById(recruiterId);
+    
+    if (!recruiter) {
+        throw new Error("Recruiter not found");
+    }
+    
+    if (recruiter.userRole !== "recruiter") {
+        throw new Error("User must have userRole 'recruiter' to be added to recruiterList");
+    }
+    
+    // Check if recruiter is already in the list
+    if (this.recruiterList.includes(recruiterId)) {
+        return this; // Already added, no need to add again
+    }
+    
+    this.recruiterList.push(recruiterId);
+    return await this.save();
+};
+
+// Method to set manager (validates userRole)
+mpuserSchema.methods.setManager = async function (managerId) {
+    const MpUser = mongoose.model('MpUser');
+    const manager = await MpUser.findById(managerId);
+    
+    if (!manager) {
+        throw new Error("Manager not found");
+    }
+    
+    if (manager.userRole !== "Manager") {
+        throw new Error("User must have userRole 'Manager' to be set as manager");
+    }
+    
+    this.manager = managerId;
+    return await this.save();
+};
+
+// Method to remove a recruiter from recruiterList
+mpuserSchema.methods.removeRecruiter = async function (recruiterId) {
+    this.recruiterList = this.recruiterList.filter(id => id.toString() !== recruiterId.toString());
+    return await this.save();
 };
 
 export const MpUser = mongoose.models.MpUser || mongoose.model('MpUser', mpuserSchema);

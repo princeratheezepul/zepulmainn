@@ -156,7 +156,7 @@ const RecruiterJobs = () => {
   return (
     <div className="bg-white py-0 min-h-screen relative">
       {/* Jobs List Header and Filters */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-betweenborder-gray-200 gap-4">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between pb-2 pt-2 border-b border-gray-200 mb-2 gap-2">
         <div className="flex flex-col justify-center">
           <div className="text-lg font-bold text-black mb-0">Jobs</div>
           <p className="text-xs text-gray-500">Manage and track all your job posting here</p>
@@ -219,7 +219,7 @@ const RecruiterJobs = () => {
           
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="flex justify-center items-center gap-2 mt-6">
+            <div className="flex justify-center items-center gap-2 mt-2">
               <button
                 onClick={() => handlePageChange(currentPage - 1)}
                 disabled={currentPage === 1}

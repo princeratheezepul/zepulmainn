@@ -212,16 +212,6 @@ const Sidebar = ({
       ),
     },
     {
-      id: "Talent Scout",
-      label: "Talent Scout",
-      icon: (
-        <svg width="22" height="22" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path d="M14 14C17.4062 14 20.1667 11.2396 20.1667 7.83333C20.1667 4.42708 17.4062 1.66667 14 1.66667C10.5938 1.66667 7.83333 4.42708 7.83333 7.83333C7.83333 11.2396 10.5938 14 14 14Z" stroke="black" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M24.0845 26.3333C24.0845 21.5417 19.5928 17.5 14.0011 17.5C8.40951 17.5 3.91784 21.5417 3.91784 26.3333" stroke="black" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-</svg>
-      ),
-    },
-    {
       id: "Wallet",
       label: "Wallet",
       icon: (

@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 import { MpUser } from "../models/mpuser.model.js";
+import { validateUserSession } from "../utils/sessionManager.js";
 
 export const authenticateMarketplace = async (req, res, next) => {
   try {
@@ -22,17 +23,18 @@ export const authenticateMarketplace = async (req, res, next) => {
       });
     }
 
-    // Verify user still exists
-    const user = await MpUser.findById(decoded.userId);
-    if (!user) {
+    // Validate session
+    const sessionValidation = await validateUserSession(decoded.userId, decoded.sessionId);
+    if (!sessionValidation.valid) {
       return res.status(401).json({
         success: false,
-        message: "User not found"
+        message: `Session invalid: ${sessionValidation.reason}`
       });
     }
 
     req.user = {
       userId: decoded.userId,
+      sessionId: decoded.sessionId,
       userType: 'marketplace'
     };
 

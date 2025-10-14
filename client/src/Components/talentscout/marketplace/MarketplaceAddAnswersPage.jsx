@@ -4,8 +4,8 @@ import { format } from 'date-fns';
 import toast from 'react-hot-toast';
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { useNavigate } from 'react-router-dom';
-import { geminiQueue } from '../../utils/apiQueue';
-import { useMarketplaceAuth } from '../../context/MarketplaceAuthContext';
+import { geminiQueue } from '../../../utils/apiQueue';
+import { useMarketplaceAuth } from '../../../context/MarketplaceAuthContext';
 
 const MarketplaceAddAnswersPage = ({ onBack, questions, jobDetails, resumeData, onEvaluationComplete }) => {
   const [completeText, setCompleteText] = useState('');
@@ -252,7 +252,7 @@ const MarketplaceAddAnswersPage = ({ onBack, questions, jobDetails, resumeData, 
         onBack();
       } else {
         // Fallback to dashboard if neither callback is provided
-        navigate('/partnerlead/marketplace/dashboard');
+        navigate('/talentscout/marketplace/dashboard');
       }
 
     } catch (error) {

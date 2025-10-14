@@ -50,7 +50,7 @@ const JobCard = ({ job, showSubmitButton = false, onBookmarkToggle, isBookmarkin
 
   // Handle card click to navigate to job details
   const handleCardClick = () => {
-    navigate(`/partnerlead/marketplace/jobs/${job._id}`);
+    navigate(`/talentscout/marketplace/jobs/${job._id}`);
   };
 
   return (
