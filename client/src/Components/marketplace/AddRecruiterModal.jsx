@@ -18,9 +18,10 @@ const AddRecruiterForm = ({ isOpen, onClose, onSubmit }) => {
   // Set onboardedBy when component mounts or user changes
   useEffect(() => {
     if (user) {
+      const fullName = `${user.firstName || ''} ${user.lastName || ''}`.trim();
       setForm(prev => ({
         ...prev,
-        onboardedBy: `${user.firstName} ${user.lastName}` || 'Manager'
+        onboardedBy: fullName || user.firstName || user.emailid || 'Manager'
       }));
     }
   }, [user]);

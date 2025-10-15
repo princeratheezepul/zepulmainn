@@ -8,6 +8,7 @@ import SearchResults from '../Components/marketplace/SearchResults';
 import ProfilePage from '../Components/marketplace/ProfilePage';
 import BankDetailsSetup from '../Components/marketplace/BankDetailsSetup';
 import TalentScoutPage from '../Components/marketplace/TalentScoutPage';
+import PartnerLeadDashboard from '../Components/marketplace/PartnerLeadDashboard';
 import { useMarketplaceAuth } from '../context/MarketplaceAuthContext';
 import { jobListings, yourPicks, walletData } from '../Data/marketplaceData';
 
@@ -15,7 +16,7 @@ const MarketplaceJobs = () => {
   const { user, logout, fetchUserProfile, saveBankDetails } = useMarketplaceAuth();
   const [activeFilter, setActiveFilter] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeSidebarItem, setActiveSidebarItem] = useState('Home');
+  const [activeSidebarItem, setActiveSidebarItem] = useState('Dashboard');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [activeJobsTab, setActiveJobsTab] = useState('Picked Jobs');
@@ -166,7 +167,9 @@ const MarketplaceJobs = () => {
             />
           ) : (
             <div className="px-3 py-3">
-              {activeSidebarItem === 'Home' ? (
+              {activeSidebarItem === 'Dashboard' ? (
+                <PartnerLeadDashboard user={user} />
+              ) : activeSidebarItem === 'Home' ? (
                 <HomePage 
                   activeFilter={activeFilter}
                   setActiveFilter={setActiveFilter}
@@ -182,7 +185,7 @@ const MarketplaceJobs = () => {
               ) : activeSidebarItem === 'Talent Scout' ? (
                 <TalentScoutPage />
               ) : (
-                <WalletPage />
+                <PartnerLeadDashboard user={user} />
               )}
             </div>
           )}

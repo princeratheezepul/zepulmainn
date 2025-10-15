@@ -257,6 +257,124 @@ export const createTalentScoutByManager = async (req, res) => {
   }
 };
 
+// Get manager's talent scouts (recruiterList with details)
+export const getManagerTalentScouts = async (req, res) => {
+  try {
+    const managerId = req.user.userId; // Get manager ID from auth middleware
+    
+    console.log("Fetching talent scouts for manager:", managerId);
+    
+    // Fetch manager with populated recruiterList
+    const manager = await MpUser.findById(managerId)
+      .populate({
+        path: 'recruiterList',
+        select: 'firstName lastName emailid phone DOB userRole isActive createdAt'
+      });
+    
+    if (!manager) {
+      return res.status(404).json(
+        new ApiResponse(404, null, "Manager not found")
+      );
+    }
+
+    // Transform recruiter data for frontend
+    const talentScouts = (manager.recruiterList || []).map(recruiter => ({
+      _id: recruiter._id,
+      name: `${recruiter.firstName} ${recruiter.lastName}`,
+      firstName: recruiter.firstName,
+      lastName: recruiter.lastName,
+      email: recruiter.emailid,
+      phone: recruiter.phone,
+      dob: recruiter.DOB,
+      userRole: recruiter.userRole,
+      status: recruiter.isActive ? 'active' : 'disabled',
+      isActive: recruiter.isActive,
+      createdAt: recruiter.createdAt
+    }));
+
+    console.log(`Found ${talentScouts.length} talent scouts for manager ${managerId}`);
+
+    res.status(200).json(
+      new ApiResponse(200, {
+        talentScouts: talentScouts,
+        total: talentScouts.length
+      }, "Talent scouts fetched successfully")
+    );
+  } catch (error) {
+    console.error("Get manager talent scouts error:", error);
+    res.status(500).json(
+      new ApiResponse(500, null, "Internal server error")
+    );
+  }
+};
+
+// Delete talent scout by manager
+export const deleteTalentScoutByManager = async (req, res) => {
+  try {
+    const managerId = req.user.userId; // Get manager ID from auth middleware
+    const { talentScoutId } = req.params;
+    
+    console.log("Deleting talent scout:", talentScoutId, "by manager:", managerId);
+    
+    // Validate talent scout ID
+    if (!mongoose.Types.ObjectId.isValid(talentScoutId)) {
+      return res.status(400).json(
+        new ApiResponse(400, null, "Invalid talent scout ID")
+      );
+    }
+
+    // Fetch manager
+    const manager = await MpUser.findById(managerId);
+    if (!manager) {
+      return res.status(404).json(
+        new ApiResponse(404, null, "Manager not found")
+      );
+    }
+
+    // Verify manager role
+    if (manager.userRole !== "Manager") {
+      return res.status(403).json(
+        new ApiResponse(403, null, "Only managers can delete talent scouts")
+      );
+    }
+
+    // Check if talent scout exists
+    const talentScout = await MpUser.findById(talentScoutId);
+    if (!talentScout) {
+      return res.status(404).json(
+        new ApiResponse(404, null, "Talent scout not found")
+      );
+    }
+
+    // Verify the talent scout belongs to this manager
+    if (talentScout.manager?.toString() !== managerId.toString()) {
+      return res.status(403).json(
+        new ApiResponse(403, null, "This talent scout does not belong to you")
+      );
+    }
+
+    // Remove talent scout from manager's recruiterList
+    manager.recruiterList = manager.recruiterList.filter(
+      id => id.toString() !== talentScoutId.toString()
+    );
+    await manager.save();
+    console.log("Talent scout removed from manager's recruiterList");
+
+    // Delete the talent scout user from database
+    await MpUser.findByIdAndDelete(talentScoutId);
+    console.log("Talent scout deleted from database");
+
+    res.status(200).json(
+      new ApiResponse(200, null, "Talent scout deleted successfully")
+    );
+  } catch (error) {
+    console.error("Delete talent scout error:", error);
+    res.status(500).json(
+      new ApiResponse(500, null, "Internal server error")
+    );
+  }
+};
+
 // Create test MP user (for development)
 export const createTestUser = async (req, res) => {
   try {
@@ -311,8 +429,11 @@ export const marketplaceLogin = async (req, res) => {
       );
     }
 
-    // Find user by email
-    const user = await MpUser.findOne({ emailid: email });
+    // Find user by email and populate pickedJobs
+    const user = await MpUser.findOne({ emailid: email }).populate({
+      path: 'pickedJobs',
+      select: 'jobTitle location jobType salary status'
+    });
     console.log("User found:", user ? "Yes" : "No");
     console.log("User data:", user ? {
       _id: user._id,
@@ -358,9 +479,17 @@ export const marketplaceLogin = async (req, res) => {
       firstName: user.firstName,
       lastName: user.lastName,
       emailid: user.emailid,
+      phone: user.phone,
+      DOB: user.DOB,
       userRole: user.userRole,
       totalEarnings: user.totalEarnings,
-      pendingEarnings: user.pendingEarnings
+      pendingEarnings: user.pendingEarnings,
+      pickedJobs: user.pickedJobs || [],
+      myJobs: user.myJobs || [],
+      bookmarkedJobs: user.bookmarkedJobs || [],
+      accountDetails: user.accountDetails || [],
+      manager: user.manager,
+      recruiterList: user.recruiterList || []
     };
 
     res.status(200).json(
@@ -424,7 +553,12 @@ export const getMarketplaceProfile = async (req, res) => {
   try {
     const userId = req.user.userId;
 
-    const user = await MpUser.findById(userId).select('-__v');
+    const user = await MpUser.findById(userId)
+      .select('-__v')
+      .populate({
+        path: 'pickedJobs',
+        select: 'jobTitle location jobType salary status'
+      });
     
     if (!user) {
       return res.status(404).json(
@@ -660,9 +794,14 @@ export const searchJobs = async (req, res) => {
       );
     }
     
-    // Fetch user's bookmarked jobs
-    const user = await MpUser.findById(userId).select('bookmarkedJobs');
+    // Fetch user's bookmarked jobs, role, and myJobs
+    const user = await MpUser.findById(userId).select('bookmarkedJobs userRole myJobs');
     const bookmarkedJobIds = user?.bookmarkedJobs || [];
+    const userRole = user?.userRole;
+    const myJobIds = user?.myJobs || [];
+    
+    console.log("User role:", userRole);
+    console.log("User's myJobs:", myJobIds);
     
     // Create search conditions for mpJobs
     const searchConditions = {
@@ -675,6 +814,29 @@ export const searchJobs = async (req, res) => {
         { skills: { $in: [new RegExp(query, 'i')] } }
       ]
     };
+    
+    // If user is a recruiter (TalentScout), only search in their myJobs
+    if (userRole === 'recruiter') {
+      if (myJobIds.length === 0) {
+        console.log("TalentScout has no jobs in myJobs array");
+        return res.status(200).json(
+          new ApiResponse(200, { 
+            jobs: [],
+            pagination: {
+              currentPage: parseInt(page),
+              totalPages: 0,
+              totalJobs: 0,
+              jobsPerPage: parseInt(limit),
+              hasNextPage: false,
+              hasPrevPage: false
+            },
+            searchQuery: query
+          }, "No jobs found")
+        );
+      }
+      searchConditions._id = { $in: myJobIds };
+      console.log("TalentScout: Searching only in myJobs array");
+    }
     
     // Get total count of matching mpJobs
     const totalJobs = await MpJob.countDocuments(searchConditions);
@@ -764,24 +926,56 @@ export const getAllJobs = async (req, res) => {
     
     console.log("Fetching mpJobs for marketplace for user:", userId, "Page:", page, "Limit:", limit);
     
-    // Fetch user's bookmarked jobs
-    const user = await MpUser.findById(userId).select('bookmarkedJobs');
+    // Fetch user's bookmarked jobs and user role
+    const user = await MpUser.findById(userId).select('bookmarkedJobs userRole myJobs');
     const bookmarkedJobIds = user?.bookmarkedJobs || [];
+    const userRole = user?.userRole;
+    const myJobIds = user?.myJobs || [];
+    
+    console.log("User role:", userRole);
     console.log("User's bookmarked jobs:", bookmarkedJobIds);
-    console.log("User's bookmarked jobs types:", bookmarkedJobIds.map(id => typeof id));
+    console.log("User's myJobs:", myJobIds);
     
-    // Get total count of active mpJobs
-    const totalJobs = await MpJob.countDocuments({ status: 'active', isClosed: false });
+    // Build query based on user role
+    let jobQuery = { status: 'active', isClosed: false };
     
-    // Fetch paginated active mpJobs with populated company data
-    const jobs = await MpJob.find({ status: 'active', isClosed: false })
+    // If user is a recruiter (TalentScout), only show jobs from their myJobs array
+    if (userRole === 'recruiter') {
+      if (myJobIds.length === 0) {
+        // If talent scout has no jobs assigned, return empty result
+        console.log("TalentScout has no jobs in myJobs array");
+        return res.status(200).json(
+          new ApiResponse(200, { 
+            jobs: [],
+            pagination: {
+              currentPage: page,
+              totalPages: 0,
+              totalJobs: 0,
+              jobsPerPage: limit,
+              hasNextPage: false,
+              hasPrevPage: false
+            }
+          }, "No jobs found")
+        );
+      }
+      jobQuery._id = { $in: myJobIds };
+      console.log("TalentScout: Filtering jobs by myJobs array");
+    } else {
+      console.log("Manager/PartnerLead: Showing all active jobs");
+    }
+    
+    // Get total count of jobs based on query
+    const totalJobs = await MpJob.countDocuments(jobQuery);
+    
+    // Fetch paginated jobs with populated company data
+    const jobs = await MpJob.find(jobQuery)
       .populate('mpCompanies', 'companyName logo')
       .select('-internalNotes')
       .sort({ createdAt: -1 }) // Sort by newest first
       .skip(skip)
       .limit(limit);
 
-    console.log(`Found ${jobs.length} active mpJobs on page ${page} of ${Math.ceil(totalJobs / limit)}`);
+    console.log(`Found ${jobs.length} mpJobs on page ${page} of ${Math.ceil(totalJobs / limit)}`);
     
     // Debug: Log company data for first job
     if (jobs.length > 0) {
@@ -1080,7 +1274,8 @@ export const getJobDetails = async (req, res) => {
       shortlisted: job.mpSelectedCandidates || 0,
       interviewed: job.totalInterviews || 0,
       totalHires: job.totalHires || 0,
-      isBookmarked: bookmarkedJobIds.includes(job._id.toString())
+      isBookmarked: bookmarkedJobIds.includes(job._id.toString()),
+      talentScouts: job.talentScouts || []
     };
 
     res.status(200).json(
@@ -1091,6 +1286,180 @@ export const getJobDetails = async (req, res) => {
 
   } catch (error) {
     console.error("Get job details error:", error);
+    res.status(500).json(
+      new ApiResponse(500, null, "Internal server error")
+    );
+  }
+};
+
+// Get talent scouts for a specific job
+export const getJobTalentScouts = async (req, res) => {
+  try {
+    const { jobId } = req.params;
+    
+    console.log("Fetching talent scouts for job:", jobId);
+    
+    // Fetch the job with populated talent scouts
+    const job = await MpJob.findById(jobId)
+      .populate({
+        path: 'talentScouts',
+        select: 'firstName lastName emailid phone userRole isActive createdAt'
+      });
+
+    if (!job) {
+      return res.status(404).json(
+        new ApiResponse(404, null, "Job not found")
+      );
+    }
+
+    // Transform talent scout data for frontend
+    const talentScouts = (job.talentScouts || []).map(ts => ({
+      _id: ts._id,
+      firstName: ts.firstName,
+      lastName: ts.lastName,
+      email: ts.emailid,
+      phone: ts.phone,
+      userRole: ts.userRole,
+      status: ts.isActive ? 'active' : 'inactive',
+      assignedDate: ts.createdAt, // Using createdAt as assigned date for now
+      performance: Math.floor(Math.random() * 100) // Placeholder performance score
+    }));
+
+    res.status(200).json(
+      new ApiResponse(200, { 
+        talentScouts,
+        totalCount: talentScouts.length
+      }, "Talent scouts fetched successfully")
+    );
+
+  } catch (error) {
+    console.error("Get job talent scouts error:", error);
+    res.status(500).json(
+      new ApiResponse(500, null, "Internal server error")
+    );
+  }
+};
+
+// Add talent scout to a job
+export const addTalentScoutToJob = async (req, res) => {
+  try {
+    const { jobId } = req.params;
+    const { talentScoutId } = req.body;
+    const userId = req.user?.userId;
+    
+    console.log("=== ADD TALENT SCOUT TO JOB ===");
+    console.log("Adding talent scout to job:", { jobId, talentScoutId, userId });
+    console.log("Request user:", req.user);
+    console.log("Request headers:", req.headers);
+    console.log("Request body:", req.body);
+    console.log("=== END DEBUG INFO ===");
+    
+    // Find the job
+    const job = await MpJob.findById(jobId);
+    if (!job) {
+      return res.status(404).json(
+        new ApiResponse(404, null, "Job not found")
+      );
+    }
+
+    // Find the talent scout
+    const talentScout = await MpUser.findById(talentScoutId);
+    if (!talentScout) {
+      return res.status(404).json(
+        new ApiResponse(404, null, "Talent scout not found")
+      );
+    }
+
+    // Verify the talent scout has recruiter role
+    if (talentScout.userRole !== "recruiter") {
+      return res.status(400).json(
+        new ApiResponse(400, null, "User must have recruiter role to be added as talent scout")
+      );
+    }
+
+    // Check if talent scout is already assigned to this job
+    if (job.talentScouts.includes(talentScoutId)) {
+      return res.status(400).json(
+        new ApiResponse(400, null, "Talent scout is already assigned to this job")
+      );
+    }
+
+    // Add talent scout to job using the schema method
+    await job.addTalentScout(talentScoutId);
+
+    // Add job to talent scout's myJobs array
+    const jobObjectId = new mongoose.Types.ObjectId(jobId);
+    if (!talentScout.myJobs.includes(jobObjectId)) {
+      talentScout.myJobs.push(jobObjectId);
+      await talentScout.save();
+      console.log("Job added to talent scout's myJobs array");
+    }
+
+    res.status(200).json(
+      new ApiResponse(200, { 
+        message: "Talent scout added to job successfully"
+      }, "Talent scout added successfully")
+    );
+
+  } catch (error) {
+    console.error("=== ADD TALENT SCOUT ERROR ===");
+    console.error("Add talent scout to job error:", error);
+    console.error("Error name:", error.name);
+    console.error("Error message:", error.message);
+    console.error("Error stack:", error.stack);
+    console.error("=== END ERROR DEBUG ===");
+    res.status(500).json(
+      new ApiResponse(500, null, "Internal server error")
+    );
+  }
+};
+
+// Remove talent scout from a job
+export const removeTalentScoutFromJob = async (req, res) => {
+  try {
+    const { jobId, talentScoutId } = req.params;
+    const userId = req.user?.userId;
+    
+    console.log("Removing talent scout from job:", { jobId, talentScoutId, userId });
+    console.log("Request user:", req.user);
+    
+    // Find the job
+    const job = await MpJob.findById(jobId);
+    if (!job) {
+      return res.status(404).json(
+        new ApiResponse(404, null, "Job not found")
+      );
+    }
+
+    // Check if talent scout is assigned to this job
+    if (!job.talentScouts.includes(talentScoutId)) {
+      return res.status(400).json(
+        new ApiResponse(400, null, "Talent scout is not assigned to this job")
+      );
+    }
+
+    // Find the talent scout
+    const talentScout = await MpUser.findById(talentScoutId);
+    if (talentScout) {
+      // Remove job from talent scout's myJobs array
+      talentScout.myJobs = talentScout.myJobs.filter(
+        jobObjId => jobObjId.toString() !== jobId.toString()
+      );
+      await talentScout.save();
+      console.log("Job removed from talent scout's myJobs array");
+    }
+
+    // Remove talent scout from job using the schema method
+    await job.removeTalentScout(talentScoutId);
+
+    res.status(200).json(
+      new ApiResponse(200, { 
+        message: "Talent scout removed from job successfully"
+      }, "Talent scout removed successfully")
+    );
+
+  } catch (error) {
+    console.error("Remove talent scout from job error:", error);
     res.status(500).json(
       new ApiResponse(500, null, "Internal server error")
     );
@@ -1177,13 +1546,18 @@ export const pickJob = async (req, res) => {
 
     console.log("Job picked successfully. Total picked jobs:", user.pickedJobs.length);
 
-    // Return updated user data
-    const updatedUser = await MpUser.findById(userId).select('-__v');
+    // Return updated user data with populated pickedJobs
+    const updatedUser = await MpUser.findById(userId)
+      .select('-__v')
+      .populate({
+        path: 'pickedJobs',
+        select: 'jobTitle location jobType salary status'
+      });
 
     res.status(200).json(
       new ApiResponse(200, { 
         user: updatedUser,
-        pickedJobs: user.pickedJobs
+        pickedJobs: updatedUser.pickedJobs
       }, "Job picked successfully")
     );
 
@@ -1258,13 +1632,18 @@ export const withdrawJob = async (req, res) => {
 
     console.log("Job withdrawn successfully. Total picked jobs:", user.pickedJobs.length);
 
-    // Return updated user data
-    const updatedUser = await MpUser.findById(userId).select('-__v');
+    // Return updated user data with populated pickedJobs
+    const updatedUser = await MpUser.findById(userId)
+      .select('-__v')
+      .populate({
+        path: 'pickedJobs',
+        select: 'jobTitle location jobType salary status'
+      });
 
     res.status(200).json(
       new ApiResponse(200, { 
         user: updatedUser,
-        pickedJobs: user.pickedJobs
+        pickedJobs: updatedUser.pickedJobs
       }, "Job withdrawn successfully")
     );
 
@@ -1331,6 +1710,7 @@ export const saveMarketplaceResume = async (req, res) => {
       tag,
       recruiterId: userId, // Store marketplace user ID in recruiterId field
       isMPUser: true, // Mark as marketplace user resume
+      isMarketplace: true, // Mark as marketplace resume
       ...resumeData,
     };
 
@@ -1388,6 +1768,20 @@ export const saveMarketplaceResume = async (req, res) => {
       }
     } catch (companyError) {
       console.error("Error updating MpCompany candidatesCount:", companyError);
+      // Don't fail the request if this fails, just log the error
+    }
+
+    // Increment applied count in user's candidate_data
+    try {
+      await MpUser.findByIdAndUpdate(userId, {
+        $inc: { 'candidate_data.applied': 1 }
+      }, {
+        upsert: false, // Don't create if doesn't exist
+        setDefaultsOnInsert: true // Set default values if inserting
+      });
+      console.log("User candidate_data.applied incremented for user:", userId);
+    } catch (userError) {
+      console.error("Error updating MpUser candidate_data.applied:", userError);
       // Don't fail the request if this fails, just log the error
     }
     
@@ -1479,6 +1873,20 @@ export const saveMarketplaceInterviewEvaluation = async (req, res) => {
     }
 
     console.log('Marketplace interview evaluation saved successfully:', updatedResume._id);
+
+    // Increment interviewed count in user's candidate_data
+    try {
+      await MpUser.findByIdAndUpdate(userId, {
+        $inc: { 'candidate_data.interviewed': 1 }
+      }, {
+        upsert: false, // Don't create if doesn't exist
+        setDefaultsOnInsert: true // Set default values if inserting
+      });
+      console.log("User candidate_data.interviewed incremented for user:", userId);
+    } catch (userError) {
+      console.error("Error updating MpUser candidate_data.interviewed:", userError);
+      // Don't fail the request if this fails, just log the error
+    }
 
     res.status(200).json(
       new ApiResponse(200, { 
@@ -1703,8 +2111,8 @@ export const getPickedJobs = async (req, res) => {
 export const updateMarketplaceResume = async (req, res) => {
   try {
     const { resumeId } = req.params;
-    const { redFlagged, addedNotes } = req.body;
-    const userId = req.userId; // Get user ID from marketplace auth middleware
+    const { redFlagged, addedNotes, referredToManager } = req.body;
+    const userId = req.user.userId; // Get user ID from marketplace auth middleware
     
     console.log('PATCH /api/marketplace/resumes/:resumeId called');
     console.log('resumeId:', resumeId);
@@ -1715,6 +2123,7 @@ export const updateMarketplaceResume = async (req, res) => {
     const updateObj = {};
     if (typeof redFlagged === 'boolean') updateObj.redFlagged = redFlagged;
     if (addedNotes !== undefined) updateObj.addedNotes = addedNotes;
+    if (typeof referredToManager === 'boolean') updateObj.referredToManager = referredToManager;
     
     if (Object.keys(updateObj).length === 0) {
       return res.status(400).json(
@@ -1761,6 +2170,22 @@ export const updateMarketplaceResume = async (req, res) => {
         // Don't fail the main request if this fails
       }
     }
+
+    // If referredToManager is being set to true, increment shortlisted count in user's candidate_data
+    if (referredToManager === true) {
+      try {
+        await MpUser.findByIdAndUpdate(userId, {
+          $inc: { 'candidate_data.shortlisted': 1 }
+        }, {
+          upsert: false, // Don't create if doesn't exist
+          setDefaultsOnInsert: true // Set default values if inserting
+        });
+        console.log("User candidate_data.shortlisted incremented for user:", userId);
+      } catch (userError) {
+        console.error("Error updating MpUser candidate_data.shortlisted:", userError);
+        // Don't fail the request if this fails, just log the error
+      }
+    }
     
     res.status(200).json(
       new ApiResponse(200, { resume: updatedResume }, "Resume updated successfully")
@@ -1768,6 +2193,226 @@ export const updateMarketplaceResume = async (req, res) => {
     
   } catch (error) {
     console.error("Update marketplace resume error:", error);
+    res.status(500).json(
+      new ApiResponse(500, null, "Internal server error")
+    );
+  }
+};
+
+// Get candidate pipeline data for Talent Scout Dashboard
+export const getCandidatePipelineData = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+
+    // Get user with populated pickedJobs
+    const user = await MpUser.findById(userId).populate({
+      path: 'pickedJobs',
+      select: 'jobTitle _id'
+    });
+
+    if (!user) {
+      return res.status(404).json(
+        new ApiResponse(404, null, "User not found")
+      );
+    }
+
+    if (!user.pickedJobs || user.pickedJobs.length === 0) {
+      return res.status(200).json(
+        new ApiResponse(200, { pipelineData: [] }, "No picked jobs found")
+      );
+    }
+
+    // Get all job IDs
+    const jobIds = user.pickedJobs.map(job => job._id);
+
+    // Aggregate resume data for all picked jobs
+    const pipelineData = await Resume.aggregate([
+      {
+        $match: {
+          jobId: { $in: jobIds },
+          isMarketplace: true
+        }
+      },
+      {
+        $group: {
+          _id: '$jobId',
+          submitted: { $sum: 1 }, // All resumes count as submitted
+          screened: {
+            $sum: {
+              $cond: [
+                { 
+                  $and: [
+                    { $ifNull: ['$interviewEvaluation', false] },
+                    { $gt: [{ $size: { $ifNull: ['$interviewEvaluation.evaluationResults', []] } }, 0] }
+                  ]
+                },
+                1,
+                0
+              ]
+            }
+          },
+          shortlisted: {
+            $sum: {
+              $cond: [
+                { $eq: ['$referredToManager', true] },
+                1,
+                0
+              ]
+            }
+          },
+          hired: {
+            $sum: {
+              $cond: [
+                { $eq: ['$status', 'hired'] },
+                1,
+                0
+              ]
+            }
+          }
+        }
+      }
+    ]);
+
+    // Log aggregation results for debugging
+    console.log('Pipeline aggregation results:', JSON.stringify(pipelineData, null, 2));
+
+    // Create a map of jobId to counts
+    const pipelineMap = new Map();
+    pipelineData.forEach(item => {
+      pipelineMap.set(item._id.toString(), {
+        submitted: item.submitted || 0,
+        screened: item.screened || 0,
+        shortlisted: item.shortlisted || 0,
+        hired: item.hired || 0
+      });
+    });
+
+    // Build the final pipeline data array
+    const finalPipelineData = user.pickedJobs.map(job => {
+      const counts = pipelineMap.get(job._id.toString()) || {
+        submitted: 0,
+        screened: 0,
+        shortlisted: 0,
+        hired: 0
+      };
+
+      console.log(`Job: ${job.jobTitle}, Counts:`, counts);
+
+      return {
+        role: job.jobTitle,
+        stages: [
+          counts.submitted,
+          counts.screened,
+          counts.shortlisted,
+          counts.hired
+        ]
+      };
+    });
+
+    console.log('Final pipeline data:', JSON.stringify(finalPipelineData, null, 2));
+
+    // Calculate scorecard data
+    // Total = all candidates across all jobs
+    // Pending = submitted + screened (not yet referred to manager)
+    // Reviewed = shortlisted + hired (referred to manager or hired)
+    let totalCandidates = 0;
+    let pendingCount = 0;
+    let reviewedCount = 0;
+
+    pipelineData.forEach(item => {
+      const submitted = item.submitted || 0;
+      const screened = item.screened || 0;
+      const shortlisted = item.shortlisted || 0;
+      const hired = item.hired || 0;
+
+      totalCandidates += submitted;
+      
+      // Pending = candidates who are submitted or screened but not yet shortlisted/hired
+      // This is: (submitted - screened) + (screened - shortlisted)
+      // Which simplifies to: submitted - shortlisted
+      const notYetReviewed = submitted - shortlisted - hired;
+      pendingCount += Math.max(0, notYetReviewed);
+      
+      // Reviewed = shortlisted + hired
+      reviewedCount += shortlisted + hired;
+    });
+
+    const scorecardData = {
+      total: totalCandidates,
+      pending: pendingCount,
+      reviewed: reviewedCount
+    };
+
+    console.log('Scorecard data:', scorecardData);
+
+    res.status(200).json(
+      new ApiResponse(200, { 
+        pipelineData: finalPipelineData,
+        scorecardData: scorecardData
+      }, "Pipeline data fetched successfully")
+    );
+
+  } catch (error) {
+    console.error("Get candidate pipeline data error:", error);
+    res.status(500).json(
+      new ApiResponse(500, null, "Internal server error")
+    );
+  }
+};
+
+// Get team performance data for Talent Scout Dashboard
+export const getTeamPerformanceData = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+
+    // Get user with populated recruiterList
+    const user = await MpUser.findById(userId).populate({
+      path: 'recruiterList',
+      select: 'firstName lastName myJobs candidate_data isActive'
+    });
+
+    if (!user) {
+      return res.status(404).json(
+        new ApiResponse(404, null, "User not found")
+      );
+    }
+
+    if (!user.recruiterList || user.recruiterList.length === 0) {
+      return res.status(200).json(
+        new ApiResponse(200, { teamPerformance: [] }, "No recruiters found")
+      );
+    }
+
+    console.log('Fetching team performance for user:', userId);
+    console.log('Recruiter list count:', user.recruiterList.length);
+
+    // Build team performance data
+    const teamPerformanceData = user.recruiterList.map(recruiter => {
+      const jobsAssigned = recruiter.myJobs ? recruiter.myJobs.length : 0;
+      const submitted = recruiter.candidate_data ? recruiter.candidate_data.applied || 0 : 0;
+      const shortlisted = recruiter.candidate_data ? recruiter.candidate_data.shortlisted || 0 : 0;
+      const status = recruiter.isActive ? 'Active' : 'Inactive';
+
+      return {
+        id: recruiter._id,
+        name: `${recruiter.firstName} ${recruiter.lastName}`,
+        firstName: recruiter.firstName,
+        lastName: recruiter.lastName,
+        jobsAssigned: jobsAssigned,
+        submitted: submitted,
+        shortlisted: shortlisted,
+        status: status
+      };
+    });
+
+    console.log('Team performance data:', JSON.stringify(teamPerformanceData, null, 2));
+
+    res.status(200).json(
+      new ApiResponse(200, { teamPerformance: teamPerformanceData }, "Team performance data fetched successfully")
+    );
+
+  } catch (error) {
+    console.error("Get team performance data error:", error);
     res.status(500).json(
       new ApiResponse(500, null, "Internal server error")
     );

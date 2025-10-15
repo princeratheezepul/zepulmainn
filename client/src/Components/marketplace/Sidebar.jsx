@@ -137,6 +137,17 @@ const Sidebar = ({
 }) => {
   const sidebarItems = [
     {
+      id: "Dashboard",
+      label: "Dashboard",
+      icon: (
+        <svg width="22" height="22" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M10.5 25.6667H17.5C23.3333 25.6667 25.6667 23.3333 25.6667 17.5V10.5C25.6667 4.66667 23.3333 2.33333 17.5 2.33333H10.5C4.66667 2.33333 2.33333 4.66667 2.33333 10.5V17.5C2.33333 23.3333 4.66667 25.6667 10.5 25.6667Z" stroke="black" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          <path d="M2.33333 15.1667H25.6667" stroke="black" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          <path d="M14 25.55V14.9333" stroke="black" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      ),
+    },
+    {
       id: "Home",
       label: "Home",
       icon: (
@@ -212,26 +223,25 @@ const Sidebar = ({
       ),
     },
     {
-      id: "Talent Scout",
-      label: "Talent Scout",
-      icon: (
-        <svg width="22" height="22" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path d="M14 14C17.4062 14 20.1667 11.2396 20.1667 7.83333C20.1667 4.42708 17.4062 1.66667 14 1.66667C10.5938 1.66667 7.83333 4.42708 7.83333 7.83333C7.83333 11.2396 10.5938 14 14 14Z" stroke="black" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M24.0845 26.3333C24.0845 21.5417 19.5928 17.5 14.0011 17.5C8.40951 17.5 3.91784 21.5417 3.91784 26.3333" stroke="black" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-</svg>
-      ),
-    },
-    {
       id: "Wallet",
       label: "Wallet",
       icon: (
         <svg width="26" height="26" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path d="M2.33325 9.92249H25.6666" stroke="black" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M7 19.2556H9.33333" stroke="black" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M12.25 19.2556H16.9167" stroke="black" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M7.51325 4.08899H20.4749C24.6283 4.08899 25.6666 5.11566 25.6666 9.21066V18.789C25.6666 22.884 24.6283 23.9107 20.4866 23.9107H7.51325C3.37159 23.9223 2.33325 22.8957 2.33325 18.8007V9.21066C2.33325 5.11566 3.37159 4.08899 7.51325 4.08899Z" stroke="black" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M2.33325 9.92249H25.6666" stroke="black" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"/>
+<path d="M7 19.2556H9.33333" stroke="black" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"/>
+<path d="M12.25 19.2556H16.9167" stroke="black" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"/>
+<path d="M7.51325 4.08899H20.4749C24.6283 4.08899 25.6666 5.11566 25.6666 9.21066V18.789C25.6666 22.884 24.6283 23.9107 20.4866 23.9107H7.51325C3.37159 23.9223 2.33325 22.8957 2.33325 18.8007V9.21066C2.33325 5.11566 3.37159 4.08899 7.51325 4.08899Z" stroke="black" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
 </svg>
-
+      ),
+    },
+    {
+      id: "Talent Scout",
+      label: "Talent Scout",
+      icon: (
+        <svg width="22" height="22" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M14 14C17.4062 14 20.1667 11.2396 20.1667 7.83333C20.1667 4.42708 17.4062 1.66667 14 1.66667C10.5938 1.66667 7.83333 4.42708 7.83333 7.83333C7.83333 11.2396 10.5938 14 14 14Z" stroke="black" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+<path d="M24.0845 26.3333C24.0845 21.5417 19.5928 17.5 14.0011 17.5C8.40951 17.5 3.91784 21.5417 3.91784 26.3333" stroke="black" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+</svg>
       ),
     },
   ];

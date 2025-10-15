@@ -289,10 +289,25 @@ const ResumeDetailsView = ({ resumeData, onBack, onResumeUpdate, isMarketplace =
               <button
                 onClick={async () => {
                   try {
-                    const userInfo = JSON.parse(localStorage.getItem("userInfo"));
-                    const token = userInfo?.data?.accessToken;
-                    if (!token) throw new Error('No authentication token found');
-                    const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/resumes/${resumeData._id}`, {
+                    // Use the same logic as red flag toggle for marketplace vs regular
+                    const apiUrl = isMarketplace 
+                      ? `${import.meta.env.VITE_BACKEND_URL}/api/marketplace/resumes/${resumeData._id}`
+                      : `${import.meta.env.VITE_BACKEND_URL}/api/resumes/${resumeData._id}`;
+                    
+                    // Get the appropriate token
+                    const token = isMarketplace 
+                      ? localStorage.getItem('marketplace_token')
+                      : JSON.parse(localStorage.getItem("userInfo"))?.data?.accessToken;
+                    
+                    console.log('Refer to Manager - isMarketplace:', isMarketplace);
+                    console.log('Refer to Manager - apiUrl:', apiUrl);
+                    console.log('Refer to Manager - token exists:', !!token);
+                    
+                    if (!token) {
+                      throw new Error('No authentication token found');
+                    }
+
+                    const response = await fetch(apiUrl, {
                       method: 'PATCH',
                       headers: {
                         'Content-Type': 'application/json',
@@ -300,13 +315,22 @@ const ResumeDetailsView = ({ resumeData, onBack, onResumeUpdate, isMarketplace =
                       },
                       body: JSON.stringify({ referredToManager: true })
                     });
-                    if (!response.ok) throw new Error('Failed to refer to manager');
+                    
+                    console.log('Refer to Manager - response status:', response.status);
+                    console.log('Refer to Manager - response ok:', response.ok);
+
+                    if (!response.ok) {
+                      const errorData = await response.json();
+                      console.log('Refer to Manager - error data:', errorData);
+                      throw new Error(errorData.message || 'Failed to refer to manager');
+                    }
                     
                     // Update the state to trigger re-render
                     setReferredToManager(true);
                     
                     toast.success('Candidate referred to manager!');
                   } catch (err) {
+                    console.error('Error referring to manager:', err);
                     toast.error(err.message || 'Failed to refer to manager');
                   }
                 }}

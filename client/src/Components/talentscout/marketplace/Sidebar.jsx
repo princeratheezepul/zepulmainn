@@ -211,19 +211,6 @@ const Sidebar = ({
         </svg>
       ),
     },
-    {
-      id: "Wallet",
-      label: "Wallet",
-      icon: (
-        <svg width="26" height="26" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path d="M2.33325 9.92249H25.6666" stroke="black" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M7 19.2556H9.33333" stroke="black" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M12.25 19.2556H16.9167" stroke="black" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M7.51325 4.08899H20.4749C24.6283 4.08899 25.6666 5.11566 25.6666 9.21066V18.789C25.6666 22.884 24.6283 23.9107 20.4866 23.9107H7.51325C3.37159 23.9223 2.33325 22.8957 2.33325 18.8007V9.21066C2.33325 5.11566 3.37159 4.08899 7.51325 4.08899Z" stroke="black" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-</svg>
-
-      ),
-    },
   ];
 
   return (

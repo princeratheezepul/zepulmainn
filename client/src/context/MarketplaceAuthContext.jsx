@@ -679,7 +679,8 @@ export const MarketplaceAuthProvider = ({ children }) => {
       throw new Error('No authentication token available');
     }
 
-    const defaultOptions = {
+    const mergedOptions = {
+      ...options,
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`,
@@ -687,7 +688,7 @@ export const MarketplaceAuthProvider = ({ children }) => {
       },
     };
 
-    const response = await fetch(url, { ...defaultOptions, ...options });
+    const response = await fetch(url, mergedOptions);
     
     if (response.status === 401) {
       // Session invalid or expired

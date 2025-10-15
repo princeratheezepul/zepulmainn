@@ -202,6 +202,12 @@ const ResumeSchema = new mongoose.Schema(
       default: false
     },
     
+    // Marketplace Resume Flag (for resumes submitted through marketplace)
+    isMarketplace: {
+      type: Boolean,
+      default: false
+    },
+    
     // Red Flag Status
     redFlagged: {
       type: Boolean,

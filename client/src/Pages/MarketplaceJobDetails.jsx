@@ -18,6 +18,7 @@ import { CommissionCard } from '../Components/marketplace/CommisionCard';
 import MarketplaceResumeUpload from '../Components/marketplace/MarketplaceResumeUpload';
 import SavedResumes from '../Components/recruiter/dashboard/SavedResumes';
 import MarketplaceCandidateList from '../Components/marketplace/MarketplaceCandidateList';
+import TalentScoutList from '../Components/marketplace/TalentScoutList';
 import toast from 'react-hot-toast';
 
 const MarketplaceJobDetails = () => {
@@ -36,7 +37,9 @@ const MarketplaceJobDetails = () => {
   const [showResumeUpload, setShowResumeUpload] = useState(false);
   const [showSavedResumes, setShowSavedResumes] = useState(false);
   const [showCandidateList, setShowCandidateList] = useState(false);
+  const [showTalentScoutList, setShowTalentScoutList] = useState(false);
   const [resumeCount, setResumeCount] = useState(0);
+  const [talentScoutCount, setTalentScoutCount] = useState(0);
 
   // Fetch resume count for this job (marketplace candidates)
   const fetchResumeCount = async () => {
@@ -64,6 +67,8 @@ const MarketplaceJobDetails = () => {
         
         if (result.success) {
           setJob(result.job);
+          // Set talent scout count from job data
+          setTalentScoutCount(result.job.talentScouts?.length || 0);
         } else {
           setError(result.error);
         }
@@ -268,6 +273,19 @@ const MarketplaceJobDetails = () => {
         <div className="w-full max-w-6xl bg-gray-50">
           <SavedResumes onBack={() => setShowSavedResumes(false)} jobId={jobId} jobtitle={job?.title} />
         </div>
+      ) : showTalentScoutList ? (
+        <div className="w-full max-w-6xl bg-gray-50">
+          <TalentScoutList 
+            onClose={() => {
+              setShowTalentScoutList(false);
+              // Refresh talent scout count when going back
+              if (job?.talentScouts) {
+                setTalentScoutCount(job.talentScouts.length);
+              }
+            }} 
+            job={job} 
+          />
+        </div>
       ) : showCandidateList ? (
         <div className="w-full max-w-6xl bg-gray-50">
           <MarketplaceCandidateList 
@@ -397,16 +415,30 @@ const MarketplaceJobDetails = () => {
                 Posted {formatDate(job.postedDate)}
               </span>
             </div>
-            <button 
-              onClick={() => setShowCandidateList(true)}
-              className="flex items-center gap-2 bg-black text-white px-5 py-2 rounded-full text-sm font-semibold hover:bg-gray-900 transition-colors cursor-pointer"
-            >
-              <Users size={18} className="text-white" />
-              {resumeCount} Candidate List 
-              <svg xmlns='http://www.w3.org/2000/svg' className='inline ml-1' width='18' height='18' fill='none' viewBox='0 0 24 24' stroke='currentColor'>
-                <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M9 5l7 7-7 7' />
-              </svg>
-            </button>
+            <div className="flex items-center gap-3">
+              {isJobPicked && (
+                <button 
+                  onClick={() => setShowTalentScoutList(true)}
+                  className="flex items-center gap-2 bg-black text-white px-5 py-2 rounded-full text-sm font-semibold hover:bg-gray-900 transition-colors cursor-pointer"
+                >
+                  <Users size={18} className="text-white" />
+                  {talentScoutCount} Talent Scout
+                  <svg xmlns='http://www.w3.org/2000/svg' className='inline ml-1' width='18' height='18' fill='none' viewBox='0 0 24 24' stroke='currentColor'>
+                    <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M9 5l7 7-7 7' />
+                  </svg>
+                </button>
+              )}
+              <button 
+                onClick={() => setShowCandidateList(true)}
+                className="flex items-center gap-2 bg-black text-white px-5 py-2 rounded-full text-sm font-semibold hover:bg-gray-900 transition-colors cursor-pointer"
+              >
+                <Users size={18} className="text-white" />
+                {resumeCount} Candidate List 
+                <svg xmlns='http://www.w3.org/2000/svg' className='inline ml-1' width='18' height='18' fill='none' viewBox='0 0 24 24' stroke='currentColor'>
+                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M9 5l7 7-7 7' />
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
         

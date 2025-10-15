@@ -1,11 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import JobCard from './JobCard';
-import YourPicks from './YourPicks';
 import { useMarketplaceAuth } from '../../../context/MarketplaceAuthContext';
 
 const HomePage = ({ 
-  activeFilter, 
-  setActiveFilter,
   onViewAllPicks
 }) => {
   const { fetchJobs, toggleJobBookmark } = useMarketplaceAuth();
@@ -21,7 +18,6 @@ const HomePage = ({
     hasNextPage: false,
     hasPrevPage: false
   });
-  const filters = ['All', 'New', 'Urgent', 'Actively Recruiting'];
 
   // Load jobs for a specific page
   const loadJobs = async (page = 1) => {
@@ -92,126 +88,87 @@ const HomePage = ({
     }
   };
 
-  // Filter jobs based on active filter
-  const filteredJobs = jobs.filter(job => {
-    switch (activeFilter) {
-      case 'New':
-        // Jobs posted in the last 7 days
-        const weekAgo = new Date();
-        weekAgo.setDate(weekAgo.getDate() - 7);
-        return new Date(job.postedDate) > weekAgo;
-      case 'Urgent':
-        return job.priority.includes('High');
-      case 'Actively Recruiting':
-        return job.totalApplications > 0;
-      default:
-        return true;
-    }
-  });
 
   return (
-    <div className="flex gap-6">
-      {/* Job Listings Area */}
-      <div className="flex-1">
-        {/* Hero Section */}
-        <div  
-          className="rounded-xl px-8 py-[1.2rem] mb-3 text-white border"
-          style={{
-            background: 'linear-gradient(135deg, #1F1F1F 0%, #0066FE 82%, #0E4598 90.25%)',
-            borderColor: '#D0D0D8'
-          }}
-        >
-          <div className="text-2xl font-bold mb-1">Explore the best hiring opportunities</div>
-          <div className="text-gray-100 opacity-90 text-sm">Browse through verified jobs from trusted recruiters and companies across industries.</div>
-        </div>
+    <div>
+      {/* Hero Section */}
+      <div  
+        className="rounded-xl px-8 py-[1.2rem] mb-3 text-white border"
+        style={{
+          background: 'linear-gradient(135deg, #1F1F1F 0%, #0066FE 82%, #0E4598 90.25%)',
+          borderColor: '#D0D0D8'
+        }}
+      >
+        <div className="text-2xl font-bold mb-1">Explore the best hiring opportunities</div>
+        <div className="text-gray-100 opacity-90 text-sm">Browse through verified jobs from trusted recruiters and companies across industries.</div>
+      </div>
 
-        {/* Filters */}
-        <div className="flex flex-wrap gap-2 mb-3">
-          {filters.map((filter) => (
-            <div
-              key={filter}
-              onClick={() => setActiveFilter(filter)}
-              className={`px-3 py-1 rounded-2xl transition-colors border cursor-pointer font-medium ${
-                activeFilter === filter
-                  ? 'bg-black text-white'
-                  : 'bg-white text-gray-800 hover:bg-gray-50'
-              }`}
-            >
-              {filter}
-            </div>
-          ))}
-        </div>
-
-        {/* Job Listings */}
-        <div className="space-y-4">
-          {isLoadingJobs ? (
-            <div className="flex justify-center items-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-            </div>
-          ) : jobsError ? (
-            <div className="text-center py-12">
-              <div className="text-red-600 mb-2">Failed to load jobs</div>
-              <div className="text-gray-500">{jobsError}</div>
-            </div>
-          ) : filteredJobs.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="text-gray-600 mb-2">No jobs found</div>
-              <div className="text-gray-500">Try adjusting your filters or check back later</div>
-            </div>
-          ) : (
-            filteredJobs.map((job) => (
-              <JobCard 
-                key={job._id} 
-                job={job} 
-                onBookmarkToggle={handleBookmarkToggle}
-                isBookmarking={bookmarkingJobs.has(job._id)}
-              />
-            ))
-          )}
-        </div>
-
-        {/* Pagination Controls */}
-        {!isLoadingJobs && !jobsError && pagination.totalPages > 1 && (
-          <div className="flex justify-center items-center mt-8 space-x-4">
-            <button
-              onClick={() => loadJobs(pagination.currentPage - 1)}
-              disabled={!pagination.hasPrevPage}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                pagination.hasPrevPage
-                  ? 'bg-blue-600 text-white hover:bg-blue-700'
-                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-              }`}
-            >
-              Previous
-            </button>
-            
-            <div className="flex items-center space-x-2">
-              <span className="text-gray-600">
-                Page {pagination.currentPage} of {pagination.totalPages}
-              </span>
-              <span className="text-gray-400">•</span>
-              <span className="text-gray-600">
-                {pagination.totalJobs} total jobs
-              </span>
-            </div>
-            
-            <button
-              onClick={() => loadJobs(pagination.currentPage + 1)}
-              disabled={!pagination.hasNextPage}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                pagination.hasNextPage
-                  ? 'bg-blue-600 text-white hover:bg-blue-700'
-                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-              }`}
-            >
-              Next
-            </button>
+      {/* Job Listings */}
+      <div className="space-y-4">
+        {isLoadingJobs ? (
+          <div className="flex justify-center items-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
           </div>
+        ) : jobsError ? (
+          <div className="text-center py-12">
+            <div className="text-red-600 mb-2">Failed to load jobs</div>
+            <div className="text-gray-500">{jobsError}</div>
+          </div>
+        ) : jobs.length === 0 ? (
+          <div className="text-center py-12">
+            <div className="text-gray-600 mb-2">No jobs found</div>
+            <div className="text-gray-500">Check back later for new opportunities</div>
+          </div>
+        ) : (
+          jobs.map((job) => (
+            <JobCard 
+              key={job._id} 
+              job={job} 
+              onBookmarkToggle={handleBookmarkToggle}
+              isBookmarking={bookmarkingJobs.has(job._id)}
+            />
+          ))
         )}
       </div>
 
-      {/* Sidebar - Your Picks */}
-      <YourPicks onViewAll={onViewAllPicks} />
+      {/* Pagination Controls */}
+      {!isLoadingJobs && !jobsError && pagination.totalPages > 1 && (
+        <div className="flex justify-center items-center mt-8 space-x-4">
+          <button
+            onClick={() => loadJobs(pagination.currentPage - 1)}
+            disabled={!pagination.hasPrevPage}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              pagination.hasPrevPage
+                ? 'bg-blue-600 text-white hover:bg-blue-700'
+                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+            }`}
+          >
+            Previous
+          </button>
+          
+          <div className="flex items-center space-x-2">
+            <span className="text-gray-600">
+              Page {pagination.currentPage} of {pagination.totalPages}
+            </span>
+            <span className="text-gray-400">•</span>
+            <span className="text-gray-600">
+              {pagination.totalJobs} total jobs
+            </span>
+          </div>
+          
+          <button
+            onClick={() => loadJobs(pagination.currentPage + 1)}
+            disabled={!pagination.hasNextPage}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              pagination.hasNextPage
+                ? 'bg-blue-600 text-white hover:bg-blue-700'
+                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+            }`}
+          >
+            Next
+          </button>
+        </div>
+      )}
     </div>
   );
 };

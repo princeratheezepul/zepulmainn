@@ -85,6 +85,12 @@ const mpJobSchema = new mongoose.Schema({
         ref: 'MpUser'
     }],
     
+    // Talent Scouts - array of MpUser ObjectIds with userRole "recruiter"
+    talentScouts: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'MpUser'
+    }],
+    
     // Track when jobs are picked (for statistics)
     pickHistory: [{
         userId: {
@@ -149,6 +155,34 @@ const mpJobSchema = new mongoose.Schema({
 }, {
     timestamps: true
 });
+
+// Method to add a talent scout to the job (validates userRole)
+mpJobSchema.methods.addTalentScout = async function (talentScoutId) {
+    const MpUser = mongoose.model('MpUser');
+    const talentScout = await MpUser.findById(talentScoutId);
+    
+    if (!talentScout) {
+        throw new Error("Talent scout not found");
+    }
+    
+    if (talentScout.userRole !== "recruiter") {
+        throw new Error("User must have userRole 'recruiter' to be added as a talent scout");
+    }
+    
+    // Check if talent scout is already in the list
+    if (this.talentScouts.some(id => id.toString() === talentScoutId.toString())) {
+        return this; // Already added, no need to add again
+    }
+    
+    this.talentScouts.push(talentScoutId);
+    return await this.save();
+};
+
+// Method to remove a talent scout from the job
+mpJobSchema.methods.removeTalentScout = async function (talentScoutId) {
+    this.talentScouts = this.talentScouts.filter(id => id.toString() !== talentScoutId.toString());
+    return await this.save();
+};
 
 // Index for better query performance
 mpJobSchema.index({ creatorId: 1 });

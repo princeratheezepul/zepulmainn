@@ -3,7 +3,6 @@ import Sidebar from '../Components/talentscout/marketplace/Sidebar';
 import Header from '../Components/talentscout/marketplace/Header';
 import HomePage from '../Components/talentscout/marketplace/HomePage';
 import JobsPage from '../Components/talentscout/marketplace/JobsPage';
-import WalletPage from '../Components/talentscout/marketplace/WalletPage';
 import SearchResults from '../Components/talentscout/marketplace/SearchResults';
 import ProfilePage from '../Components/talentscout/marketplace/ProfilePage';
 import BankDetailsSetup from '../Components/talentscout/marketplace/BankDetailsSetup';
@@ -12,7 +11,6 @@ import { jobListings, yourPicks, walletData } from '../Data/marketplaceData';
 
 const TalentScoutJobs = () => {
   const { user, logout, fetchUserProfile, saveBankDetails } = useMarketplaceAuth();
-  const [activeFilter, setActiveFilter] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [activeSidebarItem, setActiveSidebarItem] = useState('Home');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -167,8 +165,6 @@ const TalentScoutJobs = () => {
             <div className="px-3 py-3">
               {activeSidebarItem === 'Home' ? (
                 <HomePage 
-                  activeFilter={activeFilter}
-                  setActiveFilter={setActiveFilter}
                   onViewAllPicks={handleViewAllPicks}
                 />
               ) : activeSidebarItem === 'Jobs' ? (
@@ -177,7 +173,9 @@ const TalentScoutJobs = () => {
                   setActiveJobsTab={setActiveJobsTab}
                 />
               ) : (
-                <WalletPage />
+                <HomePage 
+                  onViewAllPicks={handleViewAllPicks}
+                />
               )}
             </div>
           )}

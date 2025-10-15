@@ -6,9 +6,7 @@ import {
   Calendar, 
   IndianRupee, 
   Users, 
-  Bookmark,
   ArrowLeft,
-  FileText,
   CalendarDays,
   MoreVertical
 } from 'lucide-react';
@@ -23,15 +21,11 @@ import toast from 'react-hot-toast';
 const TalentScoutJobDetails = () => {
   const { jobId } = useParams();
   const navigate = useNavigate();
-  const { fetchJobDetails, toggleJobBookmark, pickJob, withdrawJob, user } = useMarketplaceAuth();
+  const { fetchJobDetails, user } = useMarketplaceAuth();
   
   const [job, setJob] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [isBookmarking, setIsBookmarking] = useState(false);
-  const [isPicking, setIsPicking] = useState(false);
-  const [isWithdrawing, setIsWithdrawing] = useState(false);
-  const [isJobPicked, setIsJobPicked] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [showResumeUpload, setShowResumeUpload] = useState(false);
   const [showSavedResumes, setShowSavedResumes] = useState(false);
@@ -81,17 +75,6 @@ const TalentScoutJobDetails = () => {
     }
   }, [jobId, fetchJobDetails]);
 
-  // Check if job is already picked
-  useEffect(() => {
-    if (user && user.pickedJobs && jobId) {
-      // Check if jobId exists in pickedJobs array (handle both string and ObjectId formats)
-      const isPicked = user.pickedJobs.some(pickedJob => 
-        pickedJob === jobId || pickedJob._id === jobId || pickedJob.toString() === jobId
-      );
-      setIsJobPicked(isPicked);
-    }
-  }, [user, jobId]);
-
   // Close menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -106,42 +89,6 @@ const TalentScoutJobDetails = () => {
     };
   }, [showMenu]);
 
-  const handleBookmarkToggle = async () => {
-    if (isBookmarking || !job) return;
-    
-    setIsBookmarking(true);
-    try {
-      const result = await toggleJobBookmark(job._id);
-      if (result.success) {
-        setJob(prev => ({ ...prev, isBookmarked: result.isBookmarked }));
-      }
-    } catch (error) {
-      console.error('Error toggling bookmark:', error);
-    } finally {
-      setIsBookmarking(false);
-    }
-  };
-
-  const handlePickJob = async () => {
-    if (isPicking || !job) return;
-    
-    setIsPicking(true);
-    try {
-      const result = await pickJob(job._id);
-      if (result.success) {
-        setIsJobPicked(true);
-        toast.success('Job picked successfully!');
-      } else {
-        toast.error(result.error || 'Failed to pick job');
-      }
-    } catch (error) {
-      console.error('Error picking job:', error);
-      toast.error('Failed to pick job');
-    } finally {
-      setIsPicking(false);
-    }
-  };
-
   const handleMenuToggle = () => {
     setShowMenu(!showMenu);
   };
@@ -149,28 +96,6 @@ const TalentScoutJobDetails = () => {
   const handleReport = () => {
     setShowMenu(false);
     toast.success('Report submitted');
-  };
-
-  const handleWithdrawJob = async () => {
-    if (isWithdrawing || !job) return;
-    
-    setIsWithdrawing(true);
-    setShowMenu(false);
-    
-    try {
-      const result = await withdrawJob(job._id);
-      if (result.success) {
-        setIsJobPicked(false);
-        toast.success('Job withdrawn successfully!');
-      } else {
-        toast.error(result.error || 'Failed to withdraw job');
-      }
-    } catch (error) {
-      console.error('Error withdrawing job:', error);
-      toast.error('Failed to withdraw job');
-    } finally {
-      setIsWithdrawing(false);
-    }
   };
 
   const formatDate = (date) => {
@@ -300,66 +225,34 @@ const TalentScoutJobDetails = () => {
                 <div className="text-2xl md:text-3xl font-bold text-gray-900">{job.title}</div>
               </div>
             </div>
-            <div className="flex gap-3">
-              <button
-                onClick={handleBookmarkToggle}
-                disabled={isBookmarking}
-                className={`flex items-center px-4 py-2 rounded-lg border transition-colors ${
-                  job.isBookmarked
-                    ? 'bg-yellow-50 border-yellow-200 text-yellow-700'
-                    : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
-                } ${isBookmarking ? 'opacity-50 cursor-not-allowed' : ''}`}
+            <div className="flex items-center gap-2">
+              <button 
+                onClick={() => setShowResumeUpload(true)}
+                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-lg text-base cursor-pointer"
               >
-                <Bookmark className={`h-4 w-4 mr-2 ${job.isBookmarked ? 'fill-current' : ''}`} />
-                {job.isBookmarked ? 'Bookmarked' : 'Bookmark'}
+                Submit Resume
               </button>
-              
-              {!isJobPicked ? (
-                <button 
-                  onClick={handlePickJob}
-                  disabled={isPicking}
-                  className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-lg text-base cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              <div className="relative menu-container">
+                <button
+                  onClick={handleMenuToggle}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                 >
-                  {isPicking ? 'Picking...' : 'Pick Job'}
+                  <MoreVertical className="h-5 w-5 text-gray-600" />
                 </button>
-              ) : (
-                <div className="flex items-center gap-2">
-                  <button 
-                    onClick={() => setShowResumeUpload(true)}
-                    className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-lg text-base cursor-pointer"
-                  >
-                    Submit Resume
-                  </button>
-                  <div className="relative menu-container">
-                    <button
-                      onClick={handleMenuToggle}
-                      className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                    >
-                      <MoreVertical className="h-5 w-5 text-gray-600" />
-                    </button>
-                    
-                    {showMenu && (
-                      <div className="absolute right-0 top-full mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
-                        <div className="py-1">
-                          <button
-                            onClick={handleReport}
-                            className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 border-b border-gray-100"
-                          >
-                            Report
-                          </button>
-                          <button
-                            onClick={handleWithdrawJob}
-                            disabled={isWithdrawing}
-                            className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                          >
-                            {isWithdrawing ? 'Withdrawing...' : 'Withdraw Job'}
-                          </button>
-                        </div>
-                      </div>
-                    )}
+                
+                {showMenu && (
+                  <div className="absolute right-0 top-full mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
+                    <div className="py-1">
+                      <button
+                        onClick={handleReport}
+                        className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
+                      >
+                        Report
+                      </button>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           </div>
           <div className="flex items-center justify-between w-full gap-2 flex-wrap mt-1">

@@ -61,7 +61,7 @@ const mpuserSchema = new Schema({
     }],
     myJobs: [{
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Job'
+        ref: 'MpJob'
     }],
     // Manager reference - stores ObjectId of mpUser with userRole "Manager"
     manager: {
@@ -86,6 +86,25 @@ const mpuserSchema = new Schema({
     sessionExpiresAt: {
         type: Date,
         default: null
+    },
+    // Candidate data tracking
+    candidate_data: {
+        applied: {
+            type: Number,
+            default: 0
+        },
+        hired: {
+            type: Number,
+            default: 0
+        },
+        interviewed: {
+            type: Number,
+            default: 0
+        },
+        shortlisted: {
+            type: Number,
+            default: 0
+        }
     }
 }, { 
     timestamps: true,

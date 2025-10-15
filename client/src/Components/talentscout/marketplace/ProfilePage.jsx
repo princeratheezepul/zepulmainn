@@ -5,7 +5,6 @@ import BankDetails from './BankDetails';
 import Sidebar from './Sidebar';
 import HomePage from './HomePage';
 import JobsPage from './JobsPage';
-import WalletPage from './WalletPage';
 import { useMarketplaceAuth } from '../../../context/MarketplaceAuthContext';
 
 const ProfilePage = ({ isOpen, onClose, user, logout }) => {
@@ -14,7 +13,6 @@ const ProfilePage = ({ isOpen, onClose, user, logout }) => {
   const [activeSidebarItem, setActiveSidebarItem] = useState(null); // No item selected by default
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activeJobsTab, setActiveJobsTab] = useState('Picked Jobs');
-  const [activeFilter, setActiveFilter] = useState('All');
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [editedProfile, setEditedProfile] = useState({});
 
@@ -438,8 +436,6 @@ const ProfilePage = ({ isOpen, onClose, user, logout }) => {
           ) : activeSidebarItem === 'Home' ? (
             <div className="p-6">
               <HomePage 
-                activeFilter={activeFilter}
-                setActiveFilter={setActiveFilter}
                 onViewAllPicks={handleViewAllPicks}
               />
             </div>
@@ -449,10 +445,6 @@ const ProfilePage = ({ isOpen, onClose, user, logout }) => {
                 activeJobsTab={activeJobsTab}
                 setActiveJobsTab={setActiveJobsTab}
               />
-            </div>
-          ) : activeSidebarItem === 'Wallet' ? (
-            <div className="p-6">
-              <WalletPage />
             </div>
           ) : null}
         </div>

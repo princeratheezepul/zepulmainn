@@ -1,70 +1,49 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Plus, FileText, Trash2, MoreVertical } from 'lucide-react';
+import { Search, Plus, Trash2 } from 'lucide-react';
 import AddRecruiterForm from './AddRecruiterModal';
+import { useMarketplaceAuth } from '../../context/MarketplaceAuthContext';
+import toast from 'react-hot-toast';
 
 const TalentScoutPage = () => {
+  const { apiCall } = useMarketplaceAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [recruiters, setRecruiters] = useState([
-    {
-      id: 1,
-      name: "Manager Fixed test",
-      email: "maangerfixedtest@gmail.com",
-      location: "N/A",
-      status: "disabled"
-    },
-    {
-      id: 2,
-      name: "Recruiter Fixed",
-      email: "recruiterfixed@gmail.com",
-      location: "N/A",
-      status: "active"
-    },
-    {
-      id: 3,
-      name: "John Smith",
-      email: "john.smith@example.com",
-      location: "Remote",
-      status: "active"
-    },
-    {
-      id: 4,
-      name: "Drisha Chitale",
-      email: "drishyachitale@use.startmail.com",
-      location: "Remote",
-      status: "active"
-    },
-    {
-      id: 5,
-      name: "Sarah Johnson",
-      email: "sarah.johnson@example.com",
-      location: "On-Site",
-      status: "active"
-    },
-    {
-      id: 6,
-      name: "Mike Wilson",
-      email: "mike.wilson@example.com",
-      location: "Remote",
-      status: "disabled"
-    },
-    {
-      id: 7,
-      name: "Emily Davis",
-      email: "emily.davis@example.com",
-      location: "On-Site",
-      status: "active"
-    },
-    {
-      id: 8,
-      name: "Recruiter Userdff",
-      email: "testrec@gmail.com",
-      location: "On-Site",
-      status: "active"
-    }
-  ]);
+  const [recruiters, setRecruiters] = useState([]);
+  const [filteredRecruiters, setFilteredRecruiters] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const [filteredRecruiters, setFilteredRecruiters] = useState(recruiters);
+  // Fetch talent scouts on component mount
+  useEffect(() => {
+    fetchTalentScouts();
+  }, []);
+
+  const fetchTalentScouts = async () => {
+    setIsLoading(true);
+    try {
+      const response = await apiCall(`${import.meta.env.VITE_BACKEND_URL}/api/marketplace/talent-scouts`, {
+        method: 'GET'
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch talent scouts');
+      }
+
+      const data = await response.json();
+      console.log('Talent scouts data:', data);
+
+      if (data.success && data.data.talentScouts) {
+        setRecruiters(data.data.talentScouts);
+        setFilteredRecruiters(data.data.talentScouts);
+      }
+    } catch (error) {
+      console.error('Error fetching talent scouts:', error);
+      toast.error('Failed to load talent scouts');
+      setRecruiters([]);
+      setFilteredRecruiters([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Filter recruiters based on search query
   useEffect(() => {
@@ -87,32 +66,45 @@ const TalentScoutPage = () => {
     setIsModalOpen(false);
   };
 
-  const handleRecruiterSubmit = (recruiterData) => {
-    // TODO: Implement API call to add recruiter
+  const handleRecruiterSubmit = async (recruiterData) => {
     console.log('New recruiter data:', recruiterData);
     
-    // For now, just add to local state
-    const newRecruiter = {
-      id: recruiters.length + 1,
-      name: `${recruiterData.firstName} ${recruiterData.lastName}`,
-      email: recruiterData.email,
-      status: 'active'
-    };
+    // Refresh the talent scouts list after successful creation
+    await fetchTalentScouts();
     
-    setRecruiters(prev => [...prev, newRecruiter]);
-    
-    // You can add success toast here
-    console.log('Recruiter added successfully!');
+    // Success toast is already shown in the form component
+    console.log('Talent scouts list refreshed');
   };
 
-  const handleViewDetails = (recruiterId) => {
-    // TODO: Implement view details functionality
-    console.log('View details for recruiter:', recruiterId);
-  };
+  const handleDeleteRecruiter = async (recruiterId) => {
+    // Show confirmation dialog
+    if (!window.confirm('Are you sure you want to delete this talent scout? This action cannot be undone.')) {
+      return;
+    }
 
-  const handleDeleteRecruiter = (recruiterId) => {
-    // TODO: Implement delete recruiter functionality
-    console.log('Delete recruiter:', recruiterId);
+    try {
+      const response = await apiCall(
+        `${import.meta.env.VITE_BACKEND_URL}/api/marketplace/talent-scouts/${recruiterId}`,
+        {
+          method: 'DELETE'
+        }
+      );
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.message || 'Failed to delete talent scout');
+      }
+
+      // Remove from local state
+      setRecruiters(prev => prev.filter(r => r._id !== recruiterId));
+      setFilteredRecruiters(prev => prev.filter(r => r._id !== recruiterId));
+      
+      toast.success('Talent scout deleted successfully');
+      console.log('Talent scout deleted:', recruiterId);
+    } catch (error) {
+      console.error('Error deleting talent scout:', error);
+      toast.error(error.message || 'Failed to delete talent scout');
+    }
   };
 
   const getStatusColor = (status) => {
@@ -143,7 +135,7 @@ const TalentScoutPage = () => {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <div className="text-sm text-gray-500 mb-1">JOB DETAILS</div>
-          <h1 className="text-3xl font-bold text-gray-900">My Recruiters</h1>
+          <h1 className="text-3xl font-bold text-gray-900">My Talent Scouts</h1>
         </div>
         <button
           onClick={handleAddRecruiter}
@@ -168,27 +160,33 @@ const TalentScoutPage = () => {
 
       {/* Recruiters Table */}
       <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50 border-b border-gray-200">
-              <tr>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Name
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Email ID
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Action
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {filteredRecruiters.map((recruiter) => (
-                <tr key={recruiter.id} className="hover:bg-gray-50 transition-colors duration-150">
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            <span className="ml-3 text-gray-600">Loading talent scouts...</span>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50 border-b border-gray-200">
+                <tr>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Name
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Email ID
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Action
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {filteredRecruiters.map((recruiter) => (
+                  <tr key={recruiter._id} className="hover:bg-gray-50 transition-colors duration-150">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900">
                       {recruiter.name}
@@ -205,47 +203,41 @@ const TalentScoutPage = () => {
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center gap-3">
-                      <button
-                        onClick={() => handleViewDetails(recruiter.id)}
-                        className="text-gray-400 hover:text-gray-600 transition-colors duration-200"
-                        title="View Details"
-                      >
-                        <FileText className="w-5 h-5" />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteRecruiter(recruiter.id)}
-                        className="text-gray-400 hover:text-red-600 transition-colors duration-200"
-                        title="Delete"
-                      >
-                        <Trash2 className="w-5 h-5" />
-                      </button>
-                    </div>
+                    <button
+                      onClick={() => handleDeleteRecruiter(recruiter._id)}
+                      className="text-gray-400 hover:text-red-600 transition-colors duration-200"
+                      title="Delete Talent Scout"
+                    >
+                      <Trash2 className="w-5 h-5" />
+                    </button>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
-        </div>
+          </div>
+        )}
 
         {/* Empty State */}
-        {filteredRecruiters.length === 0 && (
+        {!isLoading && filteredRecruiters.length === 0 && (
           <div className="text-center py-12">
             <div className="text-gray-400 mb-4">
               <Search className="w-12 h-12 mx-auto" />
             </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No recruiters found</h3>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No talent scouts found</h3>
             <p className="text-gray-500">
-              {searchQuery ? 'Try adjusting your search terms.' : 'Get started by adding your first recruiter.'}
+              {searchQuery ? 'Try adjusting your search terms.' : 'Get started by adding your first talent scout.'}
             </p>
           </div>
         )}
+
       </div>
 
       {/* Mobile Cards View */}
-      <div className="block sm:hidden space-y-4">
-        {filteredRecruiters.map((recruiter) => (
-          <div key={recruiter.id} className="bg-white rounded-lg border border-gray-200 p-4">
+      {!isLoading && (
+        <div className="block sm:hidden space-y-4">
+          {filteredRecruiters.map((recruiter) => (
+            <div key={recruiter._id} className="bg-white rounded-lg border border-gray-200 p-4">
             <div className="flex items-start justify-between mb-3">
               <div>
                 <h3 className="text-sm font-medium text-gray-900">{recruiter.name}</h3>
@@ -255,27 +247,19 @@ const TalentScoutPage = () => {
                 {recruiter.status}
               </span>
             </div>
-            <div className="flex items-center justify-end">
-              <div className="flex items-center gap-3">
+              <div className="flex items-center justify-end">
                 <button
-                  onClick={() => handleViewDetails(recruiter.id)}
-                  className="text-gray-400 hover:text-gray-600 transition-colors duration-200"
-                  title="View Details"
-                >
-                  <FileText className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => handleDeleteRecruiter(recruiter.id)}
+                  onClick={() => handleDeleteRecruiter(recruiter._id)}
                   className="text-gray-400 hover:text-red-600 transition-colors duration-200"
-                  title="Delete"
+                  title="Delete Talent Scout"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
               </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
     </div>
   );
