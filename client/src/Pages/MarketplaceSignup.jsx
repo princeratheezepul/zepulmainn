@@ -259,7 +259,7 @@ export default function MarketplaceSignup() {
           <div className="mt-4 text-center">
             <span className="text-gray-600 text-sm">Already have an account? </span>
             <button
-              onClick={() => navigate('/partnerlead/marketplace/login')}
+              onClick={() => navigate('/marketplace/login', { state: { role: 'partnerlead' } })}
               className="text-blue-600 hover:underline text-sm font-medium"
             >
               Login here

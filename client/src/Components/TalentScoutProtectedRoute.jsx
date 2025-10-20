@@ -10,14 +10,11 @@ const TalentScoutProtectedRoute = ({ children }) => {
   useEffect(() => {
     if (!isLoading) {
       if (!isAuthenticated()) {
-        // If not authenticated, redirect to login
-        navigate('/talentscout/marketplace/login', { 
-          state: { from: location.pathname },
+        // If not authenticated, redirect to unified marketplace login with Talent Scout preset
+        navigate('/marketplace/login', { 
+          state: { role: 'talentscout', from: location.pathname },
           replace: true 
         });
-      } else if (location.pathname === '/talentscout/marketplace/login') {
-        // If already authenticated and trying to access login, redirect to dashboard
-        navigate('/talentscout/marketplace/dashboard', { replace: true });
       }
     }
   }, [isAuthenticated, isLoading, navigate, location]);
@@ -41,4 +38,3 @@ const TalentScoutProtectedRoute = ({ children }) => {
 };
 
 export default TalentScoutProtectedRoute;
-

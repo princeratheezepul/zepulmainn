@@ -1,5 +1,5 @@
 import React, { Fragment, Suspense, useState } from "react";
-import { Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
 import { lazy } from "react";
 import Loader from "../Components/Loader";
 import ProRecruitor from "../Pages/ProRecruitor";
@@ -14,7 +14,6 @@ import ProtectedRoute from "../Components/ProtectedRoute";
 import MarketplaceProtectedRoute from "../Components/MarketplaceProtectedRoute";
 import TalentScoutProtectedRoute from "../Components/TalentScoutProtectedRoute";
 import MarketplaceJobDetails from "../Pages/MarketplaceJobDetails";
-import TalentScoutLogin from "../Pages/TalentScoutLogin";
 import TalentScoutSignup from "../Pages/TalentScoutSignup";
 import TalentScoutJobs from "../Pages/TalentScoutJobs";
 import TalentScoutJobDetails from "../Pages/TalentScoutJobDetails";
@@ -74,8 +73,8 @@ import AccountManagerJobDetailPage from '../Pages/AccountManager/jobs/[jobid]';
 import UnifiedLogin from "../Pages/UnifiedLogin";
 import AdminLogin from "../Pages/Admin/Login.jsx";
 import MarketplaceJobs from "../Pages/MarketplaceJobs";
-import MarketplaceLogin from "../Pages/MarketplaceLogin";
 import MarketplaceSignup from "../Pages/MarketplaceSignup";
+import MarketplaceUnifiedLogin from "../Pages/MarketplaceUnifiedLogin";
 
 
 
@@ -145,10 +144,13 @@ const Router = () => {
             </Route>
 
             {/* Marketplace Routes - No Header/Footer */}
-            <Route path="/partnerlead/marketplace/login" element={
+            <Route path="/marketplace/login" element={
               <MarketplaceAuthProvider>
-                <MarketplaceLogin />
+                <MarketplaceUnifiedLogin />
               </MarketplaceAuthProvider>
+            } />
+            <Route path="/partnerlead/marketplace/login" element={
+              <Navigate to="/marketplace/login" state={{ role: "partnerlead" }} replace />
             } />
             <Route path="/partnerlead/marketplace/signup" element={
               <MarketplaceAuthProvider>
@@ -172,9 +174,7 @@ const Router = () => {
 
             {/* TalentScout Marketplace Routes - No Header/Footer */}
             <Route path="/talentscout/marketplace/login" element={
-              <MarketplaceAuthProvider>
-                <TalentScoutLogin />
-              </MarketplaceAuthProvider>
+              <Navigate to="/marketplace/login" state={{ role: "talentscout" }} replace />
             } />
             <Route path="/talentscout/marketplace/signup" element={
               <MarketplaceAuthProvider>
