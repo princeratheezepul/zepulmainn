@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import FormInput from './FormInput';
 import FormSelect from './FormSelect';
 import FormTextarea from './FormTextarea';
 import DateInput from './DateInput';
 import PrioritySelect from './PrioritySelect';
 
-const JobDetailsForm = ({ onClose, onSave, companyData }) => {
+const JobDetailsForm = ({ onClose, onSave, companyData, companyList, onRequestCompanies }) => {
   const [formData, setFormData] = useState({
     jobTitle: '',
     company: '',
@@ -28,7 +28,24 @@ const JobDetailsForm = ({ onClose, onSave, companyData }) => {
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState({ show: false, message: '', type: '' });
 
-  const companyOptions = companyData ? [companyData.name] : ['Company A', 'Company B', 'Company C', 'Google', 'Microsoft', 'Apple'];
+  const companyOptions = useMemo(() => {
+    if (companyData) {
+      return [companyData.name];
+    }
+    if (Array.isArray(companyList) && companyList.length > 0) {
+      return companyList.map((company) => {
+        if (typeof company === 'string') {
+          return company;
+        }
+        if (company && typeof company === 'object') {
+          return company.name || company.companyName || '';
+        }
+        return '';
+      }).filter(Boolean);
+    }
+    return [];
+  }, [companyData, companyList]);
+
   const employmentTypeOptions = ['Full-Time', 'Part-Time', 'Contract', 'Internship', 'Freelance'];
   const workModeOptions = ['Hybrid', 'Remote', 'On-site', 'Flexible'];
   const experienceOptions = ['0 - 2 Years', '2 - 5 Years', '5 - 10 Years', '10+ Years'];
@@ -145,6 +162,12 @@ const JobDetailsForm = ({ onClose, onSave, companyData }) => {
   const handleCancel = () => {
     onClose();
   };
+
+  useEffect(() => {
+    if (!companyData && (!companyList || companyList.length === 0) && typeof onRequestCompanies === 'function') {
+      onRequestCompanies();
+    }
+  }, [companyData, companyList, onRequestCompanies]);
 
   return (
     <div className="h-full bg-gray-50">

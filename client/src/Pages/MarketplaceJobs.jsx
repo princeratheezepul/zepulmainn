@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Sidebar from '../Components/marketplace/Sidebar';
 import Header from '../Components/marketplace/Header';
 import HomePage from '../Components/marketplace/HomePage';
@@ -26,6 +26,8 @@ const MarketplaceJobs = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [showCreateJobModal, setShowCreateJobModal] = useState(false);
   const [jobsRefreshKey, setJobsRefreshKey] = useState(0);
+  const [companyOptions, setCompanyOptions] = useState([]);
+  const [isLoadingCompanies, setIsLoadingCompanies] = useState(false);
 
   // Fetch user profile on component mount
   useEffect(() => {
@@ -141,6 +143,45 @@ const MarketplaceJobs = () => {
     return result.job;
   };
 
+  const handleFetchCompanies = useCallback(async () => {
+    if (isLoadingCompanies) return;
+
+    const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+    if (!userInfo?.data?.accessToken) {
+      console.error('No authentication token found for fetching companies');
+      return;
+    }
+
+    try {
+      setIsLoadingCompanies(true);
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/manager/marketplace-companies`, {
+        headers: {
+          'Authorization': `Bearer ${userInfo.data.accessToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        console.error('Failed to fetch companies');
+        return;
+      }
+
+      const data = await response.json();
+      if (data.success && Array.isArray(data.companies)) {
+        const names = data.companies
+          .map((company) => company.name || company.companyName)
+          .filter(Boolean);
+        setCompanyOptions(names);
+      } else {
+        console.error('Unexpected companies response:', data);
+      }
+    } catch (error) {
+      console.error('Error fetching companies:', error);
+    } finally {
+      setIsLoadingCompanies(false);
+    }
+  }, [isLoadingCompanies]);
+
   // Show loading state while fetching profile
   if (isLoadingProfile) {
     return (
@@ -193,6 +234,8 @@ const MarketplaceJobs = () => {
                   onClose={handleCloseCreateJob}
                   onSave={handleSaveMarketplaceJob}
                   companyData={null}
+                  companyList={companyOptions}
+                  onRequestCompanies={handleFetchCompanies}
                 />
               </div>
             ) : isSearching ? (
