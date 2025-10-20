@@ -726,6 +726,31 @@ export const MarketplaceAuthProvider = ({ children }) => {
     }
   };
 
+  const createMarketplaceJob = async (jobData) => {
+    if (!token) {
+      console.log('No token available for creating job');
+      return { success: false, error: 'No authentication token' };
+    }
+
+    try {
+      const response = await apiCall(`${config.backendUrl}/api/marketplace/jobs/create`, {
+        method: 'POST',
+        body: JSON.stringify(jobData),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to create job');
+      }
+
+      return { success: true, job: data.data?.job };
+    } catch (error) {
+      console.error('Create marketplace job error:', error);
+      return { success: false, error: error.message };
+    }
+  };
+
   // Helper method to refresh token (placeholder - implement based on your backend)
   const refreshToken = async () => {
     try {
@@ -762,6 +787,7 @@ export const MarketplaceAuthProvider = ({ children }) => {
     toggleJobBookmark,
     pickJob,
     withdrawJob,
+    createMarketplaceJob,
     apiCall,
     handleSessionExpired,
   };

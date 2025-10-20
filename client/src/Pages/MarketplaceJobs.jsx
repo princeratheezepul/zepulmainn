@@ -9,11 +9,11 @@ import ProfilePage from '../Components/marketplace/ProfilePage';
 import BankDetailsSetup from '../Components/marketplace/BankDetailsSetup';
 import TalentScoutPage from '../Components/marketplace/TalentScoutPage';
 import PartnerLeadDashboard from '../Components/marketplace/PartnerLeadDashboard';
+import JobDetailsForm from '../Components/marketplace/manager/JobDetailsForm';
 import { useMarketplaceAuth } from '../context/MarketplaceAuthContext';
-import { jobListings, yourPicks, walletData } from '../Data/marketplaceData';
 
 const MarketplaceJobs = () => {
-  const { user, logout, fetchUserProfile, saveBankDetails } = useMarketplaceAuth();
+  const { user, logout, fetchUserProfile, saveBankDetails, createMarketplaceJob } = useMarketplaceAuth();
   const [activeFilter, setActiveFilter] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [activeSidebarItem, setActiveSidebarItem] = useState('Dashboard');
@@ -24,6 +24,8 @@ const MarketplaceJobs = () => {
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
   const [showBankSetup, setShowBankSetup] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
+  const [showCreateJobModal, setShowCreateJobModal] = useState(false);
+  const [jobsRefreshKey, setJobsRefreshKey] = useState(0);
 
   // Fetch user profile on component mount
   useEffect(() => {
@@ -114,6 +116,31 @@ const MarketplaceJobs = () => {
     setActiveJobsTab('Picked Jobs');
   };
 
+  const handleOpenCreateJob = () => {
+    setActiveSidebarItem('Jobs');
+    setActiveJobsTab('Picked Jobs');
+    setShowCreateJobModal(true);
+  };
+
+  const handleCloseCreateJob = () => {
+    setShowCreateJobModal(false);
+  };
+
+  const handleSaveMarketplaceJob = async (jobData) => {
+    const payload = {
+      ...jobData,
+      createdByMPUser: true
+    };
+
+    const result = await createMarketplaceJob(payload);
+    if (!result.success) {
+      throw new Error(result.error || 'Failed to create job');
+    }
+
+    setJobsRefreshKey((prev) => prev + 1);
+    return result.job;
+  };
+
   // Show loading state while fetching profile
   if (isLoadingProfile) {
     return (
@@ -133,74 +160,83 @@ const MarketplaceJobs = () => {
     );
   }
 
-  // Show normal dashboard
   return (
-    <div className="min-h-screen bg-gray-50 flex">
-      <Sidebar 
-        activeSidebarItem={activeSidebarItem}
-        setActiveSidebarItem={setActiveSidebarItem}
-        isSidebarOpen={isSidebarOpen}
-        setIsSidebarOpen={setIsSidebarOpen}
-        isCollapsed={isSidebarCollapsed}
-        onToggle={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-      />
-
-      {/* Main Content Area */}
-      <div className={`flex-1 transition-all duration-300 ease-in-out ${
-        isSidebarCollapsed ? 'lg:ml-14' : 'lg:ml-40'
-      }`}>
-        <Header 
-          searchQuery={searchQuery}
-          setSearchQuery={handleSearch}
+    <>
+      <div className="min-h-screen bg-gray-50 flex">
+        <Sidebar 
+          activeSidebarItem={activeSidebarItem}
+          setActiveSidebarItem={setActiveSidebarItem}
+          isSidebarOpen={isSidebarOpen}
           setIsSidebarOpen={setIsSidebarOpen}
-          setIsProfileOpen={setIsProfileOpen}
-          user={user}
-          logout={logout}
+          isCollapsed={isSidebarCollapsed}
+          onToggle={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
         />
 
-        {/* Main Content */}
-        <div>
-          {isSearching ? (
-            <SearchResults 
+        <div className={`flex-1 transition-all duration-300 ease-in-out ${
+          isSidebarCollapsed ? 'lg:ml-14' : 'lg:ml-40'
+        }`}>
+          {!showCreateJobModal && (
+            <Header 
               searchQuery={searchQuery}
-              onBackToHome={handleBackToHome}
+              setSearchQuery={handleSearch}
+              setIsSidebarOpen={setIsSidebarOpen}
+              setIsProfileOpen={setIsProfileOpen}
+              user={user}
+              logout={logout}
             />
-          ) : (
-            <div className="px-3 py-3">
-              {activeSidebarItem === 'Dashboard' ? (
-                <PartnerLeadDashboard user={user} />
-              ) : activeSidebarItem === 'Home' ? (
-                <HomePage 
-                  activeFilter={activeFilter}
-                  setActiveFilter={setActiveFilter}
-                  onViewAllPicks={handleViewAllPicks}
-                />
-              ) : activeSidebarItem === 'Jobs' ? (
-                <JobsPage 
-                  activeJobsTab={activeJobsTab}
-                  setActiveJobsTab={setActiveJobsTab}
-                />
-              ) : activeSidebarItem === 'Wallet' ? (
-                <WalletPage />
-              ) : activeSidebarItem === 'Talent Scout' ? (
-                <TalentScoutPage />
-              ) : (
-                <PartnerLeadDashboard user={user} />
-              )}
-            </div>
           )}
+
+          <div>
+            {showCreateJobModal ? (
+              <div className="px-3 py-3">
+                <JobDetailsForm
+                  onClose={handleCloseCreateJob}
+                  onSave={handleSaveMarketplaceJob}
+                  companyData={null}
+                />
+              </div>
+            ) : isSearching ? (
+              <SearchResults 
+                searchQuery={searchQuery}
+                onBackToHome={handleBackToHome}
+              />
+            ) : (
+              <div className="px-3 py-3">
+                {activeSidebarItem === 'Dashboard' ? (
+                  <PartnerLeadDashboard user={user} />
+                ) : activeSidebarItem === 'Home' ? (
+                  <HomePage 
+                    activeFilter={activeFilter}
+                    setActiveFilter={setActiveFilter}
+                    onViewAllPicks={handleViewAllPicks}
+                  />
+                ) : activeSidebarItem === 'Jobs' ? (
+                  <JobsPage 
+                    activeJobsTab={activeJobsTab}
+                    setActiveJobsTab={setActiveJobsTab}
+                    onCreateJob={handleOpenCreateJob}
+                    refreshKey={jobsRefreshKey}
+                  />
+                ) : activeSidebarItem === 'Wallet' ? (
+                  <WalletPage />
+                ) : activeSidebarItem === 'Talent Scout' ? (
+                  <TalentScoutPage />
+                ) : (
+                  <PartnerLeadDashboard user={user} />
+                )}
+              </div>
+            )}
+          </div>
         </div>
-      </div>
 
-
-        {/* Profile Page */}
         <ProfilePage 
           isOpen={isProfileOpen}
           onClose={() => setIsProfileOpen(false)}
           user={user}
           logout={logout}
         />
-    </div>
+      </div>
+    </>
   );
 };
 

@@ -1512,6 +1512,8 @@ export const createMarketplaceJob = async (req, res) => {
             salary: salaryRange,
             skills: skills.split(',').map(skill => skill.trim()),
             creatorId: managerId,
+            creatorModel: 'User',
+            companyName: mpCompany?.companyName || company,
             mpCompanies: [companyId],
             hiringDeadline: parsedDeadline,
             priority: priority || 'Medium',

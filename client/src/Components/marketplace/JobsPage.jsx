@@ -3,7 +3,7 @@ import { Info } from 'lucide-react';
 import JobCard from './JobCard';
 import { useMarketplaceAuth } from '../../context/MarketplaceAuthContext';
 
-const JobsPage = ({ activeJobsTab, setActiveJobsTab }) => {
+const JobsPage = ({ activeJobsTab, setActiveJobsTab, onCreateJob, refreshKey = 0 }) => {
   const { fetchPickedJobs, fetchBookmarkedJobs } = useMarketplaceAuth();
   const [pickedJobs, setPickedJobs] = useState([]);
   const [bookmarkedJobs, setBookmarkedJobs] = useState([]);
@@ -44,7 +44,7 @@ const JobsPage = ({ activeJobsTab, setActiveJobsTab }) => {
     };
 
     fetchData();
-  }, [activeJobsTab, fetchPickedJobs, fetchBookmarkedJobs]);
+  }, [activeJobsTab, fetchPickedJobs, fetchBookmarkedJobs, refreshKey]);
 
   // Get current jobs based on active tab
   const getCurrentJobs = () => {
@@ -64,14 +64,22 @@ const JobsPage = ({ activeJobsTab, setActiveJobsTab }) => {
     <div>
       {/* Jobs Page Header */}
       <div className="mb-3">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-3">
           <div className="text-2xl font-bold text-gray-900">
             {activeJobsTab === 'Picked Jobs' && 'Jobs picked by you'}
             {activeJobsTab === 'Saved Jobs' && 'Jobs saved by you'}
           </div>
-          
-          {/* Jobs Tabs */}
-          <div className="flex gap-3">
+
+          <div className="flex items-center gap-2">
+            {typeof onCreateJob === 'function' && (
+              <button
+                type="button"
+                onClick={onCreateJob}
+                className="px-4 py-1.5 rounded-full border border-blue-600 text-blue-600 font-semibold text-sm hover:bg-blue-50 transition-colors"
+              >
+                Create Job
+              </button>
+            )}
             {jobsTabs.map((tab) => (
               <div
                 key={tab.id}

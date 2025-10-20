@@ -7,6 +7,11 @@ const mpJobSchema = new mongoose.Schema({
         required: true,
         trim: true
     },
+    companyName: {
+        type: String,
+        trim: true,
+        default: ''
+    },
     jobDescription: {
         type: String,
         required: true,
@@ -69,8 +74,18 @@ const mpJobSchema = new mongoose.Schema({
     // Creator Information
     creatorId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
+        refPath: 'creatorModel',
         required: true
+    },
+    creatorModel: {
+        type: String,
+        enum: ['User', 'MpUser'],
+        default: 'User',
+        required: true
+    },
+    createdByMPUser: {
+        type: Boolean,
+        default: false
     },
     
     // Marketplace Companies

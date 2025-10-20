@@ -1,5 +1,5 @@
 import express from "express";
-import { marketplaceLogin, marketplaceRegister, talentScoutRegister, createTalentScoutByManager, getManagerTalentScouts, deleteTalentScoutByManager, marketplaceLogout, validateSession, getMarketplaceProfile, updateMarketplaceProfile, createTestUser, saveBankDetails, getMarketplaceBankDetails, deleteMarketplaceBankDetails, getAllJobs, searchJobs, toggleBookmark, getBookmarkedJobs, getJobDetails, getJobTalentScouts, addTalentScoutToJob, removeTalentScoutFromJob, pickJob, withdrawJob, saveMarketplaceResume, saveMarketplaceInterviewEvaluation, getMarketplaceCandidates, getMarketplaceResumeDetails, getPickedJobs, updateMarketplaceResume, getCandidatePipelineData, getTeamPerformanceData } from "../controllers/marketplace.controller.js";
+import { marketplaceLogin, marketplaceRegister, talentScoutRegister, createTalentScoutByManager, getManagerTalentScouts, deleteTalentScoutByManager, marketplaceLogout, validateSession, getMarketplaceProfile, updateMarketplaceProfile, createTestUser, saveBankDetails, getMarketplaceBankDetails, deleteMarketplaceBankDetails, getAllJobs, searchJobs, toggleBookmark, getBookmarkedJobs, getJobDetails, getJobTalentScouts, addTalentScoutToJob, removeTalentScoutFromJob, pickJob, withdrawJob, saveMarketplaceResume, saveMarketplaceInterviewEvaluation, getMarketplaceCandidates, getMarketplaceResumeDetails, getPickedJobs, updateMarketplaceResume, getCandidatePipelineData, getTeamPerformanceData, createMarketplaceJobByMpUser } from "../controllers/marketplace.controller.js";
 import { authenticateMarketplace } from "../middleware/marketplace.auth.middleware.js";
 
 const router = express.Router();
@@ -12,6 +12,7 @@ router.post("/login", marketplaceLogin);
 
 // Protected routes
 router.post("/create-talent-scout", authenticateMarketplace, createTalentScoutByManager);
+router.post("/jobs/create", authenticateMarketplace, createMarketplaceJobByMpUser);
 router.get("/talent-scouts", authenticateMarketplace, getManagerTalentScouts);
 router.delete("/talent-scouts/:talentScoutId", authenticateMarketplace, deleteTalentScoutByManager);
 router.post("/logout", authenticateMarketplace, marketplaceLogout);

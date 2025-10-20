@@ -257,6 +257,126 @@ export const createTalentScoutByManager = async (req, res) => {
   }
 };
 
+// Create marketplace job by MP user
+export const createMarketplaceJobByMpUser = async (req, res) => {
+  try {
+    console.log("Marketplace user creating job with data:", req.body);
+    const mpUserId = req.user.userId;
+    const {
+      jobTitle,
+      company,
+      location,
+      employmentType,
+      department,
+      workMode,
+      jobDescription,
+      skills,
+      experience,
+      openings,
+      packageRange,
+      priority,
+      hiringDeadline,
+      tat,
+      commissionRate
+    } = req.body;
+
+    if (
+      !jobTitle || !company || !location || !employmentType || !workMode ||
+      !jobDescription || !skills || !experience || !openings || !packageRange ||
+      !hiringDeadline || !commissionRate
+    ) {
+      return res.status(400).json(
+        new ApiResponse(400, null, "All required fields must be provided.")
+      );
+    }
+
+    const commissionRateNum = parseFloat(commissionRate);
+    if (isNaN(commissionRateNum) || commissionRateNum < 0 || commissionRateNum > 100) {
+      return res.status(400).json(
+        new ApiResponse(400, null, "Commission rate must be a number between 0 and 100.")
+      );
+    }
+
+    const marketplaceUser = await MpUser.findById(mpUserId);
+    if (!marketplaceUser) {
+      return res.status(404).json(
+        new ApiResponse(404, null, "Marketplace user not found.")
+      );
+    }
+
+    let experienceRange = { min: 0, max: 10 };
+    if (experience.includes("0 - 2")) {
+      experienceRange = { min: 0, max: 2 };
+    } else if (experience.includes("2 - 5")) {
+      experienceRange = { min: 2, max: 5 };
+    } else if (experience.includes("5 - 10")) {
+      experienceRange = { min: 5, max: 10 };
+    } else if (experience.includes("10+")) {
+      experienceRange = { min: 10, max: 20 };
+    }
+
+    let salaryRange = { min: 0, max: 0 };
+    if (packageRange.includes("₹50k-₹100k")) {
+      salaryRange = { min: 50000, max: 100000 };
+    } else if (packageRange.includes("₹100k-₹160k")) {
+      salaryRange = { min: 100000, max: 160000 };
+    } else if (packageRange.includes("₹160k-₹250k")) {
+      salaryRange = { min: 160000, max: 250000 };
+    } else if (packageRange.includes("₹250k-₹400k")) {
+      salaryRange = { min: 250000, max: 400000 };
+    } else if (packageRange.includes("₹400k+")) {
+      salaryRange = { min: 400000, max: 1000000 };
+    }
+
+    let parsedDeadline;
+    try {
+      parsedDeadline = new Date(hiringDeadline);
+      if (isNaN(parsedDeadline.getTime())) {
+        throw new Error("Invalid date format");
+      }
+    } catch (dateError) {
+      console.error("Date parsing error:", dateError);
+      return res.status(400).json(
+        new ApiResponse(400, null, "Invalid hiring deadline format.")
+      );
+    }
+
+    const newMpJob = new MpJob({
+      jobTitle,
+      jobDescription,
+      location,
+      jobType: workMode,
+      experience: experienceRange,
+      salary: salaryRange,
+      skills: skills.split(",").map((skill) => skill.trim()),
+      creatorId: mpUserId,
+      creatorModel: "MpUser",
+      companyName: company,
+      hiringDeadline: parsedDeadline,
+      priority: priority || "Medium",
+      commissionRate: commissionRateNum,
+      createdByMPUser: true,
+      internalNotes: `Department: ${department || "N/A"}, Employment Type: ${employmentType}, Openings: ${openings}, TAT: ${tat || "15 Days"}`
+    });
+
+    const savedJob = await newMpJob.save();
+
+    await MpUser.findByIdAndUpdate(mpUserId, {
+      $push: { myJobs: savedJob._id }
+    });
+
+    console.log("Marketplace user job created successfully:", savedJob);
+    return res.status(201).json(
+      new ApiResponse(201, { job: savedJob }, "Marketplace job created successfully.")
+    );
+  } catch (error) {
+    console.error("Error creating marketplace job by MP user:", error);
+    return res.status(500).json(
+      new ApiResponse(500, null, "Error creating marketplace job.")
+    );
+  }
+};
+
 // Get manager's talent scouts (recruiterList with details)
 export const getManagerTalentScouts = async (req, res) => {
   try {
@@ -855,7 +975,7 @@ export const searchJobs = async (req, res) => {
     const transformedJobs = jobs.map(job => ({
       _id: job._id,
       title: job.jobTitle,
-      company: job.mpCompanies && job.mpCompanies.length > 0 ? job.mpCompanies[0].companyName : 'Unknown Company',
+      company: job.mpCompanies && job.mpCompanies.length > 0 ? job.mpCompanies[0].companyName : (job.companyName || 'Unknown Company'),
       companyLogo: job.mpCompanies && job.mpCompanies.length > 0 ? job.mpCompanies[0].logo : '/api/placeholder/48/48',
       location: job.location || 'Not specified',
       type: job.jobType || 'Full-time',
@@ -979,18 +1099,18 @@ export const getAllJobs = async (req, res) => {
     
     // Debug: Log company data for first job
     if (jobs.length > 0) {
-      console.log('Sample job company data:', {
-        jobId: jobs[0]._id,
-        mpCompanies: jobs[0].mpCompanies,
-        companyName: jobs[0].mpCompanies && jobs[0].mpCompanies.length > 0 ? jobs[0].mpCompanies[0].companyName : 'No company'
-      });
+    console.log('Sample job company data:', {
+      jobId: jobs[0]._id,
+      mpCompanies: jobs[0].mpCompanies,
+      companyName: jobs[0].mpCompanies && jobs[0].mpCompanies.length > 0 ? jobs[0].mpCompanies[0].companyName : jobs[0].companyName || 'No company'
+    });
     }
 
     // Transform jobs data for marketplace display
     const transformedJobs = jobs.map(job => ({
       _id: job._id,
       title: job.jobTitle,
-      company: job.mpCompanies && job.mpCompanies.length > 0 ? job.mpCompanies[0].companyName : 'Unknown Company',
+      company: job.mpCompanies && job.mpCompanies.length > 0 ? job.mpCompanies[0].companyName : (job.companyName || 'Unknown Company'),
       companyLogo: job.mpCompanies && job.mpCompanies.length > 0 ? job.mpCompanies[0].logo : '/api/placeholder/48/48',
       location: job.location || 'Not specified',
       type: job.jobType || 'Full-time',
@@ -1165,7 +1285,7 @@ export const getBookmarkedJobs = async (req, res) => {
     const transformedJobs = jobs.map(job => ({
       _id: job._id,
       title: job.jobTitle,
-      company: job.mpCompanies && job.mpCompanies.length > 0 ? job.mpCompanies[0].companyName : 'Unknown Company',
+      company: job.mpCompanies && job.mpCompanies.length > 0 ? job.mpCompanies[0].companyName : (job.companyName || 'Unknown Company'),
       companyLogo: job.mpCompanies && job.mpCompanies.length > 0 ? job.mpCompanies[0].logo : '/api/placeholder/48/48',
       location: job.location || 'Not specified',
       type: job.jobType || 'Full-time',
@@ -1246,7 +1366,7 @@ export const getJobDetails = async (req, res) => {
     const transformedJob = {
       _id: job._id,
       title: job.jobTitle,
-      company: job.mpCompanies && job.mpCompanies.length > 0 ? job.mpCompanies[0].companyName : 'Unknown Company',
+      company: job.mpCompanies && job.mpCompanies.length > 0 ? job.mpCompanies[0].companyName : (job.companyName || 'Unknown Company'),
       companyLogo: job.mpCompanies && job.mpCompanies.length > 0 ? job.mpCompanies[0].logo : '/api/placeholder/48/48',
       location: job.location || 'Not specified',
       type: job.jobType || 'Full-time',
@@ -2059,7 +2179,7 @@ export const getPickedJobs = async (req, res) => {
     const transformedJobs = jobs.map(job => ({
       _id: job._id,
       title: job.jobTitle,
-      company: job.mpCompanies && job.mpCompanies.length > 0 ? job.mpCompanies[0].companyName : 'Unknown Company',
+      company: job.mpCompanies && job.mpCompanies.length > 0 ? job.mpCompanies[0].companyName : (job.companyName || 'Unknown Company'),
       companyLogo: job.mpCompanies && job.mpCompanies.length > 0 ? job.mpCompanies[0].logo : '/api/placeholder/48/48',
       location: job.location || 'Not specified',
       type: job.jobType || 'Full-time',
