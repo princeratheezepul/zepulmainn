@@ -16,7 +16,8 @@ const ListOfJobs = () => {
     experience: { min: "", max: "" },
     managerId: "",
     recruiterId: "",
-    internalNotes: ""
+    internalNotes: "",
+    resumeAnalysisPoints: []
   });
 
   const userInfo = JSON.parse(localStorage.getItem("userInfo"));
@@ -67,6 +68,14 @@ const ListOfJobs = () => {
       setFormData(prev => ({
         ...prev,
         skills: value.split(",").map(skill => skill.trim())
+      }));
+    } else if (name === "resumeAnalysisPoints") {
+      setFormData(prev => ({
+        ...prev,
+        resumeAnalysisPoints: value
+          .split(",")
+          .map(point => point.trim())
+          .filter(Boolean)
       }));
     } else if (name.startsWith("experience.")) {
       setFormData(prev => ({
@@ -121,7 +130,8 @@ const ListOfJobs = () => {
           experience: { min: "", max: "" },
           managerId: formData.managerId,
           recruiterId: "",
-          internalNotes: ""
+          internalNotes: "",
+          resumeAnalysisPoints: []
         });
         fetchData(); // Refresh job list
       } else {
@@ -189,6 +199,13 @@ console.log(jobs)
         </select>
 
         <textarea name="internalNotes" value={formData.internalNotes} onChange={handleChange} placeholder="Internal Notes (optional)" className="w-full p-2 rounded bg-gray-700 min-h-[80px]" />
+        <textarea
+          name="resumeAnalysisPoints"
+          value={formData.resumeAnalysisPoints.join(", ")}
+          onChange={handleChange}
+          placeholder="Resume Analysis Points (optional, comma-separated)"
+          className="w-full p-2 rounded bg-gray-700 min-h-[80px]"
+        />
 
         <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 py-2 px-4 rounded font-semibold">
           Create Job
