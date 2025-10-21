@@ -378,7 +378,7 @@ const ResumeUpload = ({ onBack, jobDetails }) => {
   });
 
   if (parsedData) {
-    return <ResumeDetailsView resumeData={parsedData} onBack={onBack} />;
+    return <ResumeDetailsView resumeData={parsedData} onBack={onBack} jobDetailsOverride={jobDetails} />;
   }
 
   return (

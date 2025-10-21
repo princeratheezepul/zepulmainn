@@ -119,6 +119,7 @@ const RecruiterJobDetailPage = () => {
   // Hardcoded data for the static UI
   const job = {
     jobId: jobId, // Add the jobId from URL params
+    _id: jobData?._id,
     jobtitle: capitalizeFirstLetter(jobData?.jobtitle),
     company: jobData?.company,
     location: `${capitalizeFirstLetter(jobData?.type)} - ${capitalizeFirstLetter(jobData?.location)}`,
@@ -137,7 +138,8 @@ const RecruiterJobDetailPage = () => {
       shortlisted: jobData?.shortlisted_number || 0,
       interviewed: jobData?.interviewed_number || 0,
       secondRound: jobData?.["2ndround_interviewed_number"] || 0
-    }
+    },
+    resumeAnalysisPoints: jobData?.resumeAnalysisPoints || []
   };
 
   return (
