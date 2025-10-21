@@ -121,6 +121,10 @@ const JobSchema = new mongoose.Schema(
       type: Number,
       default: 8
     },
+    resumeAnalysisPoints: {
+      type: [String],
+      default: []
+    },
     isMPJob: {
       type: Boolean,
       default: false

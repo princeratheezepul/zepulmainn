@@ -463,7 +463,8 @@ export const createJobm = async (req, res) => {
         recruiterId,
         company,
         hiringDeadline,
-        internalNotes 
+        internalNotes,
+        resumeAnalysisPoints
     } = req.body;
     console.log("managerId:", managerId);
 
@@ -493,6 +494,7 @@ export const createJobm = async (req, res) => {
             company,
             hiringDeadline: hiringDeadline ? new Date(hiringDeadline) : null,
             internalNotes: internalNotes || "",
+            resumeAnalysisPoints: Array.isArray(resumeAnalysisPoints) ? resumeAnalysisPoints : [],
             assignedTo: recruiterId ? [recruiterId] : []
         });
         if (recruiterId) {
@@ -1422,7 +1424,8 @@ export const createMarketplaceJob = async (req, res) => {
             hiringDeadline,
             tat,
             companyId,
-            commissionRate
+            commissionRate,
+            resumeAnalysisPoints
         } = req.body;
 
         // Validate required fields
@@ -1518,7 +1521,8 @@ export const createMarketplaceJob = async (req, res) => {
             hiringDeadline: parsedDeadline,
             priority: priority || 'Medium',
             commissionRate: commissionRateNum,
-            internalNotes: `Department: ${department || 'N/A'}, Employment Type: ${employmentType}, Openings: ${openings}, TAT: ${tat || '15 Days'}`
+            internalNotes: `Department: ${department || 'N/A'}, Employment Type: ${employmentType}, Openings: ${openings}, TAT: ${tat || '15 Days'}`,
+            resumeAnalysisPoints: Array.isArray(resumeAnalysisPoints) ? resumeAnalysisPoints : []
         });
 
         // Save the job

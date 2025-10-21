@@ -21,7 +21,8 @@ const JobDetailsForm = ({ onClose, onSave, companyData, companyList, onRequestCo
     priority: 'Low',
     hiringDeadline: '',
     tat: '15 Days',
-    commissionRate: ''
+    commissionRate: '',
+    resumeAnalysisPoints: ''
   });
 
   const [errors, setErrors] = useState({});
@@ -146,7 +147,17 @@ const JobDetailsForm = ({ onClose, onSave, companyData, companyList, onRequestCo
     setLoading(true);
     
     try {
-      await onSave(formData);
+      const formattedData = {
+        ...formData,
+        resumeAnalysisPoints: formData.resumeAnalysisPoints
+          ? formData.resumeAnalysisPoints
+              .split('\n')
+              .map(point => point.trim())
+              .filter(Boolean)
+          : []
+      };
+
+      await onSave(formattedData);
       showToast('Job created successfully!', 'success');
       // Close the form after a short delay
       setTimeout(() => {
@@ -272,6 +283,13 @@ const JobDetailsForm = ({ onClose, onSave, companyData, companyList, onRequestCo
                   placeholder="Enter job description"
                   rows={6}
                   required
+                />
+                <FormTextarea
+                  label="Resume Analysis Points"
+                  value={formData.resumeAnalysisPoints}
+                  onChange={(value) => handleInputChange('resumeAnalysisPoints', value)}
+                  placeholder="Add bullet points (optional, one per line)"
+                  rows={4}
                 />
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

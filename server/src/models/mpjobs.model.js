@@ -137,6 +137,10 @@ const mpJobSchema = new mongoose.Schema({
         type: String,
         trim: true
     },
+    resumeAnalysisPoints: {
+        type: [String],
+        default: []
+    },
     
     // Statistics
     totalApplications: {

@@ -15,6 +15,8 @@ export default function CreateJobManager({ onBack }) {
   const [keyRespInput, setKeyRespInput] = useState("");
   const [preferredQualifications, setPreferredQualifications] = useState([]);
   const [prefQualInput, setPrefQualInput] = useState("");
+  const [resumeAnalysisPoints, setResumeAnalysisPoints] = useState([]);
+  const [resumePointInput, setResumePointInput] = useState("");
   const [hiringDeadline, setHiringDeadline] = useState("");
   const [internalNotes, setInternalNotes] = useState("");
   const [priority, setPriority] = useState("");
@@ -47,6 +49,13 @@ export default function CreateJobManager({ onBack }) {
     }
   };
   const handleRemovePrefQual = (idx) => setPreferredQualifications(preferredQualifications.filter((_, i) => i !== idx));
+  const handleAddResumePoint = () => {
+    if (resumePointInput.trim()) {
+      setResumeAnalysisPoints([...resumeAnalysisPoints, resumePointInput.trim()]);
+      setResumePointInput("");
+    }
+  };
+  const handleRemoveResumePoint = (idx) => setResumeAnalysisPoints(resumeAnalysisPoints.filter((_, i) => i !== idx));
 
   // Priority handler
   const handlePriorityChange = (level) => {
@@ -123,6 +132,7 @@ export default function CreateJobManager({ onBack }) {
         company: company, // Include company name
         hiringDeadline: hiringDeadline || null,
         internalNotes: internalNotes || "",
+        resumeAnalysisPoints,
         managerId // <-- Ensure managerId is included
       };
       const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/manager/create-job`, {
@@ -243,6 +253,28 @@ export default function CreateJobManager({ onBack }) {
                 <li key={idx} className="flex items-center justify-between mb-1">
                   <span>{qual}</span>
                   <button type="button" className="text-red-400 ml-2" onClick={() => handleRemovePrefQual(idx)}>×</button>
+                </li>
+              ))}
+            </ul>
+          </div>
+          {/* Resume Analysis Points */}
+          <div>
+            <label className="block text-gray-500 text-sm mb-1">Resume Analysis Points (Optional)</label>
+            <div className="flex gap-2 mb-2">
+              <input
+                type="text"
+                className="flex-1 border border-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500 bg-white text-base"
+                placeholder="Add a resume analysis point"
+                value={resumePointInput}
+                onChange={e => setResumePointInput(e.target.value)}
+              />
+              <button type="button" className="bg-blue-600 text-white px-3 py-2 rounded-lg" onClick={handleAddResumePoint}>+</button>
+            </div>
+            <ul className="list-disc pl-6">
+              {resumeAnalysisPoints.map((point, idx) => (
+                <li key={idx} className="flex items-center justify-between mb-1">
+                  <span>{point}</span>
+                  <button type="button" className="text-red-400 ml-2" onClick={() => handleRemoveResumePoint(idx)}>×</button>
                 </li>
               ))}
             </ul>
