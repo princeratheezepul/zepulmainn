@@ -335,7 +335,7 @@ const ResumeDetailsView = ({
     }
   };
 
-  // Handle red flag toggle
+  // Handle hire risk toggle
   const handleRedFlagToggle = async () => {
     setRedFlagLoading(true);
     try {
@@ -351,10 +351,10 @@ const ResumeDetailsView = ({
         ? localStorage.getItem('marketplace_token')
         : JSON.parse(localStorage.getItem("userInfo"))?.data?.accessToken;
       
-      console.log('Red flag toggle - isMarketplace:', isMarketplace);
-      console.log('Red flag toggle - apiUrl:', apiUrl);
-      console.log('Red flag toggle - token exists:', !!token);
-      console.log('Red flag toggle - token preview:', token ? token.substring(0, 20) + '...' : 'No token');
+      console.log('Hire risk toggle - isMarketplace:', isMarketplace);
+      console.log('Hire risk toggle - apiUrl:', apiUrl);
+      console.log('Hire risk toggle - token exists:', !!token);
+      console.log('Hire risk toggle - token preview:', token ? token.substring(0, 20) + '...' : 'No token');
       
       if (!token) {
         throw new Error('No authentication token found');
@@ -369,23 +369,23 @@ const ResumeDetailsView = ({
         body: JSON.stringify({ redFlagged: newRedFlagged })
       });
 
-      console.log('Red flag toggle - response status:', response.status);
-      console.log('Red flag toggle - response ok:', response.ok);
+      console.log('Hire risk toggle - response status:', response.status);
+      console.log('Hire risk toggle - response ok:', response.ok);
 
       if (!response.ok) {
         const errorData = await response.json();
-        console.log('Red flag toggle - error data:', errorData);
-        throw new Error(errorData.message || 'Failed to update red flag status');
+        console.log('Hire risk toggle - error data:', errorData);
+        throw new Error(errorData.message || 'Failed to update hire risk status');
       }
 
       const result = await response.json();
-      console.log('Red flag toggle - success result:', result);
+      console.log('Hire risk toggle - success result:', result);
 
       setRedFlagged(newRedFlagged);
-      toast.success(newRedFlagged ? 'Candidate marked as red flag' : 'Red flag removed from candidate');
+      toast.success(newRedFlagged ? 'Candidate marked as hire risk' : 'Hire risk removed from candidate');
     } catch (err) {
-      console.error('Error toggling red flag:', err);
-      toast.error(err.message || 'Failed to update red flag status');
+      console.error('Error toggling hire risk:', err);
+      toast.error(err.message || 'Failed to update hire risk status');
     } finally {
       setRedFlagLoading(false);
     }
@@ -486,13 +486,13 @@ const ResumeDetailsView = ({
               </button>
             )}
             
-            {/* Red Flag Button */}
+            {/* Hire Risk Button */}
             {redFlagged ? (
               <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-red-50 border border-red-200 text-red-700">
                 <svg className="h-4 w-4 fill-current" viewBox="0 0 20 20">
                   <path d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"/>
                 </svg>
-                <span className="font-medium text-sm">Red Flag Candidate</span>
+                <span className="font-medium text-sm">Hire Risk Candidate</span>
                 <div className="w-5 h-5 rounded-full border-2 border-red-500 flex items-center justify-center">
                   <svg className="h-3 w-3 text-red-500" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd"/>
@@ -517,7 +517,7 @@ const ResumeDetailsView = ({
                     <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
                   </svg>
                 )}
-                Add Red Flag
+                Add Hire Risk
               </button>
             )}
             
