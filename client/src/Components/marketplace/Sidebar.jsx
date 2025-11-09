@@ -176,7 +176,7 @@ const Sidebar = ({
     },
     {
       id: "Jobs",
-      label: "Jobs",
+      label: "Marketplace Jobs",
       icon: (
         <svg
           viewBox="0 0 28 28"
@@ -224,7 +224,7 @@ const Sidebar = ({
     },
     {
       id: "Talent Scout",
-      label: "Talent Scout",
+      label: "My Team",
       icon: (
         <svg width="22" height="22" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
 <path d="M14 14C17.4062 14 20.1667 11.2396 20.1667 7.83333C20.1667 4.42708 17.4062 1.66667 14 1.66667C10.5938 1.66667 7.83333 4.42708 7.83333 7.83333C7.83333 11.2396 10.5938 14 14 14Z" stroke="black" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>

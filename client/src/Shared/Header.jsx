@@ -1,8 +1,20 @@
 import React, { Fragment } from "react";
 import "../styles/Header.css";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { FaBars } from "react-icons/fa6";
 const Header = () => {
+  const location = useLocation();
+  
+  const handleTryZepulClick = () => {
+    // If route is /ZepRecruit or /zepTalentHub, redirect to /login
+    if (location.pathname === "/ZepRecruit" || location.pathname === "/zepTalentHub") {
+      window.location.href = "/login";
+    } else {
+      // For all other routes, redirect to /marketplace/login
+      window.location.href = "/marketplace/login";
+    }
+  };
+
   return (
     <Fragment>
       <div className="container-fluid d-flex justify-content-between">
@@ -240,7 +252,7 @@ const Header = () => {
                     type="button"
                     id="loginDropdown"
                     style={{ backgroundColor: "blue" }}
-                    onClick={() => (window.location.href = "/login")}
+                    onClick={handleTryZepulClick}
                   >
                     Try Zepul
                   </button>
