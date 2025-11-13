@@ -9,20 +9,20 @@ const Footer = () => {
   return (
     <footer className="bg-black text-white text-sm">
       
-      <div className="flex flex-col md:flex-row justify-between gap-8 px-6 md:px-16 py-10 border-b border-white/20">
+      <div className="flex flex-col md:flex-row justify-between gap-8 md:gap-2 px-6 md:px-16 py-10 md:py-1 border-b border-white/20">
         <div className="md:w-1/3 relative">
           <div className="relative inline-block">
-            <img src="/assets/image.png" alt="logo" className="mb-4" />
+            <img src="/assets/image.png" alt="logo" className="mb-4 md:mb-0" />
             <span className="absolute top-0 right-0 text-sm font-semibold">
               ™
             </span>
           </div>
-          <p className="opacity-50 ">
+          <p className="opacity-50 mb-4 md:mb-0">
             Zepul™ is committed to removing inefficiencies from the recruitment
             process while maximizing the value of human expertise.
           </p>
 
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2 md:gap-0">
             <div className="flex sm:gap-[3.1rem] gap-[7.5rem]">
               <img
                 src="/assets/DPIIT.png"
@@ -74,19 +74,18 @@ const Footer = () => {
           </div>
         </div>
 
-        <div className="flex flex-row gap-10 md:w-1/2 md:mx-auto lg:mx-0 ">
+        <div className="flex flex-row gap-10 md:gap-3 md:w-1/2 md:mx-auto lg:mx-0 ">
           <div>
-            <h5 className="uppercase opacity-50 mb-3 ml-8">Company</h5>
-            <ul className="space-y-2">
+            <h5 className="uppercase opacity-50 mb-3 md:mb-0 ml-8 md:ml-1 text-xs">Company</h5>
+            <ul className="space-y-2 md:space-y-0">
               <li>
                 <Link
                   to="/terms"
-                  className="hover:underline text-white"
+                  className="hover:underline text-white text-sm md:text-xs"
                   style={{
                     color: "#024bff",
                     fontFamily: '"DM Sans", sans-serif',
                     fontWeight: 500,
-                    fontSize: "16px",
                     lineHeight: 1,
                     letterSpacing: "-0.05em",
                     margin: 0,
@@ -101,12 +100,11 @@ const Footer = () => {
               <li>
                 <Link
                   to="/privacy"
-                  className="hover:underline text-white"
+                  className="hover:underline text-white text-sm md:text-xs"
                   style={{
                     color: "#024bff",
                     fontFamily: '"DM Sans", sans-serif',
                     fontWeight: 500,
-                    fontSize: "16px",
                     lineHeight: 1,
                     letterSpacing: "-0.05em",
                     margin: 0,
@@ -121,12 +119,11 @@ const Footer = () => {
               <li>
                 <Link
                   to="/support"
-                  className="hover:underline text-white"
+                  className="hover:underline text-white text-sm md:text-xs"
                   style={{
                     color: "#024bff",
                     fontFamily: '"DM Sans", sans-serif',
                     fontWeight: 500,
-                    fontSize: "16px",
                     lineHeight: 1,
                     letterSpacing: "-0.05em",
                     margin: 0,
@@ -142,17 +139,16 @@ const Footer = () => {
           </div>
 
           <div>
-            <h5 className="uppercase opacity-50 mb-3 ml-8">Quick Link</h5>
-            <ul className="space-y-2">
+            <h5 className="uppercase opacity-50 mb-3 md:mb-0 ml-8 md:ml-1 text-xs">Quick Link</h5>
+            <ul className="space-y-2 md:space-y-0">
               <li>
                 <Link
                   to="/"
-                  className="hover:underline text-white"
+                  className="hover:underline text-white text-sm md:text-xs"
                   style={{
                     color: "#024bff",
                     fontFamily: '"DM Sans", sans-serif',
                     fontWeight: 500,
-                    fontSize: "16px",
                     lineHeight: 1,
                     letterSpacing: "-0.05em",
                     margin: 0,
@@ -167,12 +163,11 @@ const Footer = () => {
               <li>
                 <Link
                   to="/ZepRecruit"
-                  className="hover:underline text-white"
+                  className="hover:underline text-white text-sm md:text-xs"
                   style={{
                     color: "#024bff",
                     fontFamily: '"DM Sans", sans-serif',
                     fontWeight: 500,
-                    fontSize: "16px",
                     lineHeight: 1,
                     letterSpacing: "-0.05em",
                     margin: 0,
@@ -187,12 +182,11 @@ const Footer = () => {
               <li>
                 <Link
                   to="/zepTalentHub"
-                  className="hover:underline text-white"
+                  className="hover:underline text-white text-sm md:text-xs"
                   style={{
                     color: "#024bff",
                     fontFamily: '"DM Sans", sans-serif',
                     fontWeight: 500,
-                    fontSize: "16px",
                     lineHeight: 1,
                     letterSpacing: "-0.05em",
                     margin: 0,
@@ -207,12 +201,11 @@ const Footer = () => {
               <li>
                 <Link
                   to="/prorecruitor"
-                  className="hover:underline text-white"
+                  className="hover:underline text-white text-sm md:text-xs"
                   style={{
                     color: "#024bff",
                     fontFamily: '"DM Sans", sans-serif',
                     fontWeight: 500,
-                    fontSize: "16px",
                     lineHeight: 1,
                     letterSpacing: "-0.05em",
                     margin: 0,
@@ -227,12 +220,11 @@ const Footer = () => {
               <li>
                 <Link
                   to="https://careers.zepul.com/"
-                  className="hover:underline text-white"
+                  className="hover:underline text-white text-sm md:text-xs"
                   style={{
                     color: "#024bff",
                     fontFamily: '"DM Sans", sans-serif',
                     fontWeight: 500,
-                    fontSize: "16px",
                     lineHeight: 1,
                     letterSpacing: "-0.05em",
                     margin: 0,
@@ -249,7 +241,7 @@ const Footer = () => {
         </div>
 
         <div className="md:w-1/3">
-          <div className="flex gap-4 mb-4">
+          <div className="flex gap-4 mb-4 md:mb-0">
             <a
               href="https://www.facebook.com/tryzepul?mibextid=ZbWKwL"
               target="_blank"
@@ -274,11 +266,11 @@ const Footer = () => {
           </div>
           
           {/* Addresses in horizontal flex row */}
-          <div className="flex flex-col md:flex-row gap-4 mb-4 opacity-50">
+          <div className="flex flex-col md:flex-row gap-4 md:gap-1 mb-4 md:mb-0 opacity-50">
             <div className="flex flex-col md:w-1/2">
-              <div className="flex items-start gap-2">
-                <FaHome className="mt-1 flex-shrink-0" />
-                <span>
+              <div className="flex items-start gap-2 md:gap-1">
+                <FaHome className="mt-1 flex-shrink-0 md:text-xs" />
+                <span className="text-sm md:text-xs">
                   Product HQ
                   <br />
                   56 Weighton Road, Harrow,
@@ -286,15 +278,15 @@ const Footer = () => {
                   London, United Kingdom
                 </span>
               </div>
-              <div className="flex items-center mt-2">
-                <MdAlternateEmail className="mr-2" />
-                <span>info@zepul.com</span>
+              <div className="flex items-center mt-2 md:mt-0 md:gap-1">
+                <MdAlternateEmail className="mr-2 md:mr-1 md:text-xs" />
+                <span className="text-sm md:text-xs">info@zepul.com</span>
               </div>
             </div>
             <div className="flex flex-col md:w-1/2">
-              <div className="flex items-start gap-2">
-                <FaHome className="mt-1 flex-shrink-0" />
-                <span>
+              <div className="flex items-start gap-2 md:gap-1">
+                <FaHome className="mt-1 flex-shrink-0 md:text-xs" />
+                <span className="text-sm md:text-xs">
                   Services HQ
                   <br />
                   Floor 6, 610/B Sandhya Techno 1,
@@ -302,46 +294,46 @@ const Footer = () => {
                   Khajaguda, Hyderabad, India
                 </span>
               </div>
-              <div className="flex items-center mt-2">
-                <MdAlternateEmail className="mr-2" />
-                <span>support@zepul.com</span>
+              <div className="flex items-center mt-2 md:mt-0 md:gap-1">
+                <MdAlternateEmail className="mr-2 md:mr-1 md:text-xs" />
+                <span className="text-sm md:text-xs">support@zepul.com</span>
               </div>
-              <div className="flex items-center mt-2">
-                <FaPhoneVolume className="mr-2" />
-                <span>+91-77939 55555</span>
+              <div className="flex items-center mt-2 md:mt-0 md:gap-1">
+                <FaPhoneVolume className="mr-2 md:mr-1 md:text-xs" />
+                <span className="text-sm md:text-xs">+91-77939 55555</span>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="flex flex-col md:flex-row justify-between gap-6 px-6 md:px-16 py-6 border-b border-white/20">
+      <div className="flex flex-col md:flex-row justify-between gap-6 md:gap-2 px-6 md:px-16 py-6 md:py-0.5 border-b border-white/20">
         <div className="md:w-2/3">
-          <h4 className="font-semibold mb-2">Attention</h4>
-          <p className="opacity-50 leading-none">
+          <h4 className="font-semibold mb-2 md:mb-0 text-sm">Attention</h4>
+          <p className="opacity-50 leading-none text-xs">
             Zepul™ and its partners, authorized vendors, and subsidiaries do not
             charge any fees from job seekers for employment placements. If
             anyone claims otherwise, please report such violations immediately.
           </p>
         </div>
-        <div className="flex flex-col space-y-2 md:items-start">
+        <div className="flex flex-col space-y-2 md:space-y-0 md:items-start">
           <Link
             to="/report-violations"
-            className="text-lg "
+            className="text-lg md:text-sm"
             style={{ textDecoration: "none" }}
           >
             Report Violations
           </Link>
           <a
             href="mailto:info@zepul.com"
-            className="opacity-50 hover:underline text-white leading-none"
+            className="opacity-50 hover:underline text-white leading-none text-xs"
             style={{ textDecoration: "none" }}
           >
             info@zepul.com
           </a>
           <a
             href="mailto:legal@zepul.com"
-            className="opacity-50 hover:underline text-white"
+            className="opacity-50 hover:underline text-white text-xs"
             style={{ textDecoration: "none" }}
           >
             legal@zepul.com
@@ -349,7 +341,7 @@ const Footer = () => {
         </div>
       </div>
 
-      <div className="px-6 md:px-16 py-4 text-left text-white opacity-50 text-xs">
+      <div className="px-6 md:px-16 py-4 md:py-0 text-left text-white opacity-50 text-xs">
         © Copyright 2023. All Rights Reserved by Zepul
       </div>
     </footer>
