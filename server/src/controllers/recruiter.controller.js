@@ -485,36 +485,58 @@ export const forgotpassword = async (req, res) => {
         recruiter.resetPasswordExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 1 day from now
         await recruiter.save({ validateBeforeSave: false });
 
-        // Create reset URL
-        const resetUrl = `http://localhost:5173/recruiter/reset_password/${recruiter._id}/${resetToken}`;
+        // Create reset URL - ensure FRONTEND_URL is used
+        const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+        const resetUrl = `${frontendUrl}/recruiter/reset_password/${recruiter._id}/${resetToken}`;
         
         // Console log the URL for testing
+        console.log('FRONTEND_URL from env:', process.env.FRONTEND_URL);
         console.log('Password reset URL:', resetUrl);
         console.log('Sending reset email to:', recruiter.email);
+        console.log('EMAIL_USER configured:', !!process.env.EMAIL_USER);
 
-        var transporter = nodemailer.createTransport({
-            service: 'gmail',
-            auth: {
-                user: process.env.EMAIL_USER,
-                pass: process.env.EMAIL_PASS
+        // Send email with password reset link using async/await for proper error handling
+        try {
+            // Use the global transporter or create a new one
+            const emailTransporter = transporter || nodemailer.createTransport({
+                service: 'gmail',
+                auth: {
+                    user: process.env.EMAIL_USER,
+                    pass: process.env.EMAIL_PASS
+                }
+            });
+
+            // Verify transporter configuration
+            if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+                console.error('Email configuration missing: EMAIL_USER or EMAIL_PASS not set');
+                return res.status(500).json({ Status: "Error", message: "Email service not configured" });
             }
-        });
 
-        var mailOptions = {
-            from: process.env.EMAIL_USER,
-            to: recruiter.email,
-            subject: 'Reset Password Link',
-            text: `Click the following link to reset your password: ${resetUrl}`
-        };
+            const mailOptions = {
+                from: process.env.EMAIL_USER,
+                to: recruiter.email,
+                subject: 'Reset Password Link',
+                html: `
+                    <h2>Password Reset Request</h2>
+                    <p>You requested to reset your password. Click the link below to reset it:</p>
+                    <a href="${resetUrl}" style="background-color: #4CAF50; color: white; padding: 14px 20px; text-decoration: none; border-radius: 4px; display: inline-block;">Reset Password</a>
+                    <p>This link will expire in 24 hours.</p>
+                    <p>If you didn't request this, please ignore this email.</p>
+                `
+            };
 
-        transporter.sendMail(mailOptions, function (error, info) {
-            if (error) {
-                console.log('Email error:', error);
-                return res.status(500).json({ Status: "Error", message: "Failed to send email" });
-            } else {
-                return res.json({ Status: "Success", message: "Password reset email sent successfully" });
+            // Send email using async/await
+            const emailInfo = await emailTransporter.sendMail(mailOptions);
+            console.log('Password reset email sent successfully:', emailInfo.messageId);
+            return res.json({ Status: "Success", message: "Password reset email sent successfully" });
+        } catch (emailError) {
+            console.error('Email sending error:', emailError);
+            // Log detailed error information
+            if (emailError.response) {
+                console.error('Email error response:', emailError.response);
             }
-        });
+            return res.status(500).json({ Status: "Error", message: "Failed to send email" });
+        }
     } catch (error) {
         console.error('Forgot password error:', error);
         return res.status(500).json({ Status: "Error", message: "Internal server error" });
@@ -759,44 +781,59 @@ export const createRecruiterByAdmin = async (req, res) => {
     user.resetPasswordExpires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
     await user.save({ validateBeforeSave: false });
 
-    // Create password set URL
-    const setPasswordUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/recruiter/set_password/${user._id}/${resetToken}`;
+    // Create password set URL - ensure FRONTEND_URL is used
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const setPasswordUrl = `${frontendUrl}/recruiter/set_password/${user._id}/${resetToken}`;
     
     // Console log the URL for testing
+    console.log('FRONTEND_URL from env:', process.env.FRONTEND_URL);
     console.log('Password set URL:', setPasswordUrl);
     console.log('Sending password set email to:', email);
+    console.log('EMAIL_USER configured:', !!process.env.EMAIL_USER);
 
-    // Send email with password set link
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
+    // Send email with password set link using async/await for proper error handling
+    try {
+      // Use the global transporter or create a new one
+      const emailTransporter = transporter || nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASS
+        }
+      });
+
+      // Verify transporter configuration
+      if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+        console.error('Email configuration missing: EMAIL_USER or EMAIL_PASS not set');
+        throw new Error('Email service not configured');
       }
-    });
 
-    const mailOptions = {
-      from: process.env.EMAIL_USER,
-      to: email,
-      subject: 'Set Your Password - Account Created',
-      html: `
-        <h2>Welcome ${fullname}!</h2>
-        <p>Your recruiter account has been created successfully.</p>
-        <p>Please click the link below to set your password:</p>
-        <a href="${setPasswordUrl}" style="background-color: #4CAF50; color: white; padding: 14px 20px; text-decoration: none; border-radius: 4px; display: inline-block;">Set Password</a>
-        <p>This link will expire in 7 days.</p>
-        <p>If you didn't request this account, please ignore this email.</p>
-      `
-    };
+      const mailOptions = {
+        from: process.env.EMAIL_USER,
+        to: email,
+        subject: 'Set Your Password - Account Created',
+        html: `
+          <h2>Welcome ${fullname}!</h2>
+          <p>Your recruiter account has been created successfully.</p>
+          <p>Please click the link below to set your password:</p>
+          <a href="${setPasswordUrl}" style="background-color: #4CAF50; color: white; padding: 14px 20px; text-decoration: none; border-radius: 4px; display: inline-block;">Set Password</a>
+          <p>This link will expire in 7 days.</p>
+          <p>If you didn't request this account, please ignore this email.</p>
+        `
+      };
 
-    transporter.sendMail(mailOptions, function (error, info) {
-      if (error) {
-        console.log('Email error:', error);
-        // Don't fail the request if email fails, just log it
-      } else {
-        console.log('Password set email sent successfully');
+      // Send email using async/await
+      const emailInfo = await emailTransporter.sendMail(mailOptions);
+      console.log('Password set email sent successfully:', emailInfo.messageId);
+    } catch (emailError) {
+      console.error('Email sending error:', emailError);
+      // Log detailed error information
+      if (emailError.response) {
+        console.error('Email error response:', emailError.response);
       }
-    });
+      // Don't fail the request if email fails, but log it for debugging
+      // The recruiter is still created successfully
+    }
 
     // Remove sensitive data from response
     const createdUser = await User.findById(user._id).select("-password -refreshToken");
@@ -884,44 +921,59 @@ export const createRecruiterByManager = async (req, res) => {
     user.resetPasswordExpires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
     await user.save({ validateBeforeSave: false });
 
-    // Create password set URL
-    const setPasswordUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/recruiter/set_password/${user._id}/${resetToken}`;
+    // Create password set URL - ensure FRONTEND_URL is used
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const setPasswordUrl = `${frontendUrl}/recruiter/set_password/${user._id}/${resetToken}`;
     
     // Console log the URL for testing
+    console.log('FRONTEND_URL from env:', process.env.FRONTEND_URL);
     console.log('Password set URL:', setPasswordUrl);
     console.log('Sending password set email to:', email);
+    console.log('EMAIL_USER configured:', !!process.env.EMAIL_USER);
 
-    // Send email with password set link
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
+    // Send email with password set link using async/await for proper error handling
+    try {
+      // Use the global transporter or create a new one
+      const emailTransporter = transporter || nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASS
+        }
+      });
+
+      // Verify transporter configuration
+      if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+        console.error('Email configuration missing: EMAIL_USER or EMAIL_PASS not set');
+        throw new Error('Email service not configured');
       }
-    });
 
-    const mailOptions = {
-      from: process.env.EMAIL_USER,
-      to: email,
-      subject: 'Set Your Password - Recruiter Account Created',
-      html: `
-        <h2>Welcome ${fullname}!</h2>
-        <p>Your recruiter account has been created successfully by manager <strong>${onboardedBy}</strong>.</p>
-        <p>Please click the link below to set your password:</p>
-        <a href="${setPasswordUrl}" style="background-color: #4CAF50; color: white; padding: 14px 20px; text-decoration: none; border-radius: 4px; display: inline-block;">Set Password</a>
-        <p>This link will expire in 7 days.</p>
-        <p>If you didn't request this account, please ignore this email.</p>
-      `
-    };
+      const mailOptions = {
+        from: process.env.EMAIL_USER,
+        to: email,
+        subject: 'Set Your Password - Recruiter Account Created',
+        html: `
+          <h2>Welcome ${fullname}!</h2>
+          <p>Your recruiter account has been created successfully by manager <strong>${onboardedBy}</strong>.</p>
+          <p>Please click the link below to set your password:</p>
+          <a href="${setPasswordUrl}" style="background-color: #4CAF50; color: white; padding: 14px 20px; text-decoration: none; border-radius: 4px; display: inline-block;">Set Password</a>
+          <p>This link will expire in 7 days.</p>
+          <p>If you didn't request this account, please ignore this email.</p>
+        `
+      };
 
-    transporter.sendMail(mailOptions, function (error, info) {
-      if (error) {
-        console.log('Email error:', error);
-        // Don't fail the request if email fails, just log it
-      } else {
-        console.log('Password set email sent successfully');
+      // Send email using async/await
+      const emailInfo = await emailTransporter.sendMail(mailOptions);
+      console.log('Password set email sent successfully:', emailInfo.messageId);
+    } catch (emailError) {
+      console.error('Email sending error:', emailError);
+      // Log detailed error information
+      if (emailError.response) {
+        console.error('Email error response:', emailError.response);
       }
-    });
+      // Don't fail the request if email fails, but log it for debugging
+      // The recruiter is still created successfully
+    }
 
     // Remove sensitive data from response
     const createdUser = await User.findById(user._id).select("-password -refreshToken");
