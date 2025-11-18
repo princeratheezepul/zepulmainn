@@ -6,6 +6,7 @@ import Resume from "../models/resume.model.js";
 import nodemailer from "nodemailer";
 import { User } from '../models/user.model.js';
 import { Admin } from "../models/admin.model.js";
+import ServerConfig from "../config/ServerConfig.js";
 const JWT_SECRET = process.env.ACCESS_TOKEN_SECRET || process.env.JWT_SECRET || "your_secret_key_here";
 
 const transporter = nodemailer.createTransport({
@@ -486,11 +487,11 @@ export const forgotpassword = async (req, res) => {
         await recruiter.save({ validateBeforeSave: false });
 
         // Create reset URL - ensure FRONTEND_URL is used
-        const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+        const frontendUrl = ServerConfig.Frontend_URL || 'http://localhost:5173';
         const resetUrl = `${frontendUrl}/recruiter/reset_password/${recruiter._id}/${resetToken}`;
         
         // Console log the URL for testing
-        console.log('FRONTEND_URL from env:', process.env.FRONTEND_URL);
+        console.log('ServerConfig.Frontend_URL:', ServerConfig.Frontend_URL);
         console.log('Password reset URL:', resetUrl);
         console.log('Sending reset email to:', recruiter.email);
         console.log('EMAIL_USER configured:', !!process.env.EMAIL_USER);
@@ -782,17 +783,26 @@ export const createRecruiterByAdmin = async (req, res) => {
     await user.save({ validateBeforeSave: false });
 
     // Create password set URL - ensure FRONTEND_URL is used
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const frontendUrl = ServerConfig.Frontend_URL || 'http://localhost:5173';
     const setPasswordUrl = `${frontendUrl}/recruiter/set_password/${user._id}/${resetToken}`;
     
     // Console log the URL for testing
-    console.log('FRONTEND_URL from env:', process.env.FRONTEND_URL);
+    console.log('ServerConfig.Frontend_URL:', ServerConfig.Frontend_URL);
     console.log('Password set URL:', setPasswordUrl);
     console.log('Sending password set email to:', email);
     console.log('EMAIL_USER configured:', !!process.env.EMAIL_USER);
+    console.log('EMAIL_PASS configured:', !!process.env.EMAIL_PASS);
 
     // Send email with password set link using async/await for proper error handling
     try {
+      // Verify transporter configuration first
+      if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+        console.error('Email configuration missing: EMAIL_USER or EMAIL_PASS not set');
+        console.error('EMAIL_USER:', process.env.EMAIL_USER ? 'Set' : 'NOT SET');
+        console.error('EMAIL_PASS:', process.env.EMAIL_PASS ? 'Set' : 'NOT SET');
+        throw new Error('Email service not configured');
+      }
+
       // Use the global transporter or create a new one
       const emailTransporter = transporter || nodemailer.createTransport({
         service: 'gmail',
@@ -801,12 +811,6 @@ export const createRecruiterByAdmin = async (req, res) => {
           pass: process.env.EMAIL_PASS
         }
       });
-
-      // Verify transporter configuration
-      if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-        console.error('Email configuration missing: EMAIL_USER or EMAIL_PASS not set');
-        throw new Error('Email service not configured');
-      }
 
       const mailOptions = {
         from: process.env.EMAIL_USER,
@@ -922,17 +926,26 @@ export const createRecruiterByManager = async (req, res) => {
     await user.save({ validateBeforeSave: false });
 
     // Create password set URL - ensure FRONTEND_URL is used
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const frontendUrl = ServerConfig.Frontend_URL || 'http://localhost:5173';
     const setPasswordUrl = `${frontendUrl}/recruiter/set_password/${user._id}/${resetToken}`;
     
     // Console log the URL for testing
-    console.log('FRONTEND_URL from env:', process.env.FRONTEND_URL);
+    console.log('ServerConfig.Frontend_URL:', ServerConfig.Frontend_URL);
     console.log('Password set URL:', setPasswordUrl);
     console.log('Sending password set email to:', email);
     console.log('EMAIL_USER configured:', !!process.env.EMAIL_USER);
+    console.log('EMAIL_PASS configured:', !!process.env.EMAIL_PASS);
 
     // Send email with password set link using async/await for proper error handling
     try {
+      // Verify transporter configuration first
+      if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+        console.error('Email configuration missing: EMAIL_USER or EMAIL_PASS not set');
+        console.error('EMAIL_USER:', process.env.EMAIL_USER ? 'Set' : 'NOT SET');
+        console.error('EMAIL_PASS:', process.env.EMAIL_PASS ? 'Set' : 'NOT SET');
+        throw new Error('Email service not configured');
+      }
+
       // Use the global transporter or create a new one
       const emailTransporter = transporter || nodemailer.createTransport({
         service: 'gmail',
@@ -941,12 +954,6 @@ export const createRecruiterByManager = async (req, res) => {
           pass: process.env.EMAIL_PASS
         }
       });
-
-      // Verify transporter configuration
-      if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-        console.error('Email configuration missing: EMAIL_USER or EMAIL_PASS not set');
-        throw new Error('Email service not configured');
-      }
 
       const mailOptions = {
         from: process.env.EMAIL_USER,
