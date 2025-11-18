@@ -350,7 +350,7 @@ const Footer = () => {
       </div>
 
       <div className="px-6 md:px-16 pt-4 md:pt-0 pb-2 md:pb-0 text-left text-white opacity-50 text-xs">
-        © Copyright 2023. All Rights Reserved by Zepul
+        t
       </div>
     </footer>
   );

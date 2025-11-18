@@ -1,17 +1,20 @@
 import React, { Fragment } from "react";
 import "../styles/Header.css";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { FaBars } from "react-icons/fa6";
 const Header = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   
   const handleTryZepulClick = () => {
-    // If route is /ZepRecruit or /zepTalentHub, redirect to /login
-    if (location.pathname === "/ZepRecruit" || location.pathname === "/zepTalentHub") {
-      window.location.href = "/login";
+    const pathname = location.pathname;
+    
+    // If route is /, /ZepRecruit or /zepTalentHub, redirect to /login
+    if (pathname === "/" || pathname === "/ZepRecruit" || pathname === "/zepTalentHub") {
+      navigate("/login", { replace: true });
     } else {
       // For all other routes, redirect to /marketplace/login
-      window.location.href = "/marketplace/login";
+      navigate("/marketplace/login", { replace: true });
     }
   };
 
