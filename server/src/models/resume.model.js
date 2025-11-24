@@ -129,6 +129,44 @@ const ResumeSchema = new mongoose.Schema(
       default: 'submitted'
     },
     
+    // Internal AI Assessment
+    oa: {
+      scheduled: { type: Boolean, default: false },
+      assessmentId: String, // Unique ID for the test link
+      status: { type: String, enum: ['invited', 'in_progress', 'completed', 'evaluated'], default: 'invited' },
+      inviteDate: Date,
+      completionDate: Date,
+      
+      // The Problem
+      question: {
+        title: String,
+        description: String,
+        difficulty: String,
+        constraints: String,
+        examples: [{
+          input: String,
+          output: String,
+          explanation: String
+        }]
+      },
+      
+      // The Submission
+      submission: {
+        code: String,
+        language: { type: String, default: 'javascript' },
+        submittedAt: Date
+      },
+      
+      // AI Evaluation
+      evaluation: {
+        score: Number, // 0-100
+        pass: Boolean,
+        feedback: String,
+        complexityAnalysis: String,
+        improvementSuggestions: String
+      }
+    },
+    
     // Interview Management
     interviewScheduled: {
       type: Boolean,

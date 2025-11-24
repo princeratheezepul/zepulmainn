@@ -17,6 +17,7 @@ import adminRoutes from "./routes/admin.route.js";
 import accountmanagerRoutes from "./routes/accountmanager.route.js";
 import zepdbRoutes from "./routes/zepdb.route.js";
 import marketplaceRoutes from "./routes/marketplace.route.js";
+import assessmentRoutes from "./routes/assessment.routes.js";
 import { cleanupExpiredSessions } from "./utils/sessionManager.js";
 const app = express();
 
@@ -61,6 +62,13 @@ app.use(
 app.use(express.json());
 app.use(express.text());
 app.use(express.urlencoded({ extended: true }));
+
+// Global Request Logger
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+  next();
+});
+
 app.use(cookieParser());
 
 app.use("/api/resumes", resumeRoutes);
@@ -76,6 +84,7 @@ app.use("/api/admin",adminRoutes);
 app.use("/api/accountmanager",accountmanagerRoutes);
 app.use("/api/zepdb", zepdbRoutes);
 app.use("/api/marketplace", marketplaceRoutes);
+app.use("/api/assessment", assessmentRoutes);
 app.listen(ServerConfig.PORT, async () => {
   console.log(`Server started on port ${ServerConfig.PORT}...`);
 });

@@ -99,6 +99,7 @@ const TalentHub = lazy(() => import("../Pages/TalentHub"));
 
 
 const ZepRecruit = lazy(() => import("../Pages/ZepRecruit"));
+const CandidateAssessmentPage = lazy(() => import("../Pages/CandidateAssessmentPage"));
 
 const Router = () => {
   return (
@@ -203,9 +204,13 @@ const Router = () => {
 
             {/* Unified Login Route - No Header/Footer */}
             <Route path="/login" element={<UnifiedLogin />} />
+
+            {/* Public Assessment Route */}
+            <Route path="/assessment/:assessmentId" element={<CandidateAssessmentPage />} />
+
             {/* Admin Login Route - No Header/Footer */}
             <Route path="/admin/login" element={<AdminLogin />} />
-            
+
             {/* Recruiter Routes - Public Routes - No Header/Footer */}
             <Route path="/signup/recruiter" element={<RecruiterSignup />} />
             <Route path="/recruiter/forgot-password" element={<RecruiterForgotPassword />}></Route>
