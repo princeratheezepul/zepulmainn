@@ -144,8 +144,8 @@ const ResumeSchema = new mongoose.Schema(
         difficulty: String,
         constraints: String,
         examples: [{
-          input: String,
-          output: String,
+          input: mongoose.Schema.Types.Mixed,
+          output: mongoose.Schema.Types.Mixed,
           explanation: String
         }]
       },

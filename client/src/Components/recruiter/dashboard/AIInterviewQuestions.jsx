@@ -264,6 +264,14 @@ const AIInterviewQuestions = ({ jobDetails, resumeData, onBack, onResumeUpdate }
     }
   };
 
+  // Helper to check if role is technical
+  const isTechnicalRole = (title) => {
+    if (!title) return false;
+    const t = title.toLowerCase();
+    const techKeywords = ['developer', 'engineer', 'architect', 'programmer', 'coder', 'software', 'frontend', 'backend', 'fullstack', 'web', 'app', 'data', 'science', 'analyst', 'qa', 'test', 'tech'];
+    return techKeywords.some(k => t.includes(k));
+  };
+
   // Show answers page if it's active
   if (showAnswersPage) {
     // Filter out placeholder questions before passing to AddAnswersPage
@@ -364,8 +372,8 @@ const AIInterviewQuestions = ({ jobDetails, resumeData, onBack, onResumeUpdate }
           )}
         </div>
 
-        {/* Schedule Assessment Section */}
-        {!interviewScheduled && !resumeData?.oa?.scheduled && (
+        {/* Schedule Assessment Section - Only for technical roles */}
+        {!interviewScheduled && !resumeData?.oa?.scheduled && isTechnicalRole(resumeData?.jobId?.jobtitle) && (
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200/80 mb-8">
             <div className="text-xl font-bold text-gray-800 mb-4">Schedule Assessment</div>
             <p className="text-gray-600 mb-6">
@@ -387,8 +395,8 @@ const AIInterviewQuestions = ({ jobDetails, resumeData, onBack, onResumeUpdate }
             <div className="flex justify-between items-center mb-4">
               <div className="text-xl font-bold text-gray-800">Assessment Status</div>
               <span className={`px-3 py-1 rounded-full text-sm font-semibold ${resumeData.oa.status === 'evaluated' ? 'bg-green-100 text-green-800' :
-                  resumeData.oa.status === 'completed' ? 'bg-blue-100 text-blue-800' :
-                    'bg-yellow-100 text-yellow-800'
+                resumeData.oa.status === 'completed' ? 'bg-blue-100 text-blue-800' :
+                  'bg-yellow-100 text-yellow-800'
                 }`}>
                 {resumeData.oa.status === 'evaluated' ? 'Evaluated' :
                   resumeData.oa.status === 'completed' ? 'Submitted' : 'Invited'}

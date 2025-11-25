@@ -56,7 +56,8 @@ const CandidateAssessmentPage = () => {
 
             setAssessment(data);
             // Set default code template
-            setCode(`// ${data.question.title}\n// Write your solution below\n\nfunction twoSum(nums, target) {\n  // Your code here\n  \n}`);
+            const functionName = data.question.functionName || 'solution';
+            setCode(`// ${data.question.title}\n// Write your solution below\n\nfunction ${functionName}(args) {\n  // Your code here\n  \n}`);
         } catch (err) {
             console.error("Error fetching assessment:", err);
             setError(err.message);
@@ -67,50 +68,58 @@ const CandidateAssessmentPage = () => {
 
     const runTestCases = (userCode) => {
         const results = [];
+        const functionName = assessment.question.functionName || 'solution';
 
         try {
-            // Parse the examples to extract test inputs
             assessment.question.examples.forEach((example, index) => {
                 try {
-                    // Simple simulation for Two Sum problem
-                    // Extract numbers from input string like "nums = [2,7,11,15], target = 9"
-                    const inputMatch = example.input.match(/\[([^\]]+)\].*?(\d+)/);
-                    if (!inputMatch) {
-                        throw new Error("Could not parse input");
-                    }
-
-                    const numsStr = inputMatch[1];
-                    const target = parseInt(inputMatch[2]);
-                    const nums = numsStr.split(',').map(n => parseInt(n.trim()));
-
                     // Execute user's code in a safe eval context
                     let actualOutput;
                     try {
+                        // Prepare arguments for the function call
+                        const args = Array.isArray(example.input) ? example.input : [example.input];
+                        const argsString = args.map(arg => JSON.stringify(arg)).join(', ');
+
                         const testCode = `
                             ${userCode}
-                            JSON.stringify(twoSum([${nums.join(',')}], ${target}));
+                            const result = ${functionName}(${argsString});
+                            JSON.stringify(result);
                         `;
+
+                        // Capture console.log output if needed (advanced)
                         actualOutput = eval(testCode);
+
+                        // Parse back if it's a stringified JSON (from our wrapper)
+                        try {
+                            if (typeof actualOutput === 'string') {
+                                actualOutput = JSON.parse(actualOutput);
+                            }
+                        } catch (e) {
+                            // keep as string if parse fails
+                        }
+
                     } catch (e) {
                         actualOutput = `Error: ${e.message}`;
                     }
 
                     const expectedOutput = example.output;
-                    const passed = actualOutput === expectedOutput;
+
+                    // Deep comparison for arrays/objects
+                    const passed = JSON.stringify(actualOutput) === JSON.stringify(expectedOutput);
 
                     results.push({
                         testCase: index + 1,
-                        input: example.input,
-                        expectedOutput,
-                        actualOutput,
+                        input: JSON.stringify(example.input),
+                        expectedOutput: JSON.stringify(expectedOutput),
+                        actualOutput: JSON.stringify(actualOutput),
                         passed,
                         explanation: example.explanation
                     });
                 } catch (err) {
                     results.push({
                         testCase: index + 1,
-                        input: example.input,
-                        expectedOutput: example.output,
+                        input: JSON.stringify(example.input),
+                        expectedOutput: JSON.stringify(example.output),
                         actualOutput: `Error: ${err.message}`,
                         passed: false,
                         explanation: example.explanation
@@ -224,7 +233,7 @@ const CandidateAssessmentPage = () => {
                         <span>Time Remaining: {formatTime(timeRemaining)}</span>
                     </div>
                     <button
-                        onClick={() => handleSubmit(false) }
+                        onClick={() => handleSubmit(false)}
                         disabled={submitting}
                         className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-semibold flex items-center gap-2 transition-colors shadow-sm disabled:opacity-70"
                     >
@@ -325,8 +334,8 @@ const CandidateAssessmentPage = () => {
                                 <div className="space-y-3">
                                     {testResults.map((result, idx) => (
                                         <div key={idx} className={`p-3 rounded-lg border ${result.passed
-                                                ? 'bg-green-900/20 border-green-700'
-                                                : 'bg-red-900/20 border-red-700'
+                                            ? 'bg-green-900/20 border-green-700'
+                                            : 'bg-red-900/20 border-red-700'
                                             }`}>
                                             <div className="flex items-center gap-2 mb-2">
                                                 {result.passed ? (

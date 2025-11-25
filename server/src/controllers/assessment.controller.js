@@ -55,24 +55,110 @@ export const generateAssessment = async (req, res) => {
 
     const job = resume.jobId;
     
-    const questionData = {
-      title: "Mock Problem: Two Sum",
-      description: "Given an array of integers `nums` and an integer `target`, return indices of the two numbers such that they add up to `target`.\n\nYou may assume that each input would have **exactly one solution**, and you may not use the same element twice.\n\nYou can return the answer in any order.",
-      difficulty: "Easy",
-      constraints: "2 <= nums.length <= 10^4\n-10^9 <= nums[i] <= 10^9\n-10^9 <= target <= 10^9\nOnly one valid answer exists.",
-      examples: [
-        {
-          input: "nums = [2,7,11,15], target = 9",
-          output: "[0,1]",
-          explanation: "Because nums[0] + nums[1] == 9, we return [0, 1]."
-        },
-        {
-          input: "nums = [3,2,4], target = 6",
-          output: "[1,2]",
-          explanation: "Because nums[1] + nums[2] == 6, we return [1, 2]."
-        }
-      ]
-    };
+    let questionData;
+    
+    // Try AI generation first with timeout
+    try {
+      const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
+      const prompt = `
+Generate a coding problem suitable for a ${job.jobtitle} role.
+
+Job Description: ${job.description || 'General software development position'}
+Required Skills: ${job.requiredSkills ? job.requiredSkills.join(", ") : 'Programming, Problem Solving'}
+
+The problem should:
+1. Be a single algorithmic function challenge (NOT a full web application or API)
+2. Be relevant to the job role but solvable as a pure function
+3. Be solvable within 30-45 minutes
+4. Be strictly in **JavaScript**
+
+Return ONLY a valid JSON object in this EXACT format (no markdown, no code blocks):
+{
+  "title": "Problem Title",
+  "description": "Detailed problem description. Use \\n for line breaks.",
+  "difficulty": "Easy or Medium",
+  "constraints": "Time and space constraints",
+  "functionName": "nameOfFunctionToCall",
+  "examples": [
+    {
+      "input": [arg1, arg2], // Array of arguments to pass to function
+      "output": "Expected return value",
+      "explanation": "Why this output is correct"
+    }
+  ]
+}
+      `.trim();
+
+      const result = await Promise.race([
+        model.generateContent(prompt),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 15000))
+      ]);
+
+      const response = await result.response;
+      const text = response.text();
+      const cleanedText = text.replace(/```json|```/g, "").trim();
+      questionData = JSON.parse(cleanedText);
+      
+      console.log("✓ AI generated question:", questionData.title);
+    } catch (aiError) {
+      console.log("AI generation failed, using fallback:", aiError.message);
+      
+      // Fallback to a role-appropriate default question
+      const roleKeywords = job.jobtitle.toLowerCase();
+      
+      if (roleKeywords.includes('frontend') || roleKeywords.includes('react') || roleKeywords.includes('ui')) {
+        questionData = {
+          title: "Component State Management",
+          description: "Implement a function `manageTodos` that manages a list of todos. The function takes the current list and an action object.\n\nAction types:\n- 'ADD': { type: 'ADD', payload: { id, text } }\n- 'REMOVE': { type: 'REMOVE', payload: id }\n- 'TOGGLE': { type: 'TOGGLE', payload: id }\n\nReturn the updated list.",
+          difficulty: "Medium",
+          constraints: "Should handle edge cases like duplicate IDs, empty text, etc.",
+          functionName: "manageTodos",
+          examples: [
+            {
+              input: [[], { type: 'ADD', payload: { id: 1, text: 'Learn React' } }],
+              output: [{ id: 1, text: 'Learn React', completed: false }],
+              explanation: "Adds the new todo to empty list"
+            }
+          ]
+        };
+      } else if (roleKeywords.includes('backend') || roleKeywords.includes('api') || roleKeywords.includes('node')) {
+        questionData = {
+          title: "API Rate Limiter",
+          description: "Implement a function `isRateLimited` that checks if a user has exceeded their request limit.\n\nArguments:\n- userId (string)\n- timestamp (number)\n- maxRequests (number)\n- windowMs (number)\n\nReturn true if request is allowed, false if rate limit exceeded.",
+          difficulty: "Medium",
+          constraints: "Must efficiently handle thousands of users",
+          functionName: "isRateLimited",
+          examples: [
+            {
+              input: ["user1", 1000, 3, 60000],
+              output: true,
+              explanation: "First request is always allowed"
+            }
+          ]
+        };
+      } else {
+        // Default fallback
+        questionData = {
+          title: "Two Sum Problem",
+          description: "Given an array of integers `nums` and an integer `target`, return indices of the two numbers such that they add up to `target`.\n\nYou may assume that each input would have **exactly one solution**, and you may not use the same element twice.\n\nYou can return the answer in any order.",
+          difficulty: "Easy",
+          constraints: "2 <= nums.length <= 10^4\n-10^9 <= nums[i] <= 10^9\n-10^9 <= target <= 10^9\nOnly one valid answer exists.",
+          functionName: "twoSum",
+          examples: [
+            {
+              input: [[2,7,11,15], 9],
+              output: [0,1],
+              explanation: "Because nums[0] + nums[1] == 9, we return [0, 1]."
+            },
+            {
+              input: [[3,2,4], 6],
+              output: [1,2],
+              explanation: "Because nums[1] + nums[2] == 6, we return [1, 2]."
+            }
+          ]
+        };
+      }
+    }
 
     // Generate a unique assessment ID
     const assessmentId = crypto.randomBytes(16).toString('hex');
