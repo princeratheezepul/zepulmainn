@@ -120,6 +120,14 @@ const ResumeDetailsView = ({ resumeData, onBack }) => {
   };
   const match = getMatchLabel(resumeData.overallScore);
 
+    // Helper to determine recommendation text based on score
+  const getRecommendationText = (score) => {
+    if (score < 50) return 'Not Recommended';
+    if (score >= 50 && score < 70) return 'Consider with caution';
+    if (score >= 70 && score < 85) return 'Good Candidate';
+    return 'Recommended'; // score >= 85
+  };
+
 
 
   // Handle shortlist action
@@ -506,9 +514,8 @@ const ResumeDetailsView = ({ resumeData, onBack }) => {
                         <div className="flex justify-center mb-8">
                             <CircularProgress percentage={score} size={160} strokeWidth={14} />
                         </div>
-                        <button className="bg-blue-100 text-gray-700 px-6 py-3 rounded-lg text-sm font-medium border border-gray-300 hover:bg-blue-200 transition-colors">
-                            Consider with caution
-                        </button>
+{/* Recommendation */}
+                <div className="w-full text-center bg-blue-100 text-blue-900 font-medium rounded-xl py-2 px-3 mb-4">{getRecommendationText(score)}</div>
                     </div>
 
                     {/* Key Strength Section */}
