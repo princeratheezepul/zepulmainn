@@ -13,7 +13,7 @@ import { createUserSession, invalidateUserSession } from "../utils/sessionManage
 // Generate JWT token for marketplace user with session ID
 const generateMarketplaceToken = (userId, sessionId) => {
   return jwt.sign(
-    { 
+    {
       userId,
       sessionId,
       type: 'marketplace'
@@ -27,7 +27,7 @@ const generateMarketplaceToken = (userId, sessionId) => {
 export const marketplaceRegister = async (req, res) => {
   try {
     const { firstName, lastName, email, password, DOB, phone } = req.body;
-    
+
     // Validate required fields
     if (!firstName || !lastName || !email || !password || !DOB || !phone) {
       return res.status(400).json(
@@ -60,9 +60,9 @@ export const marketplaceRegister = async (req, res) => {
       pickedJobs: [],
       myJobs: []
     });
-    
+
     const savedUser = await mpUser.save();
-    
+
     // Create session and generate token
     const sessionData = await createUserSession(savedUser._id);
     const token = generateMarketplaceToken(savedUser._id, sessionData.sessionId);
@@ -96,7 +96,7 @@ export const marketplaceRegister = async (req, res) => {
 export const talentScoutRegister = async (req, res) => {
   try {
     const { firstName, lastName, email, password, DOB, phone } = req.body;
-    
+
     // Validate required fields
     if (!firstName || !lastName || !email || !password || !DOB || !phone) {
       return res.status(400).json(
@@ -129,9 +129,9 @@ export const talentScoutRegister = async (req, res) => {
       pickedJobs: [],
       myJobs: []
     });
-    
+
     const savedUser = await mpUser.save();
-    
+
     // Create session and generate token
     const sessionData = await createUserSession(savedUser._id);
     const token = generateMarketplaceToken(savedUser._id, sessionData.sessionId);
@@ -166,10 +166,10 @@ export const createTalentScoutByManager = async (req, res) => {
   try {
     const { firstName, lastName, email, DOB, phone, password } = req.body;
     const managerId = req.user.userId; // Get manager ID from auth middleware
-    
+
     console.log("Creating talent scout by manager:", managerId);
     console.log("Talent scout data:", { firstName, lastName, email, DOB, phone });
-    
+
     // Validate required fields
     if (!firstName || !lastName || !email || !DOB || !phone || !password) {
       return res.status(400).json(
@@ -218,7 +218,7 @@ export const createTalentScoutByManager = async (req, res) => {
       myJobs: [],
       recruiterList: []
     });
-    
+
     const savedTalentScout = await talentScout.save();
     console.log("Talent scout created:", savedTalentScout._id);
 
@@ -381,16 +381,16 @@ export const createMarketplaceJobByMpUser = async (req, res) => {
 export const getManagerTalentScouts = async (req, res) => {
   try {
     const managerId = req.user.userId; // Get manager ID from auth middleware
-    
+
     console.log("Fetching talent scouts for manager:", managerId);
-    
+
     // Fetch manager with populated recruiterList
     const manager = await MpUser.findById(managerId)
       .populate({
         path: 'recruiterList',
         select: 'firstName lastName emailid phone DOB userRole isActive createdAt'
       });
-    
+
     if (!manager) {
       return res.status(404).json(
         new ApiResponse(404, null, "Manager not found")
@@ -433,9 +433,9 @@ export const deleteTalentScoutByManager = async (req, res) => {
   try {
     const managerId = req.user.userId; // Get manager ID from auth middleware
     const { talentScoutId } = req.params;
-    
+
     console.log("Deleting talent scout:", talentScoutId, "by manager:", managerId);
-    
+
     // Validate talent scout ID
     if (!mongoose.Types.ObjectId.isValid(talentScoutId)) {
       return res.status(400).json(
@@ -505,7 +505,7 @@ export const createTestUser = async (req, res) => {
         new ApiResponse(200, { user: existingUser }, "Test user already exists")
       );
     }
-    
+
     // Create new MP user
     const mpUser = new MpUser({
       firstName: "test",
@@ -521,12 +521,12 @@ export const createTestUser = async (req, res) => {
       accountDetails: [],
       bookmarkedJobs: []
     });
-    
+
     const savedUser = await mpUser.save();
     res.status(201).json(
       new ApiResponse(201, { user: savedUser }, "Test user created successfully")
     );
-    
+
   } catch (error) {
     console.error("Error creating test user:", error);
     res.status(500).json(
@@ -563,7 +563,7 @@ export const marketplaceLogin = async (req, res) => {
       firstName: user.firstName,
       lastName: user.lastName
     } : "No user found");
-    
+
     if (!user) {
       console.log("User not found for email:", email);
       return res.status(401).json(
@@ -631,10 +631,10 @@ export const marketplaceLogin = async (req, res) => {
 export const marketplaceLogout = async (req, res) => {
   try {
     const userId = req.user.userId;
-    
+
     // Invalidate the user's session
     await invalidateUserSession(userId);
-    
+
     res.status(200).json(
       new ApiResponse(200, null, "Logged out successfully")
     );
@@ -651,10 +651,10 @@ export const validateSession = async (req, res) => {
   try {
     const userId = req.user.userId;
     const sessionId = req.user.sessionId;
-    
+
     // Session is already validated by middleware, just return success
     res.status(200).json(
-      new ApiResponse(200, { 
+      new ApiResponse(200, {
         valid: true,
         userId: userId,
         sessionId: sessionId
@@ -679,7 +679,7 @@ export const getMarketplaceProfile = async (req, res) => {
         path: 'pickedJobs',
         select: 'jobTitle location jobType salary status'
       });
-    
+
     if (!user) {
       return res.status(404).json(
         new ApiResponse(404, null, "User not found")
@@ -815,11 +815,11 @@ export const saveBankDetails = async (req, res) => {
 
     // Return updated user data
     const updatedUser = await MpUser.findById(userId).select('-__v');
-    
+
     res.status(200).json(
-      new ApiResponse(200, { 
+      new ApiResponse(200, {
         user: updatedUser,
-        bankDetails: savedBankDetails 
+        bankDetails: savedBankDetails
       }, "Bank details saved successfully")
     );
 
@@ -864,9 +864,9 @@ export const deleteMarketplaceBankDetails = async (req, res) => {
     console.log("Deleting bank details for user:", userId, "bankDetailId:", bankDetailId);
 
     // Check if bank detail exists and belongs to user
-    const bankDetail = await BankDetails.findOne({ 
-      _id: bankDetailId, 
-      mpuserId: userId 
+    const bankDetail = await BankDetails.findOne({
+      _id: bankDetailId,
+      mpuserId: userId
     });
 
     if (!bankDetail) {
@@ -905,24 +905,24 @@ export const searchJobs = async (req, res) => {
     const userId = req.user.userId;
     const { query, page = 1, limit = 10 } = req.query;
     const skip = (page - 1) * limit;
-    
+
     console.log("Searching mpJobs for marketplace for user:", userId, "Query:", query, "Page:", page, "Limit:", limit);
-    
+
     if (!query || query.trim() === '') {
       return res.status(400).json(
         new ApiResponse(400, null, "Search query is required")
       );
     }
-    
+
     // Fetch user's bookmarked jobs, role, and myJobs
     const user = await MpUser.findById(userId).select('bookmarkedJobs userRole myJobs');
     const bookmarkedJobIds = user?.bookmarkedJobs || [];
     const userRole = user?.userRole;
     const myJobIds = user?.myJobs || [];
-    
+
     console.log("User role:", userRole);
     console.log("User's myJobs:", myJobIds);
-    
+
     // Create search conditions for mpJobs
     const searchConditions = {
       status: 'active',
@@ -934,13 +934,13 @@ export const searchJobs = async (req, res) => {
         { skills: { $in: [new RegExp(query, 'i')] } }
       ]
     };
-    
+
     // If user is a recruiter (TalentScout), only search in their myJobs
     if (userRole === 'recruiter') {
       if (myJobIds.length === 0) {
         console.log("TalentScout has no jobs in myJobs array");
         return res.status(200).json(
-          new ApiResponse(200, { 
+          new ApiResponse(200, {
             jobs: [],
             pagination: {
               currentPage: parseInt(page),
@@ -957,10 +957,10 @@ export const searchJobs = async (req, res) => {
       searchConditions._id = { $in: myJobIds };
       console.log("TalentScout: Searching only in myJobs array");
     }
-    
+
     // Get total count of matching mpJobs
     const totalJobs = await MpJob.countDocuments(searchConditions);
-    
+
     // Fetch paginated search results with populated company data
     const jobs = await MpJob.find(searchConditions)
       .populate('mpCompanies', 'companyName logo')
@@ -979,17 +979,17 @@ export const searchJobs = async (req, res) => {
       companyLogo: job.mpCompanies && job.mpCompanies.length > 0 ? job.mpCompanies[0].logo : '/api/placeholder/48/48',
       location: job.location || 'Not specified',
       type: job.jobType || 'Full-time',
-      experience: job.experience ? 
-        (job.experience.min && job.experience.max ? 
+      experience: job.experience ?
+        (job.experience.min && job.experience.max ?
           `${job.experience.min}-${job.experience.max} years` :
           job.experience.min ? `${job.experience.min}+ years` :
-          job.experience.max ? `Up to ${job.experience.max} years` : 'Not specified') 
+            job.experience.max ? `Up to ${job.experience.max} years` : 'Not specified')
         : 'Not specified',
-      salary: job.salary ? 
-        (job.salary.min && job.salary.max ? 
-          `₹${job.salary.min.toLocaleString()} - ₹${job.salary.max.toLocaleString()}` : 
+      salary: job.salary ?
+        (job.salary.min && job.salary.max ?
+          `₹${job.salary.min.toLocaleString()} - ₹${job.salary.max.toLocaleString()}` :
           job.salary.min ? `₹${job.salary.min.toLocaleString()}+` :
-          job.salary.max ? `Up to ₹${job.salary.max.toLocaleString()}` : 'Not disclosed') 
+            job.salary.max ? `Up to ₹${job.salary.max.toLocaleString()}` : 'Not disclosed')
         : 'Not disclosed',
       description: job.jobDescription || 'No description available',
       skills: job.skills || [],
@@ -1014,7 +1014,7 @@ export const searchJobs = async (req, res) => {
     }));
 
     res.status(200).json(
-      new ApiResponse(200, { 
+      new ApiResponse(200, {
         jobs: transformedJobs,
         pagination: {
           currentPage: parseInt(page),
@@ -1043,29 +1043,29 @@ export const getAllJobs = async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
-    
+
     console.log("Fetching mpJobs for marketplace for user:", userId, "Page:", page, "Limit:", limit);
-    
+
     // Fetch user's bookmarked jobs and user role
     const user = await MpUser.findById(userId).select('bookmarkedJobs userRole myJobs');
     const bookmarkedJobIds = user?.bookmarkedJobs || [];
     const userRole = user?.userRole;
     const myJobIds = user?.myJobs || [];
-    
+
     console.log("User role:", userRole);
     console.log("User's bookmarked jobs:", bookmarkedJobIds);
     console.log("User's myJobs:", myJobIds);
-    
+
     // Build query based on user role
     let jobQuery = { status: 'active', isClosed: false };
-    
+
     // If user is a recruiter (TalentScout), only show jobs from their myJobs array
     if (userRole === 'recruiter') {
       if (myJobIds.length === 0) {
         // If talent scout has no jobs assigned, return empty result
         console.log("TalentScout has no jobs in myJobs array");
         return res.status(200).json(
-          new ApiResponse(200, { 
+          new ApiResponse(200, {
             jobs: [],
             pagination: {
               currentPage: page,
@@ -1083,10 +1083,10 @@ export const getAllJobs = async (req, res) => {
     } else {
       console.log("Manager/PartnerLead: Showing all active jobs");
     }
-    
+
     // Get total count of jobs based on query
     const totalJobs = await MpJob.countDocuments(jobQuery);
-    
+
     // Fetch paginated jobs with populated company data
     const jobs = await MpJob.find(jobQuery)
       .populate('mpCompanies', 'companyName logo')
@@ -1096,14 +1096,14 @@ export const getAllJobs = async (req, res) => {
       .limit(limit);
 
     console.log(`Found ${jobs.length} mpJobs on page ${page} of ${Math.ceil(totalJobs / limit)}`);
-    
+
     // Debug: Log company data for first job
     if (jobs.length > 0) {
-    console.log('Sample job company data:', {
-      jobId: jobs[0]._id,
-      mpCompanies: jobs[0].mpCompanies,
-      companyName: jobs[0].mpCompanies && jobs[0].mpCompanies.length > 0 ? jobs[0].mpCompanies[0].companyName : jobs[0].companyName || 'No company'
-    });
+      console.log('Sample job company data:', {
+        jobId: jobs[0]._id,
+        mpCompanies: jobs[0].mpCompanies,
+        companyName: jobs[0].mpCompanies && jobs[0].mpCompanies.length > 0 ? jobs[0].mpCompanies[0].companyName : jobs[0].companyName || 'No company'
+      });
     }
 
     // Transform jobs data for marketplace display
@@ -1114,17 +1114,17 @@ export const getAllJobs = async (req, res) => {
       companyLogo: job.mpCompanies && job.mpCompanies.length > 0 ? job.mpCompanies[0].logo : '/api/placeholder/48/48',
       location: job.location || 'Not specified',
       type: job.jobType || 'Full-time',
-      experience: job.experience ? 
-        (job.experience.min && job.experience.max ? 
+      experience: job.experience ?
+        (job.experience.min && job.experience.max ?
           `${job.experience.min}-${job.experience.max} years` :
           job.experience.min ? `${job.experience.min}+ years` :
-          job.experience.max ? `Up to ${job.experience.max} years` : 'Not specified') 
+            job.experience.max ? `Up to ${job.experience.max} years` : 'Not specified')
         : 'Not specified',
-      salary: job.salary ? 
-        (job.salary.min && job.salary.max ? 
-          `₹${job.salary.min.toLocaleString()} - ₹${job.salary.max.toLocaleString()}` : 
+      salary: job.salary ?
+        (job.salary.min && job.salary.max ?
+          `₹${job.salary.min.toLocaleString()} - ₹${job.salary.max.toLocaleString()}` :
           job.salary.min ? `₹${job.salary.min.toLocaleString()}+` :
-          job.salary.max ? `Up to ₹${job.salary.max.toLocaleString()}` : 'Not disclosed') 
+            job.salary.max ? `Up to ₹${job.salary.max.toLocaleString()}` : 'Not disclosed')
         : 'Not disclosed',
       description: job.jobDescription || 'No description available',
       skills: job.skills || [],
@@ -1149,7 +1149,7 @@ export const getAllJobs = async (req, res) => {
     }));
 
     res.status(200).json(
-      new ApiResponse(200, { 
+      new ApiResponse(200, {
         jobs: transformedJobs,
         pagination: {
           currentPage: page,
@@ -1232,7 +1232,7 @@ export const toggleBookmark = async (req, res) => {
     console.log("Bookmark updated successfully. New bookmarked jobs:", updatedBookmarkedJobs.length);
 
     res.status(200).json(
-      new ApiResponse(200, { 
+      new ApiResponse(200, {
         isBookmarked,
         bookmarkedJobs: updatedBookmarkedJobs
       }, isBookmarked ? "Job bookmarked successfully" : "Bookmark removed successfully")
@@ -1251,28 +1251,28 @@ export const getBookmarkedJobs = async (req, res) => {
   try {
     const userId = req.user.userId;
     const limit = parseInt(req.query.limit) || 8;
-    
+
     console.log("Fetching bookmarked mpJobs for user:", userId, "Limit:", limit);
-    
+
     // Fetch user's bookmarked jobs
     const user = await MpUser.findById(userId).select('bookmarkedJobs');
     const bookmarkedJobIds = user?.bookmarkedJobs || [];
     console.log("User's bookmarked job IDs:", bookmarkedJobIds);
-    
+
     if (bookmarkedJobIds.length === 0) {
       return res.status(200).json(
-        new ApiResponse(200, { 
+        new ApiResponse(200, {
           jobs: [],
           total: 0
         }, "No bookmarked jobs found")
       );
     }
-    
+
     // Fetch bookmarked mpJobs with populated company data
-    const jobs = await MpJob.find({ 
+    const jobs = await MpJob.find({
       _id: { $in: bookmarkedJobIds },
-      status: 'active', 
-      isClosed: false 
+      status: 'active',
+      isClosed: false
     })
       .populate('mpCompanies', 'companyName logo')
       .select('-internalNotes')
@@ -1289,17 +1289,17 @@ export const getBookmarkedJobs = async (req, res) => {
       companyLogo: job.mpCompanies && job.mpCompanies.length > 0 ? job.mpCompanies[0].logo : '/api/placeholder/48/48',
       location: job.location || 'Not specified',
       type: job.jobType || 'Full-time',
-      experience: job.experience ? 
-        (job.experience.min && job.experience.max ? 
+      experience: job.experience ?
+        (job.experience.min && job.experience.max ?
           `${job.experience.min}-${job.experience.max} years` :
           job.experience.min ? `${job.experience.min}+ years` :
-          job.experience.max ? `Up to ${job.experience.max} years` : 'Not specified') 
+            job.experience.max ? `Up to ${job.experience.max} years` : 'Not specified')
         : 'Not specified',
-      salary: job.salary ? 
-        (job.salary.min && job.salary.max ? 
-          `₹${job.salary.min.toLocaleString()} - ₹${job.salary.max.toLocaleString()}` : 
+      salary: job.salary ?
+        (job.salary.min && job.salary.max ?
+          `₹${job.salary.min.toLocaleString()} - ₹${job.salary.max.toLocaleString()}` :
           job.salary.min ? `₹${job.salary.min.toLocaleString()}+` :
-          job.salary.max ? `Up to ₹${job.salary.max.toLocaleString()}` : 'Not disclosed') 
+            job.salary.max ? `Up to ₹${job.salary.max.toLocaleString()}` : 'Not disclosed')
         : 'Not disclosed',
       description: job.jobDescription || 'No description available',
       skills: job.skills || [],
@@ -1317,7 +1317,7 @@ export const getBookmarkedJobs = async (req, res) => {
     }));
 
     res.status(200).json(
-      new ApiResponse(200, { 
+      new ApiResponse(200, {
         jobs: transformedJobs,
         total: transformedJobs.length
       }, "Bookmarked jobs fetched successfully")
@@ -1336,13 +1336,13 @@ export const getJobDetails = async (req, res) => {
   try {
     const userId = req.user.userId;
     const { jobId } = req.params;
-    
+
     console.log("Fetching mpJob details for job:", jobId, "user:", userId);
-    
+
     // Fetch user's bookmarked jobs to check if this job is bookmarked
     const user = await MpUser.findById(userId).select('bookmarkedJobs');
     const bookmarkedJobIds = user?.bookmarkedJobs || [];
-    
+
     // Fetch the specific mpJob with populated company data
     const job = await MpJob.findById(jobId)
       .populate('mpCompanies', 'companyName logo')
@@ -1370,17 +1370,17 @@ export const getJobDetails = async (req, res) => {
       companyLogo: job.mpCompanies && job.mpCompanies.length > 0 ? job.mpCompanies[0].logo : '/api/placeholder/48/48',
       location: job.location || 'Not specified',
       type: job.jobType || 'Full-time',
-      experience: job.experience ? 
-        (job.experience.min && job.experience.max ? 
+      experience: job.experience ?
+        (job.experience.min && job.experience.max ?
           `${job.experience.min}-${job.experience.max} years` :
           job.experience.min ? `${job.experience.min}+ years` :
-          job.experience.max ? `Up to ${job.experience.max} years` : 'Not specified') 
+            job.experience.max ? `Up to ${job.experience.max} years` : 'Not specified')
         : 'Not specified',
-      salary: job.salary ? 
-        (job.salary.min && job.salary.max ? 
-          `₹${job.salary.min.toLocaleString()} - ₹${job.salary.max.toLocaleString()}` : 
+      salary: job.salary ?
+        (job.salary.min && job.salary.max ?
+          `₹${job.salary.min.toLocaleString()} - ₹${job.salary.max.toLocaleString()}` :
           job.salary.min ? `₹${job.salary.min.toLocaleString()}+` :
-          job.salary.max ? `Up to ₹${job.salary.max.toLocaleString()}` : 'Not disclosed') 
+            job.salary.max ? `Up to ₹${job.salary.max.toLocaleString()}` : 'Not disclosed')
         : 'Not disclosed',
       description: job.jobDescription || 'No description available',
       skills: job.skills || [],
@@ -1399,7 +1399,7 @@ export const getJobDetails = async (req, res) => {
     };
 
     res.status(200).json(
-      new ApiResponse(200, { 
+      new ApiResponse(200, {
         job: transformedJob
       }, "Job details fetched successfully")
     );
@@ -1416,9 +1416,9 @@ export const getJobDetails = async (req, res) => {
 export const getJobTalentScouts = async (req, res) => {
   try {
     const { jobId } = req.params;
-    
+
     console.log("Fetching talent scouts for job:", jobId);
-    
+
     // Fetch the job with populated talent scouts
     const job = await MpJob.findById(jobId)
       .populate({
@@ -1446,7 +1446,7 @@ export const getJobTalentScouts = async (req, res) => {
     }));
 
     res.status(200).json(
-      new ApiResponse(200, { 
+      new ApiResponse(200, {
         talentScouts,
         totalCount: talentScouts.length
       }, "Talent scouts fetched successfully")
@@ -1466,14 +1466,14 @@ export const addTalentScoutToJob = async (req, res) => {
     const { jobId } = req.params;
     const { talentScoutId } = req.body;
     const userId = req.user?.userId;
-    
+
     console.log("=== ADD TALENT SCOUT TO JOB ===");
     console.log("Adding talent scout to job:", { jobId, talentScoutId, userId });
     console.log("Request user:", req.user);
     console.log("Request headers:", req.headers);
     console.log("Request body:", req.body);
     console.log("=== END DEBUG INFO ===");
-    
+
     // Find the job
     const job = await MpJob.findById(jobId);
     if (!job) {
@@ -1516,7 +1516,7 @@ export const addTalentScoutToJob = async (req, res) => {
     }
 
     res.status(200).json(
-      new ApiResponse(200, { 
+      new ApiResponse(200, {
         message: "Talent scout added to job successfully"
       }, "Talent scout added successfully")
     );
@@ -1539,10 +1539,10 @@ export const removeTalentScoutFromJob = async (req, res) => {
   try {
     const { jobId, talentScoutId } = req.params;
     const userId = req.user?.userId;
-    
+
     console.log("Removing talent scout from job:", { jobId, talentScoutId, userId });
     console.log("Request user:", req.user);
-    
+
     // Find the job
     const job = await MpJob.findById(jobId);
     if (!job) {
@@ -1573,7 +1573,7 @@ export const removeTalentScoutFromJob = async (req, res) => {
     await job.removeTalentScout(talentScoutId);
 
     res.status(200).json(
-      new ApiResponse(200, { 
+      new ApiResponse(200, {
         message: "Talent scout removed from job successfully"
       }, "Talent scout removed successfully")
     );
@@ -1640,13 +1640,13 @@ export const pickJob = async (req, res) => {
     const userObjectId = new mongoose.Types.ObjectId(userId);
     if (!job.licensePartners.includes(userObjectId)) {
       job.licensePartners.push(userObjectId);
-      
+
       // Add to pickHistory for statistics
       job.pickHistory.push({
         userId: userObjectId,
         pickedAt: new Date()
       });
-      
+
       // Increment pickedNumber for the job
       job.pickedNumber = (job.pickedNumber || 0) + 1;
       await job.save();
@@ -1675,7 +1675,7 @@ export const pickJob = async (req, res) => {
       });
 
     res.status(200).json(
-      new ApiResponse(200, { 
+      new ApiResponse(200, {
         user: updatedUser,
         pickedJobs: updatedUser.pickedJobs
       }, "Job picked successfully")
@@ -1683,6 +1683,153 @@ export const pickJob = async (req, res) => {
 
   } catch (error) {
     console.error("Pick job error:", error);
+    res.status(500).json(
+      new ApiResponse(500, null, "Internal server error")
+    );
+  }
+};
+
+// Get public jobs (no auth required)
+export const getPublicJobs = async (req, res) => {
+  try {
+    const { query, page = 1, limit = 10 } = req.query;
+    const skip = (page - 1) * limit;
+
+    console.log("Fetching public jobs. Query:", query, "Page:", page, "Limit:", limit);
+
+    // Create search conditions
+    const searchConditions = {
+      status: 'active',
+      isClosed: false
+    };
+
+    if (query && query.trim() !== '') {
+      searchConditions.$or = [
+        { jobTitle: { $regex: query, $options: 'i' } },
+        { jobDescription: { $regex: query, $options: 'i' } },
+        { location: { $regex: query, $options: 'i' } },
+        { skills: { $in: [new RegExp(query, 'i')] } },
+        { companyName: { $regex: query, $options: 'i' } }
+      ];
+    }
+
+    // Get total count
+    const totalJobs = await MpJob.countDocuments(searchConditions);
+
+    // Fetch paginated results
+    const jobs = await MpJob.find(searchConditions)
+      .populate('mpCompanies', 'companyName logo')
+      .select('jobTitle companyName location jobType experience salary jobDescription skills createdAt hiringDeadline')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(parseInt(limit));
+
+    // Transform data
+    const transformedJobs = jobs.map(job => ({
+      _id: job._id,
+      title: job.jobTitle,
+      company: job.mpCompanies && job.mpCompanies.length > 0 ? job.mpCompanies[0].companyName : (job.companyName || 'Unknown Company'),
+      companyLogo: job.mpCompanies && job.mpCompanies.length > 0 ? job.mpCompanies[0].logo : '/api/placeholder/48/48',
+      location: job.location || 'Not specified',
+      type: job.jobType || 'Full-time',
+      experience: job.experience ?
+        (job.experience.min && job.experience.max ?
+          `${job.experience.min}-${job.experience.max} Years` :
+          job.experience.min ? `${job.experience.min}+ Years` :
+            job.experience.max ? `Up to ${job.experience.max} Years` : 'Not specified')
+        : 'Not specified',
+      salary: job.salary ?
+        (job.salary.min && job.salary.max ?
+          `₹${job.salary.min.toLocaleString()} - ₹${job.salary.max.toLocaleString()}` :
+          job.salary.min ? `₹${job.salary.min.toLocaleString()}+` :
+            job.salary.max ? `Up to ₹${job.salary.max.toLocaleString()}` : 'Not disclosed')
+        : 'Not disclosed',
+      description: job.jobDescription || 'No description available',
+      skills: job.skills || [],
+      postedDate: job.createdAt,
+      hiringDeadline: job.hiringDeadline
+    }));
+
+    res.status(200).json(
+      new ApiResponse(200, {
+        jobs: transformedJobs,
+        pagination: {
+          currentPage: parseInt(page),
+          totalPages: Math.ceil(totalJobs / limit),
+          totalJobs: totalJobs,
+          jobsPerPage: parseInt(limit),
+          hasNextPage: parseInt(page) < Math.ceil(totalJobs / limit),
+          hasPrevPage: parseInt(page) > 1
+        }
+      }, "Public jobs fetched successfully")
+    );
+
+  } catch (error) {
+    console.error("Get public jobs error:", error);
+    res.status(500).json(
+      new ApiResponse(500, null, "Internal server error")
+    );
+  }
+};
+
+// Get public job details by ID (no auth required)
+export const getPublicJobDetails = async (req, res) => {
+  try {
+    const { jobId } = req.params;
+
+    console.log("Fetching public job details for job:", jobId);
+
+    // Fetch the specific job
+    const job = await MpJob.findById(jobId)
+      .populate('mpCompanies', 'companyName logo')
+      .select('jobTitle companyName location jobType experience salary jobDescription skills createdAt hiringDeadline status isClosed');
+
+    if (!job) {
+      return res.status(404).json(
+        new ApiResponse(404, null, "Job not found")
+      );
+    }
+
+    if (job.status !== 'active' || job.isClosed) {
+      return res.status(404).json(
+        new ApiResponse(404, null, "Job is no longer available")
+      );
+    }
+
+    // Transform data
+    const transformedJob = {
+      _id: job._id,
+      title: job.jobTitle,
+      company: job.mpCompanies && job.mpCompanies.length > 0 ? job.mpCompanies[0].companyName : (job.companyName || 'Unknown Company'),
+      companyLogo: job.mpCompanies && job.mpCompanies.length > 0 ? job.mpCompanies[0].logo : '/api/placeholder/48/48',
+      location: job.location || 'Not specified',
+      type: job.jobType || 'Full-time',
+      experience: job.experience ?
+        (job.experience.min && job.experience.max ?
+          `${job.experience.min}-${job.experience.max} Years` :
+          job.experience.min ? `${job.experience.min}+ Years` :
+            job.experience.max ? `Up to ${job.experience.max} Years` : 'Not specified')
+        : 'Not specified',
+      salary: job.salary ?
+        (job.salary.min && job.salary.max ?
+          `₹${job.salary.min.toLocaleString()} - ₹${job.salary.max.toLocaleString()}` :
+          job.salary.min ? `₹${job.salary.min.toLocaleString()}+` :
+            job.salary.max ? `Up to ₹${job.salary.max.toLocaleString()}` : 'Not disclosed')
+        : 'Not disclosed',
+      description: job.jobDescription || 'No description available',
+      skills: job.skills || [],
+      postedDate: job.createdAt,
+      hiringDeadline: job.hiringDeadline
+    };
+
+    res.status(200).json(
+      new ApiResponse(200, {
+        job: transformedJob
+      }, "Job details fetched successfully")
+    );
+
+  } catch (error) {
+    console.error("Get public job details error:", error);
     res.status(500).json(
       new ApiResponse(500, null, "Internal server error")
     );
@@ -1729,10 +1876,10 @@ export const withdrawJob = async (req, res) => {
     const job = await MpJob.findById(jobId);
     if (job) {
       const userObjectId = new mongoose.Types.ObjectId(userId);
-      job.licensePartners = job.licensePartners.filter(partnerId => 
+      job.licensePartners = job.licensePartners.filter(partnerId =>
         partnerId.toString() !== userId
       );
-      
+
       // Decrement pickedNumber for the job
       job.pickedNumber = Math.max((job.pickedNumber || 0) - 1, 0);
       await job.save();
@@ -1761,7 +1908,7 @@ export const withdrawJob = async (req, res) => {
       });
 
     res.status(200).json(
-      new ApiResponse(200, { 
+      new ApiResponse(200, {
         user: updatedUser,
         pickedJobs: updatedUser.pickedJobs
       }, "Job withdrawn successfully")
@@ -1781,7 +1928,7 @@ export const saveMarketplaceResume = async (req, res) => {
     console.log("Received request to save marketplace resume with jobId:", req.params.jobId);
     console.log("Resume data:", req.body);
     console.log("Marketplace User ID:", req.user.userId);
-    
+
     const resumeData = req.body;
     const { jobId } = req.params;
     const userId = req.user.userId; // Get user ID from marketplace auth middleware
@@ -1839,7 +1986,7 @@ export const saveMarketplaceResume = async (req, res) => {
     const newResume = new Resume(resumeObject);
 
     console.log("Creating new marketplace resume document:", newResume);
-    
+
     let saved;
     try {
       saved = await newResume.save();
@@ -1857,7 +2004,7 @@ export const saveMarketplaceResume = async (req, res) => {
 
     // Increment totalApplications for the MpJob
     await MpJob.findByIdAndUpdate(jobId, { $inc: { totalApplications: 1 } });
-    
+
     // Add resume to job's candidateList (for MpJob)
     try {
       const mpJob = await MpJob.findById(jobId);
@@ -1904,7 +2051,7 @@ export const saveMarketplaceResume = async (req, res) => {
       console.error("Error updating MpUser candidate_data.applied:", userError);
       // Don't fail the request if this fails, just log the error
     }
-    
+
     res.status(201).json(
       new ApiResponse(201, { resume: saved }, "Resume saved successfully")
     );
@@ -2009,7 +2156,7 @@ export const saveMarketplaceInterviewEvaluation = async (req, res) => {
     }
 
     res.status(200).json(
-      new ApiResponse(200, { 
+      new ApiResponse(200, {
         resume: updatedResume,
         evaluationSummary: {
           totalScore,
@@ -2076,7 +2223,7 @@ export const getMarketplaceCandidates = async (req, res) => {
     }));
 
     res.status(200).json(
-      new ApiResponse(200, { 
+      new ApiResponse(200, {
         candidates: transformedCandidates,
         totalCount: transformedCandidates.length
       }, "Candidates retrieved successfully")
@@ -2145,28 +2292,28 @@ export const getPickedJobs = async (req, res) => {
   try {
     const userId = req.user.userId;
     const limit = parseInt(req.query.limit) || 10;
-    
+
     console.log("Fetching picked mpJobs for user:", userId, "Limit:", limit);
-    
+
     // Fetch user's picked jobs
     const user = await MpUser.findById(userId).select('pickedJobs');
     const pickedJobIds = user?.pickedJobs || [];
     console.log("User's picked job IDs:", pickedJobIds);
-    
+
     if (pickedJobIds.length === 0) {
       return res.status(200).json(
-        new ApiResponse(200, { 
+        new ApiResponse(200, {
           jobs: [],
           total: 0
         }, "No picked jobs found")
       );
     }
-    
+
     // Fetch picked mpJobs with populated company data
-    const jobs = await MpJob.find({ 
+    const jobs = await MpJob.find({
       _id: { $in: pickedJobIds },
-      status: 'active', 
-      isClosed: false 
+      status: 'active',
+      isClosed: false
     })
       .populate('mpCompanies', 'companyName logo')
       .select('-internalNotes')
@@ -2183,17 +2330,17 @@ export const getPickedJobs = async (req, res) => {
       companyLogo: job.mpCompanies && job.mpCompanies.length > 0 ? job.mpCompanies[0].logo : '/api/placeholder/48/48',
       location: job.location || 'Not specified',
       type: job.jobType || 'Full-time',
-      experience: job.experience ? 
-        (job.experience.min && job.experience.max ? 
+      experience: job.experience ?
+        (job.experience.min && job.experience.max ?
           `${job.experience.min}-${job.experience.max} years` :
           job.experience.min ? `${job.experience.min}+ years` :
-          job.experience.max ? `Up to ${job.experience.max} years` : 'Not specified') 
+            job.experience.max ? `Up to ${job.experience.max} years` : 'Not specified')
         : 'Not specified',
-      salary: job.salary ? 
-        (job.salary.min && job.salary.max ? 
-          `₹${job.salary.min.toLocaleString()} - ₹${job.salary.max.toLocaleString()}` : 
+      salary: job.salary ?
+        (job.salary.min && job.salary.max ?
+          `₹${job.salary.min.toLocaleString()} - ₹${job.salary.max.toLocaleString()}` :
           job.salary.min ? `₹${job.salary.min.toLocaleString()}+` :
-          job.salary.max ? `Up to ₹${job.salary.max.toLocaleString()}` : 'Not disclosed') 
+            job.salary.max ? `Up to ₹${job.salary.max.toLocaleString()}` : 'Not disclosed')
         : 'Not disclosed',
       description: job.jobDescription || 'No description available',
       skills: job.skills || [],
@@ -2208,12 +2355,12 @@ export const getPickedJobs = async (req, res) => {
       interviewed: job.totalInterviews || 0,
       totalHires: job.totalHires || 0,
       isBookmarked: false, // We'll check this separately if needed
-      status: job.priority === 'High' ? 'Urgent' : 
-              job.priority === 'Medium' ? 'Active' : 'Open'
+      status: job.priority === 'High' ? 'Urgent' :
+        job.priority === 'Medium' ? 'Active' : 'Open'
     }));
 
     res.status(200).json(
-      new ApiResponse(200, { 
+      new ApiResponse(200, {
         jobs: transformedJobs,
         total: transformedJobs.length
       }, "Picked jobs fetched successfully")
@@ -2233,30 +2380,30 @@ export const updateMarketplaceResume = async (req, res) => {
     const { resumeId } = req.params;
     const { redFlagged, addedNotes, referredToManager } = req.body;
     const userId = req.user.userId; // Get user ID from marketplace auth middleware
-    
+
     console.log('PATCH /api/marketplace/resumes/:resumeId called');
     console.log('resumeId:', resumeId);
     console.log('userId:', userId);
     console.log('req.body:', req.body);
-    
+
     // Build update object
     const updateObj = {};
     if (typeof redFlagged === 'boolean') updateObj.redFlagged = redFlagged;
     if (addedNotes !== undefined) updateObj.addedNotes = addedNotes;
     if (typeof referredToManager === 'boolean') updateObj.referredToManager = referredToManager;
-    
+
     if (Object.keys(updateObj).length === 0) {
       return res.status(400).json(
         new ApiResponse(400, null, "No valid fields to update")
       );
     }
-    
+
     const updatedResume = await Resume.findByIdAndUpdate(
       resumeId,
       updateObj,
       { new: true }
     );
-    
+
     if (!updatedResume) {
       return res.status(404).json(
         new ApiResponse(404, null, "Resume not found")
@@ -2306,11 +2453,11 @@ export const updateMarketplaceResume = async (req, res) => {
         // Don't fail the request if this fails, just log the error
       }
     }
-    
+
     res.status(200).json(
       new ApiResponse(200, { resume: updatedResume }, "Resume updated successfully")
     );
-    
+
   } catch (error) {
     console.error("Update marketplace resume error:", error);
     res.status(500).json(
@@ -2360,7 +2507,7 @@ export const getCandidatePipelineData = async (req, res) => {
           screened: {
             $sum: {
               $cond: [
-                { 
+                {
                   $and: [
                     { $ifNull: ['$interviewEvaluation', false] },
                     { $gt: [{ $size: { $ifNull: ['$interviewEvaluation.evaluationResults', []] } }, 0] }
@@ -2446,13 +2593,13 @@ export const getCandidatePipelineData = async (req, res) => {
       const hired = item.hired || 0;
 
       totalCandidates += submitted;
-      
+
       // Pending = candidates who are submitted or screened but not yet shortlisted/hired
       // This is: (submitted - screened) + (screened - shortlisted)
       // Which simplifies to: submitted - shortlisted
       const notYetReviewed = submitted - shortlisted - hired;
       pendingCount += Math.max(0, notYetReviewed);
-      
+
       // Reviewed = shortlisted + hired
       reviewedCount += shortlisted + hired;
     });
@@ -2466,7 +2613,7 @@ export const getCandidatePipelineData = async (req, res) => {
     console.log('Scorecard data:', scorecardData);
 
     res.status(200).json(
-      new ApiResponse(200, { 
+      new ApiResponse(200, {
         pipelineData: finalPipelineData,
         scorecardData: scorecardData
       }, "Pipeline data fetched successfully")

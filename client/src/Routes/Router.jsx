@@ -86,6 +86,8 @@ const Privacy = lazy(() => import("../Pages/Policy/Privacy"));
 const Terms = lazy(() => import("../Pages/Policy/Terms"));
 const Support = lazy(() => import("../Pages/Policy/Support"));
 const TalentHub = lazy(() => import("../Pages/TalentHub"));
+const Careers = lazy(() => import("../Pages/Careers"));
+const CareerJobDetails = lazy(() => import("../Pages/CareerJobDetails"));
 
 
 
@@ -142,6 +144,8 @@ const Router = () => {
               <Route path="terms" element={<Terms />} />
               <Route path="support" element={<Support />} />
               <Route path="prorecruitor" element={<ProRecruitor />} />
+              <Route path="careers" element={<Careers />} />
+              <Route path="careers/job/:jobId" element={<CareerJobDetails />} />
             </Route>
 
             {/* Marketplace Routes - No Header/Footer */}

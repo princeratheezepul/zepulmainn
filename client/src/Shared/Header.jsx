@@ -5,10 +5,10 @@ import { FaBars } from "react-icons/fa6";
 const Header = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  
+
   const handleTryZepulClick = () => {
     const pathname = location.pathname;
-    
+
     // If route is /, /ZepRecruit or /zepTalentHub, redirect to /login
     if (pathname === "/" || pathname === "/ZepRecruit" || pathname === "/zepTalentHub") {
       navigate("/login", { replace: true });
@@ -137,8 +137,8 @@ const Header = () => {
 
                 <li className="nav-item">
                   <div className="flex flex-col leading-none">
-                    <a
-                      href="https://careers.zepul.com/"
+                    <Link
+                      to="/careers"
                       className="nav-link uppercase"
                       style={{
                         color: "#024bff",
@@ -151,11 +151,9 @@ const Header = () => {
                         padding: 0,
                         display: "block",
                       }}
-                      target="_blank"
-                      rel="noopener noreferrer"
                     >
                       Zep Jobs
-                    </a>
+                    </Link>
                     <p
                       style={{
                         fontSize: "12px",
@@ -187,61 +185,61 @@ const Header = () => {
                 <ul className=" dropdown-menu ">
                   <li className="nav-item">
                     <Link to="/ZepRecruit" className="nav-link dropdown-item" style={{
-                        color: "#024bff",
-                        fontFamily: '"DM Sans", sans-serif',
-                        fontWeight: 500,
-                        fontSize: "16px",
-                        lineHeight: 1,
-                        letterSpacing: "-0.05em",
-                        margin: 0,
-                        padding: 0,
-                        display: "block",
-                      }}>
+                      color: "#024bff",
+                      fontFamily: '"DM Sans", sans-serif',
+                      fontWeight: 500,
+                      fontSize: "16px",
+                      lineHeight: 1,
+                      letterSpacing: "-0.05em",
+                      margin: 0,
+                      padding: 0,
+                      display: "block",
+                    }}>
                       Zep Recruit
                     </Link>
                   </li>
                   <li className="nav-item">
                     <Link to="/zepTalentHub" className="nav-link dropdown-item" style={{
-                        color: "#024bff",
-                        fontFamily: '"DM Sans", sans-serif',
-                        fontWeight: 500,
-                        fontSize: "16px",
-                        lineHeight: 1,
-                        letterSpacing: "-0.05em",
-                        margin: 0,
-                        padding: 0,
-                        display: "block",
-                      }}>
+                      color: "#024bff",
+                      fontFamily: '"DM Sans", sans-serif',
+                      fontWeight: 500,
+                      fontSize: "16px",
+                      lineHeight: 1,
+                      letterSpacing: "-0.05em",
+                      margin: 0,
+                      padding: 0,
+                      display: "block",
+                    }}>
                       Zep Talenthub
                     </Link>
                   </li>
                   <li className="nav-item">
                     <Link to="/prorecruitor" className="nav-link dropdown-item" style={{
-                        color: "#024bff",
-                        fontFamily: '"DM Sans", sans-serif',
-                        fontWeight: 500,
-                        fontSize: "16px",
-                        lineHeight: 1,
-                        letterSpacing: "-0.05em",
-                        margin: 0,
-                        padding: 0,
-                        display: "block",
-                      }}>
+                      color: "#024bff",
+                      fontFamily: '"DM Sans", sans-serif',
+                      fontWeight: 500,
+                      fontSize: "16px",
+                      lineHeight: 1,
+                      letterSpacing: "-0.05em",
+                      margin: 0,
+                      padding: 0,
+                      display: "block",
+                    }}>
                       Zep Pro Recruiter
                     </Link>
                   </li>
                   <li className="nav-item">
-                    <Link to="https://careers.zepul.com" className="nav-link dropdown-item" style={{
-                        color: "#024bff",
-                        fontFamily: '"DM Sans", sans-serif',
-                        fontWeight: 500,
-                        fontSize: "16px",
-                        lineHeight: 1,
-                        letterSpacing: "-0.05em",
-                        margin: 0,
-                        padding: 0,
-                        display: "block",
-                      }}>
+                    <Link to="/careers" className="nav-link dropdown-item" style={{
+                      color: "#024bff",
+                      fontFamily: '"DM Sans", sans-serif',
+                      fontWeight: 500,
+                      fontSize: "16px",
+                      lineHeight: 1,
+                      letterSpacing: "-0.05em",
+                      margin: 0,
+                      padding: 0,
+                      display: "block",
+                    }}>
                       Zep Jobs
                     </Link>
                   </li>

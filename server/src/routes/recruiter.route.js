@@ -1,5 +1,5 @@
 import express from 'express';
-import { recruiterSignup, recruiterSignin, recruiterLogout, getRecruitersByCreator,updateRecruiter,updateRecruiterProfile,getRecruiterById, updateRecruiterDetails, getRecruiterProfile,testRecruiterAuth,toggleRecruiterStatus,getAllRecruiters,forgotpassword,resetpassword, changeRecruiterPassword, setPassword, validateSetPassword, getUserById, createRecruiterByAdmin, createRecruiterByManager, deleteRecruiter, getAssignedJobs, getRecruiterStats, refreshRecruiterToken, updateAvgTAT, getRecruiterStatsById } from '../controllers/recruiter.controller.js';
+import { recruiterSignup, recruiterSignin, recruiterLogout, getRecruitersByCreator,updateRecruiter,updateRecruiterProfile,getRecruiterById, updateRecruiterDetails, getRecruiterProfile,testRecruiterAuth,toggleRecruiterStatus,getAllRecruiters,forgotpassword,resetpassword, changeRecruiterPassword, setPassword, validateSetPassword, getUserById, createRecruiterByAdmin, createRecruiterByManager, deleteRecruiter, getAssignedJobs, getRecruiterStats, refreshRecruiterToken, updateAvgTAT, getRecruiterStatsById, testEmailConfig } from '../controllers/recruiter.controller.js';
 import { verifyRecruiterJWT } from '../middleware/recruiter.auth.middleware.js';
 import { verifyJWT as verifyAdminJWT } from '../middleware/admin.auth.middleware.js';
 import { verifyJWT as verifyManagerJWT } from '../middleware/manager.auth.middleware.js';
@@ -11,7 +11,8 @@ const router = express.Router();
 router.post('/signup', recruiterSignup);
 router.post('/signin', recruiterSignin);
 
-// Test authentication route
+// Test routes
+router.get('/test-email', testEmailConfig); // Public route to test email config
 router.get('/test-auth', verifyRecruiterJWT, testRecruiterAuth);
 router.post('/logout', recruiterLogout);
 router.post('/refresh-token', refreshRecruiterToken);

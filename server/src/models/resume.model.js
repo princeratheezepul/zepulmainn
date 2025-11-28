@@ -6,24 +6,24 @@ const ResumeSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Job"
     },
-    
+
     recruiterId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Recruiter"
     },
-    
+
     managerId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User"
     },
-    
+
     // Tag field for categorizing resumes
     tag: {
       type: String,
       enum: ['Engineering', 'Marketing', 'Sales', 'Customer Support', 'Finance'],
       required: true
     },
-    
+
     // Basic Information
     name: String,
     title: String, // Professional title
@@ -31,11 +31,11 @@ const ResumeSchema = new mongoose.Schema(
     phone: String,
     experience: String, // Total years of experience
     location: String,
-    
+
     // Skills
     skills: [String],
     non_technical_skills: [String],
-    
+
     // AI Analysis Results
     ats_score: Number,
     ats_reason: String,
@@ -74,7 +74,7 @@ const ResumeSchema = new mongoose.Schema(
       }
     },
     overallScore: Number,
-    
+
     // AI Summary
     aiSummary: {
       technicalExperience: String,
@@ -85,7 +85,7 @@ const ResumeSchema = new mongoose.Schema(
       competitiveFit: String,
       consistencyCheck: String
     },
-    
+
     // AI Scorecard
     aiScorecard: {
       technicalSkillMatch: Number,
@@ -93,12 +93,12 @@ const ResumeSchema = new mongoose.Schema(
       consistencyCheck: Number,
       teamLeadership: Number
     },
-    
+
     // Recommendation and Analysis
     recommendation: String,
     keyStrength: [String],
     potentialConcern: [String],
-    
+
     // Application Details
     applicationDetails: {
       position: String,
@@ -106,11 +106,11 @@ const ResumeSchema = new mongoose.Schema(
       noticePeriod: String,
       source: String
     },
-    
+
     // Additional Information
     about: String,
     addedNotes: String,
-    
+
     // Original Resume Data
     education: mongoose.Schema.Types.Mixed,
     work_experience: mongoose.Schema.Types.Mixed,
@@ -121,14 +121,14 @@ const ResumeSchema = new mongoose.Schema(
     number_of_job_jumps: Number,
     average_job_duration_months: Number,
     raw_text: String,
-    
+
     // Status Management
     status: {
       type: String,
       enum: ['scheduled', 'screening', 'submitted', 'shortlisted', 'rejected', 'offered', 'hired'],
       default: 'submitted'
     },
-    
+
     // Internal AI Assessment
     oa: {
       scheduled: { type: Boolean, default: false },
@@ -136,27 +136,29 @@ const ResumeSchema = new mongoose.Schema(
       status: { type: String, enum: ['invited', 'in_progress', 'completed', 'evaluated'], default: 'invited' },
       inviteDate: Date,
       completionDate: Date,
-      
-      // The Problem
-      question: {
+
+      // The Problems
+      questions: [{
         title: String,
         description: String,
         difficulty: String,
         constraints: String,
+        functionName: String,
         examples: [{
           input: mongoose.Schema.Types.Mixed,
           output: mongoose.Schema.Types.Mixed,
           explanation: String
         }]
-      },
-      
-      // The Submission
-      submission: {
+      }],
+
+      // The Submissions
+      submissions: [{
+        questionIndex: Number,
         code: String,
         language: { type: String, default: 'javascript' },
         submittedAt: Date
-      },
-      
+      }],
+
       // AI Evaluation
       evaluation: {
         score: Number, // 0-100
@@ -166,7 +168,7 @@ const ResumeSchema = new mongoose.Schema(
         improvementSuggestions: String
       }
     },
-    
+
     // Interview Management
     interviewScheduled: {
       type: Boolean,
@@ -179,7 +181,7 @@ const ResumeSchema = new mongoose.Schema(
       category: String,
       text: String
     }],
-    
+
     // Interview Evaluation Results
     interviewEvaluation: {
       evaluationResults: [{
@@ -203,7 +205,7 @@ const ResumeSchema = new mongoose.Schema(
         default: Date.now
       }
     },
-    
+
     // Score fields for transcript evaluation
     score: {
       type: Number,
@@ -213,7 +215,7 @@ const ResumeSchema = new mongoose.Schema(
       type: Number,
       default: 0
     },
-    
+
     // Approval/Rejection Management
     isApproved: { type: Boolean, default: false },
     isRejected: { type: Boolean, default: false },
@@ -221,31 +223,31 @@ const ResumeSchema = new mongoose.Schema(
     rejectFeedback: { type: String, default: '' },
     requestAnotherRound: { type: Boolean, default: false },
     referredToManager: { type: Boolean, default: false },
-    
+
     // Onboarding Time
     onBoardingTime: {
       type: Date,
       default: null
     },
-    
+
     // Shortlisted Time
     shortlistedTime: {
       type: Date,
       default: null
     },
-    
+
     // Marketplace User Flag
     isMPUser: {
       type: Boolean,
       default: false
     },
-    
+
     // Marketplace Resume Flag (for resumes submitted through marketplace)
     isMarketplace: {
       type: Boolean,
       default: false
     },
-    
+
     // Red Flag Status
     redFlagged: {
       type: Boolean,

@@ -1,12 +1,20 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Editor from '@monaco-editor/react';
-import { CheckCircle, XCircle, Clock, Award, AlertTriangle } from 'lucide-react';
+import { CheckCircle, XCircle, Clock, Award, AlertTriangle, ChevronRight } from 'lucide-react';
 
 const AssessmentResultView = ({ assessmentData }) => {
-    if (!assessmentData || !assessmentData.submission) return null;
+    // Handle both legacy (single) and new (multiple) data structures
+    const submissions = assessmentData?.submissions || (assessmentData?.submission ? [assessmentData.submission] : []);
+    const questions = assessmentData?.questions || (assessmentData?.question ? [assessmentData.question] : []);
+    const evaluation = assessmentData?.evaluation;
 
-    const { question, submission, evaluation } = assessmentData;
+    const [activeTab, setActiveTab] = useState(0);
+
+    if (!submissions.length) return null;
+
     const isPass = evaluation?.pass;
+    const currentSubmission = submissions.find(s => s.questionIndex === activeTab) || submissions[activeTab] || {};
+    const currentQuestion = questions[activeTab] || {};
 
     return (
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
@@ -32,24 +40,42 @@ const AssessmentResultView = ({ assessmentData }) => {
                     <div className="text-right">
                         <div className="text-sm text-gray-500">Submitted</div>
                         <div className="font-medium text-gray-900">
-                            {new Date(submission.submittedAt).toLocaleDateString()}
+                            {currentSubmission.submittedAt ? new Date(currentSubmission.submittedAt).toLocaleDateString() : 'N/A'}
                         </div>
                     </div>
                 </div>
             </div>
+
+            {/* Question Tabs */}
+            {questions.length > 1 && (
+                <div className="flex border-b border-gray-200 bg-gray-50 overflow-x-auto">
+                    {questions.map((q, idx) => (
+                        <button
+                            key={idx}
+                            onClick={() => setActiveTab(idx)}
+                            className={`px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${activeTab === idx
+                                    ? 'border-blue-600 text-blue-600 bg-white'
+                                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-100'
+                                }`}
+                        >
+                            Q{idx + 1}: {q.title || `Question ${idx + 1}`}
+                        </button>
+                    ))}
+                </div>
+            )}
 
             <div className="grid grid-cols-1 lg:grid-cols-2 h-[600px]">
                 {/* Left: Code Submission */}
                 <div className="border-r border-gray-200 flex flex-col">
                     <div className="bg-gray-50 px-4 py-2 border-b border-gray-200 font-medium text-gray-700 flex justify-between items-center">
                         <span>Candidate Submission</span>
-                        <span className="text-xs bg-gray-200 px-2 py-1 rounded text-gray-600">{submission.language}</span>
+                        <span className="text-xs bg-gray-200 px-2 py-1 rounded text-gray-600">{currentSubmission.language || 'javascript'}</span>
                     </div>
                     <div className="flex-1 overflow-hidden">
                         <Editor
                             height="100%"
-                            defaultLanguage={submission.language || 'javascript'}
-                            value={submission.code}
+                            defaultLanguage={currentSubmission.language || 'javascript'}
+                            value={currentSubmission.code || '// No code submitted'}
                             theme="light"
                             options={{
                                 readOnly: true,
@@ -69,10 +95,18 @@ const AssessmentResultView = ({ assessmentData }) => {
                     </h4>
 
                     <div className="space-y-6">
+                        {/* Question Context */}
+                        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+                            <h5 className="font-semibold text-gray-800 mb-2">Problem: {currentQuestion.title}</h5>
+                            <p className="text-gray-600 text-sm leading-relaxed line-clamp-3">
+                                {currentQuestion.description}
+                            </p>
+                        </div>
+
                         {/* Feedback */}
                         <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
                             <h5 className="font-semibold text-gray-800 mb-2">General Feedback</h5>
-                            <p className="text-gray-600 text-sm leading-relaxed">
+                            <p className="text-gray-600 text-sm leading-relaxed whitespace-pre-wrap">
                                 {evaluation?.feedback}
                             </p>
                         </div>

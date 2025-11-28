@@ -9,13 +9,47 @@ import { Admin } from "../models/admin.model.js";
 import ServerConfig from "../config/ServerConfig.js";
 const JWT_SECRET = process.env.ACCESS_TOKEN_SECRET || process.env.JWT_SECRET || "your_secret_key_here";
 
-const transporter = nodemailer.createTransport({
-  service: "gmail", // or use SMTP config
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
+// Create email transporter with explicit Gmail SMTP configuration for better compatibility
+// This works better on cloud platforms like Render, Heroku, etc.
+const createEmailTransporter = () => {
+  const config = {
+    host: 'smtp.gmail.com',
+    port: 587, // Use 587 for TLS
+    secure: false, // true for 465, false for other ports
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS,
+    },
+    tls: {
+      rejectUnauthorized: false // Accept self-signed certificates (needed for some cloud platforms)
+    },
+    debug: true, // Enable debug output
+    logger: true // Log to console
+  };
+
+  console.log('Creating email transporter with config:', {
+    host: config.host,
+    port: config.port,
+    secure: config.secure,
+    user: config.auth.user ? 'configured' : 'NOT SET'
+  });
+
+  return nodemailer.createTransport(config);
+};
+
+const transporter = createEmailTransporter();
+
+// Verify transporter connection on startup
+(async () => {
+  try {
+    await transporter.verify();
+    console.log('✅ Email transporter verified and ready to send emails');
+  } catch (error) {
+    console.error('❌ Email transporter verification failed:', error.message);
+    console.error('Email sending will not work. Please check EMAIL_USER and EMAIL_PASS environment variables.');
+  }
+})();
+
 const sendWelcomeRecruiterEmail = async (toEmail, adminName) => {
   const mailOptions = {
     from: process.env.EMAIL_USER,
@@ -498,23 +532,14 @@ export const forgotpassword = async (req, res) => {
 
         // Send email with password reset link using async/await for proper error handling
         try {
-            // Use the global transporter or create a new one
-            const emailTransporter = transporter || nodemailer.createTransport({
-                service: 'gmail',
-                auth: {
-                    user: process.env.EMAIL_USER,
-                    pass: process.env.EMAIL_PASS
-                }
-            });
-
             // Verify transporter configuration
             if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-                console.error('Email configuration missing: EMAIL_USER or EMAIL_PASS not set');
+                console.error('❌ Email configuration missing: EMAIL_USER or EMAIL_PASS not set');
                 return res.status(500).json({ Status: "Error", message: "Email service not configured" });
             }
 
             const mailOptions = {
-                from: process.env.EMAIL_USER,
+                from: `"Zepul Recruitment" <${process.env.EMAIL_USER}>`,
                 to: recruiter.email,
                 subject: 'Reset Password Link',
                 html: `
@@ -526,17 +551,33 @@ export const forgotpassword = async (req, res) => {
                 `
             };
 
+            console.log('📧 Attempting to send password reset email to:', recruiter.email);
+            
+            // Verify connection before sending
+            await transporter.verify();
+            console.log('✅ SMTP connection verified');
+
             // Send email using async/await
-            const emailInfo = await emailTransporter.sendMail(mailOptions);
-            console.log('Password reset email sent successfully:', emailInfo.messageId);
+            const emailInfo = await transporter.sendMail(mailOptions);
+            console.log('✅ Password reset email sent successfully!');
+            console.log('Message ID:', emailInfo.messageId);
+            console.log('Response:', emailInfo.response);
+            
             return res.json({ Status: "Success", message: "Password reset email sent successfully" });
         } catch (emailError) {
-            console.error('Email sending error:', emailError);
+            console.error('❌ Email sending error:', emailError.message);
+            console.error('Error code:', emailError.code);
+            console.error('Error command:', emailError.command);
+            
             // Log detailed error information
             if (emailError.response) {
-                console.error('Email error response:', emailError.response);
+                console.error('SMTP response:', emailError.response);
             }
-            return res.status(500).json({ Status: "Error", message: "Failed to send email" });
+            if (emailError.responseCode) {
+                console.error('Response code:', emailError.responseCode);
+            }
+            
+            return res.status(500).json({ Status: "Error", message: "Failed to send email. Please try again later." });
         }
     } catch (error) {
         console.error('Forgot password error:', error);
@@ -797,23 +838,14 @@ export const createRecruiterByAdmin = async (req, res) => {
     try {
       // Verify transporter configuration first
       if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-        console.error('Email configuration missing: EMAIL_USER or EMAIL_PASS not set');
+        console.error('❌ Email configuration missing: EMAIL_USER or EMAIL_PASS not set');
         console.error('EMAIL_USER:', process.env.EMAIL_USER ? 'Set' : 'NOT SET');
         console.error('EMAIL_PASS:', process.env.EMAIL_PASS ? 'Set' : 'NOT SET');
         throw new Error('Email service not configured');
       }
 
-      // Use the global transporter or create a new one
-      const emailTransporter = transporter || nodemailer.createTransport({
-        service: 'gmail',
-        auth: {
-          user: process.env.EMAIL_USER,
-          pass: process.env.EMAIL_PASS
-        }
-      });
-
       const mailOptions = {
-        from: process.env.EMAIL_USER,
+        from: `"Zepul Recruitment" <${process.env.EMAIL_USER}>`,
         to: email,
         subject: 'Set Your Password - Account Created',
         html: `
@@ -826,17 +858,33 @@ export const createRecruiterByAdmin = async (req, res) => {
         `
       };
 
+      console.log('📧 Attempting to send email to:', email);
+      
+      // Verify connection before sending
+      await transporter.verify();
+      console.log('✅ SMTP connection verified');
+
       // Send email using async/await
-      const emailInfo = await emailTransporter.sendMail(mailOptions);
-      console.log('Password set email sent successfully:', emailInfo.messageId);
+      const emailInfo = await transporter.sendMail(mailOptions);
+      console.log('✅ Password set email sent successfully!');
+      console.log('Message ID:', emailInfo.messageId);
+      console.log('Response:', emailInfo.response);
     } catch (emailError) {
-      console.error('Email sending error:', emailError);
+      console.error('❌ Email sending error:', emailError.message);
+      console.error('Error code:', emailError.code);
+      console.error('Error command:', emailError.command);
+      
       // Log detailed error information
       if (emailError.response) {
-        console.error('Email error response:', emailError.response);
+        console.error('SMTP response:', emailError.response);
       }
+      if (emailError.responseCode) {
+        console.error('Response code:', emailError.responseCode);
+      }
+      
       // Don't fail the request if email fails, but log it for debugging
       // The recruiter is still created successfully
+      console.error('⚠️ Recruiter created but email failed to send. Please check email configuration.');
     }
 
     // Remove sensitive data from response
@@ -940,23 +988,14 @@ export const createRecruiterByManager = async (req, res) => {
     try {
       // Verify transporter configuration first
       if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-        console.error('Email configuration missing: EMAIL_USER or EMAIL_PASS not set');
+        console.error('❌ Email configuration missing: EMAIL_USER or EMAIL_PASS not set');
         console.error('EMAIL_USER:', process.env.EMAIL_USER ? 'Set' : 'NOT SET');
         console.error('EMAIL_PASS:', process.env.EMAIL_PASS ? 'Set' : 'NOT SET');
         throw new Error('Email service not configured');
       }
 
-      // Use the global transporter or create a new one
-      const emailTransporter = transporter || nodemailer.createTransport({
-        service: 'gmail',
-        auth: {
-          user: process.env.EMAIL_USER,
-          pass: process.env.EMAIL_PASS
-        }
-      });
-
       const mailOptions = {
-        from: process.env.EMAIL_USER,
+        from: `"Zepul Recruitment" <${process.env.EMAIL_USER}>`,
         to: email,
         subject: 'Set Your Password - Recruiter Account Created',
         html: `
@@ -969,17 +1008,33 @@ export const createRecruiterByManager = async (req, res) => {
         `
       };
 
+      console.log('📧 Attempting to send email to:', email);
+      
+      // Verify connection before sending
+      await transporter.verify();
+      console.log('✅ SMTP connection verified');
+
       // Send email using async/await
-      const emailInfo = await emailTransporter.sendMail(mailOptions);
-      console.log('Password set email sent successfully:', emailInfo.messageId);
+      const emailInfo = await transporter.sendMail(mailOptions);
+      console.log('✅ Password set email sent successfully!');
+      console.log('Message ID:', emailInfo.messageId);
+      console.log('Response:', emailInfo.response);
     } catch (emailError) {
-      console.error('Email sending error:', emailError);
+      console.error('❌ Email sending error:', emailError.message);
+      console.error('Error code:', emailError.code);
+      console.error('Error command:', emailError.command);
+      
       // Log detailed error information
       if (emailError.response) {
-        console.error('Email error response:', emailError.response);
+        console.error('SMTP response:', emailError.response);
       }
+      if (emailError.responseCode) {
+        console.error('Response code:', emailError.responseCode);
+      }
+      
       // Don't fail the request if email fails, but log it for debugging
       // The recruiter is still created successfully
+      console.error('⚠️ Recruiter created but email failed to send. Please check email configuration.');
     }
 
     // Remove sensitive data from response
@@ -998,6 +1053,94 @@ export const createRecruiterByManager = async (req, res) => {
   } catch (error) {
     console.error('Error creating recruiter:', error);
     return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+// Test email configuration endpoint
+export const testEmailConfig = async (req, res) => {
+  try {
+    console.log('🧪 Testing email configuration...');
+    console.log('EMAIL_USER:', process.env.EMAIL_USER ? 'Set' : 'NOT SET');
+    console.log('EMAIL_PASS:', process.env.EMAIL_PASS ? 'Set (length: ' + (process.env.EMAIL_PASS?.length || 0) + ')' : 'NOT SET');
+    console.log('FRONTEND_URL:', ServerConfig.Frontend_URL || 'NOT SET');
+    
+    // Verify transporter connection
+    await transporter.verify();
+    console.log('✅ SMTP connection verified successfully');
+    
+    // Optionally send a test email if an email address is provided in query
+    const testEmail = req.query.email;
+    if (testEmail) {
+      const mailOptions = {
+        from: `"Zepul Recruitment Test" <${process.env.EMAIL_USER}>`,
+        to: testEmail,
+        subject: 'Test Email - Configuration Successful',
+        html: `
+          <h2>✅ Email Configuration Test</h2>
+          <p>If you're reading this, your email configuration is working correctly!</p>
+          <p><strong>Test Details:</strong></p>
+          <ul>
+            <li>From: ${process.env.EMAIL_USER}</li>
+            <li>SMTP Host: smtp.gmail.com</li>
+            <li>Port: 587</li>
+            <li>Frontend URL: ${ServerConfig.Frontend_URL || 'Not configured'}</li>
+          </ul>
+          <p>Your password reset emails should now work properly.</p>
+        `
+      };
+      
+      console.log('📧 Sending test email to:', testEmail);
+      const info = await transporter.sendMail(mailOptions);
+      console.log('✅ Test email sent successfully!');
+      console.log('Message ID:', info.messageId);
+      
+      return res.json({
+        success: true,
+        message: 'Email configuration is working!',
+        details: {
+          smtpVerified: true,
+          testEmailSent: true,
+          messageId: info.messageId,
+          emailUser: process.env.EMAIL_USER,
+          frontendUrl: ServerConfig.Frontend_URL
+        }
+      });
+    }
+    
+    return res.json({
+      success: true,
+      message: 'Email configuration verified successfully',
+      details: {
+        smtpVerified: true,
+        emailUser: process.env.EMAIL_USER,
+        frontendUrl: ServerConfig.Frontend_URL,
+        hint: 'Add ?email=your@email.com to send a test email'
+      }
+    });
+    
+  } catch (error) {
+    console.error('❌ Email configuration test failed:', error.message);
+    console.error('Error details:', error);
+    
+    return res.status(500).json({
+      success: false,
+      message: 'Email configuration test failed',
+      error: error.message,
+      details: {
+        emailUser: process.env.EMAIL_USER ? 'Set' : 'NOT SET',
+        emailPass: process.env.EMAIL_PASS ? 'Set' : 'NOT SET',
+        frontendUrl: ServerConfig.Frontend_URL || 'NOT SET',
+        errorCode: error.code,
+        errorCommand: error.command
+      },
+      troubleshooting: [
+        'Verify EMAIL_USER is set to your Gmail address',
+        'Verify EMAIL_PASS is set to your 16-character App-Specific Password',
+        'Make sure 2FA is enabled on your Gmail account',
+        'Generate a new App-Specific Password if needed',
+        'Check Render logs for detailed error messages'
+      ]
+    });
   }
 };
 
