@@ -248,6 +248,12 @@ const ResumeSchema = new mongoose.Schema(
       default: false
     },
 
+    // Career Application Flag (for public career page applications)
+    isCareer: {
+      type: Boolean,
+      default: false
+    },
+
     // Red Flag Status
     redFlagged: {
       type: Boolean,

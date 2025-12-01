@@ -9,6 +9,7 @@ import {
     CalendarDays,
     Building2
 } from 'lucide-react';
+import CareerResumeUpload from '../Components/careers/CareerResumeUpload';
 
 const CareerJobDetails = () => {
     const { jobId } = useParams();
@@ -17,6 +18,8 @@ const CareerJobDetails = () => {
     const [job, setJob] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [showResumeUpload, setShowResumeUpload] = useState(false);
+
 
     useEffect(() => {
         const loadJobDetails = async () => {
@@ -99,6 +102,11 @@ const CareerJobDetails = () => {
         );
     }
 
+    // Show resume upload component if upload is active
+    if (showResumeUpload) {
+        return <CareerResumeUpload onBack={() => setShowResumeUpload(false)} jobDetails={job} />;
+    }
+
     return (
         <div className="min-h-screen bg-gray-50">
             <div className="container mx-auto px-4 py-8 max-w-6xl">
@@ -154,7 +162,10 @@ const CareerJobDetails = () => {
 
                     {/* Apply Button */}
                     <div className="flex gap-3">
-                        <button className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8 py-3 rounded-lg text-base transition-colors">
+                        <button
+                            onClick={() => setShowResumeUpload(true)}
+                            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8 py-3 rounded-lg text-base transition-colors"
+                        >
                             Apply Now
                         </button>
                         <button className="border border-gray-300 hover:bg-gray-50 text-gray-700 font-semibold px-8 py-3 rounded-lg text-base transition-colors">
@@ -224,7 +235,10 @@ const CareerJobDetails = () => {
                             <p className="text-gray-700 mb-4">
                                 Join our team and be part of something amazing. Click the button below to submit your application.
                             </p>
-                            <button className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8 py-3 rounded-lg text-base transition-colors">
+                            <button
+                                onClick={() => setShowResumeUpload(true)}
+                                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8 py-3 rounded-lg text-base transition-colors"
+                            >
                                 Apply for this Position
                             </button>
                         </div>

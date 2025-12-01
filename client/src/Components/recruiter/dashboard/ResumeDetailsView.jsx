@@ -249,6 +249,7 @@ const ResumeDetailsView = ({
   const [saveMsg, setSaveMsg] = useState('');
   const [redFlagged, setRedFlagged] = useState(resumeData.redFlagged || false);
   const [redFlagLoading, setRedFlagLoading] = useState(false);
+  const isCareer = resumeData.isCareer || false;
 
   // Helper to determine match label and color
   const getMatchLabel = (score) => {
@@ -427,109 +428,110 @@ const ResumeDetailsView = ({
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto">
-        {/* Action Buttons Header */}
-        <div className="flex justify-end mb-2">
-          <div className="flex gap-2">
-            {resumeData.status !== 'screening' && (
-              <button
-                onClick={() => setShowInterviewQuestions(true)}
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center gap-2"
-              >
-                <Plus size={18} />
-                Add Answer
-              </button>
-            )}
-            {resumeData.status === 'screening' && !referredToManager && (
-              <button
-                onClick={async () => {
-                  try {
-                    // Use the same logic as red flag toggle for marketplace vs regular
-                    const apiUrl = isMarketplace
-                      ? `${import.meta.env.VITE_BACKEND_URL}/api/marketplace/resumes/${resumeData._id}`
-                      : `${import.meta.env.VITE_BACKEND_URL}/api/resumes/${resumeData._id}`;
+        {/* Action Buttons Header - Hide for career applications */}
+        {!isCareer && (
+          <div className="flex justify-end mb-2">
+            <div className="flex gap-2">
+              {resumeData.status !== 'screening' && (
+                <button
+                  onClick={() => setShowInterviewQuestions(true)}
+                  className="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center gap-2"
+                >
+                  <Plus size={18} />
+                  Add Answer
+                </button>
+              )}
+              {resumeData.status === 'screening' && !referredToManager && (
+                <button
+                  onClick={async () => {
+                    try {
+                      // Use the same logic as red flag toggle for marketplace vs regular
+                      const apiUrl = isMarketplace
+                        ? `${import.meta.env.VITE_BACKEND_URL}/api/marketplace/resumes/${resumeData._id}`
+                        : `${import.meta.env.VITE_BACKEND_URL}/api/resumes/${resumeData._id}`;
 
-                    // Get the appropriate token
-                    const token = isMarketplace
-                      ? localStorage.getItem('marketplace_token')
-                      : JSON.parse(localStorage.getItem("userInfo"))?.data?.accessToken;
+                      // Get the appropriate token
+                      const token = isMarketplace
+                        ? localStorage.getItem('marketplace_token')
+                        : JSON.parse(localStorage.getItem("userInfo"))?.data?.accessToken;
 
-                    console.log('Refer to Manager - isMarketplace:', isMarketplace);
-                    console.log('Refer to Manager - apiUrl:', apiUrl);
-                    console.log('Refer to Manager - token exists:', !!token);
+                      console.log('Refer to Manager - isMarketplace:', isMarketplace);
+                      console.log('Refer to Manager - apiUrl:', apiUrl);
+                      console.log('Refer to Manager - token exists:', !!token);
 
-                    if (!token) {
-                      throw new Error('No authentication token found');
+                      if (!token) {
+                        throw new Error('No authentication token found');
+                      }
+
+                      const response = await fetch(apiUrl, {
+                        method: 'PATCH',
+                        headers: {
+                          'Content-Type': 'application/json',
+                          'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({ referredToManager: true })
+                      });
+
+                      console.log('Refer to Manager - response status:', response.status);
+                      console.log('Refer to Manager - response ok:', response.ok);
+
+                      if (!response.ok) {
+                        const errorData = await response.json();
+                        console.log('Refer to Manager - error data:', errorData);
+                        throw new Error(errorData.message || 'Failed to refer to manager');
+                      }
+
+                      // Update the state to trigger re-render
+                      setReferredToManager(true);
+
+                      toast.success('Candidate referred to manager!');
+                    } catch (err) {
+                      console.error('Error referring to manager:', err);
+                      toast.error(err.message || 'Failed to refer to manager');
                     }
+                  }}
+                  className="bg-green-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-700 transition-colors flex items-center gap-2 cursor-pointer"
+                >
+                  Refer to Manager
+                </button>
+              )}
 
-                    const response = await fetch(apiUrl, {
-                      method: 'PATCH',
-                      headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                      },
-                      body: JSON.stringify({ referredToManager: true })
-                    });
-
-                    console.log('Refer to Manager - response status:', response.status);
-                    console.log('Refer to Manager - response ok:', response.ok);
-
-                    if (!response.ok) {
-                      const errorData = await response.json();
-                      console.log('Refer to Manager - error data:', errorData);
-                      throw new Error(errorData.message || 'Failed to refer to manager');
-                    }
-
-                    // Update the state to trigger re-render
-                    setReferredToManager(true);
-
-                    toast.success('Candidate referred to manager!');
-                  } catch (err) {
-                    console.error('Error referring to manager:', err);
-                    toast.error(err.message || 'Failed to refer to manager');
-                  }
-                }}
-                className="bg-green-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-700 transition-colors flex items-center gap-2 cursor-pointer"
-              >
-                Refer to Manager
-              </button>
-            )}
-
-            {/* Hire Risk Button */}
-            {redFlagged ? (
-              <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-red-50 border border-red-200 text-red-700">
-                <svg className="h-4 w-4 fill-current" viewBox="0 0 20 20">
-                  <path d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" />
-                </svg>
-                <span className="font-medium text-sm">Hire Risk Candidate</span>
-                <div className="w-5 h-5 rounded-full border-2 border-red-500 flex items-center justify-center">
-                  <svg className="h-3 w-3 text-red-500" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              {/* Hire Risk Button */}
+              {redFlagged ? (
+                <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-red-50 border border-red-200 text-red-700">
+                  <svg className="h-4 w-4 fill-current" viewBox="0 0 20 20">
+                    <path d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" />
                   </svg>
+                  <span className="font-medium text-sm">Hire Risk Candidate</span>
+                  <div className="w-5 h-5 rounded-full border-2 border-red-500 flex items-center justify-center">
+                    <svg className="h-3 w-3 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                  </div>
                 </div>
-              </div>
-            ) : (
-              <button
-                onClick={handleRedFlagToggle}
-                disabled={redFlagLoading}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition-colors bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 ${redFlagLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
-                  }`}
-              >
-                {redFlagLoading ? (
-                  <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
-                  </svg>
-                ) : (
-                  <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
-                  </svg>
-                )}
-                Add Hire Risk
-              </button>
-            )}
+              ) : (
+                <button
+                  onClick={handleRedFlagToggle}
+                  disabled={redFlagLoading}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition-colors bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 ${redFlagLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                    }`}
+                >
+                  {redFlagLoading ? (
+                    <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+                    </svg>
+                  ) : (
+                    <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
+                    </svg>
+                  )}
+                  Add Hire Risk
+                </button>
+              )}
 
-            {/* Scorecard button for all candidates */}
-            {/* <button
+              {/* Scorecard button for all candidates */}
+              {/* <button
               onClick={handleDownloadPDF}
               className="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center gap-2 cursor-pointer"
               type="button"
@@ -544,14 +546,30 @@ const ResumeDetailsView = ({
               Scorecard
             </button> */}
 
-            <button
-              onClick={onBack}
-              className="bg-gray-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-gray-700 transition-colors flex items-center gap-2 cursor-pointer"
-            >
-              Back to List
-            </button>
+              <button
+                onClick={onBack}
+                className="bg-gray-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-gray-700 transition-colors flex items-center gap-2 cursor-pointer"
+              >
+                Back to List
+              </button>
+            </div>
           </div>
-        </div>
+        )}
+
+        {/* Success message for career applications */}
+        {isCareer && (
+          <div className="mb-6 p-6 bg-green-50 border border-green-200 rounded-lg">
+            <div className="flex items-center gap-3">
+              <CheckCircle className="text-green-600" size={24} />
+              <div>
+                <div className="text-lg font-bold text-green-900">Application Submitted Successfully!</div>
+                <p className="text-green-700 text-sm mt-1">
+                  Thank you for applying. Your application has been received and our team will review it shortly.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* This div acts as the "content" for the screen display - simpler layout */}
         <div className="bg-white p-4 md:p-8 rounded-lg w-full">

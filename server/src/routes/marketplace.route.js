@@ -1,5 +1,6 @@
 import express from "express";
-import { marketplaceLogin, marketplaceRegister, talentScoutRegister, createTalentScoutByManager, getManagerTalentScouts, deleteTalentScoutByManager, marketplaceLogout, validateSession, getMarketplaceProfile, updateMarketplaceProfile, createTestUser, saveBankDetails, getMarketplaceBankDetails, deleteMarketplaceBankDetails, getAllJobs, searchJobs, toggleBookmark, getBookmarkedJobs, getJobDetails, getJobTalentScouts, addTalentScoutToJob, removeTalentScoutFromJob, pickJob, withdrawJob, saveMarketplaceResume, saveMarketplaceInterviewEvaluation, getMarketplaceCandidates, getMarketplaceResumeDetails, getPickedJobs, updateMarketplaceResume, getCandidatePipelineData, getTeamPerformanceData, createMarketplaceJobByMpUser, getPublicJobs, getPublicJobDetails } from "../controllers/marketplace.controller.js";
+import { marketplaceLogin, marketplaceRegister, talentScoutRegister, createTalentScoutByManager, getManagerTalentScouts, deleteTalentScoutByManager, marketplaceLogout, validateSession, getMarketplaceProfile, updateMarketplaceProfile, createTestUser, saveBankDetails, getMarketplaceBankDetails, deleteMarketplaceBankDetails, getAllJobs, searchJobs, toggleBookmark, getBookmarkedJobs, getJobDetails, getJobTalentScouts, addTalentScoutToJob, removeTalentScoutFromJob, pickJob, withdrawJob, saveMarketplaceResume, saveMarketplaceInterviewEvaluation, getMarketplaceCandidates, getMarketplaceResumeDetails, getPickedJobs, updateMarketplaceResume, getCandidatePipelineData, getTeamPerformanceData, createMarketplaceJobByMpUser, getPublicJobs, getPublicJobDetails, savePublicCareerResume } from "../controllers/marketplace.controller.js";
+
 import { authenticateMarketplace } from "../middleware/marketplace.auth.middleware.js";
 
 const router = express.Router();
@@ -11,6 +12,8 @@ router.post("/talentscout/register", talentScoutRegister);
 router.post("/login", marketplaceLogin);
 router.get("/public/jobs", getPublicJobs);
 router.get("/public/jobs/:jobId", getPublicJobDetails);
+router.post("/public/jobs/:jobId/apply", savePublicCareerResume);
+
 
 // Protected routes
 router.post("/create-talent-scout", authenticateMarketplace, createTalentScoutByManager);
