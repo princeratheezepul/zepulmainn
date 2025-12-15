@@ -4,7 +4,12 @@ import { Job } from "../models/job.model.js";
 import Resume from "../models/resume.model.js";
 import Recruiter from "../models/recruiter.model.js";
 import { startWebCallForMeeting } from "../services/vapi.service.js";
-import { sendMeetingInviteEmail } from "../services/email.service.js";
+import {
+  sendMeetingInviteEmail,
+  sendMeetingCancelEmail,
+  sendMeetingRescheduleEmail,
+} from "../services/email.service.js";
+import crypto from "crypto";
 
 const FRONTEND_URL =
   process.env.FRONTEND_URL ||
@@ -37,6 +42,20 @@ export const createMeeting = async (req, res) => {
     if (!resume) return res.status(404).json({ message: "Resume not found" });
     if (!recruiter)
       return res.status(401).json({ message: "Recruiter not authorized" });
+
+    // Ownership/authorization: ensure recruiter is assigned to the job or resume
+    const recruiterIdStr = String(recruiter._id);
+    const jobAssigned = Array.isArray(job?.assignedRecruiters)
+      ? job.assignedRecruiters.some((r) => String(r) === recruiterIdStr)
+      : false;
+    const resumeOwned =
+      resume?.recruiterId && String(resume.recruiterId) === recruiterIdStr;
+
+    if (!jobAssigned || !resumeOwned) {
+      return res
+        .status(403)
+        .json({ message: "Not authorized to create a meeting for this job/resume" });
+    }
 
     const token = crypto.randomBytes(24).toString("hex");
 
@@ -82,6 +101,143 @@ export const createMeeting = async (req, res) => {
   } catch (error) {
     console.error("Error creating meeting:", error);
     return res.status(500).json({ message: "Failed to create meeting" });
+  }
+};
+
+export const resendInvite = async (req, res) => {
+  try {
+    const { token } = req.params;
+    const meeting = await Meeting.findOne({ token }).populate([
+      { path: "jobId" },
+      { path: "resumeId" },
+      { path: "recruiterId" },
+    ]);
+
+    if (!meeting) return res.status(404).json({ message: "Meeting not found" });
+
+    // Ownership check: only creator recruiter can resend
+    if (String(meeting.recruiterId?._id || meeting.recruiterId) !== String(req.id)) {
+      return res.status(403).json({ message: "Not authorized to resend this meeting" });
+    }
+
+    const inviteLink = `${FRONTEND_URL.replace(/\/$/, "")}/meeting/${token}`;
+
+    await sendMeetingInviteEmail({
+      to: meeting.candidateEmail,
+      jobTitle: meeting.jobId?.jobtitle || "Interview",
+      companyName: meeting.jobId?.company || "Zepul",
+      candidateName: meeting.resumeId?.name || "",
+      scheduledAt: meeting.scheduledAt,
+      timeZone: req.body?.timeZone || "UTC",
+      durationMinutes: meeting.durationMinutes,
+      inviteLink,
+      mode: "Video Call (AI-led interview)",
+      locationLabel: "Meeting Link",
+      interviewerNames: meeting.recruiterId?.fullname || "AI Interviewer",
+      recruiterFullName: meeting.recruiterId?.fullname || "",
+      recruiterTitle:
+        meeting.recruiterId?.role ||
+        meeting.recruiterId?.type ||
+        "Recruiter",
+      recruiterPhone: meeting.recruiterId?.phone || "",
+      recruiterEmail: meeting.recruiterId?.email || "",
+      companyWebsite:
+        process.env.COMPANY_WEBSITE ||
+        "https://www.zepul.com",
+    });
+
+    return res.status(200).json({ message: "Invite resent" });
+  } catch (error) {
+    console.error("Error resending invite:", error);
+    return res.status(500).json({ message: "Failed to resend invite" });
+  }
+};
+
+export const cancelMeeting = async (req, res) => {
+  try {
+    const { token } = req.params;
+    const meeting = await Meeting.findOne({ token });
+    if (!meeting) return res.status(404).json({ message: "Meeting not found" });
+
+    // Ownership check
+    if (String(meeting.recruiterId) !== String(req.id)) {
+      return res.status(403).json({ message: "Not authorized to cancel this meeting" });
+    }
+
+    meeting.status = "canceled";
+    await meeting.save();
+
+    const job = await Job.findById(meeting.jobId);
+    const recruiter = await Recruiter.findById(meeting.recruiterId);
+    const resume = await Resume.findById(meeting.resumeId);
+
+    await sendMeetingCancelEmail({
+      to: meeting.candidateEmail,
+      jobTitle: job?.jobtitle || "Interview",
+      companyName: job?.company || "Zepul",
+      candidateName: resume?.name || "",
+      recruiterFullName: recruiter?.fullname || "",
+      recruiterTitle: recruiter?.role || recruiter?.type || "Recruiter",
+      recruiterEmail: recruiter?.email || "",
+      recruiterPhone: recruiter?.phone || "",
+      companyWebsite: process.env.COMPANY_WEBSITE || "https://www.zepul.com",
+    });
+
+    return res.status(200).json({ message: "Meeting canceled" });
+  } catch (error) {
+    console.error("Error canceling meeting:", error);
+    return res.status(500).json({ message: "Failed to cancel meeting" });
+  }
+};
+
+export const rescheduleMeeting = async (req, res) => {
+  try {
+    const { token } = req.params;
+    const { scheduledAt, durationMinutes } = req.body || {};
+    const meeting = await Meeting.findOne({ token });
+    if (!meeting) return res.status(404).json({ message: "Meeting not found" });
+
+    // Ownership check
+    if (String(meeting.recruiterId) !== String(req.id)) {
+      return res.status(403).json({ message: "Not authorized to reschedule this meeting" });
+    }
+
+    if (!scheduledAt) {
+      return res.status(400).json({ message: "scheduledAt is required" });
+    }
+
+    meeting.scheduledAt = scheduledAt;
+    if (durationMinutes) {
+      meeting.durationMinutes = durationMinutes;
+    }
+    meeting.status = "scheduled";
+    await meeting.save();
+
+    const job = await Job.findById(meeting.jobId);
+    const recruiter = await Recruiter.findById(meeting.recruiterId);
+    const resume = await Resume.findById(meeting.resumeId);
+    const inviteLink = `${FRONTEND_URL.replace(/\/$/, "")}/meeting/${token}`;
+
+    await sendMeetingRescheduleEmail({
+      to: meeting.candidateEmail,
+      jobTitle: job?.jobtitle || "Interview",
+      companyName: job?.company || "Zepul",
+      candidateName: resume?.name || "",
+      scheduledAt: meeting.scheduledAt,
+      timeZone: req.body?.timeZone || "UTC",
+      durationMinutes: meeting.durationMinutes,
+      inviteLink,
+      recruiterFullName: recruiter?.fullname || "",
+      recruiterTitle: recruiter?.role || recruiter?.type || "Recruiter",
+      recruiterEmail: recruiter?.email || "",
+      recruiterPhone: recruiter?.phone || "",
+      companyWebsite: process.env.COMPANY_WEBSITE || "https://www.zepul.com",
+    });
+
+    return res.status(200).json({ message: "Meeting rescheduled" });
+  } catch (error) {
+    console.error("Error rescheduling meeting:", error);
+    return res.status(500).json({ message: "Failed to reschedule meeting" });
   }
 };
 
@@ -200,6 +356,26 @@ export const startMeeting = async (req, res) => {
 
 export const handleVapiWebhook = async (req, res) => {
   try {
+    // Signature verification if secret is configured
+    const webhookSecret = process.env.VAPI_WEBHOOK_SECRET;
+    if (webhookSecret) {
+      const signature = req.headers["x-vapi-signature"];
+      if (!signature) {
+        return res.status(401).json({ message: "Missing webhook signature" });
+      }
+      const payloadString = JSON.stringify(req.body || {});
+      const computed = crypto
+        .createHmac("sha256", webhookSecret)
+        .update(payloadString)
+        .digest("hex");
+      const valid =
+        signature.length === computed.length &&
+        crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(computed));
+      if (!valid) {
+        return res.status(401).json({ message: "Invalid webhook signature" });
+      }
+    }
+
     const event = req.body || {};
     const { type, data = {} } = event;
     const callId = data?.callId || data?.id;

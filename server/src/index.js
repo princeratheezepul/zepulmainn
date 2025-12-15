@@ -19,6 +19,7 @@ import zepdbRoutes from "./routes/zepdb.route.js";
 import marketplaceRoutes from "./routes/marketplace.route.js";
 import assessmentRoutes from "./routes/assessment.routes.js";
 import meetingRoutes from "./routes/meeting.route.js";
+import { expireStaleMeetings } from "./services/meeting.service.js";
 import { cleanupExpiredSessions } from "./utils/sessionManager.js";
 const app = express();
 
@@ -104,3 +105,15 @@ setInterval(async () => {
     console.error('Session cleanup error:', error);
   }
 }, 60 * 60 * 1000); // Run every hour
+
+// Set up periodic meeting expiry cleanup (every hour)
+setInterval(async () => {
+  try {
+    const expired = await expireStaleMeetings();
+    if (expired > 0) {
+      console.log(`Meeting cleanup: expired ${expired} meetings`);
+    }
+  } catch (error) {
+    console.error("Meeting cleanup error:", error);
+  }
+}, 60 * 60 * 1000);

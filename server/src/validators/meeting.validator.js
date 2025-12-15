@@ -47,3 +47,27 @@ export const validateStartMeeting = (req, res, next) => {
   next();
 };
 
+export const validateRescheduleMeeting = (req, res, next) => {
+  const { scheduledAt, durationMinutes } = req.body || {};
+
+  if (!scheduledAt) {
+    return res.status(400).json({ message: "scheduledAt is required" });
+  }
+
+  const dateOk = !Number.isNaN(Date.parse(scheduledAt));
+  if (!dateOk) {
+    return res.status(400).json({ message: "scheduledAt must be a valid date" });
+  }
+
+  if (durationMinutes !== undefined) {
+    const num = Number(durationMinutes);
+    if (Number.isNaN(num) || num < 10 || num > 120) {
+      return res
+        .status(400)
+        .json({ message: "durationMinutes must be between 10 and 120" });
+    }
+  }
+
+  next();
+};
+
