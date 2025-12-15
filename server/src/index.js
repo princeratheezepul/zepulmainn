@@ -18,6 +18,7 @@ import accountmanagerRoutes from "./routes/accountmanager.route.js";
 import zepdbRoutes from "./routes/zepdb.route.js";
 import marketplaceRoutes from "./routes/marketplace.route.js";
 import assessmentRoutes from "./routes/assessment.routes.js";
+import meetingRoutes from "./routes/meeting.route.js";
 import { cleanupExpiredSessions } from "./utils/sessionManager.js";
 const app = express();
 
@@ -85,6 +86,7 @@ app.use("/api/accountmanager",accountmanagerRoutes);
 app.use("/api/zepdb", zepdbRoutes);
 app.use("/api/marketplace", marketplaceRoutes);
 app.use("/api/assessment", assessmentRoutes);
+app.use("/api/meetings", meetingRoutes);
 app.listen(ServerConfig.PORT, async () => {
   console.log(`Server started on port ${ServerConfig.PORT}...`);
 });
