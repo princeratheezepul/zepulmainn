@@ -69,6 +69,10 @@ const meetingSchema = new mongoose.Schema(
       recommendation: { type: String },
       risks: [{ type: String }],
       scores: { type: mongoose.Schema.Types.Mixed },
+      feedback: { type: String },
+      needToFocus: [{ type: mongoose.Schema.Types.Mixed }],
+      goodResponses: [{ type: mongoose.Schema.Types.Mixed }],
+      insights: { type: mongoose.Schema.Types.Mixed },
     },
     meta: {
       type: mongoose.Schema.Types.Mixed,
