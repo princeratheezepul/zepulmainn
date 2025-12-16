@@ -24,6 +24,10 @@ const AIInterviewQuestions = ({ jobDetails, resumeData, onBack, onResumeUpdate }
   const [editingTime, setEditingTime] = useState(null);
   const [timeValue, setTimeValue] = useState("04:00 PM");
   const [isEditing, setIsEditing] = useState(false);
+  const [aiMeetingDateTime, setAiMeetingDateTime] = useState("");
+  const [aiMeetingDuration, setAiMeetingDuration] = useState(40);
+  const [creatingAiMeeting, setCreatingAiMeeting] = useState(false);
+  const [aiMeetingLink, setAiMeetingLink] = useState(null);
 
   const newQuestionRef = useRef(null);
   const [newQuestionIndex, setNewQuestionIndex] = useState(null);
@@ -264,6 +268,72 @@ const AIInterviewQuestions = ({ jobDetails, resumeData, onBack, onResumeUpdate }
     }
   };
 
+  const handleScheduleAiInterview = async () => {
+    if (!resumeData) {
+      toast.error("Missing candidate data.");
+      return;
+    }
+    if (!aiMeetingDateTime) {
+      toast.error("Please select a date and time for the AI interview.");
+      return;
+    }
+
+    try {
+      setCreatingAiMeeting(true);
+      const scheduledAt = new Date(aiMeetingDateTime).toISOString();
+      const timeZone =
+        Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+
+      const jobId =
+        jobDetails?._id ||
+        (typeof resumeData.jobId === "object" ? resumeData.jobId._id : resumeData.jobId);
+
+      if (!jobId) {
+        toast.error("Missing job id for this candidate.");
+        setCreatingAiMeeting(false);
+        return;
+      }
+
+      const response = await fetch(
+        `${import.meta.env.VITE_BACKEND_URL}/api/meetings`,
+        {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            jobId,
+            resumeId: resumeData._id,
+            candidateEmail: resumeData.email || resumeData.email_address,
+            scheduledAt,
+            durationMinutes: Number(aiMeetingDuration) || 40,
+            timeZone,
+          }),
+        }
+      );
+
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to schedule AI interview");
+      }
+
+      if (data?.data?.inviteLink) {
+        console.log("AI Interview meeting link:", data.data.inviteLink);
+        setAiMeetingLink(data.data.inviteLink);
+        toast.success("AI interview invite sent to candidate.");
+      } else {
+        toast.success("AI interview scheduled successfully.");
+      }
+    } catch (error) {
+      console.error("Error scheduling AI meeting:", error);
+      toast.error(error.message || "Failed to schedule AI interview");
+    } finally {
+      setCreatingAiMeeting(false);
+    }
+  };
+
   // Helper to check if role is technical
   const isTechnicalRole = (title) => {
     if (!title) return false;
@@ -388,6 +458,82 @@ const AIInterviewQuestions = ({ jobDetails, resumeData, onBack, onResumeUpdate }
             </button>
           </div>
         )}
+
+        {/* Schedule AI Interview (Voice Agent) */}
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200/80 mb-8">
+          <div className="flex flex-col md:flex-row md:items-end gap-4 mb-4">
+            <div className="flex-1">
+              <div className="text-xl font-bold text-gray-800">
+                Schedule AI Interview
+              </div>
+              <p className="text-gray-600 text-sm mt-1">
+                Send the candidate an AI-led live interview link powered by the voice agent.
+              </p>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Interview Date &amp; Time
+              </label>
+              <input
+                type="datetime-local"
+                className="border border-gray-300 px-3 py-2 rounded w-full"
+                value={aiMeetingDateTime}
+                onChange={(e) => setAiMeetingDateTime(e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Duration (minutes)
+              </label>
+              <input
+                type="number"
+                min={10}
+                max={120}
+                className="border border-gray-300 px-3 py-2 rounded w-full"
+                value={aiMeetingDuration}
+                onChange={(e) => setAiMeetingDuration(e.target.value)}
+              />
+            </div>
+          </div>
+          <div className="mt-4">
+            <button
+              onClick={handleScheduleAiInterview}
+              disabled={creatingAiMeeting || !!aiMeetingLink}
+              className="px-4 py-2 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 disabled:opacity-60"
+            >
+              {creatingAiMeeting ? "Scheduling..." : aiMeetingLink ? "Interview Scheduled" : "Schedule AI Interview"}
+            </button>
+          </div>
+          {aiMeetingLink && (
+            <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-gray-700 mb-1">Meeting Link:</p>
+                  <a
+                    href={aiMeetingLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-blue-600 hover:text-blue-800 break-all"
+                  >
+                    {aiMeetingLink}
+                  </a>
+                </div>
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(aiMeetingLink);
+                    toast.success("Meeting link copied to clipboard!");
+                  }}
+                  className="ml-3 p-2 text-gray-600 hover:text-gray-800 hover:bg-blue-100 rounded transition-colors"
+                  title="Copy link"
+                >
+                  <Copy size={18} />
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* Assessment Result Section - Moved up for better visibility if scheduled */}
         {resumeData?.oa?.scheduled && (

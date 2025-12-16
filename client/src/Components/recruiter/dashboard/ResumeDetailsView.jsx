@@ -6,6 +6,7 @@ import { generateScorecardPDF } from '../../../utils/pdfGenerator';
 import AIInterviewQuestions from './AIInterviewQuestions';
 import InterviewTranscript from './InterviewTranscript';
 import MarketplaceAIInterviewQuestions from '../../marketplace/MarketplaceAIInterviewQuestions';
+import MeetingManagement from './MeetingManagement';
 
 const STOP_WORDS = new Set([
   'the', 'and', 'for', 'with', 'from', 'this', 'that', 'have', 'will', 'your', 'about', 'into', 'over', 'more', 'than', 'were', 'been', 'being',
@@ -418,7 +419,14 @@ const ResumeDetailsView = ({
         onEvaluationComplete={handleEvaluationComplete}
       />;
     } else {
-      return <AIInterviewQuestions onBack={() => setShowInterviewQuestions(false)} jobDetails={resumeData.applicationDetails} resumeData={resumeData} onResumeUpdate={onResumeUpdate} />;
+      return (
+        <AIInterviewQuestions
+          onBack={() => setShowInterviewQuestions(false)}
+          jobDetails={jobDetails}
+          resumeData={resumeData}
+          onResumeUpdate={onResumeUpdate}
+        />
+      );
     }
   }
 
@@ -755,6 +763,12 @@ const ResumeDetailsView = ({
               </div>
             </div>
           </div>
+
+          {/* AI Interview Meetings Management */}
+          <MeetingManagement 
+            resumeId={resumeData._id} 
+            jobId={jobDetails?._id || (typeof resumeData.jobId === "object" ? resumeData.jobId?._id : resumeData.jobId)}
+          />
 
           {/* Interview Transcript - Show only if evaluation exists and has results */}
           {resumeData.interviewEvaluation &&

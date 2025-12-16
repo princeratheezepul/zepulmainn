@@ -75,6 +75,8 @@ import AdminLogin from "../Pages/Admin/Login.jsx";
 import MarketplaceJobs from "../Pages/MarketplaceJobs";
 import MarketplaceSignup from "../Pages/MarketplaceSignup";
 import MarketplaceUnifiedLogin from "../Pages/MarketplaceUnifiedLogin";
+import Meeting from "../Pages/Meeting";
+import InterviewResults from "../Pages/InterviewResults";
 
 
 
@@ -211,6 +213,15 @@ const Router = () => {
 
             {/* Public Assessment Route */}
             <Route path="/assessment/:assessmentId" element={<CandidateAssessmentPage />} />
+
+            {/* AI Interview Meeting - Public Route */}
+            <Route path="/meeting/:token" element={<Meeting />} />
+            {/* Interview Results Dashboard - Recruiter Route */}
+            <Route path="/recruiter/interview-results/:meetingId" element={
+              <ProtectedRoute>
+                <InterviewResults />
+              </ProtectedRoute>
+            } />
 
             {/* Admin Login Route - No Header/Footer */}
             <Route path="/admin/login" element={<AdminLogin />} />

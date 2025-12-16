@@ -3,13 +3,12 @@ import { Meeting } from "../models/meeting.model.js";
 import { Job } from "../models/job.model.js";
 import Resume from "../models/resume.model.js";
 import Recruiter from "../models/recruiter.model.js";
-import { startWebCallForMeeting } from "../services/vapi.service.js";
+import { startWebCallForMeeting, deleteAssistant } from "../services/vapi.service.js";
 import {
   sendMeetingInviteEmail,
   sendMeetingCancelEmail,
   sendMeetingRescheduleEmail,
 } from "../services/email.service.js";
-import crypto from "crypto";
 
 const FRONTEND_URL =
   process.env.FRONTEND_URL ||
@@ -68,8 +67,8 @@ export const createMeeting = async (req, res) => {
       durationMinutes: durationMinutes || 40,
       token,
       status: "scheduled",
-      vapiAssistantId:
-        process.env.VAPI_ASSISTANT_ID || "assistant_placeholder_configure_env",
+      // Optional pre-configured assistant; if not set, service will create one per meeting
+      vapiAssistantId: process.env.VAPI_ASSISTANT_ID || undefined,
     });
 
     const inviteLink = `${FRONTEND_URL.replace(/\/$/, "")}/meeting/${token}`;
@@ -94,9 +93,11 @@ export const createMeeting = async (req, res) => {
         "https://www.zepul.com",
     });
 
+    console.log("AI interview meeting link:", inviteLink);
+
     return res.status(201).json({
       message: "Meeting created and invite sent",
-      data: { meetingId: meeting._id, token },
+      data: { meetingId: meeting._id, token, inviteLink },
     });
   } catch (error) {
     console.error("Error creating meeting:", error);
@@ -241,6 +242,49 @@ export const rescheduleMeeting = async (req, res) => {
   }
 };
 
+export const getRecruiterMeetings = async (req, res) => {
+  try {
+    const recruiterId = req.id || req.user?._id;
+    if (!recruiterId) {
+      return res.status(401).json({ message: "Recruiter not authorized" });
+    }
+
+    const { resumeId, jobId, status } = req.query;
+    const query = { recruiterId };
+
+    if (resumeId) query.resumeId = resumeId;
+    if (jobId) query.jobId = jobId;
+    if (status) query.status = status;
+
+    const meetings = await Meeting.find(query)
+      .populate("jobId", "jobtitle company")
+      .populate("resumeId", "name email")
+      .sort({ createdAt: -1 })
+      .limit(100);
+
+    return res.status(200).json({
+      meetings: meetings.map((m) => ({
+        id: m._id,
+        token: m.token,
+        status: m.status,
+        scheduledAt: m.scheduledAt,
+        durationMinutes: m.durationMinutes,
+        candidateEmail: m.candidateEmail,
+        job: m.jobId ? { id: m.jobId._id, title: m.jobId.jobtitle, company: m.jobId.company } : null,
+        resume: m.resumeId ? { id: m.resumeId._id, name: m.resumeId.name, email: m.resumeId.email } : null,
+        transcript: m.transcript,
+        recordingUrl: m.recordingUrl,
+        report: m.report,
+        createdAt: m.createdAt,
+        updatedAt: m.updatedAt,
+      })),
+    });
+  } catch (error) {
+    console.error("Error fetching recruiter meetings:", error);
+    return res.status(500).json({ message: "Failed to fetch meetings" });
+  }
+};
+
 export const getMeetingByToken = async (req, res) => {
   try {
     const { token } = req.params;
@@ -254,6 +298,10 @@ export const getMeetingByToken = async (req, res) => {
 
     if (meeting.status === "canceled")
       return res.status(410).json({ message: "Meeting canceled" });
+
+    // Prevent accessing completed meetings
+    if (meeting.status === "completed")
+      return res.status(410).json({ message: "Meeting has been completed" });
 
     const job = meeting.jobId;
     const resume = meeting.resumeId;
@@ -299,12 +347,22 @@ export const getMeetingByToken = async (req, res) => {
 export const startMeeting = async (req, res) => {
   try {
     const { token } = req.params;
-    const meeting = await Meeting.findOne({ token });
+    const meeting = await Meeting.findOne({ token }).populate([
+      { path: "jobId" },
+      { path: "resumeId" },
+    ]);
 
     if (!meeting) return res.status(404).json({ message: "Meeting not found" });
 
-    if (meeting.status === "canceled" || meeting.status === "completed") {
-      return res.status(400).json({ message: "Meeting not active" });
+    // Prevent re-accessing if already started or completed
+    if (meeting.status === "canceled" || meeting.status === "completed" || meeting.status === "active") {
+      return res.status(400).json({ 
+        message: meeting.status === "active" 
+          ? "Meeting is already in progress" 
+          : meeting.status === "completed"
+          ? "Meeting has already been completed"
+          : "Meeting not active"
+      });
     }
 
     // Timing guards: allow starting within a reasonable window around the scheduled time.
@@ -328,15 +386,39 @@ export const startMeeting = async (req, res) => {
         .json({ message: "Meeting window has expired" });
     }
 
-    const assistantId =
-      meeting.vapiAssistantId ||
-      process.env.VAPI_ASSISTANT_ID ||
-      "assistant_placeholder_configure_env";
+    // Prepare context for assistant creation (if needed)
+    const context = {
+      job: meeting.jobId
+        ? {
+            jobtitle: meeting.jobId.jobtitle,
+            description: trimText(meeting.jobId.description),
+            skills: meeting.jobId.skills || [],
+            location: meeting.jobId.location,
+            employmentType: meeting.jobId.employmentType,
+          }
+        : null,
+      resume: meeting.resumeId
+        ? {
+            name: meeting.resumeId.name,
+            title: meeting.resumeId.title,
+            email: meeting.resumeId.email,
+            phone: meeting.resumeId.phone,
+            experience: meeting.resumeId.experience,
+            skills: meeting.resumeId.skills || [],
+            aiSummary: meeting.resumeId.aiSummary || {},
+          }
+        : null,
+    };
 
     const { callId, joinConfig } = await startWebCallForMeeting({
-      assistantId,
-      context: req.body?.context,
+      assistantId: meeting.vapiAssistantId,
+      context,
     });
+
+    // If a new assistant was created, save it to the meeting
+    if (joinConfig?.assistantId && !meeting.vapiAssistantId) {
+      meeting.vapiAssistantId = joinConfig.assistantId;
+    }
 
     meeting.status = "active";
     meeting.vapiCallId = callId;
@@ -354,13 +436,50 @@ export const startMeeting = async (req, res) => {
   }
 };
 
+export const endMeeting = async (req, res) => {
+  try {
+    const { token } = req.params;
+    const meeting = await Meeting.findOne({ token });
+
+    if (!meeting) return res.status(404).json({ message: "Meeting not found" });
+
+    if (meeting.status !== "active") {
+      return res.status(400).json({ 
+        message: `Meeting is not active. Current status: ${meeting.status}` 
+      });
+    }
+
+    meeting.status = "completed";
+    await meeting.save();
+
+    // Note: Not deleting assistant to preserve webhook functionality
+
+    return res.status(200).json({
+      message: "Meeting ended successfully",
+      meeting: {
+        id: meeting._id,
+        status: meeting.status,
+      },
+    });
+  } catch (error) {
+    console.error("Error ending meeting:", error);
+    return res.status(500).json({ message: "Failed to end meeting" });
+  }
+};
+
 export const handleVapiWebhook = async (req, res) => {
   try {
+    // Log incoming webhook for debugging
+    console.log("=== Vapi Webhook Received ===");
+    console.log("Headers:", JSON.stringify(req.headers, null, 2));
+    console.log("Body:", JSON.stringify(req.body, null, 2));
+
     // Signature verification if secret is configured
     const webhookSecret = process.env.VAPI_WEBHOOK_SECRET;
     if (webhookSecret) {
       const signature = req.headers["x-vapi-signature"];
       if (!signature) {
+        console.warn("Webhook received without signature (secret is configured)");
         return res.status(401).json({ message: "Missing webhook signature" });
       }
       const payloadString = JSON.stringify(req.body || {});
@@ -372,48 +491,116 @@ export const handleVapiWebhook = async (req, res) => {
         signature.length === computed.length &&
         crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(computed));
       if (!valid) {
+        console.warn("Webhook signature mismatch");
         return res.status(401).json({ message: "Invalid webhook signature" });
       }
     }
 
-    const event = req.body || {};
-    const { type, data = {} } = event;
-    const callId = data?.callId || data?.id;
+    // Vapi webhook structure: { message: { type, call: { id }, ... } }
+    const message = req.body?.message || req.body;
+    const type = message?.type || req.body?.type;
+    const call = message?.call || {};
+    const callId = call?.id || message?.callId || req.body?.callId || req.body?.id;
+
+    console.log("Parsed webhook - Type:", type, "CallId:", callId);
 
     if (!callId) {
+      console.error("Webhook missing callId. Full body:", JSON.stringify(req.body, null, 2));
       return res.status(400).json({ message: "Missing callId" });
     }
 
-    const meeting = await Meeting.findOne({ vapiCallId: callId });
+    // Try to find meeting by callId, or by assistantId if callId doesn't match
+    let meeting = await Meeting.findOne({ vapiCallId: callId });
+    
+    // If not found by callId, try to find by assistantId (for web calls, callId might be different)
+    if (!meeting && call?.assistantId) {
+      meeting = await Meeting.findOne({ vapiAssistantId: call.assistantId, status: { $in: ["active", "scheduled"] } });
+      if (meeting) {
+        // Update the callId for future webhooks
+        meeting.vapiCallId = callId;
+        await meeting.save();
+      }
+    }
+
     if (!meeting) {
+      console.error("Meeting not found for callId:", callId);
+      // Log all active meetings for debugging
+      const activeMeetings = await Meeting.find({ status: { $in: ["active", "scheduled"] } }).select("vapiCallId vapiAssistantId token status");
+      console.log("Active meetings:", JSON.stringify(activeMeetings, null, 2));
       return res.status(404).json({ message: "Meeting not found for call" });
     }
 
+    console.log("Found meeting:", meeting._id, "Status:", meeting.status);
+
+    // Handle different webhook event types
     switch (type) {
+      case "status-update":
       case "call.started":
         meeting.status = "active";
+        console.log("Meeting status updated to: active");
         break;
+      
+      case "transcript":
       case "transcript.updated":
-        meeting.transcript = data?.transcript || meeting.transcript;
+        const transcript = message?.transcript || call?.transcript || message?.transcriptText;
+        if (transcript) {
+          // Append or replace transcript
+          if (meeting.transcript) {
+            meeting.transcript += "\n" + transcript;
+          } else {
+            meeting.transcript = transcript;
+          }
+          console.log("Transcript updated, length:", meeting.transcript.length);
+        }
         break;
+      
+      case "tool-calls":
       case "tool.outputs":
-        meeting.toolOutputs = data?.outputs;
+        meeting.toolOutputs = message?.toolCalls || message?.outputs || call?.toolOutputs;
+        console.log("Tool outputs saved");
         break;
+      
+      case "end-of-call-report":
       case "call.completed":
         meeting.status = "completed";
-        meeting.transcript = data?.transcript || meeting.transcript;
-        meeting.recordingUrl = data?.recordingUrl || meeting.recordingUrl;
-        meeting.toolOutputs = data?.toolOutputs || meeting.toolOutputs;
+        
+        // Get transcript from various possible locations
+        const finalTranscript = message?.transcript || 
+                               call?.transcript || 
+                               message?.transcriptText ||
+                               message?.endOfCallReport?.transcript ||
+                               meeting.transcript;
+        
+        if (finalTranscript) {
+          meeting.transcript = finalTranscript;
+        }
+        
+        meeting.recordingUrl = call?.recordingUrl || message?.recordingUrl || message?.recording?.url;
+        meeting.toolOutputs = message?.toolCalls || message?.toolOutputs || call?.toolOutputs;
+        
+        // Extract report data
+        const report = message?.endOfCallReport || message?.report || {};
         meeting.report = meeting.report || {};
-        meeting.report.summary =
-          meeting.report.summary || data?.summary || data?.report;
-        meeting.report.scores = meeting.report.scores || data?.scores;
+        meeting.report.summary = meeting.report.summary || report.summary || report.analysis;
+        meeting.report.scores = meeting.report.scores || report.scores || report.metrics;
+        meeting.report.recommendation = meeting.report.recommendation || report.recommendation;
+        
+        console.log("Meeting completed. Transcript length:", meeting.transcript?.length || 0);
+        console.log("Recording URL:", meeting.recordingUrl);
+        console.log("Report summary:", meeting.report.summary ? "Yes" : "No");
+        
+        // Note: Not deleting assistant to preserve webhook functionality
+        // Assistants can be cleaned up manually or via scheduled task if needed
         break;
+      
       default:
+        console.log("Unhandled webhook type:", type);
+        // Still save the meeting in case there's useful data
         break;
     }
 
     await meeting.save();
+    console.log("✅ Meeting saved successfully. Transcript length:", meeting.transcript?.length || 0);
     return res.status(200).json({ received: true });
   } catch (error) {
     console.error("Webhook handling error:", error);
