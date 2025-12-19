@@ -53,7 +53,7 @@ const AIInterviewQuestions = ({ jobDetails, resumeData, onBack, onResumeUpdate }
     try {
       const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
       const prompt = `
-              Based on the following job description and candidate profile, generate 4 distinct interview questions.
+              Based on the following job description ONLY, generate 4 distinct interview questions.
               
               Job Details:
               - Title: ${jobDetails.position}
@@ -62,22 +62,17 @@ const AIInterviewQuestions = ({ jobDetails, resumeData, onBack, onResumeUpdate }
               - Experience Required: ${jobDetails.experience || 'Not specified'}
               - Responsibilities: ${jobDetails.responsibilities ? jobDetails.responsibilities.join(", ") : 'Not specified'}
               
-              Candidate Profile:
-              - Name: ${resumeData.name}
-              - Current Skills: ${resumeData.skills.join(", ")}
-              - Experience Level: ${resumeData.experience || 'Not specified'}
-  
-              IMPORTANT: For the "Technical Experience" question, focus specifically on the job's required skills, technologies, and experience level rather than the candidate's current background. The question should assess whether the candidate can meet the job's technical requirements and responsibilities.
+              Generate 4 interview questions that directly assess the candidate's fit for this specific role based on the requirements above.
   
               Return the questions in a pure JSON array format like this: 
               [
-                  {"category": "Technical Experience", "text": "Question focused on job's required technical skills and experience level..."},
+                  {"category": "Technical Experience", "text": "Question focused on job's required technical skills..."},
                   {"category": "Problem Solving", "text": "Question text here..."},
                   {"category": "Team Collaboration", "text": "Question text here..."},
                   {"category": "Critical Thinking", "text": "Question text here..."}
               ]
   
-              Do not repeat questions you have generated before. Ensure the questions are insightful and relevant to the job requirements and the candidate's potential fit for the role.
+              Do not repeat questions. Ensure the questions are insightful and strictly relevant to the job description provided.
           `;
 
       const result = await model.generateContent(prompt);
@@ -380,7 +375,7 @@ const AIInterviewQuestions = ({ jobDetails, resumeData, onBack, onResumeUpdate }
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200/80 mb-8">
           <div className="flex justify-between items-center mb-6">
             <div className="text-xl font-bold text-gray-800">
-              {interviewScheduled ? 'Interview Questions' : 'AI Generated Questions'}
+              {interviewScheduled && 'Interview Questions'}
             </div>
             {!interviewScheduled && (
               <button onClick={fetchAIQuestions} className="flex items-center gap-2 text-sm font-semibold text-blue-600 hover:text-blue-800 transition-colors">
@@ -400,7 +395,7 @@ const AIInterviewQuestions = ({ jobDetails, resumeData, onBack, onResumeUpdate }
                 <div key={index} className="flex items-start gap-4 p-4 rounded-lg hover:bg-gray-50/80 relative">
                   <HelpCircle size={20} className="text-gray-400 mt-1 flex-shrink-0" />
                   <div className="flex-grow">
-                    <div className="font-semibold text-gray-800">{q.category}</div>
+
                     {interviewScheduled ? (
                       <p className="text-gray-600">{q.text}</p>
                     ) : (

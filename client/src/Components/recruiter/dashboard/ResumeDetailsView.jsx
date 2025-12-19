@@ -41,7 +41,6 @@ const buildResumeCorpus = (resumeData) => {
     resumeData.aiSummary?.education,
     resumeData.aiSummary?.keyAchievements,
     resumeData.aiSummary?.skillMatch,
-    resumeData.aiSummary?.competitiveFit,
     resumeData.aiSummary?.consistencyCheck,
     Array.isArray(resumeData.skills) ? resumeData.skills.join(' ') : '',
     Array.isArray(resumeData.non_technical_skills) ? resumeData.non_technical_skills.join(' ') : '',
@@ -622,9 +621,8 @@ const ResumeDetailsView = ({
                       <div>
                         <div className="font-bold text-gray-900 capitalize text-base mb-2">
                           {key === 'skillMatch' ? 'Skill Match' :
-                            key === 'competitiveFit' ? 'Competitive Fit & Market Prediction' :
-                              key === 'consistencyCheck' ? 'Consistency Check' :
-                                key.replace(/([A-Z])/g, ' $1').trim()}
+                            key === 'consistencyCheck' ? 'Consistency Check' :
+                              key.replace(/([A-Z])/g, ' $1').trim()}
                         </div>
                         <p className="text-gray-700 text-sm leading-relaxed">{value}</p>
                       </div>
@@ -670,10 +668,9 @@ const ResumeDetailsView = ({
                         <div className="flex justify-between items-center mb-3">
                           <div className="text-gray-800 capitalize font-semibold text-base">
                             {key === 'technicalSkillMatch' ? 'Technical Skill Match' :
-                              key === 'competitiveFit' ? 'Competitive Fit & Market Prediction' :
-                                key === 'consistencyCheck' ? 'Consistency Check' :
-                                  key === 'teamLeadership' ? 'Team Leadership' :
-                                    key.replace(/([A-Z])/g, ' $1').trim()}
+                              key === 'consistencyCheck' ? 'Consistency Check' :
+                                key === 'teamLeadership' ? 'Team Leadership' :
+                                  key.replace(/([A-Z])/g, ' $1').trim()}
                           </div>
                           <span className="font-bold text-gray-900 text-base">{value}%</span>
                         </div>
@@ -765,8 +762,8 @@ const ResumeDetailsView = ({
           </div>
 
           {/* AI Interview Meetings Management */}
-          <MeetingManagement 
-            resumeId={resumeData._id} 
+          <MeetingManagement
+            resumeId={resumeData._id}
             jobId={jobDetails?._id || (typeof resumeData.jobId === "object" ? resumeData.jobId?._id : resumeData.jobId)}
           />
 

@@ -67,10 +67,6 @@ const ResumeSchema = new mongoose.Schema(
       interview_prediction: {
         score: Number,
         reason: String
-      },
-      competitive_fit: {
-        score: Number,
-        reason: String
       }
     },
     overallScore: Number,
@@ -82,14 +78,12 @@ const ResumeSchema = new mongoose.Schema(
       education: String,
       keyAchievements: String,
       skillMatch: String,
-      competitiveFit: String,
       consistencyCheck: String
     },
 
     // AI Scorecard
     aiScorecard: {
       technicalSkillMatch: Number,
-      competitiveFit: Number,
       consistencyCheck: Number,
       teamLeadership: Number
     },
