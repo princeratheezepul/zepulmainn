@@ -344,7 +344,7 @@ const AddAnswersPage = ({ onBack, questions, jobDetails, resumeData, onResumeUpd
           </div>
 
           {/* Text Input Area */}
-          <div className="mb-4">
+          {/* <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Complete Interview Text
             </label>
@@ -371,7 +371,7 @@ const AddAnswersPage = ({ onBack, questions, jobDetails, resumeData, onResumeUpd
                 Clear text
               </button>
             </div>
-          </div>
+          </div> */}
 
           {/* Instructions */}
           <div className="bg-blue-50 p-4 rounded-lg">
@@ -391,7 +391,7 @@ const AddAnswersPage = ({ onBack, questions, jobDetails, resumeData, onResumeUpd
         </div>
 
         {/* Submit Button */}
-        <div className="mt-8 flex justify-center">
+        {/* <div className="mt-8 flex justify-center">
           <button
             onClick={handleSubmitAnswers}
             disabled={submitting || !completeText.trim()}
@@ -409,7 +409,7 @@ const AddAnswersPage = ({ onBack, questions, jobDetails, resumeData, onResumeUpd
               </>
             )}
           </button>
-        </div>
+        </div> */}
       </div>
     </div>
   );

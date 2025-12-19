@@ -44,7 +44,7 @@ const getCircularProgressSVG = (percentage, size = 160, strokeWidth = 14) => {
       <div class="absolute inset-0 flex items-center justify-center z-10" style="pointer-events: none;">
         <span 
           class="font-bold text-gray-900" 
-          style="font-size: 32px; line-height: 1; text-align: center; display: block; margin: 0; padding: 0;"
+          style="font-size: 24px; line-height: 1; text-align: center; display: block; margin: 0; padding: 0;"
         >
           ${percentage}%
         </span>
@@ -67,8 +67,13 @@ const generatePDFContent = (resumeData, note = '') => {
   const score = resumeData.overallScore || resumeData.ats_score || 0;
   const match = getMatchLabel(score);
 
+  // Extract OA score if available
+  const oaScore = resumeData.oa?.evaluation?.score || 0;
+  const hasOAData = resumeData.oa && resumeData.oa.evaluation;
+  const oaMatch = getMatchLabel(oaScore);
+
   // AI Summary section
-  const aiSummaryHTML = resumeData.aiSummary && Object.keys(resumeData.aiSummary).length > 0 
+  const aiSummaryHTML = resumeData.aiSummary && Object.keys(resumeData.aiSummary).length > 0
     ? Object.entries(resumeData.aiSummary).map(([key, value]) => `
         <div class="flex gap-4 items-start">
           <div class="bg-white rounded-full w-8 h-8 flex-shrink-0 flex items-center justify-center mt-1">
@@ -89,12 +94,12 @@ const generatePDFContent = (resumeData, note = '') => {
   // AI Scorecard section
   const aiScorecardHTML = resumeData.aiScorecard && Object.keys(resumeData.aiScorecard).length > 0
     ? Object.entries(resumeData.aiScorecard).map(([key, value]) => {
-        const numericValue = parseInt(value) || 0;
-        const displayName = key === 'technicalSkillMatch' ? 'Technical Skill Match' :
-                            key === 'cultureFit' ? 'Culture Fit' :
-                            key === 'teamLeadership' ? 'Team Leadership' :
-                            key.charAt(0).toUpperCase() + key.slice(1);
-        return `
+      const numericValue = parseInt(value) || 0;
+      const displayName = key === 'technicalSkillMatch' ? 'Technical Skill Match' :
+        key === 'cultureFit' ? 'Culture Fit' :
+          key === 'teamLeadership' ? 'Team Leadership' :
+            key.charAt(0).toUpperCase() + key.slice(1);
+      return `
           <div class="scorecard-item">
             <div class="flex justify-between items-center mb-3">
               <div class="text-gray-800 font-semibold text-base">${displayName}</div>
@@ -105,7 +110,7 @@ const generatePDFContent = (resumeData, note = '') => {
             </div>
           </div>
         `;
-      }).join('')
+    }).join('')
     : `<div class="space-y-6">
         <div class="scorecard-item">
           <div class="flex justify-between items-center mb-3">
@@ -176,7 +181,7 @@ const generatePDFContent = (resumeData, note = '') => {
 
   // Interview Transcript section
   const interviewTranscriptHTML = resumeData.interviewEvaluation && resumeData.interviewEvaluation.evaluationResults && resumeData.interviewEvaluation.evaluationResults.length > 0
-          ? `<div class="w-full p-4 md:p-6 border rounded-xl bg-white">
+    ? `<div class="w-full p-4 md:p-6 border rounded-xl bg-white">
         <div class="text-lg md:text-xl font-bold text-gray-800 mb-4 md:mb-6">Interview Transcript</div>
         <div class="space-y-4 md:space-y-6">
           ${resumeData.interviewEvaluation.evaluationResults.map((result, index) => `
@@ -198,46 +203,71 @@ const generatePDFContent = (resumeData, note = '') => {
       </div>`
     : '';
 
-  // Application Details section
-  const applicationDetailsHTML = `
-          <div class="w-full mt-8 p-4 md:p-6 border rounded-xl bg-white">
-      <div class="text-xl font-bold text-gray-900 mb-6">Application Details</div>
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-5 mb-8">
-        <div class="application-detail-item">
-          <span class="block text-sm font-semibold text-gray-700">Position Applied</span>
-          <p class="text-base text-gray-900 font-medium">${resumeData.applicationDetails?.position || 'Test Job'}</p>
+
+  // Coding Assessment section
+  const getCodingAssessmentHTML = (oaData) => {
+    if (!oaData || !oaData.evaluation) return '';
+
+    const evaluation = oaData.evaluation;
+    const isPass = evaluation.pass;
+    const score = evaluation.score || 0;
+    const questionsCompleted = oaData.questions?.length || 0;
+
+    return `
+      <div class="p-4 border rounded-lg bg-white mb-4">
+        <div class="flex items-center justify-between mb-3">
+          <div class="text-base font-bold text-black">Coding Assessment Summary</div>
+          <div class="flex items-center gap-2">
+            ${isPass
+        ? '<span class="flex items-center gap-1 text-green-700 font-semibold text-sm bg-green-50 px-3 py-1 rounded-full border border-green-200"><svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg> Passed</span>'
+        : '<span class="flex items-center gap-1 text-red-700 font-semibold text-sm bg-red-50 px-3 py-1 rounded-full border border-red-200"><svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg> Needs Improvement</span>'
+      }
+            <span class="text-gray-700 font-bold text-sm">Score: ${score}/100</span>
+          </div>
         </div>
-        <div class="application-detail-item">
-          <span class="block text-sm font-semibold text-gray-700">Application Date</span>
-          <p class="text-base text-gray-900 font-medium">${resumeData.applicationDetails?.date || '7/21/2025'}</p>
-        </div>
-        <div class="application-detail-item">
-          <span class="block text-sm font-semibold text-gray-700">Notice Period</span>
-          <p class="text-base text-gray-900 font-medium">${resumeData.applicationDetails?.noticePeriod || 'N/A'}</p>
-        </div>
-        <div class="application-detail-item">
-          <span class="block text-sm font-semibold text-gray-700">Application Source</span>
-          <p class="text-base text-gray-900 font-medium">${resumeData.applicationDetails?.source || 'Website'}</p>
+        
+        <div class="space-y-2">
+          ${questionsCompleted > 0 ? `
+            <div class="flex items-center gap-2 text-sm text-gray-600">
+              <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor" class="text-blue-600"><path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/><path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"/></svg>
+              <span><strong>Questions Completed:</strong> ${questionsCompleted}</span>
+            </div>
+          ` : ''}
+          
+          ${evaluation.feedback ? `
+            <div class="bg-gray-50 rounded-lg p-3 border border-gray-200">
+              <div class="font-semibold text-gray-800 mb-1 text-sm">General Feedback</div>
+              <p class="text-gray-700 text-sm leading-relaxed">${evaluation.feedback}</p>
+            </div>
+          ` : ''}
+          
+          ${evaluation.complexityAnalysis ? `
+            <div class="bg-blue-50 rounded-lg p-3 border border-blue-200">
+              <div class="font-semibold text-gray-800 mb-1 text-sm flex items-center gap-2">
+                <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor" class="text-blue-600"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/></svg>
+                Complexity Analysis
+              </div>
+              <p class="text-gray-700 text-sm font-mono bg-white p-2 rounded border border-blue-100">${evaluation.complexityAnalysis}</p>
+            </div>
+          ` : ''}
+          
+          ${evaluation.improvementSuggestions ? `
+            <div class="bg-yellow-50 rounded-lg p-3 border border-yellow-200">
+              <div class="font-semibold text-gray-800 mb-1 text-sm flex items-center gap-2">
+                <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor" class="text-yellow-600"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                Suggestions for Improvement
+              </div>
+              <p class="text-gray-700 text-sm leading-relaxed">${evaluation.improvementSuggestions}</p>
+            </div>
+          ` : ''}
         </div>
       </div>
-      <div class="mb-8">
-        <div class="text-lg font-semibold text-gray-900 mb-3">About</div>
-        <p class="text-base text-gray-700 leading-relaxed">${resumeData.about || 'Prince Rathi is a FullStack + Devops Developer with experience in building and deploying various projects. He has won several hackathons and showcases skills in various programming languages and frameworks.'}</p>
-      </div>
-      <div>
-        <div class="text-lg font-semibold text-gray-900 mb-4">Key Skills</div>
-        <div class="flex flex-wrap gap-2">${skillsHTML}</div>
-      </div>
-    </div>
-  `;
+    `;
+  };
+
+  const codingAssessmentHTML = getCodingAssessmentHTML(resumeData.oa);
 
   // Added Notes section
-  const addedNotesHTML = note && note.trim()
-    ? `<div class="pdf-only-notes">
-        <div class="text-lg font-bold text-gray-900 mb-4">Added Notes</div>
-        <div class="text-gray-700 text-sm leading-relaxed">${note}</div>
-      </div>`
-    : '';
 
   return `
     <div class="bg-white p-2 md:p-3 lg:p-4">
@@ -253,9 +283,8 @@ const generatePDFContent = (resumeData, note = '') => {
           <div class="flex flex-col items-center text-center gap-4">
             <!-- Skills Section -->
             <div class="flex flex-wrap items-center justify-center gap-2">
-              ${resumeData.skills && resumeData.skills.slice(0, 4).map(skill => `<span class="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm font-medium">${skill}</span>`).join('')}
-              ${resumeData.skills && resumeData.skills.length > 4 ? `<span class="bg-gray-200 text-gray-700 px-3 py-1 rounded-full text-sm font-medium">+${resumeData.skills.length - 4}</span>` : ''}
-              ${(!resumeData.skills || resumeData.skills.length === 0) ? `<span class="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm font-medium">JavaScript</span><span class="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm font-medium">TypeScript</span><span class="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm font-medium">React.js</span><span class="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm font-medium">Node.js</span><span class="bg-gray-200 text-gray-700 px-3 py-1 rounded-full text-sm font-medium">+6</span>` : ''}
+              ${resumeData.skills && resumeData.skills.slice(0, 5).map(skill => `<span class="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm font-medium">${skill}</span>`).join('')}
+              ${(!resumeData.skills || resumeData.skills.length === 0) ? `<span class="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm font-medium">JavaScript</span><span class="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm font-medium">TypeScript</span><span class="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm font-medium">React.js</span><span class="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm font-medium">Node.js</span><span class="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm font-medium">MongoDB</span>` : ''}
             </div>
             <!-- Contact Information -->
             <div class="flex flex-wrap items-center justify-center gap-4 text-sm text-gray-600">
@@ -266,39 +295,49 @@ const generatePDFContent = (resumeData, note = '') => {
             </div>
           </div>
         </div>
-        <div class="grid grid-cols-1 xl:grid-cols-3 gap-4 lg:gap-6">
-          <div class="xl:col-span-2 space-y-4 lg:space-y-6">
-            <div class="p-6 border rounded-xl bg-white">
-              <div class="text-sm font-semibold text-black mb-4">AI Resume Summary</div>
-              <div class="space-y-8">${aiSummaryHTML}</div>
-            </div>
-            <div class="p-6 border rounded-xl bg-white">
-              <div class="text-lg font-bold text-black mb-8">AI Scorecard</div>
-              <div class="space-y-6">${aiScorecardHTML}</div>
-            </div>
+        <!-- Score Cards Row -->
+        <div class="grid ${hasOAData ? 'grid-cols-3' : 'grid-cols-2'} gap-4 mb-5">
+          ${hasOAData ? `
+          <div class="p-4 border rounded-lg bg-white flex flex-col items-center justify-center">
+            <div class="${oaMatch.color} text-xs font-semibold mb-2">${oaMatch.label}</div>
+            <div class="text-base font-bold text-gray-900 mb-2">Coding Performance</div>
+            <div class="flex justify-center">${getCircularProgressSVG(oaScore, 90, 9)}</div>
           </div>
-          <div class="xl:col-span-1">
-                         <div class="bg-white rounded-xl shadow-sm border p-4 md:p-6 space-y-6">
-              <div class="text-center py-8">
-                <div class="${match.color} text-sm font-semibold mb-3">${match.label}</div>
-                <div class="text-xl font-bold text-gray-900 mb-8">Overall Score</div>
-                <div class="flex justify-center mb-8">${getCircularProgressSVG(score, 160, 14)}</div>
-                <button class="bg-blue-100 text-gray-700 px-6 py-3 rounded-lg text-sm font-medium border border-gray-300 hover:bg-blue-200 transition-colors">Consider with caution</button>
-              </div>
-              <div class="bg-green-50 rounded-lg p-4">
-                <div class="font-bold text-gray-900 mb-3">Key Strength</div>
-                <ul class="space-y-2">${keyStrengthHTML}</ul>
-              </div>
-              <div class="bg-red-50 rounded-lg p-4">
-                <div class="font-bold text-gray-900 mb-3">Potential Concern</div>
-                <ul class="space-y-2">${potentialConcernHTML}</ul>
-              </div>
-              ${addedNotesHTML}
-            </div>
+          ` : ''}
+          <div class="p-4 border rounded-lg bg-white flex flex-col items-center justify-center">
+            <div class="${match.color} text-xs font-semibold mb-2">${match.label}</div>
+            <div class="text-base font-bold text-gray-900 mb-2">CV Strength</div>
+            <div class="flex justify-center mb-2">${getCircularProgressSVG(score, 90, 9)}</div>
+            <div class="bg-blue-100 text-gray-700 px-3 py-1 rounded text-xs font-medium border border-gray-300 text-center">Consider with caution</div>
+          </div>
+          <div class="p-4 border rounded-lg bg-white flex flex-col items-center justify-center">
+            <div class="${match.color} text-xs font-semibold mb-2">${match.label}</div>
+            <div class="text-base font-bold text-gray-900 mb-2">Interview Performance</div>
+            <div class="flex justify-center">${getCircularProgressSVG(score, 90, 9)}</div>
           </div>
         </div>
+
+        <!-- Key Strength & Potential Concern Row -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          <div class="bg-green-50 rounded-xl p-6 border border-green-100">
+            <div class="font-bold text-gray-900 mb-4">Key Strength</div>
+            <ul class="space-y-3">${keyStrengthHTML}</ul>
+          </div>
+          <div class="bg-red-50 rounded-xl p-6 border border-red-100">
+            <div class="font-bold text-gray-900 mb-4">Potential Concern</div>
+            <ul class="space-y-3">${potentialConcernHTML}</ul>
+          </div>
+        </div>
+
+        <!-- Coding Assessment Summary (conditional) -->
+        ${codingAssessmentHTML}
+
+        <!-- AI Summary -->
+        <div class="p-6 border rounded-xl bg-white">
+          <div class="text-sm font-semibold text-black mb-4">AI Resume Summary</div>
+          <div class="space-y-8">${aiSummaryHTML}</div>
+        </div>
       </div>
-      ${applicationDetailsHTML}
       ${interviewTranscriptHTML}
     </div>
   `;
@@ -309,7 +348,7 @@ export const generateScorecardPDF = async (resumeData, note = '') => {
   try {
     const printContent = generatePDFContent(resumeData, note);
     const printWindow = window.open('', '_blank', 'width=800,height=600');
-    
+
     printWindow.document.write(`
       <!DOCTYPE html>
       <html>
@@ -348,10 +387,10 @@ export const generateScorecardPDF = async (resumeData, note = '') => {
         </body>
       </html>
     `);
-    
+
     printWindow.document.close();
     toast.success('Print dialog opened! Make sure to uncheck "Headers and footers" in print options for a clean PDF.');
-    
+
   } catch (err) {
     console.error('PDF Generation Error:', err);
     toast.error('Failed to open print dialog. Please use Ctrl+P to print.');
@@ -454,6 +493,7 @@ const getComprehensiveCSS = () => `
   .grid { display: grid !important; }
   .grid-cols-1 { grid-template-columns: repeat(1, minmax(0, 1fr)) !important; }
   .grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+  .grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
   .xl\\:grid-cols-3 { grid-template-columns: 2fr 1fr !important; }
   .xl\\:col-span-2 { grid-column: span 1 / span 1 !important; }
   .xl\\:col-span-1 { grid-column: span 1 / span 1 !important; }
