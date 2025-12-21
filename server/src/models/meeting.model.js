@@ -30,7 +30,7 @@ const meetingSchema = new mongoose.Schema(
     durationMinutes: {
       type: Number,
       default: 40,
-      min: 10,
+      min: 1,
       max: 120,
     },
     status: {

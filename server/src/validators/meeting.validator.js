@@ -27,10 +27,10 @@ export const validateCreateMeeting = (req, res, next) => {
 
   if (durationMinutes !== undefined) {
     const num = Number(durationMinutes);
-    if (Number.isNaN(num) || num < 10 || num > 120) {
+    if (Number.isNaN(num) || num < 1 || num > 120) {
       return res
         .status(400)
-        .json({ message: "durationMinutes must be between 10 and 120" });
+        .json({ message: "durationMinutes must be between 1 and 120" });
     }
   }
 
@@ -61,10 +61,10 @@ export const validateRescheduleMeeting = (req, res, next) => {
 
   if (durationMinutes !== undefined) {
     const num = Number(durationMinutes);
-    if (Number.isNaN(num) || num < 10 || num > 120) {
+    if (Number.isNaN(num) || num < 1 || num > 120) {
       return res
         .status(400)
-        .json({ message: "durationMinutes must be between 10 and 120" });
+        .json({ message: "durationMinutes must be between 1 and 120" });
     }
   }
 

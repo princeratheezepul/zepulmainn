@@ -39,6 +39,7 @@ const buildAssistantBody = async (context = {}) => {
   const baseInstructions = await loadPromptTemplate();
   const job = context?.job || {};
   const resume = context?.resume || {};
+  const durationMinutes = context?.durationMinutes || 40;
 
   // Build job context summary
   const jobSummary = [
@@ -67,6 +68,28 @@ const buildAssistantBody = async (context = {}) => {
     .filter(Boolean)
     .join("\n");
 
+  // Build concerns and strengths context
+  const concernsContext = resume.potentialConcern?.length > 0
+    ? `**POTENTIAL CONCERNS TO ADDRESS:**
+${resume.potentialConcern.map((concern, idx) => `${idx + 1}. ${concern}`).join("\n")}
+
+IMPORTANT: During the interview, you should naturally probe these areas to get clarity. Ask follow-up questions that help assess whether these concerns are valid or if the candidate can address them. Do NOT mention these concerns directly to the candidate - instead, ask questions that would reveal information about these areas.`
+    : "";
+
+  const strengthsContext = resume.keyStrength?.length > 0
+    ? `**KEY STRENGTHS:**
+${resume.keyStrength.map((strength, idx) => `${idx + 1}. ${strength}`).join("\n")}
+
+You can build upon these strengths during the interview and explore them in more depth.`
+    : "";
+
+  // Build time context
+  const timeContext = `**TIME CONTEXT:**
+- Total interview duration: ${durationMinutes} minutes
+- You should track time during the interview and manage pacing accordingly
+- When you have completed all closing questions and delivered the closing script, call the 'end_interview' function to gracefully end the call
+- If time is running out and you haven't asked all closing questions yet, prioritize them immediately`;
+
   // Combine base prompt with context
   const contextualInstructions = `${baseInstructions}
 
@@ -74,7 +97,11 @@ Job context:
 ${jobSummary || "Not provided"}
 
 Candidate context:
-${resumeSummary || "Not provided"}`;
+${resumeSummary || "Not provided"}
+${strengthsContext ? `\n\n${strengthsContext}` : ""}
+${concernsContext ? `\n\n${concernsContext}` : ""}
+
+${timeContext}`;
 
   // Construct webhook URL - prioritize explicit setting, then backend URL, then construct from frontend
   let webhookUrl = process.env.VAPI_WEBHOOK_URL;
@@ -92,9 +119,38 @@ ${resumeSummary || "Not provided"}`;
   
   console.log("🔗 Vapi webhook URL:", webhookUrl);
 
+  // Build the exact starting message as specified
+  const firstMessage = `Hello, I'm Kai from Zepul.
+I'll be guiding you through this interview on behalf of the hiring team.
+
+This interview focuses on your skills and experience related to the role you've applied for and will take approximately ${durationMinutes} minutes.
+
+Please respond naturally and feel free to take a moment before answering each question.
+
+If you're ready, let's begin.`;
+
+  // Define the end_interview tool/function for graceful call termination
+  const endInterviewFunction = {
+    type: "function",
+    function: {
+      name: "end_interview",
+      description: "Call this function to gracefully end the interview after you have completed all closing questions and delivered the closing script. This ensures the transcript is properly saved and the call ends smoothly.",
+      parameters: {
+        type: "object",
+        properties: {
+          reason: {
+            type: "string",
+            description: "Brief reason for ending (e.g., 'Interview completed successfully', 'All closing questions answered')",
+          },
+        },
+        required: ["reason"],
+      },
+    },
+  };
+
   return {
     name: VAPI_ASSISTANT_NAME,
-    firstMessage: "Hello! I'm your AI interviewer. I'm excited to learn more about your background and experience. Let's begin.",
+    firstMessage,
     model: {
       provider: VAPI_MODEL_PROVIDER,
       model: VAPI_MODEL_NAME,
@@ -104,6 +160,7 @@ ${resumeSummary || "Not provided"}`;
           content: contextualInstructions,
         },
       ],
+      tools: [endInterviewFunction],
     },
     voice: {
       provider: VAPI_VOICE_PROVIDER,

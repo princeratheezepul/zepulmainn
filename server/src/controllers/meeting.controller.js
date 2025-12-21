@@ -406,8 +406,11 @@ export const startMeeting = async (req, res) => {
             experience: meeting.resumeId.experience,
             skills: meeting.resumeId.skills || [],
             aiSummary: meeting.resumeId.aiSummary || {},
+            potentialConcern: meeting.resumeId.potentialConcern || [],
+            keyStrength: meeting.resumeId.keyStrength || [],
           }
         : null,
+      durationMinutes: meeting.durationMinutes || 40,
     };
 
     const { callId, joinConfig } = await startWebCallForMeeting({
@@ -436,6 +439,44 @@ export const startMeeting = async (req, res) => {
   }
 };
 
+/**
+ * Fetch transcript from Vapi API for a given call ID (fallback when webhooks don't deliver)
+ */
+const fetchTranscriptFromVapi = async (callId) => {
+  const VAPI_API_KEY = process.env.VAPI_API_KEY;
+  const VAPI_BASE_URL = process.env.VAPI_BASE_URL || "https://api.vapi.ai";
+  
+  if (!VAPI_API_KEY || !callId) {
+    console.warn("Cannot fetch transcript: missing API key or callId");
+    return null;
+  }
+
+  try {
+    const endpoint = `${VAPI_BASE_URL}/call/${callId}`;
+    const response = await fetch(endpoint, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${VAPI_API_KEY}`,
+      },
+    });
+
+    if (!response.ok) {
+      console.error(`Failed to fetch call data: ${response.status}`);
+      return null;
+    }
+
+    const callData = await response.json();
+    // Try multiple possible locations for transcript
+    return callData?.transcript || 
+           callData?.messages?.map(m => m.content).join("\n") || 
+           callData?.endOfCallReport?.transcript ||
+           null;
+  } catch (error) {
+    console.error("Error fetching transcript from Vapi:", error.message);
+    return null;
+  }
+};
+
 export const endMeeting = async (req, res) => {
   try {
     const { token } = req.params;
@@ -449,6 +490,21 @@ export const endMeeting = async (req, res) => {
       });
     }
 
+    // If we have a callId but no transcript, try to fetch it from Vapi API
+    // This is a fallback in case webhooks didn't deliver the transcript (e.g., on ejection)
+    if (meeting.vapiCallId && !meeting.transcript) {
+      console.log("⚠️ No transcript found in database, attempting to fetch from Vapi API...");
+      const transcript = await fetchTranscriptFromVapi(meeting.vapiCallId);
+      if (transcript) {
+        meeting.transcript = transcript;
+        console.log("✅ Transcript fetched from Vapi API, length:", transcript.length);
+      } else {
+        console.warn("⚠️ Could not fetch transcript from Vapi API - may not be available yet");
+      }
+    } else if (meeting.transcript) {
+      console.log("✅ Transcript already exists in database, length:", meeting.transcript.length);
+    }
+
     meeting.status = "completed";
     await meeting.save();
 
@@ -459,11 +515,54 @@ export const endMeeting = async (req, res) => {
       meeting: {
         id: meeting._id,
         status: meeting.status,
+        transcriptLength: meeting.transcript?.length || 0,
       },
     });
   } catch (error) {
     console.error("Error ending meeting:", error);
     return res.status(500).json({ message: "Failed to end meeting" });
+  }
+};
+
+/**
+ * Handle function call from Vapi (for end_interview tool)
+ * This is called when the AI agent calls the end_interview function
+ */
+export const handleVapiFunctionCall = async (req, res) => {
+  try {
+    const { callId, functionCall } = req.body || {};
+    
+    if (!callId) {
+      return res.status(400).json({ message: "Missing callId" });
+    }
+
+    // Find meeting by callId
+    const meeting = await Meeting.findOne({ vapiCallId: callId });
+    
+    if (!meeting) {
+      console.error("Meeting not found for function call, callId:", callId);
+      return res.status(404).json({ message: "Meeting not found" });
+    }
+
+    // Handle end_interview function
+    if (functionCall?.name === "end_interview") {
+      console.log("✅ AI called end_interview function. Reason:", functionCall.arguments?.reason || "Not provided");
+      
+      // Mark meeting as completed
+      meeting.status = "completed";
+      await meeting.save();
+      
+      // Return success - Vapi will end the call gracefully
+      return res.status(200).json({ 
+        result: "Interview ended successfully. Thank you for your time." 
+      });
+    }
+
+    // Unknown function
+    return res.status(400).json({ message: "Unknown function" });
+  } catch (error) {
+    console.error("Error handling function call:", error);
+    return res.status(500).json({ message: "Function call processing failed" });
   }
 };
 
@@ -542,7 +641,7 @@ export const handleVapiWebhook = async (req, res) => {
       
       case "transcript":
       case "transcript.updated":
-        const transcript = message?.transcript || call?.transcript || message?.transcriptText;
+        const transcript = message?.transcript || call?.transcript || message?.transcriptText || req.body?.transcript;
         if (transcript) {
           // Append or replace transcript
           if (meeting.transcript) {
@@ -556,12 +655,53 @@ export const handleVapiWebhook = async (req, res) => {
       
       case "tool-calls":
       case "tool.outputs":
-        meeting.toolOutputs = message?.toolCalls || message?.outputs || call?.toolOutputs;
+        const toolCalls = message?.toolCalls || message?.outputs || call?.toolOutputs;
+        meeting.toolOutputs = toolCalls;
         console.log("Tool outputs saved");
         break;
       
+      case "function-call":
+        // Handle function calls from the AI agent
+        const functionCall = message?.functionCall || message?.function || req.body?.functionCall || call?.functionCall;
+        console.log("Function call received:", functionCall?.name || "unknown");
+        
+        // Store function call in toolOutputs
+        if (functionCall) {
+          meeting.toolOutputs = meeting.toolOutputs || [];
+          if (Array.isArray(meeting.toolOutputs)) {
+            meeting.toolOutputs.push(functionCall);
+          } else {
+            meeting.toolOutputs = [functionCall];
+          }
+        }
+        
+        // Handle end_interview function call
+        if (functionCall?.name === "end_interview") {
+          const reason = functionCall?.arguments?.reason || 
+                        functionCall?.parameters?.reason || 
+                        (typeof functionCall?.arguments === "string" ? JSON.parse(functionCall.arguments).reason : null) ||
+                        "Interview completed";
+          console.log("✅ AI requested to end interview. Reason:", reason);
+          
+          // Mark meeting as completed
+          meeting.status = "completed";
+          
+          // Save the meeting first
+          await meeting.save();
+          
+          // Return response to Vapi - this tells Vapi to end the call gracefully
+          // Vapi expects a response with the function result
+          return res.status(200).json({
+            result: "Interview ended successfully. Thank you for your time.",
+          });
+        }
+        
+        // For other function calls, just acknowledge
+        return res.status(200).json({ result: "Function call processed" });
+      
       case "end-of-call-report":
       case "call.completed":
+      case "call.ended":
         meeting.status = "completed";
         
         // Get transcript from various possible locations
@@ -569,13 +709,15 @@ export const handleVapiWebhook = async (req, res) => {
                                call?.transcript || 
                                message?.transcriptText ||
                                message?.endOfCallReport?.transcript ||
+                               call?.transcript ||
+                               req.body?.transcript ||
                                meeting.transcript;
         
         if (finalTranscript) {
           meeting.transcript = finalTranscript;
         }
         
-        meeting.recordingUrl = call?.recordingUrl || message?.recordingUrl || message?.recording?.url;
+        meeting.recordingUrl = call?.recordingUrl || message?.recordingUrl || message?.recording?.url || req.body?.recordingUrl;
         meeting.toolOutputs = message?.toolCalls || message?.toolOutputs || call?.toolOutputs;
         
         // Extract report data
@@ -593,8 +735,44 @@ export const handleVapiWebhook = async (req, res) => {
         // Assistants can be cleaned up manually or via scheduled task if needed
         break;
       
+      case "error":
+      case "call.error":
+        // Handle error/ejection events - check if transcript is included
+        console.log("Error/ejection event received:", type);
+        const errorTranscript = message?.transcript || 
+                               call?.transcript || 
+                               message?.transcriptText ||
+                               req.body?.transcript;
+        
+        if (errorTranscript) {
+          console.log("Transcript found in error event, saving...");
+          if (meeting.transcript) {
+            meeting.transcript += "\n" + errorTranscript;
+          } else {
+            meeting.transcript = errorTranscript;
+          }
+        }
+        
+        // If meeting is still active and we got an ejection error, mark as completed
+        // but don't overwrite existing transcript if we don't have a new one
+        if (meeting.status === "active" && message?.error?.type === "ejected") {
+          console.log("Ejection detected - marking meeting as completed");
+          meeting.status = "completed";
+          // Keep existing transcript if we have one, or use error transcript if available
+          if (!meeting.transcript && errorTranscript) {
+            meeting.transcript = errorTranscript;
+          }
+        }
+        break;
+      
       default:
         console.log("Unhandled webhook type:", type);
+        // Check if this unhandled event contains transcript data
+        const defaultTranscript = message?.transcript || call?.transcript || req.body?.transcript;
+        if (defaultTranscript && !meeting.transcript) {
+          console.log("Found transcript in unhandled event type, saving...");
+          meeting.transcript = defaultTranscript;
+        }
         // Still save the meeting in case there's useful data
         break;
     }
