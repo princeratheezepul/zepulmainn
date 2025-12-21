@@ -307,7 +307,7 @@ const MarketplaceAddAnswersPage = ({ onBack, questions, jobDetails, resumeData, 
             </div>
           </div>
 
-          {/* Text Input Area */}
+          Text Input Area
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Complete Interview Text
@@ -337,7 +337,7 @@ const MarketplaceAddAnswersPage = ({ onBack, questions, jobDetails, resumeData, 
             </div>
           </div>
 
-          {/* Instructions */}
+          Instructions
           <div className="bg-blue-50 p-4 rounded-lg">
             <div className="flex items-start gap-2">
               <Upload size={16} className="text-blue-500 mt-0.5 flex-shrink-0" />
@@ -354,7 +354,7 @@ const MarketplaceAddAnswersPage = ({ onBack, questions, jobDetails, resumeData, 
           </div>
         </div>
 
-        {/* Submit Button */}
+        Submit Button
         <div className="mt-8 flex justify-center">
           <button
             onClick={handleSubmitAnswers}

@@ -253,12 +253,23 @@ const CandidateAssessmentPage = () => {
     const performSubmit = async (autoSubmit) => {
         setSubmitting(true);
         try {
-            // Prepare all submissions
-            const submissions = questions.map((_, idx) => ({
-                questionIndex: idx,
-                code: codes[idx] || '',
-                language: 'javascript'
-            }));
+            // Prepare all submissions with test results
+            const submissions = questions.map((q, idx) => {
+                const testResults = testResultsMap[idx] || [];
+                const passedTests = testResults.filter(r => r.passed).length;
+                const totalTests = testResults.length;
+
+                return {
+                    questionIndex: idx,
+                    code: codes[idx] || '',
+                    language: 'javascript',
+                    testResults: {
+                        passed: passedTests,
+                        total: totalTests,
+                        details: testResults
+                    }
+                };
+            });
 
             const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/assessment/${assessmentId}/submit`, {
                 method: 'POST',

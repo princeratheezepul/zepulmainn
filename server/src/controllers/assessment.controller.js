@@ -313,19 +313,34 @@ export const submitAssessment = async (req, res) => {
 const evaluateSubmission = async (resumeId, submissions, questions) => {
   try {
     console.log("Starting evaluation for resume:", resumeId);
+    console.log("Submissions received:", submissions.length);
 
     let totalScore = 0;
     let totalPassedTests = 0;
     let totalTests = 0;
     let feedbackParts = [];
 
-    // Evaluate each question
+    // Evaluate each question using frontend test results
     for (let i = 0; i < questions.length; i++) {
       const question = questions[i];
       const submission = submissions.find(s => s.questionIndex === i);
-      const code = submission ? submission.code : "";
 
-      // Step 1: Check for meaningful implementation
+      if (!submission) {
+        console.log(`No submission found for question ${i + 1}`);
+        feedbackParts.push(`Question ${i + 1}: No solution submitted.`);
+        continue;
+      }
+
+      const code = submission.code || "";
+      const testResults = submission.testResults || { passed: 0, total: 0, details: [] };
+
+      // Log test results for debugging
+      console.log(`Question ${i + 1} (${question.title}):`, {
+        passedTests: testResults.passed,
+        totalTests: testResults.total
+      });
+
+      // Check for meaningful implementation
       const codeWithoutComments = code.replace(/\/\/.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '').trim();
       const hasActualCode = codeWithoutComments.length > 20;
       const hasReturn = code.includes('return');
@@ -336,87 +351,47 @@ const evaluateSubmission = async (resumeId, submissions, questions) => {
         continue;
       }
 
-      // Step 2: Execute tests
-      let passedTests = 0;
-      const examples = question.examples || [];
+      // Use frontend test results
+      const passedTests = testResults.passed || 0;
+      const totalTestsForQuestion = testResults.total || 0;
 
-      for (const example of examples) {
-        try {
-          // Parse example input
-          // This regex is fragile and depends on specific format. 
-          // Better to rely on the fact that example.input is likely an array from DB now if we fixed generation, 
-          // but for safety let's try to handle both string parsing (legacy/AI text) and direct array.
-
-          let args;
-          if (Array.isArray(example.input)) {
-            args = example.input;
-          } else if (typeof example.input === 'string') {
-            // Try to parse string input like "[1,2], 3"
-            // This is tricky without a robust parser. 
-            // For now, let's assume the AI returns valid JSON arrays in the new prompt.
-            // If it's a string from legacy, we might fail here.
-            // Let's try a simple eval for arguments if it looks like arguments
-            try {
-              args = JSON.parse(`[${example.input}]`); // Wrap in array to parse "arg1, arg2" sequence? No, example.input usually is "[arg1, arg2]"
-            } catch (e) {
-              // Fallback regex from before
-              const inputMatch = example.input.match(/\[([^\]]+)\].*?(\d+)/);
-              if (inputMatch) {
-                const numsStr = inputMatch[1];
-                const target = parseInt(inputMatch[2]);
-                const nums = numsStr.split(',').map(n => parseInt(n.trim()));
-                args = [nums, target];
-              }
-            }
-          }
-
-          if (!args) args = []; // Fail safe
-
-          const argsString = args.map(arg => JSON.stringify(arg)).join(', ');
-
-          const testCode = `
-                  ${code}
-                  try {
-                    const result = ${question.functionName}(${argsString});
-                    JSON.stringify(result);
-                  } catch (e) {
-                    "ERROR: " + e.message;
-                  }
-                `;
-
-          const actualOutput = eval(testCode);
-          const expectedOutput = example.output;
-          // Simple equality check (improve for arrays/objects)
-          const passed = JSON.stringify(actualOutput) === JSON.stringify(expectedOutput) && !String(actualOutput).startsWith("ERROR");
-
-          if (passed) passedTests++;
-
-        } catch (error) {
-          // Test failed
-        }
-      }
-
-      totalTests += examples.length;
+      totalTests += totalTestsForQuestion;
       totalPassedTests += passedTests;
 
-      // Score for this question (max 33.33 points each)
-      if (examples.length > 0) {
-        totalScore += (passedTests / examples.length) * (100 / questions.length);
+      // Score for this question (proportional to number of questions)
+      if (totalTestsForQuestion > 0) {
+        const questionScore = (passedTests / totalTestsForQuestion) * (100 / questions.length);
+        totalScore += questionScore;
+        console.log(`Question ${i + 1} score: ${questionScore.toFixed(2)} (${passedTests}/${totalTestsForQuestion} tests passed)`);
+      } else {
+        console.log(`Question ${i + 1}: No tests available`);
+        feedbackParts.push(`Question ${i + 1}: No test cases were run.`);
       }
     }
 
-    // Round score
-    totalScore = Math.round(totalScore);
+    // Round score and ensure it's within bounds
+    totalScore = Math.max(0, Math.min(100, Math.round(totalScore)));
+
+    console.log("Final evaluation:", {
+      totalScore,
+      totalPassedTests,
+      totalTests
+    });
 
     // Generate feedback
-    let feedback = `Score: ${totalScore}/100. Passed ${totalPassedTests}/${totalTests} total test cases. \n` + feedbackParts.join('\n');
+    let feedback = `Score: ${totalScore}/100. Passed ${totalPassedTests}/${totalTests} total test cases.`;
+    if (feedbackParts.length > 0) {
+      feedback += '\n' + feedbackParts.join('\n');
+    }
 
     const evaluation = {
       score: totalScore,
       pass: totalScore >= 70,
       feedback,
       complexityAnalysis: "Multi-question assessment",
-      improvementSuggestions: totalScore < 70 ? "Review the unsolved problems." : "Good job!"
+      improvementSuggestions: totalScore < 70
+        ? "Review the problems where test cases failed. Focus on edge cases and problem requirements."
+        : "Excellent performance! Keep practicing to maintain your skills."
     };
 
     await Resume.findByIdAndUpdate(
@@ -432,6 +407,24 @@ const evaluateSubmission = async (resumeId, submissions, questions) => {
 
   } catch (error) {
     console.error("Error evaluating submission:", error);
-    // Fallback logic...
+    // Fallback evaluation if something goes wrong
+    try {
+      await Resume.findByIdAndUpdate(
+        resumeId,
+        {
+          "oa.status": "evaluated",
+          "oa.evaluation": {
+            score: 0,
+            pass: false,
+            feedback: "Error during evaluation. Please contact support.",
+            complexityAnalysis: "Evaluation failed",
+            improvementSuggestions: "N/A"
+          },
+          "oa.evaluatedAt": new Date()
+        }
+      );
+    } catch (fallbackError) {
+      console.error("Fallback evaluation also failed:", fallbackError);
+    }
   }
 };

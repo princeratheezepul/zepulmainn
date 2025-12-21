@@ -22,7 +22,7 @@ const ResumeUpload = ({ onBack, jobDetails }) => {
   const [loadingMessage, setLoadingMessage] = useState("");
   const [parsedData, setParsedData] = useState(null);
   const [showBulkUpload, setShowBulkUpload] = useState(false);
-  
+
   const { user, isAuthenticated } = useAuth();
   const { post, get } = useApi();
 
@@ -64,7 +64,7 @@ const ResumeUpload = ({ onBack, jobDetails }) => {
 
       setLoadingMessage("Analyzing resume with AI...");
       const analysis = await analyzeResume(text, jobDetails);
-      
+
       setLoadingMessage("Calculating ATS Score...");
       let atsResult;
       try {
@@ -74,8 +74,8 @@ const ResumeUpload = ({ onBack, jobDetails }) => {
         throw atsError;
       }
 
-      const finalData = { 
-        ...analysis, 
+      const finalData = {
+        ...analysis,
         overallScore: Math.round(atsResult.ats_score),
         ats_score: atsResult.ats_score,
         ats_reason: atsResult.ats_reason,
@@ -111,9 +111,9 @@ const ResumeUpload = ({ onBack, jobDetails }) => {
           }
           resolve(fullText);
         } catch (err) {
-            console.error("Error extracting PDF text, falling back to OCR:", err);
-            // Fallback to OCR can be implemented here if needed
-            reject("Failed to read PDF.");
+          console.error("Error extracting PDF text, falling back to OCR:", err);
+          // Fallback to OCR can be implemented here if needed
+          reject("Failed to read PDF.");
         }
       };
       fileReader.readAsArrayBuffer(file);
@@ -121,9 +121,9 @@ const ResumeUpload = ({ onBack, jobDetails }) => {
   };
 
   const extractTextFromDocx = async (file) => {
-      const arrayBuffer = await file.arrayBuffer();
-      const result = await mammoth.extractRawText({ arrayBuffer });
-      return result.value;
+    const arrayBuffer = await file.arrayBuffer();
+    const result = await mammoth.extractRawText({ arrayBuffer });
+    return result.value;
   };
 
   const saveResumeToDB = async (resumeData, jobId) => {
@@ -131,7 +131,7 @@ const ResumeUpload = ({ onBack, jobDetails }) => {
       console.log('Saving resume data:', resumeData);
       console.log('JobId:', jobId);
       console.log('API URL:', `${import.meta.env.VITE_BACKEND_URL}/api/resumes/save/${jobId}`);
-      
+
       // Debug: Check if user is authenticated
       const userInfo = localStorage.getItem('userInfo');
       const authToken = localStorage.getItem('authToken');
@@ -139,19 +139,19 @@ const ResumeUpload = ({ onBack, jobDetails }) => {
       console.log('Auth token from localStorage:', authToken);
       console.log('AuthContext user:', user);
       console.log('AuthContext isAuthenticated:', isAuthenticated);
-      
+
       // Debug: Check cookies
       console.log('All cookies:', document.cookie);
-      
+
       // Use useApi hook for consistent authentication
       const response = await post(`${import.meta.env.VITE_BACKEND_URL}/api/resumes/save/${jobId}`, resumeData);
 
       console.log('Response status:', response.status);
       console.log('Response headers:', response.headers);
-      
+
       if (!response.ok) {
         let errorMessage = 'Failed to save resume data';
-        
+
         try {
           const errorData = await response.json();
           console.error('Server error response:', errorData);
@@ -162,7 +162,7 @@ const ResumeUpload = ({ onBack, jobDetails }) => {
           console.error('Non-JSON error response:', errorText);
           errorMessage = `Server error (${response.status}): ${response.statusText}`;
         }
-        
+
         throw new Error(errorMessage);
       }
 
@@ -229,12 +229,6 @@ const ResumeUpload = ({ onBack, jobDetails }) => {
         // 3-4: Good indicators of soft skills
         // 1-2: Basic indicators present
         // 0: Poor communication indicators
-
-        "Competitive Fit & Market Standing": 5 // 0-5 points
-        // 5: Top 10% candidate for this role
-        // 3-4: Top 25% candidate
-        // 1-2: Average candidate
-        // 0: Below average candidate
       }
 
       CRITICAL SCORING RULES:
@@ -254,7 +248,6 @@ const ResumeUpload = ({ onBack, jobDetails }) => {
         "Consistency Check": {"score": number, "reason": string},
         "Resume Quality Score": {"score": number, "reason": string},
         "Interview & Behavioral Prediction": {"score": number, "reason": string},
-        "Competitive Fit & Market Standing": {"score": number, "reason": string},
         "ats_score": number, // sum of above, max 100
         "reason": string // 1-2 lines summary of the main factors for the total score
       }
@@ -293,7 +286,6 @@ const ResumeUpload = ({ onBack, jobDetails }) => {
           consistency_check: parsed["Consistency Check"],
           resume_quality: parsed["Resume Quality Score"],
           interview_prediction: parsed["Interview & Behavioral Prediction"],
-          competitive_fit: parsed["Competitive Fit & Market Standing"],
         }
       };
     } catch (err) {
@@ -326,17 +318,15 @@ const ResumeUpload = ({ onBack, jobDetails }) => {
         "experience": "Total years of experience as a string (e.g., '5 years')",
         "location": "City, Country",
         "aiSummary": {
-          "technicalExperience": "A 1-2 sentence summary of their technical background.",
-          "projectExperience": "A 1-2 sentence summary of their project work and accomplishments.",
-          "education": "A 1-2 sentence summary of their educational qualifications.",
-          "keyAchievements": "A 1-2 sentence summary of their most impressive achievements.",
-          "skillMatch": "A 1-2 sentence analysis of how well the candidate's technical skills, tools, and technologies align with the specific job requirements and responsibilities.",
-          "competitiveFit": "A 1-2 sentence assessment of the candidate's competitive position in the market for this role, considering their experience level, achievements, and market demand.",
-          "consistencyCheck": "A 1-2 sentence evaluation of the candidate's career consistency, job stability, progression patterns, and professional growth trajectory."
+          "technicalExperience": "A concise, refined 1-sentence summary of their technical background.",
+          "projectExperience": "A concise, refined 1-sentence summary of their project work and accomplishments.",
+          "education": "A concise, refined 1-sentence summary of their educational qualifications.",
+          "keyAchievements": "A concise, refined 1-sentence summary of their most impressive achievements.",
+          "skillMatch": "A concise, refined 1-sentence analysis of how well the candidate's technical skills align with the job requirements.",
+          "consistencyCheck": "A single, concise sentence evaluating the candidate's career stability and progression."
         },
         "aiScorecard": {
           "technicalSkillMatch": "Number (0-100) representing how well their skills match the job requirements.",
-          "competitiveFit": "Number (0-100) representing the candidate's competitive position in the market for this role.",
           "consistencyCheck": "Number (0-100) representing the candidate's career consistency, job stability, and progression patterns.",
           "teamLeadership": "Number (0-100) based on any management or leadership roles, and mentorship experience mentioned."
         },
@@ -352,12 +342,12 @@ const ResumeUpload = ({ onBack, jobDetails }) => {
         }
       }
 
-      IMPORTANT: For the new fields in aiSummary:
-      - skillMatch: Analyze the candidate's technical skills against the job requirements and provide a clear assessment
-      - competitiveFit: Evaluate their market position and competitiveness for this specific role
-      - consistencyCheck: Assess their career stability, progression, and professional development patterns
+      IMPORTANT: For the aiSummary fields:
+      - Ensure ALL summaries are concise, refined, and professional.
+      - consistencyCheck MUST be a SINGLE sentence.
+      - skillMatch should be a direct assessment of alignment.
       
-      Make sure all fields in aiSummary contain meaningful, detailed content that provides valuable insights for the recruiter.
+      Make sure all fields in aiSummary contain meaningful, detailed but concise content that provides valuable insights for the recruiter.
     `;
 
     const result = await model.generateContent(prompt);
@@ -366,7 +356,7 @@ const ResumeUpload = ({ onBack, jobDetails }) => {
     const cleanedText = text.replace(/```json|```/g, "").trim();
     return JSON.parse(cleanedText);
   };
-  
+
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: {
@@ -399,9 +389,8 @@ const ResumeUpload = ({ onBack, jobDetails }) => {
       <div className="flex-grow w-full flex items-center justify-center">
         <div
           {...getRootProps()}
-          className={`w-full max-w-3xl min-h-[320px] border-2 border-dashed rounded-xl p-8 sm:p-10 md:p-12 text-center cursor-pointer transition-all duration-300 ease-in-out flex flex-col items-center justify-center bg-gray-50 ${
-            isDragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-gray-400'
-          } ${loading ? 'cursor-wait' : ''}`}
+          className={`w-full max-w-3xl min-h-[320px] border-2 border-dashed rounded-xl p-8 sm:p-10 md:p-12 text-center cursor-pointer transition-all duration-300 ease-in-out flex flex-col items-center justify-center bg-gray-50 ${isDragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-gray-400'
+            } ${loading ? 'cursor-wait' : ''}`}
         >
           <input {...getInputProps()} />
           {
@@ -426,9 +415,9 @@ const ResumeUpload = ({ onBack, jobDetails }) => {
           }
         </div>
       </div>
-      
+
       {showBulkUpload && (
-        <BulkUploadModal 
+        <BulkUploadModal
           onClose={() => setShowBulkUpload(false)}
           jobDetails={jobDetails}
         />
