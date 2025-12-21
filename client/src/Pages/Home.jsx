@@ -5,6 +5,8 @@ import RecruitmentReinvention from "../Components/RecruitmentReinvention";
 
 import RecruitmentPlatform from "../Components/Recruitment-platform";
 import RecruitmentEvolution from "../Components/RecruitmentEvolution";
+import HowZepulWorks from "../Components/HowZepulWorks";
+import OurProducts from "../Components/OurProducts";
 
 
 
@@ -100,9 +102,17 @@ const Home = () => {
               <RecruitmentEvolution />
             </section>
 
+            <section>
+              <HowZepulWorks />
+            </section>
+
+            <section>
+              <OurProducts />
+            </section>
+{/* 
             <section className="recruitment-platform-section ">
               <RecruitmentPlatform />
-            </section>
+            </section> */}
             {/* <section className="d-flex row innovation py-md-2  align-items-center">
               <div className="col-md-6 mt-5">
                 <div className="home-content">
