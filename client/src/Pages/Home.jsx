@@ -1,6 +1,7 @@
 import React, { Fragment } from "react";
 import "../styles/Home.css";
 import HeroSection from "../Components/HomeHeroSection";
+import RecruitmentReinvention from "../Components/RecruitmentReinvention";
 
 import RecruitmentPlatform from "../Components/Recruitment-platform";
 
@@ -89,8 +90,13 @@ const Home = () => {
                 tracking system lets you track and govern the overall workflow.
               </p>
             </section>
+
+            <section className="bg-white">
+              <RecruitmentReinvention />
+            </section>
+
             <section className="recruitment-platform-section ">
-                  <RecruitmentPlatform />
+              <RecruitmentPlatform />
             </section>
             {/* <section className="d-flex row innovation py-md-2  align-items-center">
               <div className="col-md-6 mt-5">
