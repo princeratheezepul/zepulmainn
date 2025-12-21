@@ -7,6 +7,7 @@ import RecruitmentPlatform from "../Components/Recruitment-platform";
 import RecruitmentEvolution from "../Components/RecruitmentEvolution";
 import HowZepulWorks from "../Components/HowZepulWorks";
 import OurProducts from "../Components/OurProducts";
+import HiringModelContact from "../Components/HiringModelContact";
 
 
 
@@ -109,7 +110,11 @@ const Home = () => {
             <section>
               <OurProducts />
             </section>
-{/* 
+
+            <section>
+              <HiringModelContact />
+            </section>
+            {/* 
             <section className="recruitment-platform-section ">
               <RecruitmentPlatform />
             </section> */}
