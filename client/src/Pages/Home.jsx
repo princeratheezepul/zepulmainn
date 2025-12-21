@@ -4,6 +4,7 @@ import HeroSection from "../Components/HomeHeroSection";
 import RecruitmentReinvention from "../Components/RecruitmentReinvention";
 
 import RecruitmentPlatform from "../Components/Recruitment-platform";
+import RecruitmentEvolution from "../Components/RecruitmentEvolution";
 
 
 
@@ -93,6 +94,10 @@ const Home = () => {
 
             <section className="bg-white">
               <RecruitmentReinvention />
+            </section>
+
+            <section>
+              <RecruitmentEvolution />
             </section>
 
             <section className="recruitment-platform-section ">
