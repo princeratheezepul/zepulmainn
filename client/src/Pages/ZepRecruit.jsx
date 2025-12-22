@@ -9,6 +9,7 @@ import HowItWorks from "../Components/Shared/HowItWorks";
 import { ServicesSection } from "../Components/ZepRecruit/ServicesSection";
 import { WhyChooseUs } from "../Components/ZepRecruit/WhyChooseUs";
 import RecruitmentPartner from "../Components/ZepRecruit/RecruitmentPartner";
+import HiringModelContact from "../Components/HiringModelContact";
 
 function ZepRecruit() {
   // How Zep Recruit Works steps
@@ -32,10 +33,11 @@ function ZepRecruit() {
         subtitle="Output quality remains consistent — regardless of who sources the candidate."
         steps={howItWorksSteps}
       />
-      <WhyChooseUs />
-      <ServicesSection />
+      <HiringModelContact />
+      {/* <WhyChooseUs />
+      <ServicesSection /> */}
       {/* <ServiceFeatures /> */}
-      <RecruitmentPartner />
+      {/* <RecruitmentPartner /> */}
       {/* <CallToAction /> */}
     </Fragment>
   );

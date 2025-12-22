@@ -3,7 +3,7 @@ import { ArrowRight } from 'lucide-react';
 
 const HiringModelContact = () => {
     return (
-        <div className="w-full bg-[#EAEAEA] py-12">
+        <div className="w-full bg-[#EAEAEA] pt-12 pb-24">
             <div className="container mx-auto px-4">
                 <div className="flex flex-col lg:flex-row items-center justify-between gap-12">
                     {/* Left Side - Text */}
