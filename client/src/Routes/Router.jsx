@@ -104,6 +104,7 @@ const CareerJobDetails = lazy(() => import("../Pages/CareerJobDetails"));
 
 const ZepRecruit = lazy(() => import("../Pages/ZepRecruit"));
 const CandidateAssessmentPage = lazy(() => import("../Pages/CandidateAssessmentPage"));
+const About = lazy(() => import("../Pages/About"));
 
 const Router = () => {
   return (
@@ -148,6 +149,7 @@ const Router = () => {
               <Route path="prorecruitor" element={<ProRecruitor />} />
               <Route path="careers" element={<Careers />} />
               <Route path="careers/job/:jobId" element={<CareerJobDetails />} />
+              <Route path="about" element={<About />} />
             </Route>
 
             {/* Marketplace Routes - No Header/Footer */}

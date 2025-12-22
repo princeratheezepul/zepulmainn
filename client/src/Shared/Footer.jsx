@@ -6,7 +6,8 @@ const Footer = () => {
   const location = useLocation();
   const isZepRecruit = location.pathname.toLowerCase().includes('zeprecruit');
   const isTalentHub = location.pathname.toLowerCase().includes('zeptalenthub');
-  const shouldOverlap = isZepRecruit || isTalentHub;
+  const isAbout = location.pathname.toLowerCase().includes('about');
+  const shouldOverlap = isZepRecruit || isTalentHub || isAbout;
 
   return (
     <footer className={`bg-[#1a1a1a] text-white rounded-t-[40px] ${shouldOverlap ? '-mt-10' : 'mt-12'}`}>

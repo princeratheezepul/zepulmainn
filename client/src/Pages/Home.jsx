@@ -69,31 +69,7 @@ const Home = () => {
           {/* <PartnerCarousel /> */}
 
           <div className="home p-0 ">
-            <section className="intro   mt-5 px-5  py-3 ">
-              <h4 className="fw-bold">Who We Are</h4>
-              <p className="text-white text">
-                Zepul<span class="align-super text-xs">™</span> is a
-                comprehensive Talent Acquisition Services Platform that brings
-                together all stakeholders onto a single platform & stays true to
-                the traditional recruitment model while integrating Artificial
-                Intelligence, workload automation tools & procedures to
-                streamline hiring processes, reduce pain points, and boost the
-                effectiveness of human intervention across the Talent
-                Acquisition lifecycle.
-              </p>
-              <p className="text-white">
-                Our on-demand community-based recruitment blended with ZepDB
-                <span class="align-super text-xs">™</span> powered by Al can
-                source & match accurate candidate profiles with job requirements
-                from thousands of active candidate profiles.
-              </p>
-              <p className="text-white">
-                Our multi layer screening system combines Al and human expertise
-                to generate a comprehensive scorecard for you to make an
-                accurate candidate assessment, while our dynamic application
-                tracking system lets you track and govern the overall workflow.
-              </p>
-            </section>
+            
 
             <section className="bg-white">
               <RecruitmentReinvention />
