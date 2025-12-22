@@ -1,34 +1,29 @@
 export function FeatureCards() {
   const stats = [
     {
-      description: "Recruiters activated per role on demand",
-      value: "15+",
-      isText: false,
+      description: "Resumes screened per role using AI CV strength scoring",
+      value: "100+",
+      isText: true,
     },
     {
-      description: "Sourcing channels operating in parallel",
-      value: "3",
-      isText: false,
+      description: "Reduction in manual screening effort",
+      value: "+60%",
+      isText: true,
     },
     {
-      description: "Single contract, centralized governance",
+      description: "Automated role-based technical skill assessments",
       value: "→",
       isText: true,
     },
     {
-      description: "AI + human validation on every candidate",
+      description: "AI-assisted interviews conducted at scale",
       value: "AI",
       isText: true,
     },
     {
-      description: "Profiles evaluated per role when required",
-      value: "100+",
-      isText: false,
-    },
-    {
-      description: "Shortlisted profiles delivered within",
-      value: "48 hrs",
-      isText: false,
+      description: "Unified scorecards generated instantly",
+      value: "→",
+      isText: true,
     },
   ];
 
