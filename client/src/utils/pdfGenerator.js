@@ -74,7 +74,9 @@ const generatePDFContent = (resumeData, note = '') => {
 
   // AI Summary section
   const aiSummaryHTML = resumeData.aiSummary && Object.keys(resumeData.aiSummary).length > 0
-    ? Object.entries(resumeData.aiSummary).map(([key, value]) => `
+    ? Object.entries(resumeData.aiSummary)
+      .filter(([key]) => !['education', 'consistencyCheck', 'technicalExperience'].includes(key))
+      .map(([key, value]) => `
         <div class="flex gap-4 items-start">
           <div class="bg-white rounded-full w-8 h-8 flex-shrink-0 flex items-center justify-center mt-1">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-600">
@@ -560,9 +562,9 @@ const getComprehensiveCSS = () => `
   .h-20 { height: 80px !important; }
   
   /* Avatar and profile styles */
-  .w-20.h-20.rounded-full.border-2.border-gray-200 {
-    width: 80px !important;
-    height: 80px !important;
+  .w-14.h-14.rounded-full.border-2.border-gray-200 {
+    width: 56px !important;
+    height: 56px !important;
     border-radius: 50% !important;
     border: 2px solid #e5e7eb !important;
     background: #10b981 !important;
