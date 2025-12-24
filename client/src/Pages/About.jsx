@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import srikanthImg from '../assets/srikanth.png';
 import tarunImg from '../assets/tarun.png';
 import reenaImg from '../assets/reena.png';
+import londonSkylineImg from '../assets/london-skyline.png';
 import { Plus, Minus } from 'lucide-react';
 import HiringModelContact from '../Components/HiringModelContact';
 
@@ -56,47 +57,55 @@ const About = () => {
     return (
         <div className="w-full min-h-screen bg-white flex flex-col">
             {/* About Section */}
-            <div className="w-full flex flex-col lg:flex-row">
-                {/* Left Side - Text Content */}
-                <div className="w-full lg:w-1/2 px-[70px] py-[30px] flex flex-col gap-[10px]">
+            <div className="w-full" style={{ backgroundColor: '#171717' }}>
+                <div className="w-full px-[55px] pt-[30px]">
                     <h1
-                        className="text-black"
                         style={{
                             fontFamily: 'DM Sans',
                             fontWeight: 300,
                             fontSize: '64px',
                             lineHeight: '100%',
-                            letterSpacing: '-0.03em'
+                            letterSpacing: '-3%',
+                            color: '#FFFFFF'
                         }}
                     >
                         About
                     </h1>
-
-                    <div
-                        className="flex flex-col gap-3 text-black"
-                        style={{
-                            fontFamily: 'DM Sans',
-                            fontWeight: 300,
-                            fontSize: '28px',
-                            lineHeight: '120%',
-                            letterSpacing: '0'
-                        }}
-                    >
-                        <p>
-                            Hiring has become one of the most critical and complex challenges for organizations today. Fragmented systems, slow processes, and misaligned stakeholders continue to hold businesses back. We built this HRTech marketplace to fundamentally change how talent is discovered and hired.
-                        </p>
-                        <p>
-                            Our platform unifies the entire talent ecosystem employers, recruiters, talent partners, and candidates into a single, intelligent marketplace. Powered by a robust AI engine, we enable faster hiring, higher-quality matches, and data-driven decisions with precision and scale.
-                        </p>
-                        <p>
-                            By bringing together technology, intelligence, and collaboration, we are redefining talent acquisition transforming it into a streamlined, transparent, and future-ready experience for modern organizations.
-                        </p>
-                    </div>
                 </div>
 
-                {/* Right Side - Image Placeholder */}
-                <div className="w-full lg:w-1/2 bg-white">
-                    {/* Placeholder for future image */}
+                {/* London Skyline Image */}
+                <div className="w-full px-[14px] pb-[56px]">
+                    <img
+                        src={londonSkylineImg}
+                        alt="London Skyline"
+                        className="w-full h-auto rounded-lg"
+                        style={{ maxHeight: '400px', objectFit: 'cover' }}
+                    />
+                </div>
+            </div>
+
+            {/* Description Section */}
+            <div className="w-full px-[55px] pt-[56px]">
+                <div
+                    className="flex flex-col gap-6"
+                    style={{
+                        fontFamily: 'DM Sans',
+                        fontWeight: 300,
+                        fontSize: '28px',
+                        lineHeight: '120%',
+                        letterSpacing: '0%',
+                        color: '#000000'
+                    }}
+                >
+                    <p>
+                        Hiring has become one of the most critical and complex challenges for organizations today. Fragmented systems, slow processes, and misaligned stakeholders continue to hold businesses back. We built this HRTech marketplace to fundamentally change how talent is discovered and hired.
+                    </p>
+                    <p>
+                        Our platform unifies the entire talent ecosystem employers, recruiters, talent partners, and candidates into a single, intelligent marketplace. Powered by a robust AI engine, we enable faster hiring, higher-quality matches, and data-driven decisions with precision and scale.
+                    </p>
+                    <p>
+                        By bringing together technology, intelligence, and collaboration, we are redefining talent acquisition transforming it into a streamlined, transparent, and future-ready experience for modern organizations.
+                    </p>
                 </div>
             </div>
 

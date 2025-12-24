@@ -1,25 +1,31 @@
 import React from 'react';
 import { ArrowRight } from 'lucide-react';
 
-const HiringModelContact = () => {
+const HiringModelContact = ({
+    title = (
+        <>
+            Not just faster hiring.<br />
+            A new hiring<br />
+            operating model.
+        </>
+    )
+}) => {
     return (
-        <div className="w-full bg-[#EAEAEA] rounded-t-[40px] pt-12 pb-24">
-            <div className="container mx-auto px-4">
-                <div className="flex flex-col lg:flex-row items-center justify-between gap-12">
+        <div className="w-full bg-[#EAEAEA] rounded-t-[40px] pt-20 pb-32">
+            <div className="w-full px-4 md:px-10">
+                <div className="flex flex-col lg:flex-row items-stretch justify-between gap-12">
                     {/* Left Side - Text */}
-                    <div className="lg:w-1/2 lg:pl-[60px]">
-                        <div className="text-3xl md:text-[48px] font-medium text-[#000000] leading-[1.1] mb-8 max-w-[479px]">
-                            Not just faster hiring.<br />
-                            A new hiring<br />
-                            operating model.
+                    <div className="lg:w-1/2 flex flex-col justify-between">
+                        <div className="text-3xl md:text-[64px] font-medium text-[#000000] leading-[1.1] tracking-[-0.02em] mb-8 max-w-[800px]" style={{ fontFamily: 'DM Sans, sans-serif' }}>
+                            {title}
                         </div>
-                        <div className="text-gray-600 text-lg max-w-md">
+                        <div className="text-black/80 text-[16px] font-medium leading-[1.1] tracking-[-0.03em] max-w-[347px]" style={{ fontFamily: 'DM Sans, sans-serif' }}>
                             Talk to us to see how Zepul can transform the way you hire.
                         </div>
                     </div>
 
                     {/* Right Side - Form Card */}
-                    <div className="lg:w-1/2 w-full max-w-xl">
+                    <div className="lg:w-1/2 w-full max-w-2xl">
                         <div className="bg-white rounded-3xl p-8 md:p-10 shadow-sm relative">
                             <form className="space-y-4">
                                 <div>

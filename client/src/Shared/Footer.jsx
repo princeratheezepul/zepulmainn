@@ -7,12 +7,13 @@ const Footer = () => {
   const isZepRecruit = location.pathname.toLowerCase().includes('zeprecruit');
   const isTalentHub = location.pathname.toLowerCase().includes('zeptalenthub');
   const isAbout = location.pathname.toLowerCase().includes('about');
-  const shouldOverlap = isZepRecruit || isTalentHub || isAbout;
+  const isZepJobs = location.pathname.toLowerCase().includes('zep-jobs');
+  const shouldOverlap = isZepRecruit || isTalentHub || isAbout || isZepJobs;
 
   return (
     <footer className={`bg-[#1a1a1a] text-white rounded-t-[40px] ${shouldOverlap ? '-mt-10' : 'mt-12'}`}>
       {/* Main Footer Content */}
-      <div className="container mx-auto px-6 lg:px-16 pt-3 pb-2">
+      <div className="w-full pl-4 md:pl-10 pr-0 pt-10 pb-2">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-4">
           {/* Left Column - Logo and Disclaimer */}
           <div className="lg:col-span-4">
@@ -30,7 +31,7 @@ const Footer = () => {
           </div>
 
           {/* Middle Columns - Navigation */}
-          <div className="lg:col-span-5 grid grid-cols-2 gap-4 lg:gap-4">
+          <div className="lg:col-span-5 lg:pl-96 grid grid-cols-2 gap-4 lg:gap-4">
             {/* Quick Links Column */}
             <div>
               <h3 className="text-sm font-semibold mb-1.5">Quick Links</h3>
@@ -213,7 +214,7 @@ const Footer = () => {
 
       {/* Bottom Section - Social & Certifications */}
       <div className="border-t border-white/10">
-        <div className="container mx-auto px-6 lg:px-16 py-2">
+        <div className="w-full pl-4 md:pl-10 pr-0 py-2">
           <div className="flex flex-col lg:flex-row justify-start items-start lg:items-center gap-2 lg:gap-4">
             {/* Left - Social & Report */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
@@ -249,6 +250,9 @@ const Footer = () => {
               </div>
             </div>
 
+            {/* Vertical Separator */}
+            <div className="hidden lg:block h-12 w-px bg-white/10 mx-4"></div>
+
             {/* Right - Certifications */}
             <div className="flex flex-wrap items-center gap-4">
               {/* MSME/UDYAM */}
@@ -259,12 +263,14 @@ const Footer = () => {
               </div>
 
               {/* DPIIT */}
-              <div className="flex items-center gap-3">
-                <div className="text-center">
-                  <div className="text-xl font-bold text-orange-500">#startupindia</div>
-                  <div className="text-xs text-gray-400 mt-1">Recognized Startup</div>
-                  <div className="text-xs text-gray-400">Certificate # DIPP123320</div>
-                </div>
+              <div className="flex flex-col gap-1">
+                <img
+                  src="/assets/DPIIT.png"
+                  alt="#startupindia"
+                  className="h-12 w-auto object-contain"
+                />
+                <div className="text-xs text-gray-400">Recognized Startup</div>
+                <div className="text-xs text-gray-400">Certificate # DIPP123320</div>
               </div>
 
               {/* London Chamber */}
