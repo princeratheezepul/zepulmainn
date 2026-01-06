@@ -1,89 +1,105 @@
-import React from "react";
-
-const FeatureCard = ({ title, description, src }) => {
-  return (
-    <div className="bg-white rounded-3xl border border-gray-200 p-8 flex flex-col h-full">
-      <div className="flex flex-1">
-        <div className="flex flex-col items-center justify-start w-full">
-          <h2
-            style={{
-              fontFamily: '"DM Sans", sans-serif',
-              fontWeight: 400,
-              fontSize: "38px",
-              lineHeight: "100%",
-              letterSpacing: "0%",
-            }}
-            className="mb-4 text-[32px] md:text-[44px]"
-          >
-            {title}
-          </h2>
-          <img src={src} alt="" className="md:hidden w-[60%] mb-4" />
-        </div>
-        <div className="hidden md:flex items-start">
-          <img src={src} alt="" />
-        </div>
-      </div>
-
-      {/* Description at the bottom with 1rem (mb-4) */}
-      <p
-        style={{
-          fontFamily: '"DM Sans", sans-serif',
-          fontWeight: 400,
-          fontSize: "16px",
-          lineHeight: "100%",
-          letterSpacing: "-0.05em",
-          color: "#4D4D4D",
-        }}
-        className="mb-16 sm:text-[20px] text-[18px] md:text-[24px]"
-      >
-        {description}
-      </p>
-    </div>
-  );
-};
-
-const FeatureCards = () => {
-  const features = [
+export function FeatureCards() {
+  const stats = [
     {
-      title: "AI-Based Resume Score",
-      description:
-        "Evaluates skills, experience, and job relevance using advanced AI",
-      img: "assets/cpe.png",
+      description: "Resumes screened per role using AI CV strength scoring",
+      value: "100+",
+      isText: true,
     },
     {
-      title: "Comprehensive Human Evaluation",
-      description:
-        "Our experts assess soft skills, cultural fit, and job readiness",
-      img: "assets/cpe2.png",
+      description: "Reduction in manual screening effort",
+      value: "+60%",
+      isText: true,
     },
     {
-      title: "Enhanced insights",
-      description:
-        "Additional checks like BGV and functional scores ensure quality hires",
-      img: "assets/cpe3.png",
+      description: "Automated role-based technical skill assessments",
+      value: "→",
+      isText: true,
     },
     {
-      title: "Verified Candidate Resume",
-      description:
-        "Access comprehensive scorecard for an in-depth candidate review",
-      img: "assets/cpe4.png",
+      description: "AI-assisted interviews conducted at scale",
+      value: "AI",
+      isText: true,
+    },
+    {
+      description: "Unified scorecards generated instantly",
+      value: "→",
+      isText: true,
     },
   ];
 
   return (
-    <section className="container mx-auto px-4 py-8">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {features.map((feature, index) => (
-          <FeatureCard
-            key={index}
-            title={feature.title}
-            description={feature.description}
-            src={feature.img}
-          />
-        ))}
+    <section className="bg-white py-16">
+      <div className="container mx-auto px-4">
+        <div className="grid md:grid-cols-[auto_1fr] gap-12 items-start">
+          {/* Left: Heading */}
+          <h2
+            style={{
+              fontFamily: '"DM Sans", sans-serif',
+              fontWeight: 500,
+              fontSize: "48px",
+              lineHeight: "1.1",
+              letterSpacing: "-0.02em",
+              color: "#000000",
+              minWidth: "287px",
+            }}
+          >
+            Zep Recruit
+            <br />
+            At A Glance
+          </h2>
+
+          {/* Right: Stats Grid */}
+          <div className="grid md:grid-cols-2 gap-4">
+            {stats.map((stat, index) => (
+              <div
+                key={index}
+                style={{
+                  backgroundColor: "#F5F5F5",
+                  borderRadius: "8px",
+                  padding: "24px 28px",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  gap: "20px",
+                }}
+              >
+                {/* Description */}
+                <p
+                  style={{
+                    fontFamily: '"DM Sans", sans-serif',
+                    fontWeight: 400,
+                    fontSize: "24px",
+                    lineHeight: "1.1",
+                    letterSpacing: "-0.01em",
+                    color: "rgba(0, 0, 0, 0.7)",
+                    flex: "1",
+                  }}
+                >
+                  {stat.description}
+                </p>
+
+                {/* Value */}
+                <div
+                  style={{
+                    fontFamily: '"DM Sans", sans-serif',
+                    fontWeight: 300,
+                    fontSize: stat.isText ? "64px" : "80px",
+                    lineHeight: "1",
+                    letterSpacing: "-0.02em",
+                    color: "#0449FF",
+                    textAlign: "center",
+                    minWidth: stat.isText ? "auto" : "110px",
+                  }}
+                >
+                  {stat.value}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     </section>
   );
-};
+}
 
 export default FeatureCards;

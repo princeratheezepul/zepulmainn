@@ -1,82 +1,104 @@
 export function FeatureCards() {
-  const features = [
+  const stats = [
     {
-      title: "One Stop Shop",
-      description:
-        "Your One-Stop Shop from Requisition to Onboarding: Simplify Your Hiring Process Today.",
-      img: "assets/zeprecruit/zp1.png",
+      description: "Resumes screened per role using AI CV strength scoring",
+      value: "100+",
+      isText: true,
     },
     {
-      title: "ZepDB - AI based Sourcing",
-      description:
-        "An AI-powered database that instantly sources top talent from a vast pool of profiles, ensuring the lowest TAT.",
-      img: "assets/zeprecruit/zp2.png",
+      description: "Reduction in manual screening effort",
+      value: "+60%",
+      isText: true,
     },
     {
-      title: "Multi-layer Screening (AI + Human)",
-      description:
-        "AI-driven screening blended with human evaluation to ensure unbiased, precise talent scoring and enhanced quality.",
-      img: "assets/zeprecruit/zp3.png",
+      description: "Automated role-based technical skill assessments",
+      value: "→",
+      isText: true,
     },
     {
-      title: "Comprehensive Report Card",
-      description:
-        "A comprehensive report card combining AI and human evaluations, the candidate's resume, and value-adds like background verification (BGV) and functional assessment scores.",
-      img: "assets/zeprecruit/zp4.png",
+      description: "AI-assisted interviews conducted at scale",
+      value: "AI",
+      isText: true,
+    },
+    {
+      description: "Unified scorecards generated instantly",
+      value: "→",
+      isText: true,
     },
   ];
 
   return (
-    <section className="container mx-auto px-4 py-8">
-      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {features.map((feature, index) => (
-          <div
-            key={index}
-            className="border border-gray-200 rounded-3xl p-6 h-full flex flex-col"
+    <section className="bg-white py-16">
+      <div className="container mx-auto px-4">
+        <div className="grid md:grid-cols-[auto_1fr] gap-12 items-start">
+          {/* Left: Heading */}
+          <h2
+            style={{
+              fontFamily: '"DM Sans", sans-serif',
+              fontWeight: 500,
+              fontSize: "48px",
+              lineHeight: "1.1",
+              letterSpacing: "-0.02em",
+              color: "#000000",
+              minWidth: "287px",
+            }}
           >
-            {/* Unified space for image and title */}
-            <div style={{ minHeight: "280px" }} className="flex flex-col">
-              <div className="mb-4">
-                <img
-                  src={feature.img}
-                  alt=""
-                  className="w-full h-[180px] object-contain"
-                />
-              </div>
+            Zep Recruit
+            <br />
+            At A Glance
+          </h2>
 
-              <h3
+          {/* Right: Stats Grid */}
+          <div className="grid md:grid-cols-2 gap-4">
+            {stats.map((stat, index) => (
+              <div
+                key={index}
                 style={{
-                  fontFamily: '"DM Sans", sans-serif',
-                  fontWeight: 500,
-                  fontSize: "28px",
-                  lineHeight: "100%",
-                  height: "72px",
+                  backgroundColor: "#F5F5F5",
+                  borderRadius: "8px",
+                  padding: "24px 28px",
                   display: "flex",
-                  // alignItems: "center",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  gap: "20px",
                 }}
               >
-                {feature.title}
-              </h3>
-            </div>
+                {/* Description */}
+                <p
+                  style={{
+                    fontFamily: '"DM Sans", sans-serif',
+                    fontWeight: 400,
+                    fontSize: "24px",
+                    lineHeight: "1.1",
+                    letterSpacing: "-0.01em",
+                    color: "rgba(0, 0, 0, 0.7)",
+                    flex: "1",
+                  }}
+                >
+                  {stat.description}
+                </p>
 
-            {/* Description, aligned uniformly */}
-            <p
-              className="text-gray-600 mt-4"
-              style={{
-                fontFamily: '"DM Sans", sans-serif',
-                fontWeight: 400,
-                fontSize: "16px",
-                lineHeight: "140%",
-                minHeight: "120px", // Reserve space for longest description
-                display: "flex",
-                alignItems: "flex-start",
-              }}
-            >
-              {feature.description}
-            </p>
+                {/* Value */}
+                <div
+                  style={{
+                    fontFamily: '"DM Sans", sans-serif',
+                    fontWeight: 300,
+                    fontSize: stat.isText ? "64px" : "80px",
+                    lineHeight: "1",
+                    letterSpacing: "-0.02em",
+                    color: "#0449FF",
+                    textAlign: "center",
+                    minWidth: stat.isText ? "auto" : "110px",
+                  }}
+                >
+                  {stat.value}
+                </div>
+              </div>
+            ))}
           </div>
-        ))}
+        </div>
       </div>
     </section>
   );
 }
+

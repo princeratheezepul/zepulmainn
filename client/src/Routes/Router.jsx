@@ -2,7 +2,6 @@ import React, { Fragment, Suspense, useState } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { lazy } from "react";
 import Loader from "../Components/Loader";
-import ProRecruitor from "../Pages/ProRecruitor";
 import ScrollToTop from "../Shared/ScrollToTop";// Importing ScrollToTop
 import PublicLayout from "../Layout/PublicLayout";
 
@@ -88,8 +87,10 @@ const Privacy = lazy(() => import("../Pages/Policy/Privacy"));
 const Terms = lazy(() => import("../Pages/Policy/Terms"));
 const Support = lazy(() => import("../Pages/Policy/Support"));
 const TalentHub = lazy(() => import("../Pages/TalentHub"));
+const ProRecruitor = lazy(() => import("../Pages/ProRecruitor"));
 const Careers = lazy(() => import("../Pages/Careers"));
 const CareerJobDetails = lazy(() => import("../Pages/CareerJobDetails"));
+const ZepJobs = lazy(() => import("../Pages/ZepJobs"));
 
 
 
@@ -104,6 +105,7 @@ const CareerJobDetails = lazy(() => import("../Pages/CareerJobDetails"));
 
 const ZepRecruit = lazy(() => import("../Pages/ZepRecruit"));
 const CandidateAssessmentPage = lazy(() => import("../Pages/CandidateAssessmentPage"));
+const About = lazy(() => import("../Pages/About"));
 
 const Router = () => {
   return (
@@ -138,6 +140,7 @@ const Router = () => {
             <Route path="/" element={<PublicLayout />}>
               <Route index element={<Home />} />
               <Route path="zepTalentHub" element={<TalentHub />} />
+              <Route path="zep-jobs" element={<ZepJobs />} />
               <Route path="ZepRecruit" element={<ZepRecruit />} />
               <Route path="companies" element={<Companies />} />
               <Route path="recruitment" element={<Recruitement />} />
@@ -148,6 +151,7 @@ const Router = () => {
               <Route path="prorecruitor" element={<ProRecruitor />} />
               <Route path="careers" element={<Careers />} />
               <Route path="careers/job/:jobId" element={<CareerJobDetails />} />
+              <Route path="about" element={<About />} />
             </Route>
 
             {/* Marketplace Routes - No Header/Footer */}
