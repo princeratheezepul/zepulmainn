@@ -1,90 +1,117 @@
 import React, { useState, useEffect } from 'react';
+import {
+  ArrowLeft,
+  TrendingUp,
+  Users,
+  Clock,
+  CheckCircle,
+  XCircle,
+  AlertCircle,
+  Target,
+  Award,
+  BarChart3,
+  FileText
+} from 'lucide-react';
+import {
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  RadialBarChart,
+  RadialBar,
+  Legend
+} from 'recharts';
 
-// Default team performance data (used as fallback)
-const defaultTeamPerformanceData = [
-  {
-    id: '1',
-    name: 'TechCorp Solutions',
-    firstName: 'Tech',
-    lastName: 'Corp',
-    jobsAssigned: 15,
-    submitted: 234,
-    shortlisted: 12,
-    status: 'Active'
+// Dummy data for all metrics
+const DUMMY_DATA = {
+  kpis: {
+    profilesSubmitted: 27,
+    avgCVStrength: 78,
+    qualificationRate: 68,
+    timeToFirstSubmission: 4.2,
+    targetTime: 6.0
   },
-  {
-    id: '2',
-    name: 'Innovation Labs',
-    firstName: 'Innovation',
-    lastName: 'Labs',
-    jobsAssigned: 12,
-    submitted: 189,
-    shortlisted: 8,
-    status: 'Active'
-  },
-  {
-    id: '3',
-    name: 'Digital Ventures',
-    firstName: 'Digital',
-    lastName: 'Ventures',
-    jobsAssigned: 18,
-    submitted: 312,
-    shortlisted: 15,
-    status: 'Active'
+  candidatePipeline: [
+    { role: 'Software Engineer', stages: [45, 32, 24, 18, 12] },
+    { role: 'Product Manager', stages: [38, 28, 20, 15, 9] },
+    { role: 'Data Analyst', stages: [29, 22, 16, 11, 7] },
+    { role: 'UI/UX Designer', stages: [24, 18, 13, 9, 5] }
+  ],
+  rejectionReasons: [
+    { reason: 'Low CV Strength', count: 36, percentage: 40, color: '#EF4444' },
+    { reason: 'Coding Below Benchmark', count: 22, percentage: 25, color: '#F59E0B' },
+    { reason: 'Interview Mismatch', count: 18, percentage: 20, color: '#8B5CF6' },
+    { reason: 'JD Misalignment', count: 13, percentage: 15, color: '#6B7280' }
+  ],
+  scoutQualityScore: {
+    overall: 74,
+    components: [
+      { name: 'CV Strength', value: 78, weight: 40, color: '#10B981' },
+      { name: 'Coding Pass Rate', value: 64, weight: 30, color: '#3B82F6' },
+      { name: 'Interview Success', value: 72, weight: 20, color: '#8B5CF6' },
+      { name: 'SLA Adherence', value: 95, weight: 10, color: '#F59E0B' }
+    ]
   }
-];
+};
 
-const stageLabels = [
-  "Submitted",
-  "Screened",
-  "Shortlisted",
-  "Hired",
-];
+const stageLabels = ['Submitted', 'CV Qualified', 'Coding Passed', 'Interview Completed', 'Decision Ready'];
+const stageColors = ['#0057FF', '#10B981', '#F59E0B', '#8B5CF6', '#06B6D4'];
 
-const stageColors = [
-  "#0057FF", // Submitted (blue)
-  "#FF8A00", // Screened (orange)
-  "#FFD233", // Shortlisted (yellow)
-  "#f3f4f6",  // Hired (light gray)
-];
+// KPI Card Component
+const KPICard = ({ title, value, subtitle, icon: Icon, bgGradient, iconColor, trend, children }) => (
+  <div className={`relative overflow-hidden rounded-2xl p-6 shadow-lg border border-gray-100 backdrop-blur-sm transition-all duration-300 hover:shadow-xl hover:-translate-y-1 ${bgGradient}`}>
+    {/* Background decoration */}
+    <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-5 rounded-full -mr-16 -mt-16"></div>
 
-// Default candidate pipeline data (used as fallback)
-const defaultCandidatePipelineData = [
-  { role: 'Software Engineer', stages: [35, 28, 15, 5] },
-  { role: 'Product Manager', stages: [25, 20, 12, 4] },
-  { role: 'UI/UX Designer', stages: [22, 18, 10, 3] },
-  { role: 'Data Analyst', stages: [20, 16, 8, 2] }
-];
+    <div className="flex items-start justify-between mb-4">
+      <div className={`p-3 rounded-xl ${iconColor} bg-opacity-10`}>
+        <Icon className={`h-6 w-6 ${iconColor}`} />
+      </div>
+      {trend && (
+        <div className={`flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-full ${trend > 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+          }`}>
+          <TrendingUp className={`h-3 w-3 ${trend < 0 ? 'rotate-180' : ''}`} />
+          {Math.abs(trend)}%
+        </div>
+      )}
+    </div>
 
+    <div className="space-y-1">
+      <div className="text-3xl font-bold text-gray-900">{value}</div>
+      <div className="text-sm font-medium text-gray-600">{title}</div>
+      {subtitle && <div className="text-xs text-gray-500">{subtitle}</div>}
+    </div>
+
+    {children}
+  </div>
+);
+
+// Arrow Segment for Pipeline
 const ArrowSegment = ({ value, color, isFirst, isLast, empty, index }) => {
   let shapeClass = "middle";
   if (isFirst) shapeClass = "first";
   else if (isLast) shapeClass = "last";
-  
+
   let marginLeft = 0;
-  if (isFirst) {
-    marginLeft = 0;
-  } else if (index === 1) {
-    marginLeft = -12;
-  } else if (index === 2) {
-    marginLeft = -24;
-  } else if (index === 3) {
-    marginLeft = -36;
-  } else if (index === 4) {
-    marginLeft = -48;
-  } else {
-    marginLeft = -60;
+  if (!isFirst) {
+    marginLeft = -12 * index;
   }
-  
+
   return (
     <div
-      className={`pipeline-segment ${shapeClass} ${empty ? 'empty' : ''} text-xs`}
-      style={{ 
-        background: empty ? undefined : color, 
-        marginLeft: marginLeft, 
-        minWidth: 'clamp(50px, 12vw, 80px)', 
-        width: 'clamp(3rem, 12vw, 5rem)',
-        fontSize: 'clamp(10px, 2vw, 12px)'
+      className={`pipeline-segment ${shapeClass} ${empty ? 'empty' : ''} text-xs font-semibold`}
+      style={{
+        background: empty ? undefined : color,
+        marginLeft: marginLeft,
+        minWidth: 'clamp(60px, 12vw, 90px)',
+        width: 'clamp(60px, 12vw, 90px)',
+        fontSize: 'clamp(10px, 2vw, 13px)'
       }}
     >
       {value}
@@ -92,405 +119,398 @@ const ArrowSegment = ({ value, color, isFirst, isLast, empty, index }) => {
   );
 };
 
+// Custom Tooltip for charts
+const CustomTooltip = ({ active, payload, label }) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-white px-4 py-3 rounded-lg shadow-lg border border-gray-200">
+        <p className="font-semibold text-gray-900">{label || payload[0].name}</p>
+        <p className="text-sm text-gray-600">
+          {payload[0].name}: <span className="font-bold text-blue-600">{payload[0].value}</span>
+        </p>
+      </div>
+    );
+  }
+  return null;
+};
+
 const TalentScoutDashboardView = ({ onBack }) => {
-  // State for dynamic pipeline data
-  const [candidatePipelineData, setCandidatePipelineData] = useState(defaultCandidatePipelineData);
-  const [isLoadingPipeline, setIsLoadingPipeline] = useState(true);
-  
-  // State for dynamic scorecard data
-  const [scorecardData, setScorecardData] = useState({
-    total: 45,
-    pending: 12,
-    reviewed: 33
-  });
-  
-  // State for dynamic team performance data
-  const [teamPerformanceData, setTeamPerformanceData] = useState(defaultTeamPerformanceData);
-  const [isLoadingTeamPerformance, setIsLoadingTeamPerformance] = useState(true);
-  
-  // Fetch candidate pipeline data
+  const [animateNumbers, setAnimateNumbers] = useState(false);
+
   useEffect(() => {
-    const fetchPipelineData = async () => {
-      try {
-        setIsLoadingPipeline(true);
-        const token = localStorage.getItem('marketplace_token');
-        
-        if (!token) {
-          console.log('No marketplace token found');
-          setIsLoadingPipeline(false);
-          return;
-        }
-        
-        const response = await fetch(
-          `${import.meta.env.VITE_BACKEND_URL}/api/marketplace/candidate-pipeline`,
-          {
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json'
-            }
-          }
-        );
-        
-        if (!response.ok) {
-          throw new Error('Failed to fetch pipeline data');
-        }
-        
-        const data = await response.json();
-        console.log('Pipeline data fetched:', data);
-        
-        if (data.data && data.data.pipelineData && data.data.pipelineData.length > 0) {
-          setCandidatePipelineData(data.data.pipelineData);
-        }
-        
-        // Update scorecard data
-        if (data.data && data.data.scorecardData) {
-          console.log('Scorecard data fetched:', data.data.scorecardData);
-          setScorecardData(data.data.scorecardData);
-        }
-      } catch (error) {
-        console.error('Error fetching pipeline data:', error);
-      } finally {
-        setIsLoadingPipeline(false);
-      }
-    };
-    
-    fetchPipelineData();
+    // Trigger number animation on mount
+    setTimeout(() => setAnimateNumbers(true), 100);
   }, []);
-  
-  // Fetch team performance data
-  useEffect(() => {
-    const fetchTeamPerformanceData = async () => {
-      try {
-        setIsLoadingTeamPerformance(true);
-        const token = localStorage.getItem('marketplace_token');
-        
-        if (!token) {
-          console.log('No marketplace token found');
-          setIsLoadingTeamPerformance(false);
-          return;
-        }
-        
-        const response = await fetch(
-          `${import.meta.env.VITE_BACKEND_URL}/api/marketplace/team-performance`,
-          {
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json'
-            }
-          }
-        );
-        
-        if (!response.ok) {
-          throw new Error('Failed to fetch team performance data');
-        }
-        
-        const data = await response.json();
-        console.log('Team performance data fetched:', data);
-        
-        if (data.data && data.data.teamPerformance) {
-          setTeamPerformanceData(data.data.teamPerformance);
-        }
-      } catch (error) {
-        console.error('Error fetching team performance data:', error);
-      } finally {
-        setIsLoadingTeamPerformance(false);
-      }
-    };
-    
-    fetchTeamPerformanceData();
-  }, []);
-  
-  // Scorecard calculations
-  const size = 280;
-  const stroke = 28;
-  const radius = (size - stroke) / 2;
-  const circumference = 2 * Math.PI * radius;
-  
-  const totalScorecards = scorecardData.total;
-  const pendingScorecards = scorecardData.pending;
-  const reviewedScorecards = scorecardData.reviewed;
-  
-  const pendingPercentage = totalScorecards > 0 ? (pendingScorecards / totalScorecards) * 100 : 0;
-  const reviewedPercentage = totalScorecards > 0 ? (reviewedScorecards / totalScorecards) * 100 : 0;
-  
-  const pendingLength = (pendingPercentage / 100) * circumference;
-  const reviewedLength = (reviewedPercentage / 100) * circumference;
-  
-  const offsetPending = 0;
-  const offsetReviewed = pendingLength;
+
+  const getScoreColor = (score) => {
+    if (score >= 80) return 'text-green-600';
+    if (score >= 60) return 'text-yellow-600';
+    return 'text-red-600';
+  };
+
+  const getScoreBgColor = (score) => {
+    if (score >= 80) return 'bg-green-50';
+    if (score >= 60) return 'bg-yellow-50';
+    return 'bg-red-50';
+  };
 
   return (
-    <div className="flex bg-gray-100 min-h-screen">
-      <div className="flex-1 h-screen overflow-y-auto">
-        <main className="bg-white flex-1 p-4 md:p-6 pt-3 md:pt-4">
-          <div className="flex flex-col space-y-2 md:space-y-3">
-            {/* Header */}
-            <div className="bg-transparent">
-              <div className="flex items-start justify-between">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-gray-50">
+      <div className="max-w-7xl mx-auto p-4 md:p-6 lg:p-8">
+
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-xs font-bold text-blue-600 tracking-wider uppercase">Dashboard</span>
+                <span className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold">
+                  Talent Scout
+                </span>
+              </div>
+              <h1 className="text-3xl md:text-4xl font-bold text-gray-900">
+                Quality Performance Overview
+              </h1>
+              <p className="text-gray-600 mt-2">
+                Submit better profiles faster, not more profiles
+              </p>
+            </div>
+            <button
+              onClick={onBack}
+              className="group flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-700 px-5 py-3 rounded-xl font-semibold shadow-md border border-gray-200 transition-all duration-200 hover:shadow-lg"
+            >
+              <ArrowLeft className="h-5 w-5 transition-transform group-hover:-translate-x-1" />
+              <span className="hidden md:inline">Back to Partner Dashboard</span>
+              <span className="md:hidden">Back</span>
+            </button>
+          </div>
+          <div className="h-1 w-24 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full"></div>
+        </div>
+
+        {/* Top KPI Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
+          {/* Profiles Submitted */}
+          <KPICard
+            title="Profiles Submitted"
+            value={DUMMY_DATA.kpis.profilesSubmitted}
+            subtitle="This period"
+            icon={Users}
+            bgGradient="bg-gradient-to-br from-blue-50 to-white"
+            iconColor="text-blue-600"
+            trend={12}
+          />
+
+          {/* Avg CV Strength */}
+          <KPICard
+            title="Avg CV Strength"
+            value={`${DUMMY_DATA.kpis.avgCVStrength}/100`}
+            subtitle="Quality indicator"
+            icon={Award}
+            bgGradient="bg-gradient-to-br from-green-50 to-white"
+            iconColor="text-green-600"
+            trend={5}
+          >
+            <div className="mt-3 h-2 bg-gray-200 rounded-full overflow-hidden">
+              <div
+                className={`h-full rounded-full transition-all duration-1000 ${DUMMY_DATA.kpis.avgCVStrength >= 80 ? 'bg-green-500' :
+                  DUMMY_DATA.kpis.avgCVStrength >= 60 ? 'bg-yellow-500' : 'bg-red-500'
+                  }`}
+                style={{ width: animateNumbers ? `${DUMMY_DATA.kpis.avgCVStrength}%` : '0%' }}
+              ></div>
+            </div>
+          </KPICard>
+
+          {/* Qualification Rate */}
+          <KPICard
+            title="Qualification Rate"
+            value={`${DUMMY_DATA.kpis.qualificationRate}%`}
+            subtitle="Profiles ≥75% CV strength"
+            icon={CheckCircle}
+            bgGradient="bg-gradient-to-br from-purple-50 to-white"
+            iconColor="text-purple-600"
+            trend={8}
+          >
+            <div className="mt-3 h-2 bg-gray-200 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full transition-all duration-1000"
+                style={{ width: animateNumbers ? `${DUMMY_DATA.kpis.qualificationRate}%` : '0%' }}
+              ></div>
+            </div>
+          </KPICard>
+
+          {/* Time to First Submission */}
+          <KPICard
+            title="Time to First Submission"
+            value={`${DUMMY_DATA.kpis.timeToFirstSubmission} hrs`}
+            subtitle={`Target: ${DUMMY_DATA.kpis.targetTime} hrs`}
+            icon={Clock}
+            bgGradient="bg-gradient-to-br from-orange-50 to-white"
+            iconColor="text-orange-600"
+            trend={-15}
+          >
+            <div className="mt-2 flex items-center gap-2 text-xs">
+              <div className={`px-2 py-1 rounded-full font-semibold ${DUMMY_DATA.kpis.timeToFirstSubmission < DUMMY_DATA.kpis.targetTime
+                ? 'bg-green-100 text-green-700'
+                : 'bg-red-100 text-red-700'
+                }`}>
+                {DUMMY_DATA.kpis.timeToFirstSubmission < DUMMY_DATA.kpis.targetTime
+                  ? '✓ On Track'
+                  : '⚠ Delayed'}
+              </div>
+            </div>
+          </KPICard>
+        </div>
+
+        {/* Candidate Pipeline */}
+        <div className="bg-white rounded-2xl shadow-lg p-6 mb-8 border border-gray-100">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                <BarChart3 className="h-6 w-6 text-blue-600" />
+                Candidate Pipeline
+              </h2>
+              <p className="text-sm text-gray-500 mt-1">Track candidates through each stage</p>
+            </div>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[700px]">
+              <thead>
+                <tr>
+                  <th className="text-left text-xs font-semibold text-gray-600 uppercase tracking-wider pb-4 pr-4">
+                    Role
+                  </th>
+                  {stageLabels.map((label, idx) => {
+                    let transformClass = '';
+                    if (idx === 1) transformClass = 'transform -translate-x-3';
+                    else if (idx === 2) transformClass = 'transform -translate-x-6';
+                    else if (idx === 3) transformClass = 'transform -translate-x-9';
+                    else if (idx === 4) transformClass = 'transform -translate-x-12';
+
+                    return (
+                      <th key={label} className={`text-xs font-semibold text-gray-600 uppercase tracking-wider pb-4 text-left ${transformClass}`}>
+                        {label}
+                      </th>
+                    );
+                  })}
+                </tr>
+              </thead>
+              <tbody>
+                {DUMMY_DATA.candidatePipeline.map((item, idx) => (
+                  <tr key={item.role} className={idx !== DUMMY_DATA.candidatePipeline.length - 1 ? 'border-b border-gray-100' : ''}>
+                    <td className="text-sm font-semibold text-gray-800 py-3 pr-4">
+                      {item.role}
+                    </td>
+                    {item.stages.map((val, i) => (
+                      <td key={i} className="py-3">
+                        <ArrowSegment
+                          value={val}
+                          color={stageColors[i]}
+                          isFirst={i === 0}
+                          isLast={i === item.stages.length - 1}
+                          empty={false}
+                          index={i}
+                        />
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Rejection Feedback Loop & Scout Quality Score */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+
+          {/* Rejection Feedback Loop */}
+          <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
+            <div className="mb-6">
+              <div className="flex items-center gap-2 mb-2">
+                <AlertCircle className="h-6 w-6 text-orange-600" />
+                <h2 className="text-xl font-bold text-gray-900">Rejection Feedback Loop</h2>
+                <span className="ml-auto px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-xs font-semibold">
+                  Learning Opportunities
+                </span>
+              </div>
+              <p className="text-sm text-gray-500">Understand and improve from rejections</p>
+            </div>
+
+            <div className="space-y-4">
+              {DUMMY_DATA.rejectionReasons.map((item, idx) => (
+                <div key={idx} className="group">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-gray-700">{item.reason}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-gray-500">{item.count} rejections</span>
+                      <span className="text-sm font-bold text-gray-900">{item.percentage}%</span>
+                    </div>
+                  </div>
+                  <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
+                    <div
+                      className="h-full rounded-full transition-all duration-1000 group-hover:opacity-80"
+                      style={{
+                        backgroundColor: item.color,
+                        width: animateNumbers ? `${item.percentage}%` : '0%'
+                      }}
+                    ></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-6 p-4 bg-blue-50 rounded-xl border border-blue-100">
+              <div className="flex items-start gap-3">
+                <div className="mt-0.5">
+                  <FileText className="h-5 w-5 text-blue-600" />
+                </div>
                 <div>
-                  <div className="text-xs text-blue-600 font-semibold tracking-wide mb-1">DASHBOARD</div>
-                  <div className="text-xl font-bold text-gray-900">Talent Scout Overview</div>
+                  <h3 className="text-sm font-semibold text-blue-900 mb-1">💡 Pro Tip</h3>
+                  <p className="text-xs text-blue-700">
+                    Focus on improving CV strength and JD alignment to reduce rejections by up to 60%
+                  </p>
                 </div>
-                <div className="flex items-center">
-                  <button 
-                    onClick={onBack}
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium shadow-lg transition-all duration-200"
-                    style={{
-                      boxShadow: '0 0 0 2px rgba(59, 130, 246, 0.3), 0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-                      textShadow: '0 0 8px rgba(147, 197, 253, 0.8)'
-                    }}
-                  >
-                    Lead Partner Dashboard
-                  </button>
-                </div>
-              </div>
-              <hr className="my-2 border-gray-200" />
-            </div>
-         
-            {/* Top Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 mb-3">
-              {/* Candidate Pipeline */}
-              <div className="bg-[#F7F8FA] rounded-2xl shadow p-3 md:p-4 mb-3">
-                <div className="font-semibold text-gray-900 mb-3 text-xs md:text-sm">Candidate Pipeline</div>
-                {isLoadingPipeline ? (
-                  <div className="flex items-center justify-center py-8">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                  </div>
-                ) : candidatePipelineData.length === 0 ? (
-                  <div className="text-center py-8 text-gray-500 text-sm">
-                    No picked jobs found. Pick some jobs to see candidate pipeline data.
-                  </div>
-                ) : (
-                  <div className="w-full">
-                    <div className="overflow-x-auto">
-                      <table className="w-full min-w-[600px] table-fixed">
-                        <thead>
-                          <tr>
-                            <th className="w-20 sm:w-24 md:w-32 text-left text-xs text-gray-500 font-medium pb-2"></th>
-                            {stageLabels.map((label, idx) => {
-                              let transformClass = '';
-                              let widthClass = 'w-12 sm:w-16 md:w-20';
-                              
-                              if (label === 'Screened') {
-                                transformClass = 'transform -translate-x-2 sm:-translate-x-3 md:-translate-x-4';
-                              } else if (label === 'Shortlisted') {
-                                transformClass = 'transform -translate-x-4 sm:-translate-x-6 md:-translate-x-8';
-                              } else if (label === 'Hired') {
-                                transformClass = 'transform -translate-x-6 sm:-translate-x-8 md:-translate-x-12';
-                              }
-                              
-                              return (
-                                <th key={label} className={`${widthClass} text-xs text-gray-500 font-medium pb-2 text-left ${transformClass}`}>
-                                  {label}
-                                </th>
-                              );
-                            })}
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {candidatePipelineData.map((item, idx) => (
-                            <tr key={item.role} className="align-middle">
-                              <td className="text-xs text-gray-700 font-medium py-1 pr-2">{item.role}</td>
-                              {item.stages.map((val, i) => (
-                                <td key={i} className="py-1 px-0.5">
-                                  <ArrowSegment
-                                    value={val !== null ? val : ""}
-                                    color={stageColors[i]}
-                                    isFirst={i === 0}
-                                    isLast={i === item.stages.length - 1}
-                                    empty={val === null}
-                                    index={i}
-                                  />
-                                </td>
-                              ))}
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Pending Scorecard Review */}
-              <div className="bg-[#F7F8FA] rounded-2xl shadow p-3 md:p-4 flex flex-col items-center w-full max-w-sm mx-auto">
-                <div className="font-semibold text-gray-900 mb-3 text-sm md:text-base text-left w-full">Pending Scorecard Review</div>
-                <div className="relative flex items-center justify-center mb-4">
-                  <svg
-                    width={size * 0.8}
-                    height={size * 0.8}
-                    viewBox={`0 0 ${size} ${size}`}
-                    className="block"
-                  >
-                    <circle
-                      cx={size / 2}
-                      cy={size / 2}
-                      r={radius}
-                      fill="none"
-                      stroke="#E5E7EB"
-                      strokeWidth={stroke}
-                    />
-                    <circle
-                      cx={size / 2}
-                      cy={size / 2}
-                      r={radius}
-                      fill="none"
-                      stroke="#0A1833"
-                      strokeWidth={stroke}
-                      strokeDasharray={`${pendingLength} ${circumference - pendingLength}`}
-                      strokeDashoffset={-offsetPending}
-                      strokeLinecap="round"
-                      transform={`rotate(-90 ${size / 2} ${size / 2})`}
-                    />
-                    <circle
-                      cx={size / 2}
-                      cy={size / 2}
-                      r={radius}
-                      fill="none"
-                      stroke="#2563EB"
-                      strokeWidth={stroke}
-                      strokeDasharray={`${reviewedLength} ${circumference - reviewedLength}`}
-                      strokeDashoffset={-offsetReviewed}
-                      strokeLinecap="round"
-                      transform={`rotate(-90 ${size / 2} ${size / 2})`}
-                    />
-                  </svg>
-                  <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <div className="text-3xl md:text-4xl font-bold text-gray-900">{totalScorecards}</div>
-                    <div className="text-xs text-gray-500">Total</div>
-                  </div>
-                </div>
-                <div className="flex flex-col gap-2 w-full">
-                  <div className="flex items-center justify-between p-2 bg-white rounded-lg">
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full bg-[#0A1833]"></div>
-                      <span className="text-xs font-medium text-gray-700">Pending</span>
-                    </div>
-                    <span className="text-sm font-bold text-gray-900">{pendingScorecards}</span>
-                  </div>
-                  <div className="flex items-center justify-between p-2 bg-white rounded-lg">
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full bg-blue-600"></div>
-                      <span className="text-xs font-medium text-gray-700">Reviewed</span>
-                    </div>
-                    <span className="text-sm font-bold text-gray-900">{reviewedScorecards}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Team Performance */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-              <div className="p-6 border-b border-gray-200">
-                <div className="text-lg font-bold text-gray-900">Team Performance</div>
-                <div className="text-sm text-gray-500 mt-1">Overview of team activities and results</div>
-              </div>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-gray-50 border-b border-gray-200">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Name
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Jobs Assigned
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Submitted
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Shortlisted
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Status
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {isLoadingTeamPerformance ? (
-                      <tr>
-                        <td colSpan="5" className="px-6 py-8">
-                          <div className="flex items-center justify-center">
-                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                          </div>
-                        </td>
-                      </tr>
-                    ) : teamPerformanceData.length === 0 ? (
-                      <tr>
-                        <td colSpan="5" className="px-6 py-8">
-                          <div className="text-center text-gray-500 text-sm">
-                            No team members found.
-                          </div>
-                        </td>
-                      </tr>
-                    ) : (
-                      teamPerformanceData.map((member, index) => (
-                        <tr key={member.id || index} className="hover:bg-gray-50 transition-colors">
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="flex items-center">
-                              <div className="flex-shrink-0 h-10 w-10">
-                                <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-                                  <span className="text-blue-600 font-semibold text-sm">
-                                    {member.firstName?.charAt(0) || member.name?.charAt(0) || '?'}
-                                  </span>
-                                </div>
-                              </div>
-                              <div className="ml-4">
-                                <div className="text-sm font-medium text-gray-900">{member.name}</div>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-gray-900">{member.jobsAssigned}</div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-gray-900">{member.submitted}</div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-gray-900">{member.shortlisted}</div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                              member.status === 'Active' 
-                                ? 'bg-green-100 text-green-800' 
-                                : 'bg-gray-100 text-gray-800'
-                            }`}>
-                              {member.status}
-                            </span>
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
               </div>
             </div>
           </div>
-        </main>
+
+          {/* Scout Quality Score */}
+          <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
+            <div className="mb-6">
+              <div className="flex items-center gap-2 mb-2">
+                <Target className="h-6 w-6 text-purple-600" />
+                <h2 className="text-xl font-bold text-gray-900">Scout Quality Score</h2>
+              </div>
+              <p className="text-sm text-gray-500">Your overall performance index</p>
+            </div>
+
+            {/* Circular Progress */}
+            <div className="flex flex-col items-center mb-6">
+              <div className="relative">
+                <svg width="200" height="200" viewBox="0 0 200 200">
+                  <circle
+                    cx="100"
+                    cy="100"
+                    r="80"
+                    fill="none"
+                    stroke="#E5E7EB"
+                    strokeWidth="20"
+                  />
+                  <circle
+                    cx="100"
+                    cy="100"
+                    r="80"
+                    fill="none"
+                    stroke="url(#scoreGradient)"
+                    strokeWidth="20"
+                    strokeDasharray={`${(DUMMY_DATA.scoutQualityScore.overall / 100) * 502.65} 502.65`}
+                    strokeLinecap="round"
+                    transform="rotate(-90 100 100)"
+                    className="transition-all duration-1000"
+                  />
+                  <defs>
+                    <linearGradient id="scoreGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#8B5CF6" />
+                      <stop offset="100%" stopColor="#3B82F6" />
+                    </linearGradient>
+                  </defs>
+                </svg>
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <div className={`text-5xl font-bold ${getScoreColor(DUMMY_DATA.scoutQualityScore.overall)}`}>
+                    {DUMMY_DATA.scoutQualityScore.overall}
+                  </div>
+                  <div className="text-sm text-gray-500 font-medium">out of 100</div>
+                </div>
+              </div>
+
+              <div className={`mt-4 px-4 py-2 rounded-full font-semibold text-sm ${getScoreBgColor(DUMMY_DATA.scoutQualityScore.overall)} ${getScoreColor(DUMMY_DATA.scoutQualityScore.overall)}`}>
+                {DUMMY_DATA.scoutQualityScore.overall >= 80 ? '🌟 Excellent Performance' :
+                  DUMMY_DATA.scoutQualityScore.overall >= 60 ? '✓ Good Performance' :
+                    '⚠ Needs Improvement'}
+              </div>
+            </div>
+
+            {/* Score Breakdown */}
+            <div className="space-y-3">
+              {DUMMY_DATA.scoutQualityScore.components.map((component, idx) => (
+                <div key={idx} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                  <div className="flex items-center gap-3 flex-1">
+                    <div
+                      className="w-2 h-2 rounded-full"
+                      style={{ backgroundColor: component.color }}
+                    ></div>
+                    <div className="flex-1">
+                      <div className="text-sm font-medium text-gray-700">{component.name}</div>
+                      <div className="text-xs text-gray-500">{component.weight}% weight</div>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-lg font-bold text-gray-900">{component.value}</div>
+                    <div className="text-xs text-gray-500">score</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Decision Readiness Indicator */}
+        <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl shadow-xl p-6 text-white">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-2xl font-bold mb-2">Decision Readiness: Your North Star ⭐</h3>
+              <p className="text-blue-100 text-sm">
+                Focus on getting candidates to "Decision Ready" status - this is what matters most
+              </p>
+            </div>
+            <div className="hidden md:flex items-center gap-8">
+              <div className="text-center">
+                <div className="text-4xl font-bold">12</div>
+                <div className="text-xs text-blue-100 mt-1">✅ Decision Ready</div>
+              </div>
+              <div className="text-center">
+                <div className="text-4xl font-bold opacity-60">23</div>
+                <div className="text-xs text-blue-100 mt-1">⚠️ Partially Ready</div>
+              </div>
+              <div className="text-center">
+                <div className="text-4xl font-bold opacity-40">15</div>
+                <div className="text-xs text-blue-100 mt-1">❌ Not Ready</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
       </div>
 
+      {/* Pipeline segment styles */}
       <style jsx>{`
         .pipeline-segment {
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          height: 30px;
+          height: 36px;
           position: relative;
           color: white;
           font-weight: 600;
           text-align: center;
+          transition: all 0.2s ease;
+        }
+        
+        .pipeline-segment:hover {
+          transform: scale(1.05);
+          filter: brightness(1.1);
         }
         
         .pipeline-segment.first {
-          clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 50%, calc(100% - 8px) 100%, 0 100%);
+          clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 50%, calc(100% - 10px) 100%, 0 100%);
         }
         
         .pipeline-segment.middle {
-          clip-path: polygon(8px 0, calc(100% - 8px) 0, 100% 50%, calc(100% - 8px) 100%, 8px 100%, 0 50%);
+          clip-path: polygon(10px 0, calc(100% - 10px) 0, 100% 50%, calc(100% - 10px) 100%, 10px 100%, 0 50%);
         }
         
         .pipeline-segment.last {
-          clip-path: polygon(8px 0, 100% 0, 100% 100%, 8px 100%, 0 50%);
+          clip-path: polygon(10px 0, 100% 0, 100% 100%, 10px 100%, 0 50%);
         }
         
         .pipeline-segment.empty {
@@ -504,4 +524,3 @@ const TalentScoutDashboardView = ({ onBack }) => {
 };
 
 export default TalentScoutDashboardView;
-
