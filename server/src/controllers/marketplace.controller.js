@@ -2793,7 +2793,183 @@ export const getTeamPerformanceData = async (req, res) => {
     );
 
   } catch (error) {
-    console.error("Get team performance data error:", error);
+    res.status(500).json(
+      new ApiResponse(500, null, "Internal server error")
+    );
+  }
+};
+
+// Get Talent Scout Dashboard Stats
+export const getTalentScoutDashboardStats = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+
+    // 1. Fetch all resumes for this scout
+    const resumes = await Resume.find({ recruiterId: userId }).populate('jobId', 'jobTitle');
+
+    // 2. Calculate KPI Cards
+    const profilesSubmitted = resumes.length;
+
+    // Avg CV Strength
+    const resumesWithScore = resumes.filter(r => r.overallScore !== undefined && r.overallScore !== null);
+    const totalScore = resumesWithScore.reduce((sum, r) => sum + r.overallScore, 0);
+    const avgCVStrength = resumesWithScore.length > 0 ? Math.round(totalScore / resumesWithScore.length) : 0;
+
+    // Qualification Rate (>= 75%)
+    const qualifiedResumes = resumes.filter(r => (r.overallScore || 0) >= 75);
+    const qualificationRate = profilesSubmitted > 0 ? Math.round((qualifiedResumes.length / profilesSubmitted) * 100) : 0;
+
+    // Time to First Submission (Placeholder logic as we don't track assignment time precisely yet)
+    // We'll use a random realistic number or 0 for now, or calculate based on first resume creation if available
+    let timeToFirstSubmission = 0;
+    if (resumes.length > 0) {
+      // Sort by createdAt
+      const sortedResumes = [...resumes].sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+      // This is just a placeholder. Ideally we compare sortedResumes[0].createdAt with job assignment time.
+      // For now, let's return a static value or 0 to avoid confusion, or maybe calculate average time between submissions?
+      // Let's stick to 0 or a default if no data.
+      timeToFirstSubmission = 0;
+    }
+
+    // 3. Candidate Pipeline
+    // Group by Job Title
+    const pipelineMap = {};
+
+    resumes.forEach(r => {
+      const jobTitle = r.jobId?.jobTitle || 'Unknown Role';
+      if (!pipelineMap[jobTitle]) {
+        pipelineMap[jobTitle] = {
+          submitted: 0,
+          cvQualified: 0,
+          codingPassed: 0,
+          interviewCompleted: 0,
+          decisionReady: 0
+        };
+      }
+
+      pipelineMap[jobTitle].submitted++;
+
+      if ((r.overallScore || 0) >= 75) {
+        pipelineMap[jobTitle].cvQualified++;
+      }
+
+      if (r.oa?.evaluation?.pass) {
+        pipelineMap[jobTitle].codingPassed++;
+      }
+
+      // Check if interview is completed (has evaluation results)
+      if (r.interviewEvaluation?.evaluationResults?.length > 0) {
+        pipelineMap[jobTitle].interviewCompleted++;
+      }
+
+      if (r.status === 'shortlisted' || r.isApproved) {
+        pipelineMap[jobTitle].decisionReady++;
+      }
+    });
+
+    const candidatePipeline = Object.keys(pipelineMap).map(role => ({
+      role,
+      stages: [
+        pipelineMap[role].submitted,
+        pipelineMap[role].cvQualified,
+        pipelineMap[role].codingPassed,
+        pipelineMap[role].interviewCompleted,
+        pipelineMap[role].decisionReady
+      ]
+    }));
+
+    // 4. Rejection Feedback Loop
+    const rejectionReasonsMap = {
+      'Low CV Strength': 0,
+      'Coding Below Benchmark': 0,
+      'Interview Mismatch': 0,
+      'JD Misalignment': 0,
+      'Other': 0
+    };
+
+    let totalRejections = 0;
+
+    resumes.forEach(r => {
+      if (r.isRejected || r.status === 'rejected') {
+        totalRejections++;
+        // Simple keyword matching for now, can be improved with structured rejection reasons
+        const reason = (r.rejectFeedback || r.ats_reason || '').toLowerCase();
+
+        if (reason.includes('cv') || reason.includes('strength') || (r.overallScore || 0) < 60) {
+          rejectionReasonsMap['Low CV Strength']++;
+        } else if (reason.includes('coding') || reason.includes('score') || (r.oa?.evaluation?.pass === false)) {
+          rejectionReasonsMap['Coding Below Benchmark']++;
+        } else if (reason.includes('interview') || reason.includes('culture')) {
+          rejectionReasonsMap['Interview Mismatch']++;
+        } else if (reason.includes('jd') || reason.includes('alignment') || reason.includes('requirement')) {
+          rejectionReasonsMap['JD Misalignment']++;
+        } else {
+          rejectionReasonsMap['Other']++;
+        }
+      }
+    });
+
+    const rejectionReasons = Object.keys(rejectionReasonsMap)
+      .filter(reason => rejectionReasonsMap[reason] > 0)
+      .map(reason => ({
+        reason,
+        count: rejectionReasonsMap[reason],
+        percentage: totalRejections > 0 ? Math.round((rejectionReasonsMap[reason] / totalRejections) * 100) : 0,
+        color: reason === 'Low CV Strength' ? '#EF4444' :
+          reason === 'Coding Below Benchmark' ? '#F59E0B' :
+            reason === 'Interview Mismatch' ? '#8B5CF6' : '#6B7280'
+      }));
+
+    // 5. Scout Quality Score
+    // Formula: 40% Avg CV Strength + 30% Coding pass rate + 20% Interview-to-decision-ready conversion + 10% SLA adherence
+
+    // Coding Pass Rate
+    const resumesWithOA = resumes.filter(r => r.oa?.status === 'evaluated' || r.oa?.evaluation?.pass !== undefined);
+    const codingPassedCount = resumesWithOA.filter(r => r.oa?.evaluation?.pass).length;
+    const codingPassRate = resumesWithOA.length > 0 ? Math.round((codingPassedCount / resumesWithOA.length) * 100) : 0;
+
+    // Interview Success Rate (Interview to Decision Ready)
+    const resumesInterviews = resumes.filter(r => r.interviewEvaluation?.evaluationResults?.length > 0);
+    const decisionReadyCount = resumes.filter(r => r.status === 'shortlisted' || r.isApproved).length;
+    const interviewSuccessRate = resumesInterviews.length > 0 ? Math.round((decisionReadyCount / resumesInterviews.length) * 100) : 0;
+
+    // SLA Adherence (Placeholder - assume 95% for now or calculate if data available)
+    const slaAdherence = 95;
+
+    const overallScore = Math.round(
+      (avgCVStrength * 0.4) +
+      (codingPassRate * 0.3) +
+      (interviewSuccessRate * 0.2) +
+      (slaAdherence * 0.1)
+    );
+
+    const scoutQualityScore = {
+      overall: overallScore,
+      components: [
+        { name: 'CV Strength', value: avgCVStrength, weight: 40, color: '#10B981' },
+        { name: 'Coding Pass Rate', value: codingPassRate, weight: 30, color: '#3B82F6' },
+        { name: 'Interview Success', value: interviewSuccessRate, weight: 20, color: '#8B5CF6' },
+        { name: 'SLA Adherence', value: slaAdherence, weight: 10, color: '#F59E0B' }
+      ]
+    };
+
+    res.status(200).json(
+      new ApiResponse(200, {
+        kpis: {
+          profilesSubmitted,
+          avgCVStrength,
+          qualificationRate,
+          timeToFirstSubmission,
+          targetTime: 6.0 // Hardcoded target
+        },
+        candidatePipeline,
+        rejectionReasons,
+        scoutQualityScore
+      }, "Dashboard stats fetched successfully")
+    );
+
+  } catch (error) {
+    console.error("Get dashboard stats error:", error);
     res.status(500).json(
       new ApiResponse(500, null, "Internal server error")
     );
