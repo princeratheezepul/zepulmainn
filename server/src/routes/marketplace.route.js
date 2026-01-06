@@ -1,5 +1,5 @@
 import express from "express";
-import { marketplaceLogin, marketplaceRegister, talentScoutRegister, createTalentScoutByManager, getManagerTalentScouts, deleteTalentScoutByManager, marketplaceLogout, validateSession, getMarketplaceProfile, updateMarketplaceProfile, createTestUser, saveBankDetails, getMarketplaceBankDetails, deleteMarketplaceBankDetails, getAllJobs, searchJobs, toggleBookmark, getBookmarkedJobs, getJobDetails, getJobTalentScouts, addTalentScoutToJob, removeTalentScoutFromJob, pickJob, withdrawJob, saveMarketplaceResume, saveMarketplaceInterviewEvaluation, getMarketplaceCandidates, getMarketplaceResumeDetails, getPickedJobs, updateMarketplaceResume, getCandidatePipelineData, getTeamPerformanceData, createMarketplaceJobByMpUser, getPublicJobs, getPublicJobDetails, savePublicCareerResume } from "../controllers/marketplace.controller.js";
+import { marketplaceLogin, marketplaceRegister, talentScoutRegister, createTalentScoutByManager, getManagerTalentScouts, deleteTalentScoutByManager, marketplaceLogout, validateSession, getMarketplaceProfile, updateMarketplaceProfile, createTestUser, saveBankDetails, getMarketplaceBankDetails, deleteMarketplaceBankDetails, getAllJobs, searchJobs, toggleBookmark, getBookmarkedJobs, getJobDetails, getJobTalentScouts, addTalentScoutToJob, removeTalentScoutFromJob, pickJob, withdrawJob, saveMarketplaceResume, saveMarketplaceInterviewEvaluation, getMarketplaceCandidates, getMarketplaceResumeDetails, getPickedJobs, updateMarketplaceResume, getCandidatePipelineData, getTeamPerformanceData, createMarketplaceJobByMpUser, getPublicJobs, getPublicJobDetails, savePublicCareerResume, getTalentScoutDashboardStats } from "../controllers/marketplace.controller.js";
 
 import { authenticateMarketplace } from "../middleware/marketplace.auth.middleware.js";
 
@@ -45,5 +45,6 @@ router.get("/resumes/:resumeId", authenticateMarketplace, getMarketplaceResumeDe
 router.patch("/resumes/:resumeId", authenticateMarketplace, updateMarketplaceResume);
 router.get("/candidate-pipeline", authenticateMarketplace, getCandidatePipelineData);
 router.get("/team-performance", authenticateMarketplace, getTeamPerformanceData);
+router.get("/dashboard-stats", authenticateMarketplace, getTalentScoutDashboardStats);
 
 export default router;
