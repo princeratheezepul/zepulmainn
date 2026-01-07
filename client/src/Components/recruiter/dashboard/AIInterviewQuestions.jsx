@@ -317,7 +317,7 @@ const AIInterviewQuestions = ({ jobDetails, resumeData, onBack, onResumeUpdate }
       if (data?.data?.inviteLink) {
         console.log("AI Interview meeting link:", data.data.inviteLink);
         setAiMeetingLink(data.data.inviteLink);
-        toast.success("AI interview invite sent to candidate.");
+        toast.success("AI interview scheduled successfully! Share the link below with the candidate.");
       } else {
         toast.success("AI interview scheduled successfully.");
       }
