@@ -1,0 +1,4 @@
+{
+  "error": "Main.java.java:33: error: incompatible types: int cannot be converted to int[]\n            Object result = solution.solution(1);\n                                              ^\nNote: Some messages have been simplified; recompile with -Xdiags:verbose to get full output\n1 error\nerror: compilation failed\n",
+  "results": []
+}
