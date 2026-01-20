@@ -2,11 +2,18 @@ import axios from 'axios';
 
 const PISTON_API_URL = 'https://emkc.org/api/v2/piston';
 
-export const executeJava = async (userCode, testCases) => {
+export const executeJava = async (userCode, testCases, mainFunctionName = 'solution') => {
     try {
-        // 1. Construct the Java runner code
+
+        // 1. Extract imports from user code to avoid "class, interface, or enum expected" error
+        const importRegex = /import\s+.*?;/g;
+        const userImports = userCode.match(importRegex) || [];
+        const cleanUserCode = userCode.replace(importRegex, '');
+
+        // 2. Construct the Java runner code
         // We need to wrap the user's Solution class and call it with test cases
         const mainClass = `
+${userImports.join('\n')}
 import java.util.*;
 import java.util.stream.*;
 
@@ -33,7 +40,7 @@ public class Main {
         // System.out.println("RESULT:" + passed + "/" + total);
     }
 
-    ${generateRunTestCaseMethod(testCases)}
+    ${generateRunTestCaseMethod(testCases, mainFunctionName)}
     
     // Helper to print arrays deeply
     private static String toString(Object o) {
@@ -52,7 +59,7 @@ public class Main {
     }
 }
 
-${userCode}
+${cleanUserCode}
 `;
 
         // 2. Send to Piston
@@ -92,7 +99,7 @@ const generateTestCasesData = (testCases) => {
     return ""; // Not needed if we hardcode calls in runTestCase
 }
 
-const generateRunTestCaseMethod = (testCases) => {
+const generateRunTestCaseMethod = (testCases, mainFunctionName) => {
     let methodBody = `private static void runTestCase(Solution solution, int index) throws Exception {\n`;
     methodBody += `    switch(index) {\n`;
 
@@ -106,7 +113,7 @@ const generateRunTestCaseMethod = (testCases) => {
         // Prepare expected output
         const expected = formatJavaValue(tc.output);
 
-        methodBody += `            Object result = solution.${tc.functionName || 'solution'}(${args});\n`;
+        methodBody += `            Object result = solution.${mainFunctionName}(${args});\n`;
         methodBody += `            String actualStr = toString(result);\n`;
         methodBody += `            String expectedStr = toString(${expected});\n`;
         methodBody += `            \n`;
@@ -134,12 +141,26 @@ const formatJavaValue = (val) => {
     if (typeof val === 'boolean') return val.toString();
     if (typeof val === 'string') return `"${val}"`;
     if (Array.isArray(val)) {
-        // Check type of first element to guess array type
-        if (val.length === 0) return 'new int[]{}'; // Default to int array for empty? Risky.
-        const type = typeof val[0];
-        if (type === 'number') return `new int[]{${val.join(', ')}}`;
-        if (type === 'string') return `new String[]{${val.map(s => `"${s}"`).join(', ')}}`;
-        // Add more types as needed
+        if (val.length === 0) return 'new Object[]{}';
+        const first = val[0];
+
+        // Handle nested arrays (2D arrays)
+        if (Array.isArray(first)) {
+            const elements = val.map(v => formatJavaValue(v)).join(', ');
+            // Determine inner type
+            if (first.length > 0) {
+                if (typeof first[0] === 'string') return `new String[][]{${elements}}`;
+                if (typeof first[0] === 'number') return `new int[][]{${elements}}`;
+            }
+            return `new Object[][]{${elements}}`;
+        }
+
+        // Handle 1D arrays
+        if (typeof first === 'number') return `new int[]{${val.join(', ')}}`;
+        if (typeof first === 'string') return `new String[]{${val.map(s => `"${s}"`).join(', ')}}`;
+
+        // Generic object array
+        return `new Object[]{${val.map(v => formatJavaValue(v)).join(', ')}}`;
     }
     return 'null'; // Fallback
 };

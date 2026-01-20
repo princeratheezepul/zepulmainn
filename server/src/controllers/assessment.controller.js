@@ -327,7 +327,7 @@ export const runCode = async (req, res) => {
     }
 
     if (language === 'java') {
-      const result = await executeJava(code, question.examples);
+      const result = await executeJava(code, question.examples, question.functionName);
       return res.status(200).json(result);
     }
 
@@ -376,7 +376,7 @@ const evaluateSubmission = async (resumeId, submissions, questions) => {
       const examples = question.examples || [];
 
       if (language === 'java') {
-        const result = await executeJava(code, examples);
+        const result = await executeJava(code, examples, question.functionName);
         passedTests = result.results.filter(r => r.passed).length;
       } else {
         // Existing JS Eval Logic
