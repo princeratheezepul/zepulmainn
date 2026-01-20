@@ -47,7 +47,7 @@ app.use(
     origin: function (origin, callback) {
       // Allow requests with no origin (like mobile apps or curl requests)
       if (!origin) return callback(null, true);
-      
+
       if (allowedOrigins.indexOf(origin) !== -1) {
         callback(null, true);
       } else {
@@ -58,8 +58,14 @@ app.use(
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
+    exposedHeaders: ['Access-Control-Allow-Origin'],
+    preflightContinue: false,
+    optionsSuccessStatus: 204
   })
 );
+
+// Explicit OPTIONS handler for preflight requests
+app.options('*', cors());
 
 app.use(express.json());
 app.use(express.text());
@@ -78,12 +84,12 @@ app.use("/api/manager/resumes", managerResumeRoutes);
 app.use("/api/admin/resumes", adminResumeRoutes);
 app.use("/api/resumes/bulk-upload", bulkUploadRoutes);
 app.use("/api/recruiter", recruiterRoutes);
-app.use("/api/manager",managerRoutes );
+app.use("/api/manager", managerRoutes);
 app.use("/api/company", companyRoute);
-app.use("/api/jobs", jobRoute); 
-app.use("/api/scorecard", scorecardRoute); 
-app.use("/api/admin",adminRoutes);
-app.use("/api/accountmanager",accountmanagerRoutes);
+app.use("/api/jobs", jobRoute);
+app.use("/api/scorecard", scorecardRoute);
+app.use("/api/admin", adminRoutes);
+app.use("/api/accountmanager", accountmanagerRoutes);
 app.use("/api/zepdb", zepdbRoutes);
 app.use("/api/marketplace", marketplaceRoutes);
 app.use("/api/assessment", assessmentRoutes);
