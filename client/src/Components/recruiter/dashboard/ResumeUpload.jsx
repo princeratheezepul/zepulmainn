@@ -22,7 +22,7 @@ const ResumeUpload = ({ onBack, jobDetails }) => {
   const [loadingMessage, setLoadingMessage] = useState("");
   const [parsedData, setParsedData] = useState(null);
   const [showBulkUpload, setShowBulkUpload] = useState(false);
-  
+
   const { user, isAuthenticated } = useAuth();
   const { post, get } = useApi();
 
@@ -64,7 +64,7 @@ const ResumeUpload = ({ onBack, jobDetails }) => {
 
       setLoadingMessage("Analyzing resume with AI...");
       const analysis = await analyzeResume(text, jobDetails);
-      
+
       setLoadingMessage("Calculating ATS Score...");
       let atsResult;
       try {
@@ -74,8 +74,8 @@ const ResumeUpload = ({ onBack, jobDetails }) => {
         throw atsError;
       }
 
-      const finalData = { 
-        ...analysis, 
+      const finalData = {
+        ...analysis,
         overallScore: Math.round(atsResult.ats_score),
         ats_score: atsResult.ats_score,
         ats_reason: atsResult.ats_reason,
@@ -111,9 +111,9 @@ const ResumeUpload = ({ onBack, jobDetails }) => {
           }
           resolve(fullText);
         } catch (err) {
-            console.error("Error extracting PDF text, falling back to OCR:", err);
-            // Fallback to OCR can be implemented here if needed
-            reject("Failed to read PDF.");
+          console.error("Error extracting PDF text, falling back to OCR:", err);
+          // Fallback to OCR can be implemented here if needed
+          reject("Failed to read PDF.");
         }
       };
       fileReader.readAsArrayBuffer(file);
@@ -121,9 +121,9 @@ const ResumeUpload = ({ onBack, jobDetails }) => {
   };
 
   const extractTextFromDocx = async (file) => {
-      const arrayBuffer = await file.arrayBuffer();
-      const result = await mammoth.extractRawText({ arrayBuffer });
-      return result.value;
+    const arrayBuffer = await file.arrayBuffer();
+    const result = await mammoth.extractRawText({ arrayBuffer });
+    return result.value;
   };
 
   const saveResumeToDB = async (resumeData, jobId) => {
@@ -131,7 +131,7 @@ const ResumeUpload = ({ onBack, jobDetails }) => {
       console.log('Saving resume data:', resumeData);
       console.log('JobId:', jobId);
       console.log('API URL:', `${import.meta.env.VITE_BACKEND_URL}/api/resumes/save/${jobId}`);
-      
+
       // Debug: Check if user is authenticated
       const userInfo = localStorage.getItem('userInfo');
       const authToken = localStorage.getItem('authToken');
@@ -139,19 +139,19 @@ const ResumeUpload = ({ onBack, jobDetails }) => {
       console.log('Auth token from localStorage:', authToken);
       console.log('AuthContext user:', user);
       console.log('AuthContext isAuthenticated:', isAuthenticated);
-      
+
       // Debug: Check cookies
       console.log('All cookies:', document.cookie);
-      
+
       // Use useApi hook for consistent authentication
       const response = await post(`${import.meta.env.VITE_BACKEND_URL}/api/resumes/save/${jobId}`, resumeData);
 
       console.log('Response status:', response.status);
       console.log('Response headers:', response.headers);
-      
+
       if (!response.ok) {
         let errorMessage = 'Failed to save resume data';
-        
+
         try {
           const errorData = await response.json();
           console.error('Server error response:', errorData);
@@ -162,7 +162,7 @@ const ResumeUpload = ({ onBack, jobDetails }) => {
           console.error('Non-JSON error response:', errorText);
           errorMessage = `Server error (${response.status}): ${response.statusText}`;
         }
-        
+
         throw new Error(errorMessage);
       }
 
@@ -177,7 +177,7 @@ const ResumeUpload = ({ onBack, jobDetails }) => {
 
   const fetchATSScore = async (resumeText) => {
     try {
-      const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+      const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
 
       const prompt = `
       You are a strict, realistic ATS evaluator. Calculate ATS score out of 100 using weighted criteria below. BE CONSERVATIVE with scoring - most resumes should score 60-80, with only exceptional candidates scoring 85+.
@@ -276,7 +276,14 @@ const ResumeUpload = ({ onBack, jobDetails }) => {
       ${resumeText}
       `;
 
-      const result = await model.generateContent(prompt);
+      // Add timeout to prevent infinite hanging
+      const result = await Promise.race([
+        model.generateContent(prompt),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('ATS score calculation timed out after 30 seconds')), 30000)
+        )
+      ]);
+
       const response = await result.response;
       const aiText = await response.text();
       const cleanedText = aiText.replace(/```json|```/g, "").trim();
@@ -298,12 +305,22 @@ const ResumeUpload = ({ onBack, jobDetails }) => {
       };
     } catch (err) {
       console.error("Error retrieving ATS score:", err);
-      throw new Error("Error retrieving ATS score.");
+      console.error("Error details:", err.message, err.stack);
+
+      // Provide more specific error message
+      const errorMessage = err.message || "Unknown error occurred";
+      if (errorMessage.includes('timeout')) {
+        throw new Error("ATS score calculation timed out. Please try again.");
+      } else if (errorMessage.includes('API key')) {
+        throw new Error("API key issue. Please check your configuration.");
+      } else {
+        throw new Error(`Error retrieving ATS score: ${errorMessage}`);
+      }
     }
   };
 
   const analyzeResume = async (resumeText, job) => {
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
     const prompt = `
       You are an expert AI recruiter analyzing a resume for a specific job.
       Job Details:
@@ -360,13 +377,20 @@ const ResumeUpload = ({ onBack, jobDetails }) => {
       Make sure all fields in aiSummary contain meaningful, detailed content that provides valuable insights for the recruiter.
     `;
 
-    const result = await model.generateContent(prompt);
+    // Add timeout to prevent hanging
+    const result = await Promise.race([
+      model.generateContent(prompt),
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Resume analysis timed out after 30 seconds')), 30000)
+      )
+    ]);
+
     const response = await result.response;
     const text = response.text();
     const cleanedText = text.replace(/```json|```/g, "").trim();
     return JSON.parse(cleanedText);
   };
-  
+
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: {
@@ -399,9 +423,8 @@ const ResumeUpload = ({ onBack, jobDetails }) => {
       <div className="flex-grow w-full flex items-center justify-center">
         <div
           {...getRootProps()}
-          className={`w-full max-w-3xl min-h-[320px] border-2 border-dashed rounded-xl p-8 sm:p-10 md:p-12 text-center cursor-pointer transition-all duration-300 ease-in-out flex flex-col items-center justify-center bg-gray-50 ${
-            isDragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-gray-400'
-          } ${loading ? 'cursor-wait' : ''}`}
+          className={`w-full max-w-3xl min-h-[320px] border-2 border-dashed rounded-xl p-8 sm:p-10 md:p-12 text-center cursor-pointer transition-all duration-300 ease-in-out flex flex-col items-center justify-center bg-gray-50 ${isDragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-gray-400'
+            } ${loading ? 'cursor-wait' : ''}`}
         >
           <input {...getInputProps()} />
           {
@@ -426,9 +449,9 @@ const ResumeUpload = ({ onBack, jobDetails }) => {
           }
         </div>
       </div>
-      
+
       {showBulkUpload && (
-        <BulkUploadModal 
+        <BulkUploadModal
           onClose={() => setShowBulkUpload(false)}
           jobDetails={jobDetails}
         />

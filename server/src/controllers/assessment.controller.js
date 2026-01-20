@@ -3,6 +3,7 @@ import Resume from "../models/resume.model.js";
 import { Job } from "../models/job.model.js";
 import crypto from 'crypto';
 import nodemailer from "nodemailer";
+import { executeJava } from "../services/codeExecution.service.js";
 
 const genAI = new GoogleGenerativeAI(process.env.VITE_GEMINI_API);
 
@@ -309,6 +310,39 @@ export const submitAssessment = async (req, res) => {
   }
 };
 
+// @desc Run code (Test execution)
+export const runCode = async (req, res) => {
+  try {
+    const { code, language, questionIndex } = req.body;
+    const { assessmentId } = req.params;
+
+    const resume = await Resume.findOne({ "oa.assessmentId": assessmentId });
+    if (!resume) {
+      return res.status(404).json({ message: "Assessment not found" });
+    }
+
+    const question = resume.oa.questions[questionIndex];
+    if (!question) {
+      return res.status(404).json({ message: "Question not found" });
+    }
+
+    if (language === 'java') {
+      const result = await executeJava(code, question.examples);
+      return res.status(200).json(result);
+    }
+
+    // Fallback for JS (still client-side for now, or we could move it here too)
+    // For now, if frontend sends JS here, we can just return a message saying "Run locally"
+    // or implement JS execution via Piston too.
+    // Let's assume frontend handles JS locally for now as per plan.
+    return res.status(400).json({ message: "Language not supported for backend execution" });
+
+  } catch (error) {
+    console.error("Error running code:", error);
+    res.status(500).json({ message: "Failed to run code", error: error.message });
+  }
+};
+
 // @desc AI Evaluation Logic (Internal Helper)
 const evaluateSubmission = async (resumeId, submissions, questions) => {
   try {
@@ -324,6 +358,7 @@ const evaluateSubmission = async (resumeId, submissions, questions) => {
       const question = questions[i];
       const submission = submissions.find(s => s.questionIndex === i);
       const code = submission ? submission.code : "";
+      const language = submission ? submission.language : "javascript";
 
       // Step 1: Check for meaningful implementation
       const codeWithoutComments = code.replace(/\/\/.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '').trim();
@@ -340,59 +375,65 @@ const evaluateSubmission = async (resumeId, submissions, questions) => {
       let passedTests = 0;
       const examples = question.examples || [];
 
-      for (const example of examples) {
-        try {
-          // Parse example input
-          // This regex is fragile and depends on specific format. 
-          // Better to rely on the fact that example.input is likely an array from DB now if we fixed generation, 
-          // but for safety let's try to handle both string parsing (legacy/AI text) and direct array.
+      if (language === 'java') {
+        const result = await executeJava(code, examples);
+        passedTests = result.results.filter(r => r.passed).length;
+      } else {
+        // Existing JS Eval Logic
+        for (const example of examples) {
+          try {
+            // Parse example input
+            // This regex is fragile and depends on specific format. 
+            // Better to rely on the fact that example.input is likely an array from DB now if we fixed generation, 
+            // but for safety let's try to handle both string parsing (legacy/AI text) and direct array.
 
-          let args;
-          if (Array.isArray(example.input)) {
-            args = example.input;
-          } else if (typeof example.input === 'string') {
-            // Try to parse string input like "[1,2], 3"
-            // This is tricky without a robust parser. 
-            // For now, let's assume the AI returns valid JSON arrays in the new prompt.
-            // If it's a string from legacy, we might fail here.
-            // Let's try a simple eval for arguments if it looks like arguments
-            try {
-              args = JSON.parse(`[${example.input}]`); // Wrap in array to parse "arg1, arg2" sequence? No, example.input usually is "[arg1, arg2]"
-            } catch (e) {
-              // Fallback regex from before
-              const inputMatch = example.input.match(/\[([^\]]+)\].*?(\d+)/);
-              if (inputMatch) {
-                const numsStr = inputMatch[1];
-                const target = parseInt(inputMatch[2]);
-                const nums = numsStr.split(',').map(n => parseInt(n.trim()));
-                args = [nums, target];
+            let args;
+            if (Array.isArray(example.input)) {
+              args = example.input;
+            } else if (typeof example.input === 'string') {
+              // Try to parse string input like "[1,2], 3"
+              // This is tricky without a robust parser. 
+              // For now, let's assume the AI returns valid JSON arrays in the new prompt.
+              // If it's a string from legacy, we might fail here.
+              // Let's try a simple eval for arguments if it looks like arguments
+              try {
+                args = JSON.parse(`[${example.input}]`); // Wrap in array to parse "arg1, arg2" sequence? No, example.input usually is "[arg1, arg2]"
+              } catch (e) {
+                // Fallback regex from before
+                const inputMatch = example.input.match(/\[([^\]]+)\].*?(\d+)/);
+                if (inputMatch) {
+                  const numsStr = inputMatch[1];
+                  const target = parseInt(inputMatch[2]);
+                  const nums = numsStr.split(',').map(n => parseInt(n.trim()));
+                  args = [nums, target];
+                }
               }
             }
+
+            if (!args) args = []; // Fail safe
+
+            const argsString = args.map(arg => JSON.stringify(arg)).join(', ');
+
+            const testCode = `
+                    ${code}
+                    try {
+                      const result = ${question.functionName}(${argsString});
+                      JSON.stringify(result);
+                    } catch (e) {
+                      "ERROR: " + e.message;
+                    }
+                  `;
+
+            const actualOutput = eval(testCode);
+            const expectedOutput = example.output;
+            // Simple equality check (improve for arrays/objects)
+            const passed = JSON.stringify(actualOutput) === JSON.stringify(expectedOutput) && !String(actualOutput).startsWith("ERROR");
+
+            if (passed) passedTests++;
+
+          } catch (error) {
+            // Test failed
           }
-
-          if (!args) args = []; // Fail safe
-
-          const argsString = args.map(arg => JSON.stringify(arg)).join(', ');
-
-          const testCode = `
-                  ${code}
-                  try {
-                    const result = ${question.functionName}(${argsString});
-                    JSON.stringify(result);
-                  } catch (e) {
-                    "ERROR: " + e.message;
-                  }
-                `;
-
-          const actualOutput = eval(testCode);
-          const expectedOutput = example.output;
-          // Simple equality check (improve for arrays/objects)
-          const passed = JSON.stringify(actualOutput) === JSON.stringify(expectedOutput) && !String(actualOutput).startsWith("ERROR");
-
-          if (passed) passedTests++;
-
-        } catch (error) {
-          // Test failed
         }
       }
 

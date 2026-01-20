@@ -14,6 +14,7 @@ const CandidateAssessmentPage = () => {
     // Multi-question state
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [codes, setCodes] = useState({}); // Map index -> code string
+    const [languages, setLanguages] = useState({}); // Map index -> language string
     const [testResultsMap, setTestResultsMap] = useState({}); // Map index -> results array
     const [outputsMap, setOutputsMap] = useState({}); // Map index -> output string
 
@@ -62,13 +63,27 @@ const CandidateAssessmentPage = () => {
 
             // Initialize code for all questions
             const initialCodes = {};
+            const initialLanguages = {};
             const questions = data.questions || [data.question]; // Handle both array and legacy single object
 
             questions.forEach((q, idx) => {
                 const functionName = q.functionName || 'solution';
-                initialCodes[idx] = `// ${q.title}\n// Write your solution below\n\nfunction ${functionName}(args) {\n  // Your code here\n  \n}`;
+                // Default to Java as requested, but can support others
+                initialLanguages[idx] = 'java';
+                initialCodes[idx] = `// ${q.title}
+// Write your solution below
+
+import java.util.*;
+
+class Solution {
+    public int ${functionName}(int[] args) {
+        // Your code here
+        return 0;
+    }
+}`;
             });
             setCodes(initialCodes);
+            setLanguages(initialLanguages);
 
         } catch (err) {
             console.error("Error fetching assessment:", err);
@@ -89,6 +104,18 @@ const CandidateAssessmentPage = () => {
             ...prev,
             [currentQuestionIndex]: value
         }));
+    };
+
+    const handleLanguageChange = (e) => {
+        const newLang = e.target.value;
+        setLanguages(prev => ({
+            ...prev,
+            [currentQuestionIndex]: newLang
+        }));
+
+        // Reset code to boilerplate if needed, or keep existing
+        // For now, let's just update the language state. 
+        // Ideally we should swap boilerplate but that might lose user work.
     };
 
     const runTestCases = (userCode, question) => {
@@ -164,34 +191,84 @@ const CandidateAssessmentPage = () => {
 
     const handleRunCode = async () => {
         setIsRunning(true);
+        const currentLang = languages[currentQuestionIndex] || 'java';
 
         // Clear previous results for this question
         setOutputsMap(prev => ({ ...prev, [currentQuestionIndex]: null }));
         setTestResultsMap(prev => ({ ...prev, [currentQuestionIndex]: [] }));
 
-        setTimeout(() => {
-            try {
-                const currentQuestion = getCurrentQuestion();
-                const currentCode = codes[currentQuestionIndex];
+        try {
+            const currentQuestion = getCurrentQuestion();
+            const currentCode = codes[currentQuestionIndex];
 
-                const results = runTestCases(currentCode, currentQuestion);
+            if (currentLang === 'java') {
+                const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/assessment/${assessmentId}/run`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        code: currentCode,
+                        language: 'java',
+                        questionIndex: currentQuestionIndex
+                    })
+                });
 
-                setTestResultsMap(prev => ({ ...prev, [currentQuestionIndex]: results }));
+                const data = await response.json();
 
-                const passedCount = results.filter(r => r.passed).length;
-                setOutputsMap(prev => ({
-                    ...prev,
-                    [currentQuestionIndex]: `Test Results: ${passedCount}/${results.length} test cases passed`
-                }));
+                if (!response.ok) {
+                    throw new Error(data.message || data.error || 'Execution failed');
+                }
 
-            } catch (err) {
-                setOutputsMap(prev => ({
-                    ...prev,
-                    [currentQuestionIndex]: `Error: ${err.message}`
-                }));
+                if (data.error) {
+                    setOutputsMap(prev => ({
+                        ...prev,
+                        [currentQuestionIndex]: `Error:\n${data.error}`
+                    }));
+                } else {
+                    setTestResultsMap(prev => ({ ...prev, [currentQuestionIndex]: data.results }));
+                    const passedCount = data.results.filter(r => r.passed).length;
+                    setOutputsMap(prev => ({
+                        ...prev,
+                        [currentQuestionIndex]: `Test Results: ${passedCount}/${data.results.length} test cases passed\n\nOutput:\n${data.output || ''}`
+                    }));
+                }
+
+            } else {
+                // Legacy JS Client-side execution
+                setTimeout(() => {
+                    try {
+                        const results = runTestCases(currentCode, currentQuestion);
+                        setTestResultsMap(prev => ({ ...prev, [currentQuestionIndex]: results }));
+                        const passedCount = results.filter(r => r.passed).length;
+                        setOutputsMap(prev => ({
+                            ...prev,
+                            [currentQuestionIndex]: `Test Results: ${passedCount}/${results.length} test cases passed`
+                        }));
+                    } catch (err) {
+                        setOutputsMap(prev => ({
+                            ...prev,
+                            [currentQuestionIndex]: `Error: ${err.message}`
+                        }));
+                    }
+                }, 800);
+                // Return early to avoid setting isRunning false too soon if we used timeout
+                // But here we can just await the timeout if we wrapped it, or just let it run.
+                // To keep it simple, I'll move setIsRunning(false) to finally block or after logic.
             }
-            setIsRunning(false);
-        }, 800);
+
+        } catch (err) {
+            setOutputsMap(prev => ({
+                ...prev,
+                [currentQuestionIndex]: `Error: ${err.message}`
+            }));
+        } finally {
+            // For JS timeout, this might run before timeout finishes if not careful, 
+            // but for Java it waits for fetch.
+            if (currentLang === 'java') {
+                setIsRunning(false);
+            } else {
+                setTimeout(() => setIsRunning(false), 800);
+            }
+        }
     };
 
     const handleNext = () => {
@@ -257,7 +334,7 @@ const CandidateAssessmentPage = () => {
             const submissions = questions.map((_, idx) => ({
                 questionIndex: idx,
                 code: codes[idx] || '',
-                language: 'javascript'
+                language: languages[idx] || 'java'
             }));
 
             const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/assessment/${assessmentId}/submit`, {
@@ -418,13 +495,18 @@ const CandidateAssessmentPage = () => {
                     <div className="prose max-w-none">
                         <h2 className="text-2xl font-bold text-gray-900 mb-4">{currentQuestion.title}</h2>
 
-                        <div className="flex gap-2 mb-6">
+                        <div className="flex gap-2 mb-6 items-center">
                             <span className="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-bold rounded uppercase tracking-wide">
                                 {currentQuestion.difficulty}
                             </span>
-                            <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs font-bold rounded">
-                                JavaScript
-                            </span>
+                            <select
+                                value={languages[currentQuestionIndex] || 'java'}
+                                onChange={handleLanguageChange}
+                                className="px-2 py-1 bg-gray-100 text-gray-600 text-xs font-bold rounded border-none focus:ring-0 cursor-pointer"
+                            >
+                                <option value="java">Java</option>
+                                <option value="javascript">JavaScript</option>
+                            </select>
                         </div>
 
                         <div className="mb-6 text-gray-700 leading-relaxed whitespace-pre-wrap">
@@ -468,8 +550,9 @@ const CandidateAssessmentPage = () => {
                     <div className="flex-1 overflow-hidden">
                         <Editor
                             height="100%"
-                            defaultLanguage="javascript"
+                            defaultLanguage="java"
                             theme="vs-dark"
+                            language={languages[currentQuestionIndex] || 'java'}
                             value={codes[currentQuestionIndex] || ''}
                             onChange={handleCodeChange}
                             options={{
