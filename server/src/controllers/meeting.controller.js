@@ -73,32 +73,8 @@ export const createMeeting = async (req, res) => {
 
     const inviteLink = `${FRONTEND_URL.replace(/\/$/, "")}/meeting/${token}`;
 
-    // Send email asynchronously/non-blocking
-    try {
-      await sendMeetingInviteEmail({
-        to: candidateEmail,
-        jobTitle: job.jobtitle,
-        companyName: job.company || "Zepul",
-        candidateName: resume.name || "",
-        scheduledAt,
-        timeZone: req.body?.timeZone || "UTC",
-        durationMinutes: meeting.durationMinutes,
-        inviteLink,
-        mode: "Video Call (AI-led interview)",
-        locationLabel: "Meeting Link",
-        interviewerNames: recruiter.fullname || "AI Interviewer",
-        recruiterFullName: recruiter.fullname || "",
-        recruiterTitle: recruiter.role || recruiter.type || "Recruiter",
-        recruiterPhone: recruiter.phone || "",
-        recruiterEmail: recruiter.email || "",
-        companyWebsite:
-          process.env.COMPANY_WEBSITE ||
-          "https://www.zepul.com",
-      });
-    } catch (emailError) {
-      console.error("Failed to send meeting invite email:", emailError);
-      // Continue execution - don't fail the request just because email failed
-    }
+    // Email functionality removed as per user request
+    // console.log("AI interview meeting link:", inviteLink);
 
     console.log("AI interview meeting link:", inviteLink);
 
