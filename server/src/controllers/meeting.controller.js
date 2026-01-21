@@ -72,31 +72,38 @@ export const createMeeting = async (req, res) => {
     });
 
     const inviteLink = `${FRONTEND_URL.replace(/\/$/, "")}/meeting/${token}`;
-    await sendMeetingInviteEmail({
-      to: candidateEmail,
-      jobTitle: job.jobtitle,
-      companyName: job.company || "Zepul",
-      candidateName: resume.name || "",
-      scheduledAt,
-      timeZone: req.body?.timeZone || "UTC",
-      durationMinutes: meeting.durationMinutes,
-      inviteLink,
-      mode: "Video Call (AI-led interview)",
-      locationLabel: "Meeting Link",
-      interviewerNames: recruiter.fullname || "AI Interviewer",
-      recruiterFullName: recruiter.fullname || "",
-      recruiterTitle: recruiter.role || recruiter.type || "Recruiter",
-      recruiterPhone: recruiter.phone || "",
-      recruiterEmail: recruiter.email || "",
-      companyWebsite:
-        process.env.COMPANY_WEBSITE ||
-        "https://www.zepul.com",
-    });
+
+    // Send email asynchronously/non-blocking
+    try {
+      await sendMeetingInviteEmail({
+        to: candidateEmail,
+        jobTitle: job.jobtitle,
+        companyName: job.company || "Zepul",
+        candidateName: resume.name || "",
+        scheduledAt,
+        timeZone: req.body?.timeZone || "UTC",
+        durationMinutes: meeting.durationMinutes,
+        inviteLink,
+        mode: "Video Call (AI-led interview)",
+        locationLabel: "Meeting Link",
+        interviewerNames: recruiter.fullname || "AI Interviewer",
+        recruiterFullName: recruiter.fullname || "",
+        recruiterTitle: recruiter.role || recruiter.type || "Recruiter",
+        recruiterPhone: recruiter.phone || "",
+        recruiterEmail: recruiter.email || "",
+        companyWebsite:
+          process.env.COMPANY_WEBSITE ||
+          "https://www.zepul.com",
+      });
+    } catch (emailError) {
+      console.error("Failed to send meeting invite email:", emailError);
+      // Continue execution - don't fail the request just because email failed
+    }
 
     console.log("AI interview meeting link:", inviteLink);
 
     return res.status(201).json({
-      message: "Meeting created and invite sent",
+      message: "Meeting created successfully",
       data: { meetingId: meeting._id, token, inviteLink },
     });
   } catch (error) {
@@ -319,7 +326,7 @@ export const getMeetingByToken = async (req, res) => {
         phone: resume?.phone,
         summary: trimText(
           resume?.raw_text ||
-            `${resume?.title || ""} ${resume?.about || ""}`,
+          `${resume?.title || ""} ${resume?.about || ""}`,
           3000
         ),
         skills: resume?.skills || [],
@@ -356,12 +363,12 @@ export const startMeeting = async (req, res) => {
 
     // Prevent re-accessing if already started or completed
     if (meeting.status === "canceled" || meeting.status === "completed" || meeting.status === "active") {
-      return res.status(400).json({ 
-        message: meeting.status === "active" 
-          ? "Meeting is already in progress" 
+      return res.status(400).json({
+        message: meeting.status === "active"
+          ? "Meeting is already in progress"
           : meeting.status === "completed"
-          ? "Meeting has already been completed"
-          : "Meeting not active"
+            ? "Meeting has already been completed"
+            : "Meeting not active"
       });
     }
 
@@ -390,25 +397,25 @@ export const startMeeting = async (req, res) => {
     const context = {
       job: meeting.jobId
         ? {
-            jobtitle: meeting.jobId.jobtitle,
-            description: trimText(meeting.jobId.description),
-            skills: meeting.jobId.skills || [],
-            location: meeting.jobId.location,
-            employmentType: meeting.jobId.employmentType,
-          }
+          jobtitle: meeting.jobId.jobtitle,
+          description: trimText(meeting.jobId.description),
+          skills: meeting.jobId.skills || [],
+          location: meeting.jobId.location,
+          employmentType: meeting.jobId.employmentType,
+        }
         : null,
       resume: meeting.resumeId
         ? {
-            name: meeting.resumeId.name,
-            title: meeting.resumeId.title,
-            email: meeting.resumeId.email,
-            phone: meeting.resumeId.phone,
-            experience: meeting.resumeId.experience,
-            skills: meeting.resumeId.skills || [],
-            aiSummary: meeting.resumeId.aiSummary || {},
-            potentialConcern: meeting.resumeId.potentialConcern || [],
-            keyStrength: meeting.resumeId.keyStrength || [],
-          }
+          name: meeting.resumeId.name,
+          title: meeting.resumeId.title,
+          email: meeting.resumeId.email,
+          phone: meeting.resumeId.phone,
+          experience: meeting.resumeId.experience,
+          skills: meeting.resumeId.skills || [],
+          aiSummary: meeting.resumeId.aiSummary || {},
+          potentialConcern: meeting.resumeId.potentialConcern || [],
+          keyStrength: meeting.resumeId.keyStrength || [],
+        }
         : null,
       durationMinutes: meeting.durationMinutes || 40,
     };
@@ -445,7 +452,7 @@ export const startMeeting = async (req, res) => {
 const fetchTranscriptFromVapi = async (callId) => {
   const VAPI_API_KEY = process.env.VAPI_API_KEY;
   const VAPI_BASE_URL = process.env.VAPI_BASE_URL || "https://api.vapi.ai";
-  
+
   if (!VAPI_API_KEY || !callId) {
     console.warn("Cannot fetch transcript: missing API key or callId");
     return null;
@@ -467,10 +474,10 @@ const fetchTranscriptFromVapi = async (callId) => {
 
     const callData = await response.json();
     // Try multiple possible locations for transcript
-    return callData?.transcript || 
-           callData?.messages?.map(m => m.content).join("\n") || 
-           callData?.endOfCallReport?.transcript ||
-           null;
+    return callData?.transcript ||
+      callData?.messages?.map(m => m.content).join("\n") ||
+      callData?.endOfCallReport?.transcript ||
+      null;
   } catch (error) {
     console.error("Error fetching transcript from Vapi:", error.message);
     return null;
@@ -485,8 +492,8 @@ export const endMeeting = async (req, res) => {
     if (!meeting) return res.status(404).json({ message: "Meeting not found" });
 
     if (meeting.status !== "active") {
-      return res.status(400).json({ 
-        message: `Meeting is not active. Current status: ${meeting.status}` 
+      return res.status(400).json({
+        message: `Meeting is not active. Current status: ${meeting.status}`
       });
     }
 
@@ -531,14 +538,14 @@ export const endMeeting = async (req, res) => {
 export const handleVapiFunctionCall = async (req, res) => {
   try {
     const { callId, functionCall } = req.body || {};
-    
+
     if (!callId) {
       return res.status(400).json({ message: "Missing callId" });
     }
 
     // Find meeting by callId
     const meeting = await Meeting.findOne({ vapiCallId: callId });
-    
+
     if (!meeting) {
       console.error("Meeting not found for function call, callId:", callId);
       return res.status(404).json({ message: "Meeting not found" });
@@ -547,14 +554,14 @@ export const handleVapiFunctionCall = async (req, res) => {
     // Handle end_interview function
     if (functionCall?.name === "end_interview") {
       console.log("✅ AI called end_interview function. Reason:", functionCall.arguments?.reason || "Not provided");
-      
+
       // Mark meeting as completed
       meeting.status = "completed";
       await meeting.save();
-      
+
       // Return success - Vapi will end the call gracefully
-      return res.status(200).json({ 
-        result: "Interview ended successfully. Thank you for your time." 
+      return res.status(200).json({
+        result: "Interview ended successfully. Thank you for your time."
       });
     }
 
@@ -610,7 +617,7 @@ export const handleVapiWebhook = async (req, res) => {
 
     // Try to find meeting by callId, or by assistantId if callId doesn't match
     let meeting = await Meeting.findOne({ vapiCallId: callId });
-    
+
     // If not found by callId, try to find by assistantId (for web calls, callId might be different)
     if (!meeting && call?.assistantId) {
       meeting = await Meeting.findOne({ vapiAssistantId: call.assistantId, status: { $in: ["active", "scheduled"] } });
@@ -638,7 +645,7 @@ export const handleVapiWebhook = async (req, res) => {
         meeting.status = "active";
         console.log("Meeting status updated to: active");
         break;
-      
+
       case "transcript":
       case "transcript.updated":
         const transcript = message?.transcript || call?.transcript || message?.transcriptText || req.body?.transcript;
@@ -652,19 +659,19 @@ export const handleVapiWebhook = async (req, res) => {
           console.log("Transcript updated, length:", meeting.transcript.length);
         }
         break;
-      
+
       case "tool-calls":
       case "tool.outputs":
         const toolCalls = message?.toolCalls || message?.outputs || call?.toolOutputs;
         meeting.toolOutputs = toolCalls;
         console.log("Tool outputs saved");
         break;
-      
+
       case "function-call":
         // Handle function calls from the AI agent
         const functionCall = message?.functionCall || message?.function || req.body?.functionCall || call?.functionCall;
         console.log("Function call received:", functionCall?.name || "unknown");
-        
+
         // Store function call in toolOutputs
         if (functionCall) {
           meeting.toolOutputs = meeting.toolOutputs || [];
@@ -674,76 +681,76 @@ export const handleVapiWebhook = async (req, res) => {
             meeting.toolOutputs = [functionCall];
           }
         }
-        
+
         // Handle end_interview function call
         if (functionCall?.name === "end_interview") {
-          const reason = functionCall?.arguments?.reason || 
-                        functionCall?.parameters?.reason || 
-                        (typeof functionCall?.arguments === "string" ? JSON.parse(functionCall.arguments).reason : null) ||
-                        "Interview completed";
+          const reason = functionCall?.arguments?.reason ||
+            functionCall?.parameters?.reason ||
+            (typeof functionCall?.arguments === "string" ? JSON.parse(functionCall.arguments).reason : null) ||
+            "Interview completed";
           console.log("✅ AI requested to end interview. Reason:", reason);
-          
+
           // Mark meeting as completed
           meeting.status = "completed";
-          
+
           // Save the meeting first
           await meeting.save();
-          
+
           // Return response to Vapi - this tells Vapi to end the call gracefully
           // Vapi expects a response with the function result
           return res.status(200).json({
             result: "Interview ended successfully. Thank you for your time.",
           });
         }
-        
+
         // For other function calls, just acknowledge
         return res.status(200).json({ result: "Function call processed" });
-      
+
       case "end-of-call-report":
       case "call.completed":
       case "call.ended":
         meeting.status = "completed";
-        
+
         // Get transcript from various possible locations
-        const finalTranscript = message?.transcript || 
-                               call?.transcript || 
-                               message?.transcriptText ||
-                               message?.endOfCallReport?.transcript ||
-                               call?.transcript ||
-                               req.body?.transcript ||
-                               meeting.transcript;
-        
+        const finalTranscript = message?.transcript ||
+          call?.transcript ||
+          message?.transcriptText ||
+          message?.endOfCallReport?.transcript ||
+          call?.transcript ||
+          req.body?.transcript ||
+          meeting.transcript;
+
         if (finalTranscript) {
           meeting.transcript = finalTranscript;
         }
-        
+
         meeting.recordingUrl = call?.recordingUrl || message?.recordingUrl || message?.recording?.url || req.body?.recordingUrl;
         meeting.toolOutputs = message?.toolCalls || message?.toolOutputs || call?.toolOutputs;
-        
+
         // Extract report data
         const report = message?.endOfCallReport || message?.report || {};
         meeting.report = meeting.report || {};
         meeting.report.summary = meeting.report.summary || report.summary || report.analysis;
         meeting.report.scores = meeting.report.scores || report.scores || report.metrics;
         meeting.report.recommendation = meeting.report.recommendation || report.recommendation;
-        
+
         console.log("Meeting completed. Transcript length:", meeting.transcript?.length || 0);
         console.log("Recording URL:", meeting.recordingUrl);
         console.log("Report summary:", meeting.report.summary ? "Yes" : "No");
-        
+
         // Note: Not deleting assistant to preserve webhook functionality
         // Assistants can be cleaned up manually or via scheduled task if needed
         break;
-      
+
       case "error":
       case "call.error":
         // Handle error/ejection events - check if transcript is included
         console.log("Error/ejection event received:", type);
-        const errorTranscript = message?.transcript || 
-                               call?.transcript || 
-                               message?.transcriptText ||
-                               req.body?.transcript;
-        
+        const errorTranscript = message?.transcript ||
+          call?.transcript ||
+          message?.transcriptText ||
+          req.body?.transcript;
+
         if (errorTranscript) {
           console.log("Transcript found in error event, saving...");
           if (meeting.transcript) {
@@ -752,7 +759,7 @@ export const handleVapiWebhook = async (req, res) => {
             meeting.transcript = errorTranscript;
           }
         }
-        
+
         // If meeting is still active and we got an ejection error, mark as completed
         // but don't overwrite existing transcript if we don't have a new one
         if (meeting.status === "active" && message?.error?.type === "ejected") {
@@ -764,7 +771,7 @@ export const handleVapiWebhook = async (req, res) => {
           }
         }
         break;
-      
+
       default:
         console.log("Unhandled webhook type:", type);
         // Check if this unhandled event contains transcript data
