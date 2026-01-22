@@ -710,6 +710,62 @@ export const handleVapiWebhook = async (req, res) => {
         meeting.report.scores = meeting.report.scores || report.scores || report.metrics;
         meeting.report.recommendation = meeting.report.recommendation || report.recommendation;
 
+        // Update Resume with interview score
+        if (meeting.resumeId && meeting.report.scores) {
+          try {
+            console.log("Processing interview scores for resume:", meeting.resumeId);
+            const scores = meeting.report.scores;
+            let totalScore = 0;
+            let count = 0;
+            let evaluationResults = [];
+
+            // Handle different score formats (Array or Object)
+            if (Array.isArray(scores)) {
+              scores.forEach(s => {
+                const val = parseFloat(s.score || s.value);
+                if (!isNaN(val)) {
+                  totalScore += val;
+                  count++;
+                  evaluationResults.push({ criterion: s.name || s.criterion || "General", score: val });
+                }
+              });
+            } else if (typeof scores === 'object') {
+              Object.entries(scores).forEach(([key, val]) => {
+                const numVal = parseFloat(val);
+                if (!isNaN(numVal)) {
+                  totalScore += numVal;
+                  count++;
+                  evaluationResults.push({ criterion: key, score: numVal });
+                }
+              });
+            }
+
+            if (count > 0) {
+              // Calculate average
+              let average = totalScore / count;
+
+              // Convert to percentage (0-100)
+              // Assumption: Vapi scores are typically 0-10. If average is <= 10, multiply by 10.
+              let finalScore = Math.round(average <= 10 ? average * 10 : average);
+              finalScore = Math.min(Math.max(finalScore, 0), 100); // Clamp between 0-100
+
+              console.log(`Updating Resume ${meeting.resumeId} with score: ${finalScore}`);
+
+              await Resume.findByIdAndUpdate(meeting.resumeId, {
+                score: finalScore,
+                recommendation: meeting.report.recommendation,
+                "interviewEvaluation.evaluationResults": evaluationResults.map(r => ({
+                  question: r.criterion, // Map criterion to question field to preserve label
+                  score: r.score
+                })),
+                "interviewEvaluation.evaluatedAt": new Date()
+              });
+            }
+          } catch (err) {
+            console.error("Error updating resume with interview score:", err);
+          }
+        }
+
         console.log("Meeting completed. Transcript length:", meeting.transcript?.length || 0);
         console.log("Recording URL:", meeting.recordingUrl);
         console.log("Report summary:", meeting.report.summary ? "Yes" : "No");

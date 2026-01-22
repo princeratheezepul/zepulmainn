@@ -70,10 +70,8 @@ const generatePDFContent = (resumeData, note = '') => {
   // Helper for circular progress with label
   const getMetricCard = (title, percentage, label = null, labelColor = 'text-gray-600') => `
     <div class="flex flex-col items-center p-4 border rounded-xl bg-white h-full">
-      ${label ? `<div class="${labelColor} text-sm font-semibold mb-2">${label}</div>` : ''}
       <div class="text-lg font-bold text-gray-900 mb-4 text-center">${title}</div>
       <div class="flex justify-center mb-4">${getCircularProgressSVG(percentage, 120, 10)}</div>
-      ${title === 'CV Strength' ? `<div class="bg-blue-100 text-blue-800 px-3 py-1 rounded text-sm font-medium">Consider with caution</div>` : ''}
     </div>
   `;
 
