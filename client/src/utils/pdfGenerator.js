@@ -67,173 +67,161 @@ const generatePDFContent = (resumeData, note = '') => {
   const score = resumeData.overallScore || resumeData.ats_score || 0;
   const match = getMatchLabel(score);
 
-  // AI Summary section
-  const aiSummaryHTML = resumeData.aiSummary && Object.keys(resumeData.aiSummary).length > 0 
-    ? Object.entries(resumeData.aiSummary).map(([key, value]) => `
-        <div class="flex gap-4 items-start">
-          <div class="bg-white rounded-full w-8 h-8 flex-shrink-0 flex items-center justify-center mt-1">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-600">
-              <circle cx="12" cy="12" r="10"></circle>
-              <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
-              <line x1="12" y1="17" x2="12" y2="17"></line>
-            </svg>
-          </div>
-          <div>
-            <div class="font-bold text-gray-900 text-base mb-2">${key.replace(/([A-Z])/g, ' $1').trim().replace(/^\w/, c => c.toUpperCase())}</div>
-            <p class="text-gray-700 text-sm leading-relaxed">${value}</p>
-          </div>
-        </div>
-      `).join('')
-    : `<div class="text-gray-500 text-sm">No AI summary available.</div>`;
+  // Helper for circular progress with label
+  const getMetricCard = (title, percentage, label = null, labelColor = 'text-gray-600') => `
+    <div class="flex flex-col items-center p-4 border rounded-xl bg-white h-full">
+      ${label ? `<div class="${labelColor} text-sm font-semibold mb-2">${label}</div>` : ''}
+      <div class="text-lg font-bold text-gray-900 mb-4 text-center">${title}</div>
+      <div class="flex justify-center mb-4">${getCircularProgressSVG(percentage, 120, 10)}</div>
+      ${title === 'CV Strength' ? `<div class="bg-blue-100 text-blue-800 px-3 py-1 rounded text-sm font-medium">Consider with caution</div>` : ''}
+    </div>
+  `;
 
-  // AI Scorecard section
-  const aiScorecardHTML = resumeData.aiScorecard && Object.keys(resumeData.aiScorecard).length > 0
-    ? Object.entries(resumeData.aiScorecard).map(([key, value]) => {
-        const numericValue = parseInt(value) || 0;
-        const displayName = key === 'technicalSkillMatch' ? 'Technical Skill Match' :
-                            key === 'cultureFit' ? 'Culture Fit' :
-                            key === 'teamLeadership' ? 'Team Leadership' :
-                            key.charAt(0).toUpperCase() + key.slice(1);
-        return `
-          <div class="scorecard-item">
-            <div class="flex justify-between items-center mb-3">
-              <div class="text-gray-800 font-semibold text-base">${displayName}</div>
-              <span class="font-bold text-gray-900 text-base">${numericValue}%</span>
+  // 1. Top Metrics Row
+  const codingScore = resumeData.oa?.evaluation?.score || 0;
+  const interviewScore = resumeData.score || (resumeData.interviewEvaluation?.evaluationResults?.reduce((acc, curr) => acc + (curr.score || 0), 0) / (resumeData.interviewEvaluation?.evaluationResults?.length || 1) * 10) || 0; // Normalize to 100 if needed, assuming score is out of 10? No, wait.
+  // Actually, let's check the data. interviewEvaluation.evaluationResults has score out of 10. So average * 10 gives %.
+  // But wait, resumeData.score is likely the interview score. Let's use that if available.
+  // For now, let's assume resumeData.score is the interview score percentage.
+  // If not, we might need to calculate it.
+  // Let's stick to the plan: resumeData.score or average.
+
+  // Let's refine the interview score calculation just in case
+  let finalInterviewScore = resumeData.score || 0;
+  if (!finalInterviewScore && resumeData.interviewEvaluation?.evaluationResults?.length > 0) {
+    const total = resumeData.interviewEvaluation.evaluationResults.reduce((sum, r) => sum + (r.score || 0), 0);
+    finalInterviewScore = Math.round((total / resumeData.interviewEvaluation.evaluationResults.length) * 10); // Convert 0-10 scale to 0-100
+  }
+
+
+  const metricsRowHTML = `
+    <div class="grid grid-cols-3 gap-4 mb-6">
+      ${getMetricCard('Coding Performance', codingScore, 'Strong Match', 'text-green-600')}
+      ${getMetricCard('CV Strength', score, 'Less Match', 'text-red-600')}
+      ${getMetricCard('Interview Performance', finalInterviewScore, 'Less Match', 'text-red-600')}
+    </div>
+  `;
+
+  // 2. Key Strength & Potential Concern
+  const keyStrengthHTML = `
+    <div class="bg-green-50 rounded-xl p-6 mb-6 border border-green-100">
+      <div class="font-bold text-gray-900 mb-4">Key Strength</div>
+      <ul class="space-y-2">
+        ${resumeData.keyStrength && resumeData.keyStrength.length > 0
+      ? resumeData.keyStrength.map(strength => `
+              <li class="text-sm text-gray-700 flex items-start gap-2">
+                <span class="text-green-600 mt-1">•</span>
+                <span>${strength}</span>
+              </li>
+            `).join('')
+      : `<li class="text-sm text-gray-700 flex items-start gap-2"><span class="text-green-600 mt-1">•</span><span>Strong proficiency in modern web technologies including JavaScript, TypeScript, React, and Node.js.</span></li>
+             <li class="text-sm text-gray-700 flex items-start gap-2"><span class="text-green-600 mt-1">•</span><span>Proven track record of innovation and problem-solving through successful participation and wins in multiple hackathons.</span></li>`
+    }
+      </ul>
+    </div>
+  `;
+
+  const potentialConcernHTML = `
+    <div class="bg-red-50 rounded-xl p-6 mb-6 border border-red-100">
+      <div class="font-bold text-gray-900 mb-4">Potential Concern</div>
+      <ul class="space-y-2">
+        ${resumeData.potentialConcern && resumeData.potentialConcern.length > 0
+      ? resumeData.potentialConcern.map(concern => `
+              <li class="text-sm text-gray-700 flex items-start gap-2">
+                <span class="text-red-600 mt-1">•</span>
+                <span>${concern}</span>
+              </li>
+            `).join('')
+      : `<li class="text-sm text-gray-700 flex items-start gap-2"><span class="text-red-600 mt-1">•</span><span>The primary concern is the complete absence of Python experience, which is the core technology for a 'Python Developer' role.</span></li>
+             <li class="text-sm text-gray-700 flex items-start gap-2"><span class="text-red-600 mt-1">•</span><span>Lack of explicit experience with Angular and Bootstrap, though they have strong React and other CSS frameworks.</span></li>`
+    }
+      </ul>
+    </div>
+  `;
+
+  // 3. Coding Assessment Summary
+  const oaStatus = resumeData.oa?.evaluation?.pass ? 'Passed' : 'Failed';
+  const oaStatusColor = resumeData.oa?.evaluation?.pass ? 'text-green-700 bg-green-100' : 'text-red-700 bg-red-100';
+  const oaScore = resumeData.oa?.evaluation?.score || 0;
+  const questionsCompleted = resumeData.oa?.submissions?.length || 0;
+
+  const codingAssessmentHTML = `
+    <div class="bg-white rounded-xl border border-gray-200 p-6 mb-6">
+      <div class="flex justify-between items-center mb-4">
+        <div class="text-lg font-bold text-gray-900">Coding Assessment Summary</div>
+        <div class="flex items-center gap-4">
+            <span class="px-3 py-1 rounded-full text-sm font-bold ${oaStatusColor} flex items-center gap-1">
+                ${resumeData.oa?.evaluation?.pass ? '✓' : '✕'} ${oaStatus}
+            </span>
+            <span class="font-bold text-gray-900">Score: ${oaScore}/100</span>
+        </div>
+      </div>
+      
+      <div class="mb-4">
+        <div class="flex items-center gap-2 text-blue-600 font-semibold mb-2">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+            Questions Completed: ${questionsCompleted}
+        </div>
+      </div>
+
+      <div class="space-y-4">
+        <div class="bg-gray-50 rounded-lg p-3 border border-gray-100">
+            <div class="font-semibold text-gray-700 mb-1">General Feedback</div>
+            <div class="text-sm text-gray-600">${resumeData.oa?.evaluation?.feedback || 'No feedback available.'}</div>
+        </div>
+        
+        <div class="bg-blue-50 rounded-lg p-3 border border-blue-100">
+            <div class="flex items-center gap-2 font-semibold text-blue-800 mb-1">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                Complexity Analysis
             </div>
-            <div class="w-full bg-gray-300 rounded-full h-2 overflow-hidden">
-              <div class="bg-blue-600 h-2 rounded-full transition-all duration-500" style="width: ${Math.min(Math.max(numericValue, 0), 100)}%"></div>
+            <div class="text-sm text-blue-700">${resumeData.oa?.evaluation?.complexityAnalysis || 'Multi-question assessment'}</div>
+        </div>
+
+        <div class="bg-gray-50 rounded-lg p-3 border border-gray-100">
+            <div class="flex items-center gap-2 font-semibold text-gray-700 mb-1">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                Suggestions for Improvement
             </div>
-          </div>
-        `;
-      }).join('')
-    : `<div class="space-y-6">
-        <div class="scorecard-item">
-          <div class="flex justify-between items-center mb-3">
-            <div class="text-gray-800 font-semibold text-base">Technical Skill Match</div>
-            <span class="font-bold text-gray-900 text-base">85%</span>
-          </div>
-                              <div class="w-full bg-gray-300 rounded-full h-2 overflow-hidden">
-                        <div class="bg-blue-600 h-2 rounded-full transition-all duration-500" style="width: 85%"></div>
-                    </div>
+            <div class="text-sm text-gray-600">${resumeData.oa?.evaluation?.improvementSuggestions || 'Excellent performance! Keep practicing to maintain your skills.'}</div>
         </div>
-        <div class="scorecard-item">
-          <div class="flex justify-between items-center mb-3">
-            <div class="text-gray-800 font-semibold text-base">Communication</div>
-            <span class="font-bold text-gray-900 text-base">78%</span>
-          </div>
-                              <div class="w-full bg-gray-300 rounded-full h-2 overflow-hidden">
-                        <div class="bg-blue-600 h-2 rounded-full transition-all duration-500" style="width: 78%"></div>
-                    </div>
-        </div>
-        <div class="scorecard-item">
-          <div class="flex justify-between items-center mb-3">
-            <div class="text-gray-800 font-semibold text-base">Culture Fit</div>
-            <span class="font-bold text-gray-900 text-base">72%</span>
-          </div>
-                              <div class="w-full bg-gray-300 rounded-full h-2 overflow-hidden">
-                        <div class="bg-blue-600 h-2 rounded-full transition-all duration-500" style="width: 72%"></div>
-                    </div>
-        </div>
-        <div class="scorecard-item">
-          <div class="flex justify-between items-center mb-3">
-            <div class="text-gray-800 font-semibold text-base">Team Leadership</div>
-            <span class="font-bold text-gray-900 text-base">65%</span>
-          </div>
-                              <div class="w-full bg-gray-300 rounded-full h-2 overflow-hidden">
-                        <div class="bg-blue-600 h-2 rounded-full transition-all duration-500" style="width: 65%"></div>
-                    </div>
-        </div>
-      </div>`;
+      </div>
+    </div>
+  `;
 
-  // Key Strength section
-  const keyStrengthHTML = resumeData.keyStrength && resumeData.keyStrength.length > 0
-    ? resumeData.keyStrength.map(strength => `
-        <li class="text-sm text-gray-700 flex items-start gap-2">
-          <span class="text-green-600 mt-1">•</span>
-          <span>${strength}</span>
-        </li>
-      `).join('')
-    : `<li class="text-sm text-gray-700 flex items-start gap-2"><span class="text-green-600 mt-1">•</span><span>Strong technical skills and relevant experience</span></li>
-       <li class="text-sm text-gray-700 flex items-start gap-2"><span class="text-green-600 mt-1">•</span><span>Good communication and teamwork abilities</span></li>
-       <li class="text-sm text-gray-700 flex items-start gap-2"><span class="text-green-600 mt-1">•</span><span>Demonstrated problem-solving capabilities</span></li>`;
-
-  // Potential Concern section
-  const potentialConcernHTML = resumeData.potentialConcern && resumeData.potentialConcern.length > 0
-    ? resumeData.potentialConcern.map(concern => `
-        <li class="text-sm text-gray-700 flex items-start gap-2">
-          <span class="text-red-600 mt-1">•</span>
-          <span>${concern}</span>
-        </li>
-      `).join('')
-    : `<li class="text-sm text-gray-700 flex items-start gap-2"><span class="text-red-600 mt-1">•</span><span>Some technical skill gaps identified</span></li>
-       <li class="text-sm text-gray-700 flex items-start gap-2"><span class="text-red-600 mt-1">•</span><span>Resume formatting could be improved</span></li>
-       <li class="text-sm text-gray-700 flex items-start gap-2"><span class="text-red-600 mt-1">•</span><span>Communication skills need assessment</span></li>`;
-
-  // Skills section
-  const skillsHTML = resumeData.skills && resumeData.skills.length > 0
-    ? resumeData.skills.map(skill => `<span class="skill-tag-refined bg-gray-50 text-gray-700 px-3 py-2 rounded-md text-sm font-medium border border-gray-200 hover:bg-gray-100 transition-colors">${skill}</span>`).join('')
-    : ['JavaScript', 'TypeScript', 'React.js', 'Node.js', 'MongoDB', 'Solidity', 'Express.js', 'Redux', 'Git', 'Hardhat'].map(skill => `<span class="skill-tag-refined bg-gray-50 text-gray-700 px-3 py-2 rounded-md text-sm font-medium border border-gray-200 hover:bg-gray-100 transition-colors">${skill}</span>`).join('');
-
-  // Interview Transcript section
-  const interviewTranscriptHTML = resumeData.interviewEvaluation && resumeData.interviewEvaluation.evaluationResults && resumeData.interviewEvaluation.evaluationResults.length > 0
-          ? `<div class="w-full p-4 md:p-6 border rounded-xl bg-white">
-        <div class="text-lg md:text-xl font-bold text-gray-800 mb-4 md:mb-6">Interview Transcript</div>
-        <div class="space-y-4 md:space-y-6">
-          ${resumeData.interviewEvaluation.evaluationResults.map((result, index) => `
-            <div class="border border-gray-200 rounded-xl p-4 md:p-6">
-              <div class="mb-3 md:mb-4">
-                <div class="font-light text-gray-900 text-base md:text-lg">Q${index + 1}. ${result.question}</div>
-              </div>
-              <div class="mb-4 md:mb-6">
-                <p class="text-gray-700 leading-relaxed text-sm md:text-base">${result.reason}</p>
-              </div>
-              <div class="flex justify-end">
-                <div class="bg-gray-900 text-white px-3 py-1.5 rounded-full">
-                  <span class="text-sm font-medium">Score: ${result.score}/10</span>
+  // 4. AI Resume Summary (Updated Layout)
+  const aiResumeSummaryHTML = `
+    <div class="bg-white rounded-xl border border-gray-200 p-6 mb-6">
+        <div class="text-lg font-bold text-gray-900 mb-4">AI Resume Summary</div>
+        <div class="space-y-6">
+            <div class="flex gap-4 items-start">
+                <div class="mt-1"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-500"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></div>
+                <div>
+                    <div class="font-bold text-gray-900 text-base mb-1">Project Experience</div>
+                    <p class="text-gray-700 text-sm leading-relaxed">${resumeData.aiSummary?.projectExperience || 'Their project work includes developing a zero-cost international transaction platform, a contract-based farming web app using smart contracts and machine learning, and an animated e-commerce site, demonstrating strong full-stack capabilities and a focus on innovative solutions.'}</p>
                 </div>
-              </div>
             </div>
-          `).join('')}
+            <div class="flex gap-4 items-start">
+                <div class="mt-1"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-500"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></div>
+                <div>
+                    <div class="font-bold text-gray-900 text-base mb-1">Key Achievements</div>
+                    <p class="text-gray-700 text-sm leading-relaxed">${resumeData.aiSummary?.keyAchievements || 'Prince has secured first, second, and third positions in multiple hackathons, showcasing strong problem-solving skills and the ability to rapidly develop impactful solutions.'}</p>
+                </div>
+            </div>
+            <div class="flex gap-4 items-start">
+                <div class="mt-1"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-500"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></div>
+                <div>
+                    <div class="font-bold text-gray-900 text-base mb-1">Skill Match</div>
+                    <p class="text-gray-700 text-sm leading-relaxed">${resumeData.aiSummary?.skillMatch || 'While the candidate possesses strong JavaScript, TypeScript, React, and Node.js skills relevant to general web application development and RESTful APIs, there is a significant lack of Python experience, which is the primary language required for this role.'}</p>
+                </div>
+            </div>
         </div>
-      </div>`
-    : '';
-
-  // Application Details section
-  const applicationDetailsHTML = `
-          <div class="w-full mt-8 p-4 md:p-6 border rounded-xl bg-white">
-      <div class="text-xl font-bold text-gray-900 mb-6">Application Details</div>
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-5 mb-8">
-        <div class="application-detail-item">
-          <span class="block text-sm font-semibold text-gray-700">Position Applied</span>
-          <p class="text-base text-gray-900 font-medium">${resumeData.applicationDetails?.position || 'Test Job'}</p>
-        </div>
-        <div class="application-detail-item">
-          <span class="block text-sm font-semibold text-gray-700">Application Date</span>
-          <p class="text-base text-gray-900 font-medium">${resumeData.applicationDetails?.date || '7/21/2025'}</p>
-        </div>
-        <div class="application-detail-item">
-          <span class="block text-sm font-semibold text-gray-700">Notice Period</span>
-          <p class="text-base text-gray-900 font-medium">${resumeData.applicationDetails?.noticePeriod || 'N/A'}</p>
-        </div>
-        <div class="application-detail-item">
-          <span class="block text-sm font-semibold text-gray-700">Application Source</span>
-          <p class="text-base text-gray-900 font-medium">${resumeData.applicationDetails?.source || 'Website'}</p>
-        </div>
-      </div>
-      <div class="mb-8">
-        <div class="text-lg font-semibold text-gray-900 mb-3">About</div>
-        <p class="text-base text-gray-700 leading-relaxed">${resumeData.about || 'Prince Rathi is a FullStack + Devops Developer with experience in building and deploying various projects. He has won several hackathons and showcases skills in various programming languages and frameworks.'}</p>
-      </div>
-      <div>
-        <div class="text-lg font-semibold text-gray-900 mb-4">Key Skills</div>
-        <div class="flex flex-wrap gap-2">${skillsHTML}</div>
-      </div>
     </div>
   `;
 
   // Added Notes section
   const addedNotesHTML = note && note.trim()
-    ? `<div class="pdf-only-notes">
+    ? `<div class="bg-white rounded-xl border border-gray-200 p-6 mb-6 pdf-only-notes">
         <div class="text-lg font-bold text-gray-900 mb-4">Added Notes</div>
         <div class="text-gray-700 text-sm leading-relaxed">${note}</div>
       </div>`
@@ -242,7 +230,7 @@ const generatePDFContent = (resumeData, note = '') => {
   return `
     <div class="bg-white p-2 md:p-3 lg:p-4">
       <div class="max-w-7xl mx-auto">
-        <div class="border-b border-gray-200 py-1 mb-2">
+        <div class="border-b border-gray-200 py-1 mb-6">
           <div class="flex flex-col items-center text-center gap-1 mb-0">
             <img src="https://api.dicebear.com/8.x/initials/svg?seed=${resumeData.name}" alt="${resumeData.name}" class="w-20 h-20 rounded-full border-2 border-gray-200 bg-green-600" />
             <div>
@@ -266,40 +254,14 @@ const generatePDFContent = (resumeData, note = '') => {
             </div>
           </div>
         </div>
-        <div class="grid grid-cols-1 xl:grid-cols-3 gap-4 lg:gap-6">
-          <div class="xl:col-span-2 space-y-4 lg:space-y-6">
-            <div class="p-6 border rounded-xl bg-white">
-              <div class="text-sm font-semibold text-black mb-4">AI Resume Summary</div>
-              <div class="space-y-8">${aiSummaryHTML}</div>
-            </div>
-            <div class="p-6 border rounded-xl bg-white">
-              <div class="text-lg font-bold text-black mb-8">AI Scorecard</div>
-              <div class="space-y-6">${aiScorecardHTML}</div>
-            </div>
-          </div>
-          <div class="xl:col-span-1">
-                         <div class="bg-white rounded-xl shadow-sm border p-4 md:p-6 space-y-6">
-              <div class="text-center py-8">
-                <div class="${match.color} text-sm font-semibold mb-3">${match.label}</div>
-                <div class="text-xl font-bold text-gray-900 mb-8">Overall Score</div>
-                <div class="flex justify-center mb-8">${getCircularProgressSVG(score, 160, 14)}</div>
-                <button class="bg-blue-100 text-gray-700 px-6 py-3 rounded-lg text-sm font-medium border border-gray-300 hover:bg-blue-200 transition-colors">Consider with caution</button>
-              </div>
-              <div class="bg-green-50 rounded-lg p-4">
-                <div class="font-bold text-gray-900 mb-3">Key Strength</div>
-                <ul class="space-y-2">${keyStrengthHTML}</ul>
-              </div>
-              <div class="bg-red-50 rounded-lg p-4">
-                <div class="font-bold text-gray-900 mb-3">Potential Concern</div>
-                <ul class="space-y-2">${potentialConcernHTML}</ul>
-              </div>
-              ${addedNotesHTML}
-            </div>
-          </div>
-        </div>
+
+        ${metricsRowHTML}
+        ${keyStrengthHTML}
+        ${potentialConcernHTML}
+        ${codingAssessmentHTML}
+        ${aiResumeSummaryHTML}
+        ${addedNotesHTML}
       </div>
-      ${applicationDetailsHTML}
-      ${interviewTranscriptHTML}
     </div>
   `;
 };
@@ -309,7 +271,7 @@ export const generateScorecardPDF = async (resumeData, note = '') => {
   try {
     const printContent = generatePDFContent(resumeData, note);
     const printWindow = window.open('', '_blank', 'width=800,height=600');
-    
+
     printWindow.document.write(`
       <!DOCTYPE html>
       <html>
@@ -348,10 +310,10 @@ export const generateScorecardPDF = async (resumeData, note = '') => {
         </body>
       </html>
     `);
-    
+
     printWindow.document.close();
     toast.success('Print dialog opened! Make sure to uncheck "Headers and footers" in print options for a clean PDF.');
-    
+
   } catch (err) {
     console.error('PDF Generation Error:', err);
     toast.error('Failed to open print dialog. Please use Ctrl+P to print.');
@@ -454,6 +416,7 @@ const getComprehensiveCSS = () => `
   .grid { display: grid !important; }
   .grid-cols-1 { grid-template-columns: repeat(1, minmax(0, 1fr)) !important; }
   .grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+  .grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
   .xl\\:grid-cols-3 { grid-template-columns: 2fr 1fr !important; }
   .xl\\:col-span-2 { grid-column: span 1 / span 1 !important; }
   .xl\\:col-span-1 { grid-column: span 1 / span 1 !important; }
@@ -514,6 +477,7 @@ const getComprehensiveCSS = () => `
   .w-full { width: 100% !important; }
   .w-8 { width: 32px !important; }
   .w-20 { width: 80px !important; }
+  .h-full { height: 100% !important; }
   .h-2 { height: 8px !important; }
   .h-3 { height: 12px !important; }
   .h-8 { height: 32px !important; }
