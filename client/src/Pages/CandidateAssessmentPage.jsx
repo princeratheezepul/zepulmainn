@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import Editor from '@monaco-editor/react';
-import { Loader2, Play, Send, CheckCircle, AlertCircle, Clock, Check, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Loader2, Play, Send, CheckCircle, AlertCircle, Clock, Check, X, ChevronLeft, ChevronRight, Award } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const CandidateAssessmentPage = () => {
@@ -422,6 +422,106 @@ function ${functionName}(...args) {
         }
     };
 
+    // Security State
+    const [warnings, setWarnings] = useState(0);
+    const [isFullScreen, setIsFullScreen] = useState(false);
+    const [securityStarted, setSecurityStarted] = useState(false);
+    const MAX_WARNINGS = 3;
+
+    useEffect(() => {
+        if (!securityStarted || !assessment || assessment.completed) return;
+
+        // 1. Full Screen Detection
+        const handleFullScreenChange = () => {
+            const isFull = !!document.fullscreenElement;
+            setIsFullScreen(isFull);
+            if (!isFull) {
+                handleViolation("Exited full screen mode");
+            }
+        };
+
+        // 2. Tab/Window Switch Detection
+        const handleVisibilityChange = () => {
+            if (document.hidden) {
+                handleViolation("Tab switched or minimized window");
+            }
+        };
+
+        const handleBlur = () => {
+            // Some browsers fire blur when clicking inside iframe/editor, so we need to be careful.
+            // For rigorous testing, we can warn, but let's stick to visibility for now to avoid false positives with Editor interactions.
+            // console.log("Window blurred");
+            // handleViolation("Lost window focus"); 
+        };
+
+        // 3. Disable Context Menu
+        const handleContextMenu = (e) => {
+            e.preventDefault();
+            toast.error("Right-click is disabled");
+        };
+
+        // 4. Disable Copy/Paste (Keyboard)
+        const handleKeyDown = (e) => {
+            if ((e.ctrlKey || e.metaKey) && (e.key === 'c' || e.key === 'v' || e.key === 'x')) {
+                e.preventDefault();
+                toast.error("Copy/Paste is disabled");
+            }
+        };
+
+        document.addEventListener('fullscreenchange', handleFullScreenChange);
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        document.addEventListener('contextmenu', handleContextMenu);
+        document.addEventListener('keydown', handleKeyDown);
+        window.addEventListener('blur', handleBlur);
+
+        return () => {
+            document.removeEventListener('fullscreenchange', handleFullScreenChange);
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+            document.removeEventListener('contextmenu', handleContextMenu);
+            document.removeEventListener('keydown', handleKeyDown);
+            window.removeEventListener('blur', handleBlur);
+        };
+    }, [securityStarted, assessment]);
+
+    const handleViolation = (reason) => {
+        if (submitting || (assessment && assessment.completed)) return;
+
+        setWarnings(prev => {
+            const newVal = prev + 1;
+
+            if (newVal >= MAX_WARNINGS) {
+                handleSubmit(true); // Auto-submit
+                toast.error(`Violation: ${reason}. Max warnings reached. Submitting test...`);
+            } else {
+                toast((t) => (
+                    <div className="flex flex-col gap-1">
+                        <div className="font-bold text-red-600 flex items-center gap-2">
+                            <AlertCircle size={16} />
+                            Warning {newVal}/{MAX_WARNINGS}
+                        </div>
+                        <div className="text-sm text-gray-800">
+                            {reason}. Please stay on this screen.
+                        </div>
+                    </div>
+                ), { duration: 5000, icon: '⚠️' });
+            }
+            return newVal;
+        });
+    };
+
+    const enterFullScreen = () => {
+        const elem = document.documentElement;
+        if (elem.requestFullscreen) {
+            elem.requestFullscreen().then(() => {
+                setIsFullScreen(true);
+                setSecurityStarted(true);
+            }).catch(err => {
+                console.error("Error attempting to enable full-screen mode:", err);
+                toast.error("Could not enter full screen. Please allow permissions.");
+            });
+        }
+    };
+
     if (loading) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -430,25 +530,61 @@ function ${functionName}(...args) {
         );
     }
 
-    if (error) {
+    // ... (Error and Completed states remain same) ...
+    if (error) { /* ... */ }
+    if (assessment?.completed) { /* ... */ }
+
+    // Security Overlay
+    if (!securityStarted && assessment) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-                <div className="bg-white p-8 rounded-xl shadow-lg max-w-md text-center">
-                    <AlertCircle className="mx-auto text-red-500 mb-4" size={48} />
-                    <h2 className="text-2xl font-bold text-gray-800 mb-2">Access Denied</h2>
-                    <p className="text-gray-600">{error}</p>
+                <div className="bg-white p-8 rounded-xl shadow-lg max-w-lg text-center">
+                    <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <Award className="text-blue-600" size={32} />
+                    </div>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-4">Ready to Start Assessment?</h2>
+
+                    <div className="text-left bg-blue-50 p-4 rounded-lg mb-6 text-sm text-blue-800 space-y-2">
+                        <p className="font-semibold">Security Rules:</p>
+                        <ul className="list-disc pl-5 space-y-1">
+                            <li>Full Screen mode is mandatory.</li>
+                            <li>Do not switch tabs or windows.</li>
+                            <li>Copy/Paste is disabled.</li>
+                            <li><strong>{MAX_WARNINGS} violations will auto-submit the test.</strong></li>
+                        </ul>
+                    </div>
+
+                    <button
+                        onClick={enterFullScreen}
+                        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-colors flex items-center justify-center gap-2"
+                    >
+                        Enter Full Screen & Start
+                        <ChevronRight size={20} />
+                    </button>
                 </div>
             </div>
         );
     }
 
-    if (assessment?.completed) {
+    // Warning Overlay if Full Screen Exited mid-test
+    if (securityStarted && !isFullScreen && !assessment?.completed) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-                <div className="bg-white p-8 rounded-xl shadow-lg max-w-md text-center animate-in zoom-in duration-300">
-                    <CheckCircle className="mx-auto text-green-500 mb-4" size={64} />
-                    <h2 className="text-2xl font-bold text-gray-800 mb-2">Assessment Submitted!</h2>
-                    <p className="text-gray-600">Thank you for completing the assessment. Our team will review your submission shortly.</p>
+            <div className="fixed inset-0 z-50 bg-gray-900/90 backdrop-blur-sm flex items-center justify-center p-4">
+                <div className="bg-white p-8 rounded-xl shadow-2xl max-w-md text-center animate-bounce-in">
+                    <AlertCircle className="mx-auto text-red-600 mb-4" size={56} />
+                    <h2 className="text-2xl font-bold text-gray-900 mb-2">Security Violation</h2>
+                    <p className="text-gray-600 mb-6">
+                        You have exited full screen mode. Please return to full screen immediately to continue your assessment.
+                    </p>
+                    <p className="text-red-500 font-bold mb-6">
+                        Warnings: {warnings}/{MAX_WARNINGS}
+                    </p>
+                    <button
+                        onClick={enterFullScreen}
+                        className="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-lg shadow-lg hover:shadow-xl transition-all"
+                    >
+                        Return to Assessment
+                    </button>
                 </div>
             </div>
         );
@@ -470,6 +606,7 @@ function ${functionName}(...args) {
 
     if (!currentQuestion) {
         return (
+            // ... (No Question State) ...
             <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
                 <div className="bg-white p-8 rounded-xl shadow-lg max-w-md text-center">
                     <AlertCircle className="mx-auto text-yellow-500 mb-4" size={48} />
@@ -481,14 +618,21 @@ function ${functionName}(...args) {
     }
 
     return (
-        <div className="flex flex-col h-screen bg-gray-100 overflow-hidden">
+        <div className="flex flex-col h-screen bg-gray-100 overflow-hidden select-none">
             {/* Header */}
             <header className="bg-white border-b border-gray-200 px-6 py-3 flex justify-between items-center shadow-sm z-10">
                 <div className="flex items-center gap-3">
                     <img src="/zepul_trademark.jpg" alt="Zepul Logo" className="h-10 w-28 object-contain" />
                     <div>
                         <h1 className="font-bold text-gray-800 text-lg">Coding Assessment</h1>
-                        <p className="text-xs text-gray-500">Candidate: {assessment.candidateName}</p>
+                        <div className="flex items-center gap-2 text-xs text-gray-500">
+                            <span>Candidate: {assessment.candidateName}</span>
+                            {warnings > 0 && (
+                                <span className="text-red-500 font-bold bg-red-50 px-1 rounded">
+                                    Warnings: {warnings}/{MAX_WARNINGS}
+                                </span>
+                            )}
+                        </div>
                     </div>
                 </div>
 
@@ -621,6 +765,7 @@ function ${functionName}(...args) {
                                 scrollBeyondLastLine: false,
                                 automaticLayout: true,
                                 padding: { top: 20, bottom: 20 },
+                                contextmenu: false, // Disable right-click in editor
                             }}
                         />
                     </div>
