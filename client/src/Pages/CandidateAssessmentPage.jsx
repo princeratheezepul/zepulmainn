@@ -425,7 +425,7 @@ class Solution {
             {/* Header */}
             <header className="bg-white border-b border-gray-200 px-6 py-3 flex justify-between items-center shadow-sm z-10">
                 <div className="flex items-center gap-3">
-                    <div className="bg-blue-600 text-white p-2 rounded-lg font-bold">ZP</div>
+                    <img src="/zepul_trademark.jpg" alt="Zepul Logo" className="h-10 w-28 object-contain" />
                     <div>
                         <h1 className="font-bold text-gray-800 text-lg">Coding Assessment</h1>
                         <p className="text-xs text-gray-500">Candidate: {assessment.candidateName}</p>

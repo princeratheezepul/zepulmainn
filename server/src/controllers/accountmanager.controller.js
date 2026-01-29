@@ -3,35 +3,35 @@ import { User } from '../models/user.model.js';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import nodemailer from 'nodemailer';
-import {Company} from "../models/company.model.js"
+import { Company } from "../models/company.model.js"
 import { Job } from '../models/job.model.js';
 import Scorecard from '../models/scorecard.model.js'
 import Resume from '../models/resume.model.js'
 import { Admin } from '../models/admin.model.js';
 const generateAccessAndRefreshToken = async (userId) => {
-    try {
-        // Try to find user in User collection first
-        let user = await User.findById(userId);
-        
-        if (!user) {
-            // If not found in User collection, check AccountManagerModel
-            user = await AccountManagerModel.findById(userId);
-        }
-        
-        if (!user) {
-            throw new Error("User not found");
-        }
-        
-        const accessToken = user.generateAccessToken();
-        const refreshToken = user.generateRefreshToken();
+  try {
+    // Try to find user in User collection first
+    let user = await User.findById(userId);
 
-        user.refreshToken = refreshToken;
-        await user.save({ validateBeforeSave: false });
-        return { accessToken, refreshToken };
-    } catch (error) {
-        console.error(error);
-        return { message: "Something went wrong" };
+    if (!user) {
+      // If not found in User collection, check AccountManagerModel
+      user = await AccountManagerModel.findById(userId);
     }
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    const accessToken = user.generateAccessToken();
+    const refreshToken = user.generateRefreshToken();
+
+    user.refreshToken = refreshToken;
+    await user.save({ validateBeforeSave: false });
+    return { accessToken, refreshToken };
+  } catch (error) {
+    console.error(error);
+    return { message: "Something went wrong" };
+  }
 }
 
 const transporter = nodemailer.createTransport({
@@ -105,141 +105,141 @@ const registerAccountManager = async (req, res) => {
   }
 }
 
-const   loginAccountManager = async (req, res) => {
-    try {
-        const { email, password } = req.body;
+const loginAccountManager = async (req, res) => {
+  try {
+    const { email, password } = req.body;
 
-        if (!email) {
-            return res.status(400).json({ message: "Enter email" });
-        }
-
-        // Look for user in User collection first (for admin-created account managers)
-        let user = await User.findOne({ email, type: 'accountmanager' });
-        
-        if (!user) {
-            // If not found in User collection, check AccountManagerModel (for legacy users)
-            user = await AccountManagerModel.findOne({ email, type: 'accountmanager' });
-        }
-        
-        if (!user) {
-            return res.status(404).json({ message: "User not found. Please check the email." });
-        }
-
-        // Check if user is disabled
-        if (user.status === 'disabled') {
-            return res.status(403).json({ message: "You are disabled to get access" });
-        }
-
-        // Check if password is set (for admin-created users)
-        if (user.firstPassSet === false) {
-            return res.status(400).json({ message: "Please set your password first using the link sent to your email." });
-        }
-
-        const isPasswordValid = await user.isPasswordCorrect(password);
-        if (!isPasswordValid) {
-            return res.status(400).json({ message: "Invalid password. Try again." });
-        }
-
-        const { accessToken, refreshToken } = await generateAccessAndRefreshToken(user._id);
-
-        const loggedInUser = await User.findById(user._id).select("-password -refreshToken") || 
-                           await AccountManagerModel.findById(user._id).select("-password -refreshToken");
-
-        const options = {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax"
-        };
-
-        return res.status(200)
-            .cookie("accessToken", accessToken, options)
-            .cookie("refreshToken", refreshToken, options)
-            .json({
-                status: 200,
-                message: "User logged in successfully",
-                data: { user: loggedInUser, accessToken, refreshToken }
-            });
-
-    } catch (error) {
-        console.error(error);
-        return res.status(500).json({ message: "Internal Server Error" });
+    if (!email) {
+      return res.status(400).json({ message: "Enter email" });
     }
+
+    // Look for user in User collection first (for admin-created account managers)
+    let user = await User.findOne({ email, type: 'accountmanager' });
+
+    if (!user) {
+      // If not found in User collection, check AccountManagerModel (for legacy users)
+      user = await AccountManagerModel.findOne({ email, type: 'accountmanager' });
+    }
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found. Please check the email." });
+    }
+
+    // Check if user is disabled
+    if (user.status === 'disabled') {
+      return res.status(403).json({ message: "You are disabled to get access" });
+    }
+
+    // Check if password is set (for admin-created users)
+    if (user.firstPassSet === false) {
+      return res.status(400).json({ message: "Please set your password first using the link sent to your email." });
+    }
+
+    const isPasswordValid = await user.isPasswordCorrect(password);
+    if (!isPasswordValid) {
+      return res.status(400).json({ message: "Invalid password. Try again." });
+    }
+
+    const { accessToken, refreshToken } = await generateAccessAndRefreshToken(user._id);
+
+    const loggedInUser = await User.findById(user._id).select("-password -refreshToken") ||
+      await AccountManagerModel.findById(user._id).select("-password -refreshToken");
+
+    const options = {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax"
+    };
+
+    return res.status(200)
+      .cookie("accessToken", accessToken, options)
+      .cookie("refreshToken", refreshToken, options)
+      .json({
+        status: 200,
+        message: "User logged in successfully",
+        data: { user: loggedInUser, accessToken, refreshToken }
+      });
+
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
 }
 
 const logoutAccountManager = async (req, res) => {
-    try {
-        const accessToken = req.cookies.accessToken;
+  try {
+    const accessToken = req.cookies.accessToken;
 
-        if (!accessToken) {
-            return res.status(400).json({ message: "No token found, please log in again." });
-        }
-
-        const options = {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax"
-        };
-
-        return res.status(200)
-            .clearCookie("accessToken", options)
-            .clearCookie("refreshToken", options)
-            .json({
-                status: 200,
-                message: "User logged out successfully",
-                data: {}
-            });
-
-    } catch (error) {
-        console.error(error);
-        return res.status(500).json({ message: "Internal Server Error" });
+    if (!accessToken) {
+      return res.status(400).json({ message: "No token found, please log in again." });
     }
+
+    const options = {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax"
+    };
+
+    return res.status(200)
+      .clearCookie("accessToken", options)
+      .clearCookie("refreshToken", options)
+      .json({
+        status: 200,
+        message: "User logged out successfully",
+        data: {}
+      });
+
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
 }
 
 const refreshAccessToken = async (req, res) => {
-    try {
-        const incomingRefreshToken = req.cookies.refreshToken || req.body.refreshToken;
+  try {
+    const incomingRefreshToken = req.cookies.refreshToken || req.body.refreshToken;
 
-        if (!incomingRefreshToken) {
-            return res.status(401).json({ message: "Unauthorized request" });
-        }
-
-        const decodedToken = jwt.verify(incomingRefreshToken, process.env.REFRESH_TOKEN_SECRET);
-
-        // Try to find user in User collection first
-        let user = await User.findById(decodedToken._id);
-        
-        if (!user) {
-            // If not found in User collection, check AccountManagerModel
-            user = await AccountManagerModel.findById(decodedToken._id);
-        }
-
-        if (!user) {
-            return res.status(401).json({ message: "Invalid refresh token" });
-        }
-
-        if (incomingRefreshToken !== user?.refreshToken) {
-            return res.status(401).json({ message: "Refresh token is expired or used" });
-        }
-
-        const options = {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax"
-        };
-
-        const { accessToken, refreshToken: newRefreshToken } = await generateAccessAndRefreshToken(user._id);
-
-        return res.status(200)
-            .cookie("accessToken", accessToken, options)
-            .cookie("refreshToken", newRefreshToken, options)
-            .json({
-                status: 200,
-                message: "Access token refreshed",
-                data: { accessToken, refreshToken: newRefreshToken }
-            });
-    } catch (error) {
-        return res.status(401).json({ message: "Invalid refresh token" });
+    if (!incomingRefreshToken) {
+      return res.status(401).json({ message: "Unauthorized request" });
     }
+
+    const decodedToken = jwt.verify(incomingRefreshToken, process.env.REFRESH_TOKEN_SECRET);
+
+    // Try to find user in User collection first
+    let user = await User.findById(decodedToken._id);
+
+    if (!user) {
+      // If not found in User collection, check AccountManagerModel
+      user = await AccountManagerModel.findById(decodedToken._id);
+    }
+
+    if (!user) {
+      return res.status(401).json({ message: "Invalid refresh token" });
+    }
+
+    if (incomingRefreshToken !== user?.refreshToken) {
+      return res.status(401).json({ message: "Refresh token is expired or used" });
+    }
+
+    const options = {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax"
+    };
+
+    const { accessToken, refreshToken: newRefreshToken } = await generateAccessAndRefreshToken(user._id);
+
+    return res.status(200)
+      .cookie("accessToken", accessToken, options)
+      .cookie("refreshToken", newRefreshToken, options)
+      .json({
+        status: 200,
+        message: "Access token refreshed",
+        data: { accessToken, refreshToken: newRefreshToken }
+      });
+  } catch (error) {
+    return res.status(401).json({ message: "Invalid refresh token" });
+  }
 }
 
 
@@ -251,12 +251,12 @@ export const updatePassword = async (req, res) => {
   try {
     // Try to find user in User collection first
     let user = await User.findById(userId);
-    
+
     if (!user) {
       // If not found in User collection, check AccountManagerModel
       user = await AccountManagerModel.findById(userId);
     }
-    
+
     if (!user) return res.status(404).json({ error: 'User not found' });
 
     const isMatch = await bcrypt.compare(oldPassword, user.password);
@@ -272,205 +272,205 @@ export const updatePassword = async (req, res) => {
 };
 
 export const forgotpassword = async (req, res) => {
-    const { email } = req.body;
-    try {
-        // 1. Check User collection for account manager
-        let user = await User.findOne({ email: email, type: 'accountmanager' });
-        let isLegacy = false;
-        if (!user) {
-            // 2. If not found, check AccountManager collection (legacy)
-            user = await AccountManagerModel.findOne({ email: email });
-            isLegacy = true;
-        }
-        if (!user) {
-            return res.status(404).json({ Status: "User not existed", message: "No account found with this email address" });
-        }
-
-        // Generate reset token
-        const resetToken = jwt.sign({ id: user._id }, "jwt_secret_key", { expiresIn: "1d" });
-
-        // Save reset token and expiry to user document
-        user.resetPasswordToken = resetToken;
-        user.resetPasswordExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 1 day from now
-        await user.save({ validateBeforeSave: false });
-
-        // Create reset URL
-        const resetUrl = `http://localhost:5173/accountmanager/reset_password/${user._id}/${resetToken}`;
-
-        // Console log the URL for testing
-        console.log('Password reset URL:', resetUrl);
-        console.log('Sending reset email to:', user.email);
-
-        var transporter = nodemailer.createTransport({
-            service: 'gmail',
-            auth: {
-                user: process.env.EMAIL_USER,
-                pass: process.env.EMAIL_PASS
-            }
-        });
-
-        var mailOptions = {
-            from: process.env.EMAIL_USER,
-            to: user.email,
-            subject: 'Reset Password Link',
-            text: `Click the following link to reset your password: ${resetUrl}`
-        };
-
-        transporter.sendMail(mailOptions, function (error, info) {
-            if (error) {
-                console.log('Email error:', error);
-                return res.status(500).json({ Status: "Error", message: "Failed to send email" });
-            } else {
-                return res.json({ Status: "Success", message: "Password reset email sent successfully" });
-            }
-        });
-    } catch (error) {
-        console.error('Forgot password error:', error);
-        return res.status(500).json({ Status: "Error", message: "Internal server error" });
+  const { email } = req.body;
+  try {
+    // 1. Check User collection for account manager
+    let user = await User.findOne({ email: email, type: 'accountmanager' });
+    let isLegacy = false;
+    if (!user) {
+      // 2. If not found, check AccountManager collection (legacy)
+      user = await AccountManagerModel.findOne({ email: email });
+      isLegacy = true;
     }
+    if (!user) {
+      return res.status(404).json({ Status: "User not existed", message: "No account found with this email address" });
+    }
+
+    // Generate reset token
+    const resetToken = jwt.sign({ id: user._id }, "jwt_secret_key", { expiresIn: "1d" });
+
+    // Save reset token and expiry to user document
+    user.resetPasswordToken = resetToken;
+    user.resetPasswordExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 1 day from now
+    await user.save({ validateBeforeSave: false });
+
+    // Create reset URL
+    const resetUrl = `http://localhost:5173/accountmanager/reset_password/${user._id}/${resetToken}`;
+
+    // Console log the URL for testing
+    console.log('Password reset URL:', resetUrl);
+    console.log('Sending reset email to:', user.email);
+
+    var transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+      }
+    });
+
+    var mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: user.email,
+      subject: 'Reset Password Link',
+      text: `Click the following link to reset your password: ${resetUrl}`
+    };
+
+    transporter.sendMail(mailOptions, function (error, info) {
+      if (error) {
+        console.log('Email error:', error);
+        return res.status(500).json({ Status: "Error", message: "Failed to send email" });
+      } else {
+        return res.json({ Status: "Success", message: "Password reset email sent successfully" });
+      }
+    });
+  } catch (error) {
+    console.error('Forgot password error:', error);
+    return res.status(500).json({ Status: "Error", message: "Internal server error" });
+  }
 }
 
 
 export const resetpassword = async (req, res) => {
-    const { id, token } = req.params;
-    const { password } = req.body;
+  const { id, token } = req.params;
+  const { password } = req.body;
 
-    try {
-        // Try User collection first
-        let user = await User.findById(id);
-        let isLegacy = false;
-        if (!user) {
-            // If not found, try AccountManager collection
-            user = await AccountManagerModel.findById(id);
-            isLegacy = true;
-        }
-        if (!user) {
-            return res.status(404).json({ Status: "Error", message: "User not found" });
-        }
-
-        // Check if reset token matches and is not expired
-        if (user.resetPasswordToken !== token) {
-            return res.status(400).json({ Status: "Error", message: "Invalid reset token" });
-        }
-
-        if (user.resetPasswordExpires < new Date()) {
-            return res.status(400).json({ Status: "Error", message: "Reset token has expired" });
-        }
-
-        // Verify JWT token
-        jwt.verify(token, "jwt_secret_key", async (err, decoded) => {
-            if (err) {
-                return res.status(400).json({ Status: "Error", message: "Invalid or expired token" });
-            }
-
-            try {
-                // First clear the reset token fields
-                if (isLegacy) {
-                    await AccountManagerModel.findByIdAndUpdate(
-                        user._id,
-                        {
-                            $unset: {
-                                resetPasswordToken: 1,
-                                resetPasswordExpires: 1
-                            }
-                        },
-                        { runValidators: false }
-                    );
-                } else {
-                    user.resetPasswordToken = undefined;
-                    user.resetPasswordExpires = undefined;
-                }
-
-                // Then update the password using save to trigger the pre-save hook
-                user.password = password;
-                await user.save({ validateBeforeSave: false });
-
-                return res.json({ Status: "Success", message: "Password reset successfully" });
-            } catch (updateError) {
-                console.error('Password update error:', updateError);
-                return res.status(500).json({ Status: "Error", message: "Failed to update password" });
-            }
-        });
-    } catch (error) {
-        console.error('Reset password error:', error);
-        return res.status(500).json({ Status: "Error", message: "Internal server error" });
+  try {
+    // Try User collection first
+    let user = await User.findById(id);
+    let isLegacy = false;
+    if (!user) {
+      // If not found, try AccountManager collection
+      user = await AccountManagerModel.findById(id);
+      isLegacy = true;
     }
+    if (!user) {
+      return res.status(404).json({ Status: "Error", message: "User not found" });
+    }
+
+    // Check if reset token matches and is not expired
+    if (user.resetPasswordToken !== token) {
+      return res.status(400).json({ Status: "Error", message: "Invalid reset token" });
+    }
+
+    if (user.resetPasswordExpires < new Date()) {
+      return res.status(400).json({ Status: "Error", message: "Reset token has expired" });
+    }
+
+    // Verify JWT token
+    jwt.verify(token, "jwt_secret_key", async (err, decoded) => {
+      if (err) {
+        return res.status(400).json({ Status: "Error", message: "Invalid or expired token" });
+      }
+
+      try {
+        // First clear the reset token fields
+        if (isLegacy) {
+          await AccountManagerModel.findByIdAndUpdate(
+            user._id,
+            {
+              $unset: {
+                resetPasswordToken: 1,
+                resetPasswordExpires: 1
+              }
+            },
+            { runValidators: false }
+          );
+        } else {
+          user.resetPasswordToken = undefined;
+          user.resetPasswordExpires = undefined;
+        }
+
+        // Then update the password using save to trigger the pre-save hook
+        user.password = password;
+        await user.save({ validateBeforeSave: false });
+
+        return res.json({ Status: "Success", message: "Password reset successfully" });
+      } catch (updateError) {
+        console.error('Password update error:', updateError);
+        return res.status(500).json({ Status: "Error", message: "Failed to update password" });
+      }
+    });
+  } catch (error) {
+    console.error('Reset password error:', error);
+    return res.status(500).json({ Status: "Error", message: "Internal server error" });
+  }
 }
 
-export const getAccountManagerInfo=async(req,res)=>{
-    try {
-        const accountmanagerId = req.params.accountmanagerId;
-        console.log('AccountManager ID:', accountmanagerId);
-    
-        // Try to find user in User collection first
-        let user = await User.findById(accountmanagerId);
-        
-        if (!user) {
-            // If not found in User collection, check AccountManagerModel
-            user = await AccountManagerModel.findById(accountmanagerId);
-        }
-        
-        if (!user) return res.status(404).json({ error: 'User not found' });
-    
-        res.json({
-            user
-        });
-      } catch (err) {
-        console.error('Error in AccountManagerInfo:', err);
-        res.status(500).json({ error: 'Server error' });
-      }
+export const getAccountManagerInfo = async (req, res) => {
+  try {
+    const accountmanagerId = req.params.accountmanagerId;
+    console.log('AccountManager ID:', accountmanagerId);
+
+    // Try to find user in User collection first
+    let user = await User.findById(accountmanagerId);
+
+    if (!user) {
+      // If not found in User collection, check AccountManagerModel
+      user = await AccountManagerModel.findById(accountmanagerId);
+    }
+
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    res.json({
+      user
+    });
+  } catch (err) {
+    console.error('Error in AccountManagerInfo:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
 }
 export const getAllJobs = async (req, res) => {
-    try {
-        const jobs = await Job.find()
-            .populate('adminId', 'fullname username')
-            .populate('managerId', 'fullname username')
-            .populate('accountManagerId', 'fullname username');
-        // console.log(jobs);
-        return res.status(200).json({
-            message: "Jobs fetched successfully.",
-            jobs,
-            success: true
-        });
-    } catch (error) {
-        console.error(error);
-        return res.status(500).json({
-            message: "Error fetching jobs.",
-            success: false
-        });
-    }
+  try {
+    const jobs = await Job.find()
+      .populate('adminId', 'fullname username')
+      .populate('managerId', 'fullname username')
+      .populate('accountManagerId', 'fullname username');
+    // console.log(jobs);
+    return res.status(200).json({
+      message: "Jobs fetched successfully.",
+      jobs,
+      success: true
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      message: "Error fetching jobs.",
+      success: false
+    });
+  }
 };
 
 export const getJobById = async (req, res) => {
-    try {
-        const { jobId } = req.params;
-        const job = await Job.findById(jobId)
-            .populate('adminId', 'fullname username')
-            .populate('managerId', 'fullname username')
-            .populate('accountManagerId', 'fullname username');
-        
-        if (!job) {
-            return res.status(404).json({
-                message: "Job not found.",
-                success: false
-            });
-        }
-        
-        return res.status(200).json({
-            message: "Job fetched successfully.",
-            job,
-            success: true
-        });
-    } catch (error) {
-        console.error(error);
-        return res.status(500).json({
-            message: "Error fetching job.",
-            success: false
-        });
+  try {
+    const { jobId } = req.params;
+    const job = await Job.findById(jobId)
+      .populate('adminId', 'fullname username')
+      .populate('managerId', 'fullname username')
+      .populate('accountManagerId', 'fullname username');
+
+    if (!job) {
+      return res.status(404).json({
+        message: "Job not found.",
+        success: false
+      });
     }
+
+    return res.status(200).json({
+      message: "Job fetched successfully.",
+      job,
+      success: true
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      message: "Error fetching job.",
+      success: false
+    });
+  }
 };
 
-export const getUniqueCandidates= async (req, res) => {
+export const getUniqueCandidates = async (req, res) => {
   try {
     const allScorecards = await Scorecard.find({});
     const uniqueMap = new Map();
@@ -494,15 +494,15 @@ export const getUniqueCandidates= async (req, res) => {
   }
 }
 
-export const getDetailsCandidate=async (req, res) => {
+export const getDetailsCandidate = async (req, res) => {
   try {
     const { resumeId } = req.params;
     const scorecard = await Scorecard.find({ "resume._id": resumeId });
     if (!scorecard) return res.status(404).json({ error: "Not found" });
     // console.log(scorecard);
     res.json({
-    //   resume: scorecard.resume,
-    //   answers: scorecard.answers || [],
+      //   resume: scorecard.resume,
+      //   answers: scorecard.answers || [],
       scorecard,
     });
   } catch (err) {
@@ -513,16 +513,16 @@ export const getDetailsCandidate=async (req, res) => {
 export const getCandidatesByJob = async (req, res) => {
   try {
     const { jobId } = req.params;
-    
+
     // Find all scorecards for this job
     const scorecards = await Scorecard.find({ jobId: jobId })
       .populate('resume')
       .populate('candidateId');
-    
+
     if (!scorecards) {
       return res.status(404).json({ error: "No candidates found for this job" });
     }
-    
+
     // Transform the data to match the expected format
     const candidates = scorecards.map(scorecard => ({
       _id: scorecard._id,
@@ -534,7 +534,7 @@ export const getCandidatesByJob = async (req, res) => {
       coverLetter: scorecard.resume?.coverLetter || '',
       overallScore: scorecard.overallScore || 0
     }));
-    
+
     res.json({
       candidates: candidates,
       success: true
@@ -549,21 +549,21 @@ export const getResumesByJob = async (req, res) => {
   try {
     const { jobId } = req.params;
     console.log('AccountManager getResumesByJob - jobId:', jobId);
-    
+
     // First try to find scorecards for this job
     let scorecards = await Scorecard.find({ "jobId": jobId })
       .populate('resume')
       .populate('candidateId');
-    
+
     console.log('Found scorecards:', scorecards.length);
-    
+
     // If no scorecards found, try to find resumes for this job
     if (!scorecards || scorecards.length === 0) {
       console.log('No scorecards found, checking Resume model...');
-      
+
       const resumes = await Resume.find({ "jobId": jobId });
       console.log('Found resumes:', resumes.length);
-      
+
       if (resumes && resumes.length > 0) {
         // Transform resumes to match scorecard format
         scorecards = resumes.map(resume => ({
@@ -577,12 +577,12 @@ export const getResumesByJob = async (req, res) => {
         }));
       }
     }
-    
+
     if (!scorecards || scorecards.length === 0) {
       console.log('No data found for job:', jobId);
       return res.status(404).json({ error: "No resumes found for this job" });
     }
-    
+
     console.log('Returning scorecards:', scorecards.length);
     res.json(scorecards);
   } catch (err) {
@@ -595,20 +595,20 @@ export const updateResumeStatus = async (req, res) => {
   try {
     const { resumeId } = req.params;
     const { status, addedNotes } = req.body;
-    
+
     const updateData = {};
     if (status !== undefined) updateData.status = status;
     if (addedNotes !== undefined) updateData.addedNotes = addedNotes;
-    
+
     console.log('Updating resume/scorecard:', resumeId, updateData);
-    
+
     // First try to update in Scorecard model
     let scorecard = await Scorecard.findByIdAndUpdate(
       resumeId,
       updateData,
       { new: true }
     );
-    
+
     // If not found in Scorecard, try Resume model
     if (!scorecard) {
       console.log('Not found in Scorecard, trying Resume model...');
@@ -618,17 +618,17 @@ export const updateResumeStatus = async (req, res) => {
         { new: true }
       );
     }
-    
+
     if (!scorecard) {
       return res.status(404).json({ error: "Resume not found" });
     }
-    
-    const message = status !== undefined && addedNotes !== undefined 
-      ? "Status and note updated successfully" 
-      : status !== undefined 
-        ? "Status updated successfully" 
+
+    const message = status !== undefined && addedNotes !== undefined
+      ? "Status and note updated successfully"
+      : status !== undefined
+        ? "Status updated successfully"
         : "Note updated successfully";
-    
+
     res.json({ message, scorecard });
   } catch (err) {
     console.error('Error updating resume:', err);
@@ -648,14 +648,14 @@ export const updateAccountManagerInfo = async (req, res) => {
         updateData[field] = req.body[field];
       }
     }
-    
+
     // Try to update user in User collection first
     let updatedUser = await User.findByIdAndUpdate(
       accountmanagerId,
       { $set: updateData },
       { new: true, runValidators: true, select: '-password -refreshToken' }
     );
-    
+
     if (!updatedUser) {
       // If not found in User collection, try AccountManagerModel
       updatedUser = await AccountManagerModel.findByIdAndUpdate(
@@ -664,7 +664,7 @@ export const updateAccountManagerInfo = async (req, res) => {
         { new: true, runValidators: true, select: '-password -refreshToken' }
       );
     }
-    
+
     if (!updatedUser) {
       return res.status(404).json({ error: 'User not found' });
     }
@@ -678,7 +678,8 @@ export const updateAccountManagerInfo = async (req, res) => {
 export const createAccountManagerByAdmin = async (req, res) => {
   try {
     const { fullname, email, password, dateOfBirth, gender, phone, onboardedBy, adminId } = req.body;
-    
+    console.log("createAccountManagerByAdmin payload:", JSON.stringify({ ...req.body, password: '[REDACTED]' }, null, 2));
+
     // Check if user with this email already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -686,7 +687,22 @@ export const createAccountManagerByAdmin = async (req, res) => {
     }
 
     const username = fullname.replace(/\s+/g, '').toLowerCase();
-    
+
+    // Sanitize inputs to avoid CastError
+    const sanitizedAdminId = (adminId && adminId !== "") ? adminId : undefined;
+    const sanitizedDOB = (dateOfBirth && dateOfBirth !== "") ? dateOfBirth : undefined;
+
+    let sanitizedPhone = undefined;
+    if (phone && phone !== "") {
+      // Remove non-digit chars if it's a string, or just use as is
+      const phoneStr = String(phone).replace(/\D/g, '');
+      if (phoneStr.length > 0) {
+        sanitizedPhone = Number(phoneStr);
+      }
+    }
+
+    const sanitizedGender = (gender && gender !== "") ? gender : undefined;
+
     // Create user
     const user = await User.create({
       username,
@@ -694,16 +710,16 @@ export const createAccountManagerByAdmin = async (req, res) => {
       email,
       password,
       type: 'accountmanager',
-      adminId,
-      DOB: dateOfBirth,
-      gender,
-      phone,
+      adminId: sanitizedAdminId,
+      DOB: sanitizedDOB,
+      gender: sanitizedGender,
+      phone: sanitizedPhone,
       firstPassSet: false
     });
 
     // Generate reset token for password setting
     const resetToken = jwt.sign({ id: user._id }, "jwt_secret_key", { expiresIn: "7d" });
-    
+
     // Save reset token to user document
     user.resetPasswordToken = resetToken;
     user.resetPasswordExpires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
@@ -711,7 +727,7 @@ export const createAccountManagerByAdmin = async (req, res) => {
 
     // Create password set URL
     const setPasswordUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/accountmanager/set_password/${user._id}/${resetToken}`;
-    
+
     // Console log the URL for testing
     console.log('Password set URL:', setPasswordUrl);
     console.log('Sending password set email to:', email);
@@ -759,7 +775,11 @@ export const createAccountManagerByAdmin = async (req, res) => {
 
   } catch (error) {
     console.error('Error creating account manager:', error);
-    return res.status(500).json({ message: "Internal Server Error" });
+    // Return more specific error message if available
+    return res.status(500).json({
+      message: "Internal Server Error",
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 };
 
@@ -856,7 +876,7 @@ export const setPassword = async (req, res) => {
         // Clear reset token fields
         user.resetPasswordToken = undefined;
         user.resetPasswordExpires = undefined;
-        
+
         await user.save();
 
         return res.json({ message: "Password set successfully" });
@@ -872,4 +892,4 @@ export const setPassword = async (req, res) => {
   }
 };
 
-export {registerAccountManager,loginAccountManager,logoutAccountManager,generateAccessAndRefreshToken,refreshAccessToken};
+export { registerAccountManager, loginAccountManager, logoutAccountManager, generateAccessAndRefreshToken, refreshAccessToken };

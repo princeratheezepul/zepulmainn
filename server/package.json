@@ -6,7 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node src/index.js",
-    "dev": "nodemon src/index.js"
+    "dev": "nodemon src/index.js",
+    "postinstall": "patch-package"
   },
   "author": "",
   "license": "ISC",
@@ -34,5 +35,8 @@
     "pdf.js-extract": "^0.2.1",
     "pdfjs-dist": "^3.11.174",
     "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "patch-package": "^8.0.1"
   }
 }
