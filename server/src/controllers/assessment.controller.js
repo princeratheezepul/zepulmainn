@@ -354,19 +354,21 @@ const evaluateSubmission = async (resumeId, submissions, questions) => {
     let feedbackParts = [];
 
     // Evaluate each question
+    // Evaluate each question
     for (let i = 0; i < questions.length; i++) {
       const question = questions[i];
       const submission = submissions.find(s => s.questionIndex === i);
       const code = submission ? submission.code : "";
       const language = submission ? submission.language : "javascript";
 
+      console.log(`Evaluating Question ${i + 1}: ${question.title}, Language: ${language}`);
+
       // Step 1: Check for meaningful implementation
       const codeWithoutComments = code.replace(/\/\/.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '').trim();
-      const hasActualCode = codeWithoutComments.length > 20;
-      const hasReturn = code.includes('return');
+      const hasActualCode = codeWithoutComments.length > 5; // Relaxed check
 
-      // If code is essentially empty
-      if (!hasActualCode || !hasReturn) {
+      if (!hasActualCode) {
+        console.log(`Question ${i + 1}: Code too short.`);
         feedbackParts.push(`Question ${i + 1}: No meaningful solution provided.`);
         continue;
       }
@@ -379,27 +381,26 @@ const evaluateSubmission = async (resumeId, submissions, questions) => {
         const result = await executeJava(code, examples, question.functionName);
         passedTests = result.results.filter(r => r.passed).length;
       } else {
-        // Existing JS Eval Logic
-        for (const example of examples) {
+        // JavaScript Evaluation
+        for (let j = 0; j < examples.length; j++) {
+          const example = examples[j];
           try {
-            // Parse example input
-            // This regex is fragile and depends on specific format. 
-            // Better to rely on the fact that example.input is likely an array from DB now if we fixed generation, 
-            // but for safety let's try to handle both string parsing (legacy/AI text) and direct array.
+            console.log(`Test Case ${j + 1} Input:`, JSON.stringify(example.input));
 
             let args;
             if (Array.isArray(example.input)) {
               args = example.input;
             } else if (typeof example.input === 'string') {
-              // Try to parse string input like "[1,2], 3"
-              // This is tricky without a robust parser. 
-              // For now, let's assume the AI returns valid JSON arrays in the new prompt.
-              // If it's a string from legacy, we might fail here.
-              // Let's try a simple eval for arguments if it looks like arguments
               try {
-                args = JSON.parse(`[${example.input}]`); // Wrap in array to parse "arg1, arg2" sequence? No, example.input usually is "[arg1, arg2]"
+                // Try JSON parsing first
+                if (example.input.trim().startsWith('[')) {
+                  args = JSON.parse(example.input);
+                } else {
+                  args = JSON.parse(`[${example.input}]`);
+                }
               } catch (e) {
-                // Fallback regex from before
+                console.log("JSON parse failed, trying regex fallback for input:", example.input);
+                // Fallback regex
                 const inputMatch = example.input.match(/\[([^\]]+)\].*?(\d+)/);
                 if (inputMatch) {
                   const numsStr = inputMatch[1];
@@ -410,29 +411,52 @@ const evaluateSubmission = async (resumeId, submissions, questions) => {
               }
             }
 
-            if (!args) args = []; // Fail safe
+            if (!args) {
+              console.log("Could not parse args, using empty array");
+              args = [];
+            }
+            if (!Array.isArray(args)) args = [args];
 
             const argsString = args.map(arg => JSON.stringify(arg)).join(', ');
+            console.log(`Args String: ${argsString}`);
 
             const testCode = `
                     ${code}
-                    try {
-                      const result = ${question.functionName}(${argsString});
-                      JSON.stringify(result);
-                    } catch (e) {
-                      "ERROR: " + e.message;
-                    }
+                    
+                    (() => {
+                        try {
+                           if (typeof ${question.functionName} !== 'function') {
+                               return "ERROR: Function '${question.functionName}' not found";
+                           }
+                           const result = ${question.functionName}(${argsString});
+                           return result;
+                        } catch (e) {
+                           return "ERROR: " + e.message;
+                        }
+                    })()
                   `;
 
-            const actualOutput = eval(testCode);
+            let actualOutput;
+            try {
+              actualOutput = eval(testCode);
+            } catch (e) {
+              actualOutput = "ERROR: Eval failed: " + e.message;
+            }
+
             const expectedOutput = example.output;
-            // Simple equality check (improve for arrays/objects)
-            const passed = JSON.stringify(actualOutput) === JSON.stringify(expectedOutput) && !String(actualOutput).startsWith("ERROR");
+
+            console.log("Actual:", JSON.stringify(actualOutput));
+            console.log("Expected:", JSON.stringify(expectedOutput));
+
+            // Comparison
+            const passed = JSON.stringify(actualOutput) === JSON.stringify(expectedOutput) &&
+              !(typeof actualOutput === 'string' && actualOutput.startsWith("ERROR"));
 
             if (passed) passedTests++;
+            else console.log("Test FAILED");
 
           } catch (error) {
-            // Test failed
+            console.error("Test execution loop error:", error);
           }
         }
       }
@@ -440,7 +464,7 @@ const evaluateSubmission = async (resumeId, submissions, questions) => {
       totalTests += examples.length;
       totalPassedTests += passedTests;
 
-      // Score for this question (max 33.33 points each)
+      // Score for this question
       if (examples.length > 0) {
         totalScore += (passedTests / examples.length) * (100 / questions.length);
       }

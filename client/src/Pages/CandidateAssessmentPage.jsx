@@ -68,19 +68,39 @@ const CandidateAssessmentPage = () => {
 
             questions.forEach((q, idx) => {
                 const functionName = q.functionName || 'solution';
-                // Default to Java as requested, but can support others
+                // Default to Java as requested
                 initialLanguages[idx] = 'java';
-                initialCodes[idx] = `// ${q.title}
+
+                // JavaScript Boilerplate
+                const jsBoilerplate = `// ${q.title}
+// Write your solution below
+
+/**
+ * @param {any[]} args - Arguments passed as an array
+ * @return {any} - Return the result
+ */
+function ${functionName}(...args) {
+    // Note: args is an array of arguments passed to the function
+    // For example, if input is [1, 2], args[0] is 1, args[1] is 2
+    
+    // Your code here
+    return null;
+}`;
+
+                // Java Boilerplate (Keep as backup)
+                const javaBoilerplate = `// ${q.title}
 // Write your solution below
 
 import java.util.*;
 
 class Solution {
-    public int ${functionName}(int[] args) {
+    public Object ${functionName}(Object... args) {
         // Your code here
-        return 0;
+        return null;
     }
 }`;
+
+                initialCodes[idx] = javaBoilerplate;
             });
             setCodes(initialCodes);
             setLanguages(initialLanguages);
@@ -113,9 +133,49 @@ class Solution {
             [currentQuestionIndex]: newLang
         }));
 
-        // Reset code to boilerplate if needed, or keep existing
-        // For now, let's just update the language state. 
-        // Ideally we should swap boilerplate but that might lose user work.
+        // Generate new boilerplate for the selected language
+        const currentQuestion = getCurrentQuestion();
+        const functionName = currentQuestion?.functionName || 'solution';
+
+        let newCode = '';
+        if (newLang === 'java') {
+            newCode = `// ${currentQuestion?.title || 'Question'}
+// Write your solution below
+
+import java.util.*;
+
+class Solution {
+    public Object ${functionName}(Object... args) {
+        // Your code here
+        return null;
+    }
+}`;
+        } else {
+            // JavaScript
+            newCode = `// ${currentQuestion?.title || 'Question'}
+// Write your solution below
+
+/**
+ * @param {any[]} args - Arguments passed as an array
+ * @return {any} - Return the result
+ */
+function ${functionName}(...args) {
+    // Note: args is an array of arguments passed to the function
+    // For example, if input is [1, 2], args[0] is 1, args[1] is 2
+    
+    // Your code here
+    return null;
+}`;
+        }
+
+        // Only update code if it's the default boilerplate or user confirms? 
+        // For this task, we'll force update to ensure they get the right signature, 
+        // as preserving wrong code is useless. 
+        // A better UX would confirm, but we'll specificially target the request "not correct... change it".
+        setCodes(prev => ({
+            ...prev,
+            [currentQuestionIndex]: newCode
+        }));
     };
 
     const runTestCases = (userCode, question) => {
