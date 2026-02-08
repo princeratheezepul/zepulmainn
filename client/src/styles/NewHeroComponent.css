@@ -1,0 +1,193 @@
+.new-hero-container {
+  width: 100%;
+  background: #ffffff;
+  padding: 0;
+  margin: 0;
+}
+
+.new-hero-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2rem;
+  min-height: 80vh;
+  padding: 2rem 3rem;
+}
+
+.new-hero-left {
+  flex: 1;
+  max-width: 50%;
+  padding-right: 2rem;
+}
+
+.new-hero-title {
+  font-size: 3rem;
+  font-weight: 700;
+  color: #000000;
+  margin-bottom: 1.5rem;
+  line-height: 1.2;
+}
+
+.new-hero-title .text-primary {
+  color: #2563eb;
+}
+
+.new-hero-description {
+  font-size: 1rem;
+  color: #333333;
+  margin-bottom: 1rem;
+  line-height: 1.6;
+}
+
+.new-hero-subtitle {
+  font-size: 0.95rem;
+  color: #555555;
+  margin-bottom: 2.5rem;
+  line-height: 1.5;
+}
+
+.new-hero-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
+  margin-bottom: 3rem;
+}
+
+.stat-item {
+  text-align: left;
+}
+
+.stat-number {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #000000;
+  margin-bottom: 0.5rem;
+}
+
+.stat-label {
+  font-size: 0.75rem;
+  color: #888888;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  line-height: 1.4;
+  margin: 0;
+}
+
+.book-demo-btn {
+  background: #2563eb;
+  color: #ffffff;
+  border: none;
+  padding: 1rem 2rem;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 4px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+.book-demo-btn:hover {
+  background: #1d4ed8;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4);
+}
+
+.book-demo-btn .arrow {
+  font-size: 1.2rem;
+  transition: transform 0.3s ease;
+}
+
+.book-demo-btn:hover .arrow {
+  transform: translateX(4px);
+}
+
+.new-hero-right {
+  flex: 1;
+  max-width: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.hero-image {
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+/* Add a special circle indicator for the "R" in 48 hours stat */
+.stat-item:nth-child(2) .stat-number::after {
+  content: "";
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  background: linear-gradient(135deg, #ec4899, #6366f1);
+  border-radius: 50%;
+  margin-left: 8px;
+  vertical-align: super;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .new-hero-title {
+    font-size: 2.5rem;
+  }
+
+  .new-hero-stats {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+  }
+
+  .stat-number {
+    font-size: 2rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .new-hero-content {
+    flex-direction: column;
+    padding: 2rem 1.5rem;
+  }
+
+  .new-hero-left,
+  .new-hero-right {
+    max-width: 100%;
+    padding-right: 0;
+  }
+
+  .new-hero-title {
+    font-size: 2rem;
+  }
+
+  .new-hero-stats {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+
+  .stat-number {
+    font-size: 1.5rem;
+  }
+
+  .stat-label {
+    font-size: 0.65rem;
+  }
+
+  .book-demo-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .new-hero-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .new-hero-title {
+    font-size: 1.75rem;
+  }
+}

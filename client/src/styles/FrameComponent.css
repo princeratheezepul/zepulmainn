@@ -1,0 +1,23 @@
+.frame-component-container {
+    width: 100%;
+    background: #ffffff;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.frame-image {
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    display: block;
+}
+
+/* Responsive adjustments if needed */
+@media (max-width: 768px) {
+    .frame-component-container {
+        padding: 0;
+    }
+}
