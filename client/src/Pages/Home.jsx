@@ -71,9 +71,13 @@ const Home = () => {
           <section className="new-hero-section">
             <NewHeroComponent />
           </section>
-          <section className="why-recruitment-section">
-            <WhyRecruitment />
-          </section>
+        </div>
+      </div>
+      <section className="why-recruitment-section">
+        <WhyRecruitment />
+      </section>
+      <div className="container h-full">
+        <div className="row ">
           <section className="frame-section">
             <FrameComponent />
           </section>

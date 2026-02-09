@@ -6,10 +6,6 @@ const ProRecruiterHero = () => {
     return (
         <div className="pro-recruiter-hero-container">
             <div className="pro-recruiter-hero-left">
-                <div className="hero-header">
-                    <img src="/zepul_trademark.jpg" alt="Zepul" className="hero-logo" />
-                    <button className="sign-in-btn">Sign In</button>
-                </div>
                 <div className="hero-content">
                     <h1>Zep Pro<br /> Recruiter</h1>
                     <p>

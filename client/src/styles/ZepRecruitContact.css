@@ -83,7 +83,7 @@
     align-items: center;
 }
 
-.submit-btn {
+.zep-recruit-contact-form .submit-btn {
     position: absolute;
     right: 5px;
     top: 50%;
@@ -103,7 +103,7 @@
     transition: background-color 0.3s;
 }
 
-.submit-btn:hover {
+.zep-recruit-contact-form .submit-btn:hover {
     background-color: #004494;
 }
 

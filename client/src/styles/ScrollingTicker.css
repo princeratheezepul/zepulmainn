@@ -3,7 +3,7 @@
     width: 100%;
     background: #0a0a0a;
     overflow: hidden;
-    padding: 1.5rem 0;
+    padding: 0.5rem 0;
     margin-top: 0;
 }
 
@@ -22,7 +22,7 @@
 
 .scrolling-ticker-item {
     color: #ffffff;
-    font-size: 1rem;
+    font-size: 0.8rem;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 2px;
@@ -34,8 +34,11 @@
     content: "•";
     position: absolute;
     right: -2rem;
+    top: 50%;
+    transform: translateY(-50%);
     color: #2563eb;
-    font-size: 1.5rem;
+    font-size: 1.2rem;
+    line-height: 1;
 }
 
 .scrolling-ticker-item:last-child::after {

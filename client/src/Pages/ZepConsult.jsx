@@ -1,5 +1,6 @@
 import React from 'react';
 import ZepConsultHero from '../Components/ZepConsultHero';
+import ScrollingTicker from '../Components/ScrollingTicker';
 import ZepConsultAdvantage from '../Components/ZepConsultAdvantage';
 import ZepConsultServices from '../Components/ZepConsultServices';
 import ZepConsultStats from '../Components/ZepConsultStats';
@@ -10,6 +11,7 @@ const ZepConsult = () => {
     return (
         <div className="zep-consult-page">
             <ZepConsultHero />
+            <ScrollingTicker />
             <ZepConsultAdvantage />
             <ZepConsultServices />
             <ZepConsultStats />

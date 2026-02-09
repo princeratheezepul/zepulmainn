@@ -29,7 +29,7 @@ const Footer = () => {
           <div className="footer-links-column">
             <Link to="/ZepRecruit" className="footer-link">Zep Recruit</Link>
             <Link to="/prorecruitor" className="footer-link">Zep Pro Recruiter</Link>
-            <Link to="/zepJobs" className="footer-link">Zep Jobs</Link>
+            <Link to="/careers" className="footer-link">Zep Jobs</Link>
             <Link to="/zepConsult" className="footer-link">Zep Consult</Link>
             <Link to="/about" className="footer-link">About</Link>
           </div>
