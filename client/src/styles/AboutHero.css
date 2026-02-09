@@ -1,13 +1,13 @@
 .about-hero-container {
     width: 100%;
     font-family: 'DM Sans', sans-serif;
-    padding-bottom: 80px;
+    padding-bottom: 20px;
 }
 
 .about-hero-header {
     background-color: #111;
     color: white;
-    padding: 60px 100px 100px 100px;
+    padding: 20px 100px 150px 100px;
 }
 
 .about-hero-header h1 {
@@ -24,9 +24,10 @@
 
 .about-image-container {
     width: 100%;
-    margin-top: -40px;
-    /* Overlap effect if desired, or adjust spacing */
-    margin-bottom: 40px;
+    margin-top: -130px;
+    padding: 0 100px;
+    position: relative;
+    z-index: 10;
 }
 
 .about-hero-image {

@@ -1,7 +1,7 @@
 .how-zep-recruit-works {
     width: 100%;
     background: #ffffff;
-    padding: 4rem 5rem;
+    padding: 0 5rem 0.5rem 5rem;
     margin: 0;
 }
 
@@ -16,7 +16,7 @@
 
 .how-works-left {
     flex: 0 0 auto;
-    max-width: 400px;
+    max-width: 600px;
 }
 
 .how-works-title {

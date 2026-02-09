@@ -4,8 +4,11 @@ import "../styles/FrameComponent.css";
 const FrameComponent = () => {
     return (
         <div className="frame-component-container">
+            <h2 className="why-zepul-title">
+                Why <span className="text-primary">Zepul</span> ?
+            </h2>
             <img
-                src="/Frame 2147228550.png"
+                src="/Hompage.png"
                 alt="Frame visualization"
                 className="frame-image"
             />

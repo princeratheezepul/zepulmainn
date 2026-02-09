@@ -1,11 +1,10 @@
 .why-zep-recruit-container {
     display: flex;
     justify-content: Space-between;
-    padding: 60px 80px;
+    padding: 10px 80px;
     background-color: #ffffff;
     font-family: 'DM Sans', sans-serif;
-    /* Adjust font family as needed */
-    gap: 100px;
+    gap: 40px;
 }
 
 .why-zep-recruit-left {
@@ -17,7 +16,7 @@
 }
 
 .why-zep-recruit-left h2 {
-    font-size: 48px;
+    font-size: 32px;
     font-weight: 500;
     line-height: 1.2;
     margin-bottom: 20px;
@@ -40,20 +39,18 @@
 
 .stat-card {
     background-color: #f8f9fc;
-    /* Light grey/off-white background */
-    padding: 25px;
+    padding: 15px;
     border-radius: 12px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 16px;
+    font-size: 14px;
     color: #555;
 }
 
 .stat-value {
     color: #0056b3;
-    /* Blue color */
-    font-size: 24px;
+    font-size: 18px;
     font-weight: 500;
 }
 

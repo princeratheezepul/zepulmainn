@@ -50,15 +50,15 @@
 .reinvention-cards {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 2rem;
-    max-width: 1400px;
+    gap: 6rem;
+    max-width: 1200px;
     margin: 0 auto;
 }
 
 .reinvention-card {
     background: #ffffff;
     border-radius: 12px;
-    padding: 2rem 1.5rem;
+    padding: 1.25rem 1rem;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
     transition: all 0.3s ease;
     display: flex;
@@ -72,9 +72,9 @@
 }
 
 .card-icon {
-    width: 200px;
-    height: 200px;
-    margin-bottom: 1.5rem;
+    width: 140px;
+    height: 140px;
+    margin-bottom: 1rem;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -87,16 +87,16 @@
 }
 
 .card-title {
-    font-size: 1.5rem;
+    font-size: 1.25rem;
     font-weight: 700;
     color: #000000;
-    margin-bottom: 1rem;
+    margin-bottom: 0.75rem;
 }
 
 .card-description {
-    font-size: 0.9rem;
+    font-size: 0.8rem;
     color: #555555;
-    line-height: 1.6;
+    line-height: 1.5;
     margin: 0;
 }
 

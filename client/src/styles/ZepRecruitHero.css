@@ -1,8 +1,8 @@
 .zep-recruit-hero {
     width: 100%;
     background: #f5f5f5;
-    min-height: 100vh;
-    padding: 2rem 3rem;
+    min-height: 60vh;
+    padding: 2rem 3rem 0 3rem;
 }
 
 .hero-content {

@@ -4,18 +4,18 @@ import '../styles/AboutTeam.css';
 const AboutTeam = () => {
     const teamMembers = [
         {
-            name: 'Srikanth',
+            name: 'Srikanth Dhanwada',
             role: 'Founder & CEO',
             image: '/srikanth.png'
         },
         {
-            name: 'Tarun',
-            role: 'Co-Founder & COO',
+            name: 'Tarun Ghulati',
+            role: 'Co-Founder',
             image: '/tarun.png'
         },
         {
-            name: 'Reena',
-            role: 'Head of Operations',
+            name: 'Syed Reena Sumera',
+            role: 'CBO',
             image: '/reena.png'
         }
     ];

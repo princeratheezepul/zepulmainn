@@ -1,30 +1,37 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import "../styles/ProductsServices.css";
 
 const ProductsServices = () => {
+    const navigate = useNavigate();
+
     const products = [
         {
             iconType: "users",
             title: "Zep Recruit",
             description:
                 "A Legacy Pay After Successful Placement Model, Reimagined with AI to Reduce Cost, Time, and Complexity.",
+            path: "/zepRecruit"
         },
         {
             iconType: "briefcase",
             title: "Zep Pro Recruiter",
             description:
                 "Built for every recruiter. Boost productivity, hire quality talent, move fast.",
+            path: "/prorecruitor"
         },
         {
             iconType: "laptop",
             title: "Zep Jobs",
             description: "Where Talent Meets Opportunity",
+            path: "/careers"
         },
         {
             iconType: "chart",
             title: "Zep Consult",
             description:
                 "Global, On-Demand IT Consulting for Scalable Enterprises",
+            path: "/zepConsult"
         },
     ];
 
@@ -69,7 +76,11 @@ const ProductsServices = () => {
 
             <div className="products-grid">
                 {products.map((product, index) => (
-                    <div className="product-card" key={index}>
+                    <div
+                        className="product-card"
+                        key={index}
+                        onClick={() => navigate(product.path)}
+                    >
                         <div className="product-icon">{renderIcon(product.iconType)}</div>
                         <h3 className="product-title">{product.title}</h3>
                         <p className="product-description">{product.description}</p>
