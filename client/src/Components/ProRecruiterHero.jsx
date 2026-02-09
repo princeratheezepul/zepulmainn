@@ -7,7 +7,7 @@ const ProRecruiterHero = () => {
         <div className="pro-recruiter-hero-container">
             <div className="pro-recruiter-hero-left">
                 <div className="hero-content">
-                    <h1>Zep Pro<br /> Recruiter</h1>
+                    <h1>Zep Pro Recruiter</h1>
                     <p>
                         An AI-powered TA suite for end-to-end recruiting AI-driven sourcing to
                         assessments, client-ready report cards, and performance insights that turn recruiters

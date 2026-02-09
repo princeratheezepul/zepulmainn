@@ -1,5 +1,5 @@
 .zep-consult-services-container {
-    padding: 80px 100px;
+    padding: 20px 100px;
     background-color: #ffffff;
     font-family: 'DM Sans', sans-serif;
 }
@@ -9,7 +9,7 @@
     font-weight: 500;
     line-height: 1.1;
     color: #000;
-    margin-bottom: 60px;
+    margin-bottom: 40px;
 }
 
 .services-grid {

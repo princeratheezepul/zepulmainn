@@ -12,12 +12,25 @@ const Header = () => {
 
   return (
     <Fragment>
-      <div className="container-fluid d-flex justify-content-between py-3">
+      <div
+        className="container-fluid d-flex justify-content-between py-3"
+        style={{
+          backgroundColor: location.pathname === "/about" ? "black" : "transparent",
+          transition: "background-color 0.3s ease"
+        }}
+      >
         <div className="container">
           <div className="d-flex justify-md-content-center  align-items-center justify-content-sm-between header col-md-12 col-sm-12 w-100">
             <div className=" logo">
               <Link to="/">
-                <img src="/assets/logo.png" alt="logo" />
+                <img
+                  src="/assets/logo.png"
+                  alt="logo"
+                  style={{
+                    filter: location.pathname === "/about" ? "brightness(0) invert(1)" : "none",
+                    transition: "filter 0.3s ease"
+                  }}
+                />
               </Link>
             </div>
 
@@ -31,7 +44,13 @@ const Header = () => {
                     className="btn btn-secondary w-[8rem]"
                     type="button"
                     id="loginDropdown"
-                    style={{ backgroundColor: "black", color: "white", borderRadius: "0" }}
+                    style={{
+                      backgroundColor: location.pathname === "/about" ? "white" : "black",
+                      color: location.pathname === "/about" ? "black" : "white",
+                      borderRadius: "0",
+                      transition: "all 0.3s ease",
+                      border: "none"
+                    }}
                     onClick={handleTryZepulClick}
                   >
                     Sign In

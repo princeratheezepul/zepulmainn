@@ -54,6 +54,14 @@
     transform: scale(1.05);
 }
 
+.team-card:nth-child(2):hover .team-image {
+    transform: scale(1.4);
+}
+
+.team-card:nth-child(3):hover .team-image {
+    transform: scale(1.2);
+}
+
 .team-info {
     text-align: center;
 }

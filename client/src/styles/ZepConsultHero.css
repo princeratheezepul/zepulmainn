@@ -2,12 +2,12 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 80px 100px;
+    padding: 40px 100px;
     background-color: #fcfcfc;
     /* Very light grey/white background */
     font-family: 'DM Sans', sans-serif;
     gap: 60px;
-    min-height: 80vh;
+    min-height: auto;
 }
 
 .zep-consult-hero-left {

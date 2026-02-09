@@ -10,7 +10,7 @@
     flex: 1;
     background-color: #f8f9fa;
     /* Light grey/white background */
-    padding: 40px 60px;
+    padding: 120px 60px 40px 60px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -58,7 +58,7 @@
     line-height: 1.6;
     color: #333;
     max-width: 400px;
-    margin-bottom: 30px;
+    margin-bottom: 300px;
 }
 
 .book-demo-btn {

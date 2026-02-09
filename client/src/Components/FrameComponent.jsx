@@ -5,7 +5,7 @@ const FrameComponent = () => {
     return (
         <div className="frame-component-container">
             <h2 className="why-zepul-title">
-                Why <span className="text-primary">Zepul</span> ?
+                How <span className="text-primary">Zepul</span> Works ?
             </h2>
             <img
                 src="/Hompage.png"
