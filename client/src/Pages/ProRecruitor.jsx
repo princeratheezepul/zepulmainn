@@ -1,5 +1,6 @@
 import React from 'react';
 import ProRecruiterHero from '../Components/ProRecruiterHero';
+import ScrollingTicker from '../Components/ScrollingTicker';
 import HowProRecruiterWorks from '../Components/HowProRecruiterWorks';
 import ProRecruiterProcessDiagram from '../Components/ProRecruiterProcessDiagram';
 import WhyZepProRecruiter from '../Components/WhyZepProRecruiter';
@@ -9,6 +10,7 @@ const ProRecruitor = () => {
   return (
     <div className="font-sans text-black">
       <ProRecruiterHero />
+      <ScrollingTicker />
       <HowProRecruiterWorks />
       <ProRecruiterProcessDiagram />
       <WhyZepProRecruiter />

@@ -1,40 +1,356 @@
-footer {
-  background-color: #000;
-  color: #fff;
-}
-footer p {
-  color: white;
-  font-size:15px;
-}
-.list1 ul li {
-  margin-top:1rem;
-}
-hr {
-  height: 1px;
+/* Footer Container */
+.footer-container {
+  background-color: #1a1a1a;
+  color: #ffffff;
+  font-family: 'DM Sans', sans-serif;
+  padding: 2.5rem 4rem 1.5rem;
 }
 
-footer .logo p {
-  font-size: 14px;
+/* Main Footer Layout */
+.footer-main {
+  display: flex;
+  justify-content: space-between;
+  gap: 3rem;
+  padding-bottom: 2rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
-.list1 .title {
-  font-size: 22px;
-  font-weight: 400;
-}
-.icon {
-  font-size: 20px;
-  color: #808490;
-}
-.footer-info li{
-  margin:1rem 0rem;
 
+/* Left Section */
+.footer-left {
+  flex: 0 0 25%;
+  max-width: 280px;
 }
-.icon:hover {
-  color: #fff;
+
+.footer-logo {
+  margin-bottom: 1rem;
 }
-.copy-right{
-  font-size:15px;
+
+.logo-img {
+  width: 80px;
+  height: auto;
 }
-.address-info img{
-  width:23px;
-  height:23px;
+
+.footer-disclaimer {
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.6);
+  margin: 0;
+}
+
+/* Middle Section - Navigation Links */
+.footer-middle {
+  display: flex;
+  gap: 3rem;
+  flex: 0 0 auto;
+}
+
+.footer-links-column {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.footer-link {
+  color: #ffffff;
+  text-decoration: none;
+  font-size: 0.875rem;
+  transition: color 0.2s;
+  white-space: nowrap;
+}
+
+.footer-link:hover {
+  color: #0066ff;
+}
+
+/* Right Section - Contact Info */
+.footer-right {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  flex: 1;
+  max-width: 400px;
+}
+
+.contact-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.contact-icon {
+  color: #0066ff;
+  font-size: 1.1rem;
+  margin-top: 0.1rem;
+  flex-shrink: 0;
+}
+
+.contact-text {
+  font-size: 0.875rem;
+  color: #ffffff;
+  text-decoration: none;
+  line-height: 1.4;
+}
+
+.contact-text a {
+  color: #ffffff;
+  text-decoration: none;
+}
+
+.address-label {
+  font-weight: 600;
+  margin-bottom: 0.15rem;
+}
+
+.address-text {
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* Bottom Section */
+.footer-bottom {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  padding-top: 1.5rem;
+  gap: 3rem;
+}
+
+.footer-bottom-left {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+/* Social Icons */
+.social-icons {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.social-icon {
+  color: #ffffff;
+  font-size: 1.25rem;
+  transition: color 0.2s;
+  display: flex;
+  align-items: center;
+}
+
+.social-icon:hover {
+  color: #0066ff;
+}
+
+/* Report Section */
+.report-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.report-link {
+  color: #ffffff;
+  font-size: 0.875rem;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.report-link:hover {
+  text-decoration: underline;
+}
+
+.support-email {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.75rem;
+  text-decoration: none;
+}
+
+.support-email:hover {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* Bottom Right - Certifications */
+.footer-bottom-right {
+  display: flex;
+  gap: 2rem;
+  align-items: center;
+}
+
+.certification-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.cert-title {
+  font-size: 1.125rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  line-height: 1.2;
+}
+
+.cert-subtitle {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.6);
+  margin-top: 0.15rem;
+}
+
+.cert-number {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* Logo Groups */
+.logo-group {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.dpiit-group {
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.cert-logo {
+  height: 60px;
+  width: auto;
+  object-fit: contain;
+}
+
+.dpiit-logo {
+  height: 35px;
+}
+
+.chamber-logo {
+  height: 55px;
+}
+
+.dpiit-text,
+.chamber-text {
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+}
+
+.dpiit-title {
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+}
+
+.dpiit-subtitle {
+  font-size: 0.6rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.dpiit-cert-number {
+  font-size: 0.6rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.chamber-subtitle {
+  font-size: 0.65rem;
+  color: rgba(255, 255, 255, 0.6);
+  line-height: 1.2;
+}
+
+.chamber-title {
+  font-size: 0.875rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  line-height: 1.1;
+}
+
+.chamber-bottom {
+  font-size: 0.65rem;
+  color: rgba(255, 255, 255, 0.6);
+  line-height: 1.2;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .footer-container {
+    padding: 2rem 2rem 1.5rem;
+  }
+
+  .footer-main {
+    gap: 2rem;
+  }
+
+  .footer-middle {
+    gap: 2rem;
+  }
+
+  .footer-bottom-right {
+    gap: 1.5rem;
+  }
+}
+
+@media (max-width: 992px) {
+  .footer-main {
+    flex-wrap: wrap;
+  }
+
+  .footer-left {
+    flex: 0 0 100%;
+    max-width: 100%;
+    margin-bottom: 1rem;
+  }
+
+  .footer-middle {
+    flex: 0 0 auto;
+  }
+
+  .footer-right {
+    flex: 1 1 100%;
+    max-width: 100%;
+  }
+
+  .footer-bottom {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1.5rem;
+  }
+
+  .footer-bottom-left {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .footer-bottom-right {
+    flex-wrap: wrap;
+    gap: 1.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .footer-container {
+    padding: 1.5rem 1rem;
+  }
+
+  .footer-main {
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .footer-middle {
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .footer-right {
+    gap: 1rem;
+  }
+
+  .cert-logo {
+    height: 45px;
+  }
+
+  .dpiit-logo {
+    height: 40px;
+  }
+
+  .chamber-logo {
+    height: 45px;
+  }
 }

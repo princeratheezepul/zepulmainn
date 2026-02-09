@@ -2,6 +2,15 @@ import React from "react";
 import "../styles/NewHeroComponent.css";
 
 const NewHeroComponent = () => {
+    const scrollingItems = [
+        "DISTRIBUTED NETWORK",
+        "SKILL VALIDATION",
+        "AT SCREENING",
+        "DISTRIBUTED NETWORK",
+        "SKILL VALIDATION",
+        "AT SCREENING"
+    ];
+
     return (
         <div className="new-hero-container">
             <div className="new-hero-content">
@@ -72,6 +81,26 @@ const NewHeroComponent = () => {
                         alt="Future of Recruitment"
                         className="hero-image"
                     />
+                </div>
+            </div>
+
+            {/* Infinite Scrolling Ticker */}
+            <div className="scrolling-ticker-wrapper">
+                <div className="scrolling-ticker">
+                    <div className="scrolling-ticker-track">
+                        {scrollingItems.map((item, index) => (
+                            <div key={`item-1-${index}`} className="scrolling-ticker-item">
+                                {item}
+                            </div>
+                        ))}
+                    </div>
+                    <div className="scrolling-ticker-track">
+                        {scrollingItems.map((item, index) => (
+                            <div key={`item-2-${index}`} className="scrolling-ticker-item">
+                                {item}
+                            </div>
+                        ))}
+                    </div>
                 </div>
             </div>
         </div>
