@@ -104,6 +104,9 @@ const CareerJobDetails = lazy(() => import("../Pages/CareerJobDetails"));
 
 const ZepRecruit = lazy(() => import("../Pages/ZepRecruit"));
 const CandidateAssessmentPage = lazy(() => import("../Pages/CandidateAssessmentPage"));
+const ZepConsult = lazy(() => import("../Pages/ZepConsult"));
+const About = lazy(() => import("../Pages/About"));
+const ContactPage = lazy(() => import("../Pages/ContactPage"));
 
 const Router = () => {
   return (
@@ -138,7 +141,7 @@ const Router = () => {
             <Route path="/" element={<PublicLayout />}>
               <Route index element={<Home />} />
               <Route path="zepTalentHub" element={<TalentHub />} />
-              <Route path="ZepRecruit" element={<ZepRecruit />} />
+              <Route path="zeprecruit" element={<ZepRecruit />} />
               <Route path="companies" element={<Companies />} />
               <Route path="recruitment" element={<Recruitement />} />
               <Route path="jobseeker" element={<JobsSeeker />} />
@@ -148,6 +151,9 @@ const Router = () => {
               <Route path="prorecruitor" element={<ProRecruitor />} />
               <Route path="careers" element={<Careers />} />
               <Route path="careers/job/:jobId" element={<CareerJobDetails />} />
+              <Route path="zepConsult" element={<ZepConsult />} />
+              <Route path="about" element={<About />} />
+              <Route path="contact" element={<ContactPage />} />
             </Route>
 
             {/* Marketplace Routes - No Header/Footer */}

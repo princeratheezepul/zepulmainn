@@ -1,0 +1,87 @@
+.why-zep-pro-recruiter-container {
+    display: flex;
+    justify-content: space-between;
+    padding: 80px 100px;
+    background-color: #ffffff;
+    font-family: 'DM Sans', sans-serif;
+    gap: 80px;
+}
+
+.why-zep-pro-recruiter-left {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.why-zep-pro-recruiter-left h2 {
+    font-size: 56px;
+    font-weight: 500;
+    line-height: 1.1;
+    color: #000;
+    margin-bottom: 40px;
+}
+
+.description-container p {
+    font-size: 14px;
+    line-height: 1.6;
+    color: #333;
+    max-width: 300px;
+}
+
+.why-zep-pro-recruiter-right {
+    flex: 2;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.feature-card {
+    background-color: #f8f9fc;
+    /* Light grey/off-white background */
+    padding: 30px;
+    border-radius: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 16px;
+    color: #555;
+    min-height: 120px;
+    /* Ensure consistent height */
+}
+
+.feature-card span:first-child {
+    max-width: 70%;
+}
+
+.metric {
+    color: #0044ff;
+    /* Blue color */
+    font-size: 32px;
+    font-weight: 500;
+}
+
+.metric.arrow {
+    font-size: 24px;
+}
+
+/* Responsiveness */
+@media (max-width: 1024px) {
+    .why-zep-pro-recruiter-container {
+        padding: 60px 40px;
+        flex-direction: column;
+        gap: 40px;
+    }
+
+    .why-zep-pro-recruiter-left h2 {
+        font-size: 42px;
+    }
+
+    .why-zep-pro-recruiter-right {
+        grid-template-columns: 1fr;
+    }
+
+    .description-container p {
+        max-width: 100%;
+    }
+}

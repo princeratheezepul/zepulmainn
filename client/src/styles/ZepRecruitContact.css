@@ -1,0 +1,129 @@
+.zep-recruit-contact-container {
+    background-color: #f0f0f0;
+    /* Light grey background */
+    padding: 80px 100px;
+    display: flex;
+    justify-content: center;
+    font-family: 'DM Sans', sans-serif;
+    border-radius: 100px 100px 0 0;
+}
+
+.zep-recruit-contact-content {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 1200px;
+    align-items: center;
+    /* Center vertically */
+    gap: 60px;
+}
+
+.zep-recruit-contact-left {
+    flex: 1;
+}
+
+.zep-recruit-contact-left h2 {
+    font-size: 48px;
+    font-weight: 500;
+    line-height: 1.2;
+    margin-bottom: 40px;
+    color: #000;
+}
+
+.zep-recruit-contact-left p {
+    font-size: 16px;
+    color: #333;
+}
+
+.zep-recruit-contact-right {
+    flex: 1;
+    background-color: #fff;
+    padding: 40px;
+    border-radius: 20px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    max-width: 500px;
+    /* Limit width of the form card */
+}
+
+.zep-recruit-contact-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.form-input {
+    width: 100%;
+    padding: 15px 20px;
+    border-radius: 30px;
+    /* Rounded inputs */
+    border: none;
+    font-size: 14px;
+    outline: none;
+}
+
+.dark-input {
+    background-color: #1a1a1a;
+    /* Dark background */
+    color: #fff;
+}
+
+.dark-input::placeholder {
+    color: #aaa;
+}
+
+.light-input {
+    background-color: #f2f2f2;
+    /* Light grey input background */
+    color: #333;
+}
+
+.input-group {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.submit-btn {
+    position: absolute;
+    right: 5px;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: #0056b3;
+    /* Blue button */
+    color: #fff;
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s;
+}
+
+.submit-btn:hover {
+    background-color: #004494;
+}
+
+/* Responsiveness */
+@media (max-width: 1024px) {
+    .zep-recruit-contact-container {
+        padding: 60px 40px;
+    }
+
+    .zep-recruit-contact-content {
+        flex-direction: column;
+        gap: 40px;
+        text-align: center;
+    }
+
+    .zep-recruit-contact-left h2 {
+        font-size: 36px;
+    }
+
+    .zep-recruit-contact-right {
+        width: 100%;
+    }
+}

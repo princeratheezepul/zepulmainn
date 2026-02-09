@@ -119,17 +119,7 @@
   border-radius: 8px;
 }
 
-/* Add a special circle indicator for the "R" in 48 hours stat */
-.stat-item:nth-child(2) .stat-number::after {
-  content: "";
-  display: inline-block;
-  width: 12px;
-  height: 12px;
-  background: linear-gradient(135deg, #ec4899, #6366f1);
-  border-radius: 50%;
-  margin-left: 8px;
-  vertical-align: super;
-}
+
 
 /* Responsive Design */
 @media (max-width: 1200px) {

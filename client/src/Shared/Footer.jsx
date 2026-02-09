@@ -8,7 +8,7 @@ import "../styles/Footer.css";
 const Footer = () => {
   return (
     <footer className="bg-black text-white text-sm">
-      
+
       <div className="flex flex-col md:flex-row justify-between gap-8 md:gap-2 px-6 md:px-16 py-10 md:pt-4 md:pb-1 border-b border-white/20">
         <div className="md:w-1/3 relative">
           <div className="relative inline-block">
@@ -272,7 +272,7 @@ const Footer = () => {
               <FaTwitter size={20} color="white" />
             </a>
           </div>
-          
+
           {/* Addresses in horizontal flex row */}
           <div className="flex flex-col md:flex-row gap-4 md:gap-1 mb-4 md:mb-0 opacity-50">
             <div className="flex flex-col md:w-1/2">
@@ -349,7 +349,7 @@ const Footer = () => {
         </div>
       </div>
 
-      
+
     </footer>
   );
 };

@@ -1,0 +1,74 @@
+.zep-consult-advantage-container {
+    padding: 80px 100px;
+    background-color: #f8f9fc;
+    /* Light grey background */
+    font-family: 'DM Sans', sans-serif;
+}
+
+.zep-consult-advantage-container h2 {
+    font-size: 56px;
+    font-weight: 500;
+    line-height: 1.1;
+    color: #000;
+    margin-bottom: 60px;
+}
+
+.advantage-cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 30px;
+}
+
+.advantage-card {
+    background-color: #ffffff;
+    padding: 40px 30px;
+    border-radius: 12px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    min-height: 350px;
+}
+
+.card-image {
+    margin-bottom: 30px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 180px;
+}
+
+.card-image img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+.advantage-card h3 {
+    font-size: 18px;
+    font-weight: 400;
+    line-height: 1.5;
+    color: #000;
+    margin: 0;
+}
+
+/* Responsiveness */
+@media (max-width: 1024px) {
+    .zep-consult-advantage-container {
+        padding: 60px 40px;
+    }
+
+    .zep-consult-advantage-container h2 {
+        font-size: 42px;
+    }
+
+    .advantage-cards {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+
+    .advantage-card {
+        min-height: auto;
+    }
+}

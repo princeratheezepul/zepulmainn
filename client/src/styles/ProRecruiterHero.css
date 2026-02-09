@@ -1,0 +1,121 @@
+.pro-recruiter-hero-container {
+    display: flex;
+    height: 100vh;
+    font-family: 'DM Sans', sans-serif;
+    overflow: hidden;
+    /* Prevent scrolling if strictly 100vh */
+}
+
+.pro-recruiter-hero-left {
+    flex: 1;
+    background-color: #f8f9fa;
+    /* Light grey/white background */
+    padding: 40px 60px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.hero-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.hero-logo {
+    height: 30px;
+    /* Adjust based on actual logo aspect ratio */
+    object-fit: contain;
+}
+
+.sign-in-btn {
+    background-color: #000;
+    color: #fff;
+    border: none;
+    padding: 10px 24px;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.hero-content {
+    margin-bottom: 100px;
+    /* Push content up a bit */
+}
+
+.hero-content h1 {
+    font-size: 64px;
+    font-weight: 500;
+    line-height: 1.1;
+    color: #000;
+    margin-bottom: 250px;
+    /* Space between title and description */
+}
+
+.hero-content p {
+    font-size: 16px;
+    line-height: 1.6;
+    color: #333;
+    max-width: 400px;
+    margin-bottom: 30px;
+}
+
+.book-demo-btn {
+    background-color: #0044ff;
+    /* Bright blue */
+    color: #fff;
+    border: none;
+    padding: 15px 30px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-radius: 4px;
+    /* Slightly rounded */
+}
+
+.book-demo-btn:hover {
+    background-color: #0033cc;
+}
+
+.arrow-icon {
+    font-size: 14px;
+}
+
+.pro-recruiter-hero-right {
+    flex: 1;
+    background-color: #000;
+    /* Fallback */
+}
+
+.hero-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Responsiveness */
+@media (max-width: 1024px) {
+    .pro-recruiter-hero-container {
+        flex-direction: column;
+        height: auto;
+    }
+
+    .pro-recruiter-hero-left {
+        padding: 40px;
+        height: auto;
+        min-height: 50vh;
+    }
+
+    .hero-content h1 {
+        font-size: 48px;
+        margin-bottom: 40px;
+    }
+
+    .pro-recruiter-hero-right {
+        height: 50vh;
+    }
+}
