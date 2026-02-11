@@ -5,11 +5,11 @@ const HowProRecruiterWorks = () => {
     return (
         <div className="how-pro-recruiter-works-container">
             <div className="how-pro-recruiter-works-left">
-                <h2>HOW ZEP PRO<br /> RECRUIT WORKS</h2>
+                <h2>HOW ZEP PRO<br /> RECRUITER WORKS</h2>
             </div>
             <div className="how-pro-recruiter-works-right">
                 <p>
-                    Dummy &rarr; One platform. Endless possibilities. From requisition to onboarding, Zepul brings the
+                    One platform. Endless possibilities. From requisition to onboarding, Zepul brings the
                     entire talent acquisition lifecycle under one roof. With multichannel sourcing, AI-driven
                     screening and interviews, integrated coding assessments, and decision-ready talent
                     scorecards supported by performance insights, market intelligence, and hundreds of

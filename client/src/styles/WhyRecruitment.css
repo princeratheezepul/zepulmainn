@@ -44,7 +44,7 @@
 }
 
 .why-recruitment-title .text-primary {
-    color: #2563eb;
+    color: #024bff;
 }
 
 .reinvention-cards {
@@ -103,15 +103,16 @@
 /* Responsive Design */
 @media (max-width: 1200px) {
     .why-recruitment-container {
-        padding: 3rem 3rem;
+        padding: 3rem 2rem;
     }
 
     .why-recruitment-header {
-        gap: 3rem;
+        gap: 2rem;
     }
 
     .reinvention-cards {
         grid-template-columns: repeat(2, 1fr);
+        gap: 3rem;
     }
 
     .why-recruitment-title {
@@ -125,9 +126,10 @@
     }
 
     .why-recruitment-header {
-        flex-direction: column;
+        flex-direction: column-reverse;
         align-items: flex-start;
-        gap: 2rem;
+        text-align: left;
+        gap: 1.5rem;
     }
 
     .why-recruitment-intro {
@@ -146,16 +148,23 @@
 
     .reinvention-cards {
         grid-template-columns: 1fr;
-        gap: 1.5rem;
+        gap: 2rem;
     }
 
     .card-icon {
-        width: 120px;
-        height: 120px;
+        width: 100px;
+        height: 100px;
+        margin-left: 0;
+        margin-right: 0;
+    }
+
+    .reinvention-card {
+        align-items: flex-start;
+        text-align: left;
     }
 
     .card-title {
-        font-size: 1.25rem;
+        font-size: 1.15rem;
     }
 }
 

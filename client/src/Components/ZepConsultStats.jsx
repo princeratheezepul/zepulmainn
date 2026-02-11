@@ -121,7 +121,7 @@ const ZepConsultStats = () => {
                 }
             `}</style>
             <div className="stats-left">
-                <h2>Why Zep<br />Consult</h2>
+                <h2>Why Zep<br /> Consult</h2>
                 <p className="stats-description">
                     Technology Companies • Fintech • HealthTech<br />
                     Enterprise IT From fast-growing startups to<br />

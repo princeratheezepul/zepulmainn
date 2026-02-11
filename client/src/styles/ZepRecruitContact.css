@@ -1,7 +1,7 @@
 .zep-recruit-contact-container {
     background-color: #f0f0f0;
     /* Light grey background */
-    padding: 80px 100px;
+    padding: 20px 50px;
     display: flex;
     justify-content: center;
     font-family: 'DM Sans', sans-serif;
@@ -110,7 +110,8 @@
 /* Responsiveness */
 @media (max-width: 1024px) {
     .zep-recruit-contact-container {
-        padding: 60px 40px;
+        padding: 60px 16px;
+        border-radius: 40px 40px 0 0;
     }
 
     .zep-recruit-contact-content {
@@ -125,5 +126,20 @@
 
     .zep-recruit-contact-right {
         width: 100%;
+        padding: 30px 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    .zep-recruit-contact-container {
+        padding: 40px 16px;
+    }
+
+    .zep-recruit-contact-left h2 {
+        font-size: 28px;
+    }
+
+    .zep-recruit-contact-left p {
+        font-size: 14px;
     }
 }

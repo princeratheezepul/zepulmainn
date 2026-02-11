@@ -5,11 +5,13 @@
 }
 
 .zep-consult-serve-container h2 {
-    font-size: 56px;
-    font-weight: 500;
-    line-height: 1.1;
+    font-size: 48px;
+    font-weight: 700;
+    line-height: 1;
     color: #000;
     margin-bottom: 30px;
+    text-transform: uppercase;
+    letter-spacing: -0.025em;
 }
 
 .industries-grid {
@@ -64,11 +66,11 @@
 /* Responsiveness */
 @media (max-width: 1024px) {
     .zep-consult-serve-container {
-        padding: 60px 40px;
+        padding: 60px 16px;
     }
 
     .zep-consult-serve-container h2 {
-        font-size: 42px;
+        font-size: 36px;
     }
 
     .industries-grid {

@@ -2,7 +2,7 @@
     width: 100%;
     background: #ffffff;
     padding: 0 5rem 0.5rem 5rem;
-    margin: 0;
+    margin: 3rem 0 0 0;
 }
 
 .how-works-content {
@@ -61,11 +61,12 @@
 @media (max-width: 768px) {
     .how-zep-recruit-works {
         padding: 2rem 1.5rem;
+        margin-top: 0;
     }
 
     .how-works-content {
         flex-direction: column;
-        gap: 2rem;
+        gap: 1.5rem;
     }
 
     .how-works-left,
@@ -76,14 +77,22 @@
     .how-works-title {
         font-size: 2rem;
     }
+
+    .how-works-description {
+        font-size: 0.9rem;
+    }
 }
 
 @media (max-width: 480px) {
+    .how-zep-recruit-works {
+        padding: 1.5rem 1rem;
+    }
+
     .how-works-title {
         font-size: 1.75rem;
     }
 
     .how-works-description {
-        font-size: 0.9rem;
+        font-size: 0.85rem;
     }
 }

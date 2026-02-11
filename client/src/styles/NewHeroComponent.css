@@ -18,23 +18,43 @@
   padding: 0;
 }
 
+
+/* Desktop Styles (Default > 968px) */
 .new-hero-left {
   flex: 1;
   max-width: 50%;
-  padding: 0 0 3rem max(2rem, calc((100vw - 1280px) / 2));
+  /* Default alignment for smaller desktops before breakpoints */
+  padding: 0 0 3rem max(2rem, calc((100vw - 960px) / 2));
   display: flex;
   flex-direction: column;
   justify-content: center;
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
+/* Large Desktop Alignment (XL - 1200px+) matches Bootstrap container 1140px */
+@media (min-width: 1200px) {
+  .new-hero-left {
+    padding-left: calc((100vw - 1140px) / 2);
+  }
+}
+
+/* Extra Large Desktop Alignment (XXL - 1400px+) matches Bootstrap container 1320px */
+@media (min-width: 1400px) {
+  .new-hero-left {
+    padding-left: calc((100vw - 1320px) / 2);
+  }
+}
+
 .new-hero-title {
-  font-size: 3.5rem;
+  font-size: 2.75rem;
+  /* Reduced from 3.5rem */
   font-weight: 600;
   color: #111827;
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
   line-height: 1.1;
   letter-spacing: -0.02em;
+  max-width: 500px;
+  /* Constrain width */
 }
 
 .new-hero-title .text-primary {
@@ -43,11 +63,13 @@
 }
 
 .new-hero-description {
-  font-size: 1.125rem;
+  font-size: 1rem;
+  /* Reduced from 1.125rem */
   color: #374151;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.25rem;
   line-height: 1.6;
-  max-width: 600px;
+  max-width: 500px;
+  /* Reduced max-width */
 }
 
 .new-hero-subtitle {
@@ -63,18 +85,23 @@
 }
 
 .new-hero-subtitle-blue {
-  font-size: 1.125rem;
-  color: #2563eb;
-  margin-bottom: 2.5rem;
+  font-size: 1rem;
+  /* Reduced from 1.125rem */
+  color: #024bff;
+  margin-bottom: 2rem;
   line-height: 1.5;
   font-weight: 600;
+  max-width: 500px;
 }
 
 .new-hero-stats {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 1rem 1.25rem;
-  margin-bottom: 4rem;
+  gap: 0.75rem 1rem;
+  /* Reduced gap */
+  margin-bottom: 3rem;
+  /* Reduced margin */
+  max-width: 500px;
 }
 
 .stat-item {
@@ -82,14 +109,16 @@
 }
 
 .stat-number {
-  font-size: 1.75rem;
+  font-size: 1.5rem;
+  /* Reduced from 1.75rem */
   font-weight: 700;
-  color: #000000;
-  margin-bottom: 0.35rem;
+  color: #024bff;
+  margin-bottom: 0.25rem;
 }
 
 .stat-label {
-  font-size: 0.65rem;
+  font-size: 0.6rem;
+  /* Reduced from 0.65rem */
   color: #888888;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -103,8 +132,9 @@
   background: #2563eb;
   color: #ffffff;
   border: none;
-  padding: 0.75rem 1.5rem;
-  font-size: 0.95rem;
+  padding: 0.65rem 1.25rem;
+  /* Slightly smaller padding */
+  font-size: 0.9rem;
   font-weight: 600;
   border-radius: 4px;
   cursor: pointer;
@@ -120,8 +150,6 @@
   transform: translateY(-2px);
   box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4);
 }
-
-
 
 .new-hero-right {
   flex: 1;
@@ -142,33 +170,73 @@
 
 
 /* Responsive Design */
-@media (max-width: 1200px) {
+@media (max-width: 968px) {
+  .new-hero-content {
+    flex-direction: column;
+    min-height: auto;
+  }
+
+  .new-hero-left {
+    max-width: 100%;
+    padding: 2rem 1.5rem 0;
+    text-align: left;
+    align-items: flex-start;
+  }
+
+  .new-hero-right {
+    max-width: 100%;
+    padding: 0;
+    height: 300px;
+  }
+
   .new-hero-title {
     font-size: 2.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .new-hero-description {
+    font-size: 1rem;
+    margin-bottom: 2rem;
   }
 
   .new-hero-stats {
     grid-template-columns: repeat(2, 1fr);
     gap: 1.5rem;
+    margin-bottom: 2rem;
+    width: 100%;
   }
 
-  .stat-number {
-    font-size: 2rem;
+  .book-demo-btn {
+    align-self: flex-start;
+    width: 100%;
+    justify-content: center;
   }
 }
 
-@media (max-width: 768px) {
-  .new-hero-content {
-    flex-direction: column;
-    padding: 2rem 1.5rem;
+@media (min-width: 969px) {
+  .hero-image {
+    width: 85%;
+    height: auto;
+    border-radius: 12px;
+    max-height: 80vh;
   }
 
-  .new-hero-left,
-  .new-hero-right {
-    max-width: 100%;
-    padding: 0;
+  .new-hero-title {
+    margin-top: 3rem;
   }
 
+  /* Reduce spacing to move button up */
+  .new-hero-stats {
+    margin-bottom: ;
+  }
+
+  /* Remove gap between top component and ticker */
+  .new-hero-left {
+    padding-bottom: 0.5rem;
+  }
+}
+
+@media (max-width: 480px) {
   .new-hero-title {
     font-size: 2rem;
   }
@@ -176,29 +244,6 @@
   .new-hero-stats {
     grid-template-columns: repeat(2, 1fr);
     gap: 1rem;
-  }
-
-  .stat-number {
-    font-size: 1.5rem;
-  }
-
-  .stat-label {
-    font-size: 0.65rem;
-  }
-
-  .book-demo-btn {
-    width: 100%;
-    justify-content: center;
-  }
-}
-
-@media (max-width: 480px) {
-  .new-hero-stats {
-    grid-template-columns: 1fr;
-  }
-
-  .new-hero-title {
-    font-size: 1.75rem;
   }
 }
 

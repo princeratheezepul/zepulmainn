@@ -1,11 +1,13 @@
 .frame-component-container {
     width: 100%;
     background: #ffffff;
-    padding: 2rem 8rem 2rem 1rem;
+    /* Symmetric padding */
+    padding: 3rem 1rem;
     margin: 0;
     display: flex;
     flex-direction: column;
     justify-content: center;
+    /* Align items to starts (left) by default */
     align-items: flex-start;
 }
 
@@ -14,10 +16,13 @@
     font-weight: 700;
     color: #000000;
     text-align: left;
-    margin-bottom: 2rem;
+    /* Keep title left aligned */
+    margin-bottom: 3rem;
     line-height: 1.2;
     width: 100%;
     max-width: 1400px;
+    padding-left: 0;
+    /* Remove padding to align with container */
 }
 
 .why-zepul-title .text-primary {
@@ -25,15 +30,31 @@
 }
 
 .frame-image {
-    width: 100%;
-    max-width: 100%;
+    width: auto;
+    max-width: 80%;
     height: auto;
     display: block;
+    /* Center the image specifically */
+    align-self: center;
 }
 
 /* Responsive adjustments if needed */
 @media (max-width: 768px) {
     .frame-component-container {
-        padding: 0;
+        padding: 2rem 1.5rem;
+        align-items: flex-start;
+    }
+
+    .why-zepul-title {
+        text-align: left;
+        margin-bottom: 2rem;
+        padding-left: 0;
+        font-size: 1.75rem;
+        white-space: nowrap;
+    }
+
+    .frame-image {
+        max-width: 100%;
+        align-self: flex-start;
     }
 }

@@ -1,11 +1,20 @@
 .why-zep-pro-recruiter-container {
     display: flex;
     justify-content: space-between;
-    padding: 20px 100px;
+    padding: 0.5rem 3rem;
     background-color: #ffffff;
     font-family: 'DM Sans', sans-serif;
-    gap: 80px;
+    gap: 2rem;
 }
+
+/* Add gap between image and this component for larger screens */
+@media (min-width: 1025px) {
+    .why-zep-pro-recruiter-container {
+        margin-top: 40px;
+        padding-left: 70px;
+    }
+}
+
 
 .why-zep-pro-recruiter-left {
     flex: 1;
@@ -15,11 +24,13 @@
 }
 
 .why-zep-pro-recruiter-left h2 {
-    font-size: 56px;
-    font-weight: 500;
-    line-height: 1.1;
+    font-size: 48px;
+    font-weight: 700;
+    text-transform: uppercase;
+    line-height: 1;
+    letter-spacing: -0.025em;
     color: #000;
-    margin-bottom: 20px;
+    margin-bottom: 0.5rem;
 }
 
 .description-container p {
@@ -33,20 +44,20 @@
     flex: 2;
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 20px;
+    gap: 0.75rem;
 }
 
 .feature-card {
     background-color: #f8f9fc;
     /* Light grey/off-white background */
-    padding: 30px;
+    padding: 1rem 1.25rem;
     border-radius: 12px;
     display: flex;
     justify-content: space-between;
     align-items: center;
     font-size: 16px;
     color: #555;
-    min-height: 120px;
+    min-height: 80px;
     /* Ensure consistent height */
 }
 
@@ -68,13 +79,13 @@
 /* Responsiveness */
 @media (max-width: 1024px) {
     .why-zep-pro-recruiter-container {
-        padding: 60px 40px;
+        padding: 60px 16px;
         flex-direction: column;
         gap: 40px;
     }
 
     .why-zep-pro-recruiter-left h2 {
-        font-size: 42px;
+        font-size: 36px;
     }
 
     .why-zep-pro-recruiter-right {
