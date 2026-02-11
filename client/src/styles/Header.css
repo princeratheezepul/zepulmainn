@@ -11,14 +11,31 @@
   width: 98px;
   height: 44px;
 }
+
+@media (max-width: 768px) {
+  .sign-in-button.btnn {
+    width: 80px;
+    height: 38px;
+    font-size: 14px;
+  }
+}
+
 .logo img {
   width: 150px;
 }
-.nav-link{
-  padding:1rem !important;
+
+@media (max-width: 768px) {
+  .logo img {
+    width: 120px;
+  }
 }
-.mob-nav{
-  display:none;
+
+.nav-link {
+  padding: 1rem !important;
+}
+
+.mob-nav {
+  display: none;
 }
 
 .dropdown-content {

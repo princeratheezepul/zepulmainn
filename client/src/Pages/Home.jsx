@@ -1,8 +1,13 @@
 import React, { Fragment } from "react";
 import "../styles/Home.css";
-import HeroSection from "../Components/HomeHeroSection";
 
-import RecruitmentPlatform from "../Components/Recruitment-platform";
+
+import NewHeroComponent from "../Components/NewHeroComponent";
+import WhyRecruitment from "../Components/WhyRecruitment";
+import FrameComponent from "../Components/FrameComponent";
+import WhyChooseZepul from "../Components/WhyChooseZepul";
+import ProductsServices from "../Components/ProductsServices";
+import ContactForm from "../Components/ContactForm";
 
 
 
@@ -60,39 +65,32 @@ const Home = () => {
     <Fragment>
       <div className="container h-full">
         <div className="row ">
-          <HeroSection />
           {/* <PartnerCarousel /> */}
 
-          <div className="home p-0 ">
-            <section className="intro   mt-5 px-5  py-3 ">
-              <h4 className="fw-bold">Who We Are</h4>
-              <p className="text-white text">
-                Zepul<span class="align-super text-xs">™</span> is a
-                comprehensive Talent Acquisition Services Platform that brings
-                together all stakeholders onto a single platform & stays true to
-                the traditional recruitment model while integrating Artificial
-                Intelligence, workload automation tools & procedures to
-                streamline hiring processes, reduce pain points, and boost the
-                effectiveness of human intervention across the Talent
-                Acquisition lifecycle.
-              </p>
-              <p className="text-white">
-                Our on-demand community-based recruitment blended with ZepDB
-                <span class="align-super text-xs">™</span> powered by Al can
-                source & match accurate candidate profiles with job requirements
-                from thousands of active candidate profiles.
-              </p>
-              <p className="text-white">
-                Our multi layer screening system combines Al and human expertise
-                to generate a comprehensive scorecard for you to make an
-                accurate candidate assessment, while our dynamic application
-                tracking system lets you track and govern the overall workflow.
-              </p>
-            </section>
-            <section className="recruitment-platform-section ">
-                  <RecruitmentPlatform />
-            </section>
-            {/* <section className="d-flex row innovation py-md-2  align-items-center">
+
+          <section className="new-hero-section">
+            <NewHeroComponent />
+          </section>
+        </div>
+      </div>
+      <section className="why-recruitment-section">
+        <WhyRecruitment />
+      </section>
+      <div className="container h-full">
+        <div className="row ">
+          <section className="frame-section">
+            <FrameComponent />
+          </section>
+          <section className="why-choose-zepul-section">
+            <WhyChooseZepul />
+          </section>
+          <section className="products-services-section">
+            <ProductsServices />
+          </section>
+          <section className="contact-form-section">
+            <ContactForm />
+          </section>
+          {/* <section className="d-flex row innovation py-md-2  align-items-center">
               <div className="col-md-6 mt-5">
                 <div className="home-content">
                   <p className="color-title mb-2 fw-semibold">
@@ -112,7 +110,7 @@ const Home = () => {
                 </p>
               </div>
             </section> */}
-            {/* <section className="whats-inside d-flex row justify-content-around">
+          {/* <section className="whats-inside d-flex row justify-content-around">
               <div className="col-md-6">
                 <h1 className="">See What's inside</h1>
                 <p>
@@ -142,7 +140,7 @@ const Home = () => {
                 />
               </div>
             </section> */}
-            {/* <section className="what-we-are-solving    mt-5">
+          {/* <section className="what-we-are-solving    mt-5">
               <div className="row">
                 <div className="home-content">
                   <p className="color-title mb-2 fw-semibold">
@@ -351,7 +349,6 @@ const Home = () => {
                 })}
               </div>
             </section> */}
-          </div>
         </div>
       </div>
     </Fragment>

@@ -1,0 +1,22 @@
+.pro-recruiter-process-diagram-container {
+    width: 100%;
+    padding: 10px 20px;
+    background-color: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.pro-recruiter-process-image {
+    max-width: 100%;
+    height: auto;
+    object-fit: contain;
+    /* Ensure high quality rendering if browser supports it */
+    image-rendering: -webkit-optimize-contrast;
+}
+
+@media (max-width: 768px) {
+    .pro-recruiter-process-diagram-container {
+        padding: 10px 16px;
+    }
+}

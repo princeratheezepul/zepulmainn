@@ -1,0 +1,54 @@
+.how-pro-recruiter-works-container {
+    display: flex;
+    justify-content: space-between;
+    padding: 20px 70px;
+    background-color: #fff;
+    font-family: 'DM Sans', sans-serif;
+    align-items: flex-start;
+    gap: 60px;
+}
+
+/* Add gap between ticker and this component for larger screens */
+@media (min-width: 1025px) {
+    .how-pro-recruiter-works-container {
+        margin-top: 40px;
+    }
+}
+
+
+.how-pro-recruiter-works-left {
+    flex: 1;
+}
+
+.how-pro-recruiter-works-left h2 {
+    font-size: 48px;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -0.025em;
+    color: #000;
+    text-transform: uppercase;
+}
+
+.how-pro-recruiter-works-right {
+    flex: 1;
+}
+
+.how-pro-recruiter-works-right p {
+    font-size: 14px;
+    line-height: 1.6;
+    color: #333;
+    max-width: 600px;
+}
+
+/* Responsiveness */
+@media (max-width: 1024px) {
+    .how-pro-recruiter-works-container {
+        flex-direction: column;
+        padding: 40px 16px;
+        gap: 30px;
+    }
+
+    .how-pro-recruiter-works-left h2 {
+        font-size: 36px;
+    }
+}

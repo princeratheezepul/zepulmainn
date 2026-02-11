@@ -1,0 +1,98 @@
+.how-zep-recruit-works {
+    width: 100%;
+    background: #ffffff;
+    padding: 0 5rem 0.5rem 5rem;
+    margin: 3rem 0 0 0;
+}
+
+.how-works-content {
+    max-width: 1400px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 6rem;
+}
+
+.how-works-left {
+    flex: 0 0 auto;
+    max-width: 600px;
+}
+
+.how-works-title {
+    font-size: 3rem;
+    font-weight: 700;
+    color: #000000;
+    line-height: 1.1;
+    margin: 0;
+    letter-spacing: -0.02em;
+}
+
+.how-works-right {
+    flex: 1;
+    display: flex;
+    align-items: flex-start;
+    padding-top: 0.5rem;
+}
+
+.how-works-description {
+    font-size: 0.95rem;
+    color: #666666;
+    line-height: 1.6;
+    margin: 0;
+    max-width: 600px;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+    .how-zep-recruit-works {
+        padding: 3rem 3rem;
+    }
+
+    .how-works-content {
+        gap: 4rem;
+    }
+
+    .how-works-title {
+        font-size: 2.5rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .how-zep-recruit-works {
+        padding: 2rem 1.5rem;
+        margin-top: 0;
+    }
+
+    .how-works-content {
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .how-works-left,
+    .how-works-right {
+        max-width: 100%;
+    }
+
+    .how-works-title {
+        font-size: 2rem;
+    }
+
+    .how-works-description {
+        font-size: 0.9rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .how-zep-recruit-works {
+        padding: 1.5rem 1rem;
+    }
+
+    .how-works-title {
+        font-size: 1.75rem;
+    }
+
+    .how-works-description {
+        font-size: 0.85rem;
+    }
+}

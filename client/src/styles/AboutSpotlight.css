@@ -1,0 +1,128 @@
+.about-spotlight-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px 20px;
+    font-family: 'DM Sans', sans-serif;
+}
+
+.spotlight-title {
+    font-size: 42px;
+    font-weight: 500;
+    margin-bottom: 40px;
+    color: #000;
+}
+
+.spotlight-slider-container {
+    width: 100%;
+    overflow: hidden;
+}
+
+.spotlight-card {
+    display: flex;
+    flex-direction: column;
+    width: 300px;
+    height: 440px;
+    /* Reduced further to move buttons up */
+    /* Fixed uniform height */
+    margin-right: 24px;
+    flex-shrink: 0;
+}
+
+
+.spotlight-image-container {
+    width: 100%;
+    height: 168.75px;
+    /* Fixed height (300px * 9/16 for 16:9 ratio) */
+    background-color: #f0f0f0;
+    border-radius: 8px;
+    overflow: hidden;
+    flex-shrink: 0;
+    /* Prevent shrinking */
+}
+
+.spotlight-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.spotlight-card:hover .spotlight-image {
+    transform: scale(1.05);
+}
+
+.spotlight-content {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    /* Take remaining space */
+    padding-top: 20px;
+}
+
+.spotlight-card-title {
+    font-size: 18px;
+    font-weight: 600;
+    line-height: 1.4;
+    color: #000;
+    margin: 0 0 12px 0;
+    height: 50px;
+    /* Fixed height for 2 lines */
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    flex-shrink: 0;
+}
+
+.spotlight-description {
+    font-size: 14px;
+    line-height: 1.6;
+    color: #666;
+    margin: 0 0 20px 0;
+    height: 90px;
+    /* Fixed height for ~4 lines */
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+}
+
+.read-more-btn {
+    background-color: #0044ff;
+    color: white;
+    border: none;
+    padding: 10px 24px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    border-radius: 4px;
+    width: fit-content;
+    transition: background-color 0.3s ease;
+}
+
+.read-more-btn:hover {
+    background-color: #0033cc;
+}
+
+/* Responsiveness */
+@media (max-width: 1024px) {
+    .spotlight-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .spotlight-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .spotlight-title {
+        font-size: 32px;
+    }
+}
+
+@media (max-width: 480px) {
+    .spotlight-grid {
+        grid-template-columns: 1fr;
+    }
+}

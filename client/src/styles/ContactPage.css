@@ -1,0 +1,166 @@
+.contact-page-container {
+    display: flex;
+    min-height: 100vh;
+    width: 100%;
+    font-family: 'DM Sans', sans-serif;
+}
+
+.contact-page-left {
+    flex: 1;
+    background-color: #f5f5f5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.contact-hero-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.contact-page-right {
+    flex: 1;
+    padding: 80px 100px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    background-color: #fff;
+}
+
+.contact-content {
+    max-width: 600px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.contact-content h1 {
+    font-size: 48px;
+    font-weight: 500;
+    margin-bottom: 24px;
+    color: #000;
+}
+
+.contact-intro {
+    font-size: 14px;
+    line-height: 1.6;
+    color: #888;
+    margin-bottom: 50px;
+}
+
+.contact-page-form {
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+}
+
+.form-row {
+    display: flex;
+    gap: 40px;
+}
+
+.form-group {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    position: relative;
+}
+
+.form-group label {
+    font-size: 14px;
+    color: #888;
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    border: none;
+    border-bottom: 1px solid #e0e0e0;
+    padding: 8px 0;
+    font-size: 16px;
+    color: #333;
+    background: transparent;
+    outline: none;
+    transition: border-color 0.3s ease;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    border-bottom-color: #0044ff;
+}
+
+/* Custom styles specific to the design inputs */
+#fullName {
+    color: #0044ff;
+    /* Example: User input color if desired, or kept standard */
+}
+
+/* Select arrow styling reset/customization if needed, keeping basic for now */
+.select-wrapper {
+    position: relative;
+}
+
+.select-wrapper::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    right: 0;
+    width: 10px;
+    height: 6px;
+    /* background: url(...) add dropdown arrow if strictly needed */
+    pointer-events: none;
+}
+
+.contact-submit-btn {
+    background-color: #0044ff;
+    color: white;
+    border: none;
+    padding: 14px 40px;
+    font-size: 16px;
+    font-weight: 500;
+    border-radius: 4px;
+    cursor: pointer;
+    width: fit-content;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 20px;
+    transition: background-color 0.3s ease;
+}
+
+.contact-submit-btn:hover {
+    background-color: #0033cc;
+}
+
+.btn-icon {
+    font-size: 14px;
+}
+
+/* Responsiveness */
+@media (max-width: 1024px) {
+    .contact-page-right {
+        padding: 60px 40px;
+    }
+}
+
+@media (max-width: 768px) {
+    .contact-page-container {
+        flex-direction: column;
+    }
+
+    .contact-page-left {
+        height: 400px;
+        flex: none;
+    }
+
+    .contact-page-right {
+        padding: 40px 20px;
+    }
+
+    .form-row {
+        flex-direction: column;
+        gap: 24px;
+    }
+}

@@ -1,0 +1,238 @@
+.why-choose-zepul-container {
+    width: 100%;
+    background: #f5f5f5;
+    padding: 1.5rem 3rem;
+    margin: 0;
+}
+
+.why-choose-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #000000;
+    text-align: center;
+    margin-bottom: 1.25rem;
+    line-height: 1.3;
+}
+
+.why-choose-title .text-primary {
+    color: #024bff;
+}
+
+.comparison-table {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.table-headers {
+    display: grid;
+    grid-template-columns: 1fr 60px 1fr 60px 1fr;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+    padding: 0 1rem;
+}
+
+.header-left,
+.header-right {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #666666;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.header-left {
+    text-align: left;
+}
+
+.header-right {
+    text-align: left;
+    color: #024bff;
+}
+
+.header-middle {
+    grid-column: span 3;
+}
+
+.comparison-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.comparison-row {
+    display: grid;
+    grid-template-columns: 1fr 60px 1fr 60px 1fr;
+    gap: 0.75rem;
+    align-items: center;
+}
+
+
+.legacy-box,
+.stage-box,
+.solution-box {
+    background: #ffffff;
+    border-radius: 8px;
+    padding: 0.5rem 0.75rem;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    min-height: 50px;
+    display: flex;
+    align-items: center;
+    transition: all 0.3s ease;
+    /* Add transition for smooth effect */
+    cursor: default;
+}
+
+/* Hover effects for the boxes */
+.legacy-box:hover,
+.stage-box:hover,
+.solution-box:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.legacy-box p,
+.stage-box p,
+.solution-box p {
+    margin: 0;
+    font-size: 0.85rem;
+    color: #000000;
+    line-height: 1.4;
+}
+
+.stage-box {
+    background: #e8e8e8;
+    text-align: center;
+    justify-content: center;
+    font-weight: 600;
+}
+
+.stage-box:hover {
+    background: #e0e0e0;
+}
+
+.solution-box {
+    background: #e8eeff;
+}
+
+.solution-box:hover {
+    background: #dbe6ff;
+    box-shadow: 0 4px 15px rgba(2, 75, 255, 0.15);
+    /* Blue-tinted shadow for solution */
+}
+
+.arrow-section {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.arrow-icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    font-weight: bold;
+}
+
+.arrow-icon.gray {
+    background: #b0b0b0;
+    color: #ffffff;
+}
+
+.arrow-icon.blue {
+    background: #024bff;
+    color: #ffffff;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+    .why-choose-zepul-container {
+        padding: 3rem 2rem;
+    }
+
+    .why-choose-title {
+        font-size: 2rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .why-choose-zepul-container {
+        padding: 2rem 1.5rem;
+    }
+
+    .why-choose-title {
+        font-size: 1.75rem;
+        margin-bottom: 2rem;
+    }
+
+    .comparison-row {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+        margin-bottom: 1.5rem;
+        padding: 1rem;
+        background: #eee;
+        border-radius: 12px;
+    }
+
+    .table-headers {
+        display: none;
+    }
+
+    .arrow-section {
+        display: none;
+    }
+
+    .legacy-box::before {
+        content: "Legacy: ";
+        font-weight: 700;
+        color: #666;
+        display: block;
+        margin-bottom: 0.25rem;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+    }
+
+    .stage-box::before {
+        content: "Stage: ";
+        font-weight: 700;
+        color: #666;
+        display: block;
+        margin-bottom: 0.25rem;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+    }
+
+    .solution-box::before {
+        content: "Solution: ";
+        font-weight: 700;
+        color: #2563eb;
+        display: block;
+        margin-bottom: 0.25rem;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+    }
+
+    .legacy-box,
+    .stage-box,
+    .solution-box {
+        min-height: auto;
+        padding: 0.75rem;
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
+
+@media (max-width: 480px) {
+    .why-choose-title {
+        font-size: 1.5rem;
+    }
+
+    .legacy-box p,
+    .stage-box p,
+    .solution-box p {
+        font-size: 0.9rem;
+    }
+}

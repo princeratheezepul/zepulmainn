@@ -7,244 +7,36 @@ const Header = () => {
   const navigate = useNavigate();
 
   const handleTryZepulClick = () => {
-    const pathname = location.pathname;
-
-    // If route is /, /ZepRecruit or /zepTalentHub, redirect to /login
-    if (pathname === "/" || pathname === "/ZepRecruit" || pathname === "/zepTalentHub") {
-      navigate("/login", { replace: true });
-    } else {
-      // For all other routes, redirect to /marketplace/login
-      navigate("/marketplace/login", { replace: true });
-    }
+    navigate("/login");
   };
 
   return (
     <Fragment>
-      <div className="container-fluid d-flex justify-content-between">
+      <div
+        className="container-fluid d-flex justify-content-between py-3"
+        style={{
+          backgroundColor: location.pathname === "/about" ? "black" : "transparent",
+          transition: "background-color 0.3s ease"
+        }}
+      >
         <div className="container">
           <div className="d-flex justify-md-content-center  align-items-center justify-content-sm-between header col-md-12 col-sm-12 w-100">
             <div className=" logo">
               <Link to="/">
-                <img src="/assets/logo.png" alt="logo" />
+                <img
+                  src="/assets/logo.png"
+                  alt="logo"
+                  style={{
+                    filter: location.pathname === "/about" ? "brightness(0) invert(1)" : "none",
+                    transition: "filter 0.3s ease"
+                  }}
+                />
               </Link>
             </div>
-            <nav className="navbar w-100">
-              <ul className="nav-list d-flex w-100 justify-content-center gap-5 mb-0 p-0">
-                <li className="nav-item">
-                  <div className="flex flex-col leading-none">
-                    <Link
-                      to="/ZepRecruit"
-                      className="nav-link uppercase"
-                      style={{
-                        color: "#024bff",
-                        fontFamily: '"DM Sans", sans-serif',
-                        fontWeight: 500,
-                        fontSize: "16px",
-                        lineHeight: 1,
-                        letterSpacing: "-0.05em",
-                        margin: 0,
-                        padding: 0,
-                        display: "block",
-                      }}
-                    >
-                      Zep Recruit
-                    </Link>
-                    <p
-                      style={{
-                        fontSize: "12px",
-                        margin: 0,
-                        padding: 0,
-                        color: "#666",
-                        lineHeight: 1,
-                        display: "block",
-                        textAlign: "center", // <-- Center the text
-                      }}
-                    >
-                      (For Employers)
-                    </p>
-                  </div>
-                </li>
 
-                <li className="nav-item">
-                  <div className="flex flex-col leading-none">
-                    <Link
-                      to="/zepTalentHub"
-                      className="nav-link uppercase"
-                      style={{
-                        color: "#024bff",
-                        fontFamily: '"DM Sans", sans-serif',
-                        fontWeight: 500,
-                        fontSize: "16px",
-                        lineHeight: 1,
-                        letterSpacing: "-0.05em",
-                        margin: 0,
-                        padding: 0,
-                        display: "block",
-                      }}
-                    >
-                      Zep Talenthub
-                    </Link>
-                    <p
-                      style={{
-                        fontSize: "12px",
-                        margin: 0,
-                        padding: 0,
-                        color: "#666",
-                        lineHeight: 1,
-                        display: "block",
-                        textAlign: "center", // <-- Center the text
-                      }}
-                    >
-                      (For Employers)
-                    </p>
-                  </div>
-                </li>
-
-                <li className="nav-item">
-                  <div className="flex flex-col leading-none">
-                    <Link
-                      to="/prorecruitor"
-                      className="nav-link uppercase"
-                      style={{
-                        color: "#024bff",
-                        fontFamily: '"DM Sans", sans-serif',
-                        fontWeight: 500,
-                        fontSize: "16px",
-                        lineHeight: 1,
-                        letterSpacing: "-0.05em",
-                        margin: 0,
-                        padding: 0,
-                        display: "block",
-                      }}
-                    >
-                      Zep Pro Recruiter
-                    </Link>
-                    <p
-                      style={{
-                        fontSize: "12px",
-                        margin: 0,
-                        padding: 0,
-                        color: "#666",
-                        lineHeight: 1,
-                        display: "block",
-                        textAlign: "center", // <-- Center the text
-                      }}
-                    >
-                      (For Recruiters)
-                    </p>
-                  </div>
-                </li>
-
-                <li className="nav-item">
-                  <div className="flex flex-col leading-none">
-                    <Link
-                      to="/careers"
-                      className="nav-link uppercase"
-                      style={{
-                        color: "#024bff",
-                        fontFamily: '"DM Sans", sans-serif',
-                        fontWeight: 500,
-                        fontSize: "16px",
-                        lineHeight: 1,
-                        letterSpacing: "-0.05em",
-                        margin: 0,
-                        padding: 0,
-                        display: "block",
-                      }}
-                    >
-                      Zep Jobs
-                    </Link>
-                    <p
-                      style={{
-                        fontSize: "12px",
-                        margin: 0,
-                        padding: 0,
-                        color: "#666",
-                        lineHeight: 1,
-                        display: "block",
-                        textAlign: "center", // <-- Center the text
-                      }}
-                    >
-                      (For Job Seeker)
-                    </p>
-                  </div>
-                </li>
-              </ul>
-            </nav>
 
             <div className=" d-flex justify-content-end btn-grp align-items-center ">
-              <nav className="mob-nav ">
-                <button
-                  type="button"
-                  className="btn fs-4 border-0"
-                  data-bs-toggle="dropdown"
-                  aria-expanded="false"
-                >
-                  <FaBars />
-                </button>
-                <ul className=" dropdown-menu ">
-                  <li className="nav-item">
-                    <Link to="/ZepRecruit" className="nav-link dropdown-item" style={{
-                      color: "#024bff",
-                      fontFamily: '"DM Sans", sans-serif',
-                      fontWeight: 500,
-                      fontSize: "16px",
-                      lineHeight: 1,
-                      letterSpacing: "-0.05em",
-                      margin: 0,
-                      padding: 0,
-                      display: "block",
-                    }}>
-                      Zep Recruit
-                    </Link>
-                  </li>
-                  <li className="nav-item">
-                    <Link to="/zepTalentHub" className="nav-link dropdown-item" style={{
-                      color: "#024bff",
-                      fontFamily: '"DM Sans", sans-serif',
-                      fontWeight: 500,
-                      fontSize: "16px",
-                      lineHeight: 1,
-                      letterSpacing: "-0.05em",
-                      margin: 0,
-                      padding: 0,
-                      display: "block",
-                    }}>
-                      Zep Talenthub
-                    </Link>
-                  </li>
-                  <li className="nav-item">
-                    <Link to="/prorecruitor" className="nav-link dropdown-item" style={{
-                      color: "#024bff",
-                      fontFamily: '"DM Sans", sans-serif',
-                      fontWeight: 500,
-                      fontSize: "16px",
-                      lineHeight: 1,
-                      letterSpacing: "-0.05em",
-                      margin: 0,
-                      padding: 0,
-                      display: "block",
-                    }}>
-                      Zep Pro Recruiter
-                    </Link>
-                  </li>
-                  <li className="nav-item">
-                    <Link to="/careers" className="nav-link dropdown-item" style={{
-                      color: "#024bff",
-                      fontFamily: '"DM Sans", sans-serif',
-                      fontWeight: 500,
-                      fontSize: "16px",
-                      lineHeight: 1,
-                      letterSpacing: "-0.05em",
-                      margin: 0,
-                      padding: 0,
-                      display: "block",
-                    }}>
-                      Zep Jobs
-                    </Link>
-                  </li>
-                </ul>
-              </nav>
+
               {/* <button className="sign-in-button btnn">sign In</button> */}
               <div className="attr-nav">
                 <div className="dropdown">
@@ -252,10 +44,16 @@ const Header = () => {
                     className="btn btn-secondary w-[8rem]"
                     type="button"
                     id="loginDropdown"
-                    style={{ backgroundColor: "blue" }}
+                    style={{
+                      backgroundColor: location.pathname === "/about" ? "white" : "black",
+                      color: location.pathname === "/about" ? "black" : "white",
+                      borderRadius: "0",
+                      transition: "all 0.3s ease",
+                      border: "none"
+                    }}
                     onClick={handleTryZepulClick}
                   >
-                    Try Zepul
+                    Sign In
                   </button>
                 </div>
               </div>

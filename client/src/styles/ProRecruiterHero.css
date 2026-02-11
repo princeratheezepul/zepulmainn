@@ -1,0 +1,204 @@
+.pro-recruiter-hero-container {
+    display: flex;
+    min-height: 70vh;
+    font-family: 'DM Sans', sans-serif;
+    overflow: visible;
+}
+
+.pro-recruiter-hero-left {
+    flex: 1;
+    background-color: #f8f9fa;
+    /* Light grey/white background */
+    padding: 120px 60px 40px 60px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.hero-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.hero-logo {
+    height: 30px;
+    /* Adjust based on actual logo aspect ratio */
+    object-fit: contain;
+}
+
+.sign-in-btn {
+    background-color: #000;
+    color: #fff;
+    border: none;
+    padding: 10px 24px;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.hero-content {
+    margin-bottom: 100px;
+    /* Push content up a bit */
+}
+
+.hero-content h1 {
+    font-size: 48px;
+    font-weight: 700;
+    text-transform: uppercase;
+    line-height: 1;
+    letter-spacing: -0.025em;
+    color: #000;
+    margin-bottom: 16px;
+    /* Space between title and description */
+}
+
+/* Move heading up on larger screens */
+@media (min-width: 1025px) {
+    .hero-content h1 {
+        margin-top: -85px;
+    }
+}
+
+
+
+
+.hero-content p {
+    font-size: 16px;
+    line-height: 1.6;
+    color: #333;
+    max-width: 400px;
+    margin-bottom: 150px;
+    /* Increased gap based on user feedback */
+}
+
+.book-demo-btn {
+    background-color: #0044ff;
+    /* Bright blue */
+    color: #fff;
+    border: none;
+    padding: 15px 30px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-radius: 4px;
+    /* Slightly rounded */
+}
+
+.book-demo-btn:hover {
+    background-color: #0033cc;
+}
+
+.arrow-icon {
+    font-size: 14px;
+}
+
+.pro-recruiter-hero-right {
+    flex: 1;
+    background-color: #f8f9fa;
+    /* Match left side background */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+}
+
+.hero-image {
+    width: 95%;
+    height: auto;
+    object-fit: contain;
+    border-radius: 12px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+}
+
+.hero-image:hover {
+    transform: scale(1.02);
+}
+
+/* Responsiveness */
+@media (max-width: 1024px) {
+    .pro-recruiter-hero-container {
+        flex-direction: column;
+        height: auto;
+    }
+
+    .pro-recruiter-hero-left {
+        padding: 40px;
+        height: auto;
+        min-height: 50vh;
+    }
+
+    .hero-content h1 {
+        font-size: 48px;
+        margin-bottom: 40px;
+    }
+
+
+    .pro-recruiter-hero-right {
+        height: 50vh;
+    }
+}
+
+/* Large Desktop Alignment */
+@media (min-width: 1200px) {
+    .pro-recruiter-hero-left {
+        padding-left: calc((100vw - 1140px) / 2);
+    }
+}
+
+@media (min-width: 1400px) {
+    .pro-recruiter-hero-left {
+        padding-left: calc((100vw - 1320px) / 2);
+    }
+}
+
+/* Move button down on desktop screens */
+@media (min-width: 1025px) {
+    .book-demo-btn {
+        margin-top: calc(3rem + 15px);
+    }
+}
+
+/* Mobile Specific Adjustments */
+@media (max-width: 768px) {
+    .pro-recruiter-hero-left {
+        padding: 16px;
+        min-height: auto;
+    }
+
+    .hero-content {
+        margin-bottom: 30px;
+    }
+
+    .hero-content h1 {
+        font-size: 36px !important;
+        font-weight: 700 !important;
+        line-height: 1 !important;
+        letter-spacing: -0.025em !important;
+        text-transform: uppercase !important;
+        font-family: 'DM Sans', sans-serif !important;
+        margin-bottom: 12px;
+        margin-top: 15px;
+    }
+
+    .hero-content p {
+        margin-bottom: 24px;
+        font-size: 14px;
+    }
+
+    .book-demo-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+        width: 100%;
+        justify-content: center;
+    }
+
+    .pro-recruiter-hero-right {
+        height: 40vh;
+    }
+}
