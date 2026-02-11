@@ -13,11 +13,13 @@
 }
 
 .stats-left h2 {
-    font-size: 56px;
-    font-weight: 500;
-    line-height: 1.1;
+    font-size: 48px;
+    font-weight: 700;
+    line-height: 1;
     color: #000;
     margin-bottom: 30px;
+    text-transform: uppercase;
+    letter-spacing: -0.025em;
 }
 
 .stats-description {
@@ -65,7 +67,7 @@
 @media (max-width: 1024px) {
     .zep-consult-stats-container {
         flex-direction: column;
-        padding: 60px 40px;
+        padding: 60px 16px;
         gap: 40px;
     }
 
@@ -74,7 +76,12 @@
     }
 
     .stats-left h2 {
-        font-size: 42px;
+        font-size: 36px;
+    }
+
+    /* Hide line break on mobile to display on single line */
+    .stats-left h2 br {
+        display: none;
     }
 
     .stats-grid {

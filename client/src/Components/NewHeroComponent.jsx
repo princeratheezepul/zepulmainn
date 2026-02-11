@@ -65,8 +65,9 @@ const CountUpStat = ({ value, label, delay }) => {
             }}
         >
             <h2
-                className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent mb-1 leading-none transition-all duration-300 hover:from-blue-500 hover:to-blue-700 hover:scale-105 transform origin-left"
+                className="text-4xl font-bold mb-1 leading-none transition-all duration-300 hover:scale-105 transform origin-left"
                 style={{
+                    color: '#024bff',
                     filter: hasAnimated ? 'drop-shadow(0 0 8px rgba(37, 99, 235, 0.3))' : 'none',
                     fontFamily: 'inherit',
                     marginTop: 0
@@ -131,9 +132,9 @@ const NewHeroComponent = () => {
             <div className="new-hero-content">
                 <div className="new-hero-left">
                     <h1 className="new-hero-title">
-                        The <span className="text-primary">Future Of</span>
+                        The <span className="text-[#024bff]">Future Of</span>
                         <br />
-                        <span className="text-primary">Recruitment</span> Is Here.
+                        <span className="text-[#024bff]">Recruitment</span> Is Here.
                     </h1>
                     <p className="new-hero-description">
                         A unified, technology-driven talent acquisition operating model that combines AI, analytics, and a distributed partner network to deliver consistent, governed, decision-ready talent at scale

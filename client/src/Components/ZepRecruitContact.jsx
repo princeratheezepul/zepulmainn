@@ -4,7 +4,7 @@ import { FaArrowRight } from 'react-icons/fa';
 
 const ZepRecruitContact = () => {
     return (
-        <div className="zep-recruit-contact-container">
+        <div className="zep-recruit-contact-container ">
             <div className="zep-recruit-contact-content">
                 <div className="zep-recruit-contact-left">
                     <h2>

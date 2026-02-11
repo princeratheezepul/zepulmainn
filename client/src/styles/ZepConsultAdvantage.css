@@ -5,12 +5,21 @@
     font-family: 'DM Sans', sans-serif;
 }
 
+/* Add gap between ticker and advantage component on desktop */
+@media (min-width: 1025px) {
+    .zep-consult-advantage-container {
+        margin-top: 40px;
+    }
+}
+
 .zep-consult-advantage-container h2 {
-    font-size: 56px;
-    font-weight: 500;
-    line-height: 1.1;
+    font-size: 48px;
+    font-weight: 700;
+    line-height: 1;
     color: #000;
     margin-bottom: 40px;
+    text-transform: uppercase;
+    letter-spacing: -0.025em;
 }
 
 .advantage-cards {
@@ -62,11 +71,11 @@
 /* Responsiveness */
 @media (max-width: 1024px) {
     .zep-consult-advantage-container {
-        padding: 60px 40px;
+        padding: 60px 16px;
     }
 
     .zep-consult-advantage-container h2 {
-        font-size: 42px;
+        font-size: 36px;
     }
 
     .advantage-cards {

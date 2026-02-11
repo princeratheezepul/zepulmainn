@@ -4,7 +4,7 @@ import '../styles/ZepConsultAdvantage.css';
 const ZepConsultAdvantage = () => {
     return (
         <div className="zep-consult-advantage-container">
-            <h2>Our Core<br />Advantage</h2>
+            <h2>Our Core Advantage</h2>
             <div className="advantage-cards">
                 <div className="advantage-card">
                     <div className="card-image">

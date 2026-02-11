@@ -16,11 +16,13 @@
 }
 
 .zep-consult-hero-left h1 {
-    font-size: 64px;
-    font-weight: 500;
+    font-size: 48px;
+    font-weight: 700;
     color: #000;
     margin-bottom: 20px;
-    line-height: 1.1;
+    line-height: 1;
+    text-transform: uppercase;
+    letter-spacing: -0.025em;
 }
 
 .subtitle {
@@ -89,7 +91,7 @@
 @media (max-width: 1024px) {
     .zep-consult-hero-container {
         flex-direction: column;
-        padding: 60px 40px;
+        padding: 60px 16px;
         text-align: left;
         gap: 40px;
     }
@@ -99,6 +101,17 @@
     }
 
     .zep-consult-hero-left h1 {
-        font-size: 48px;
+        font-size: 36px !important;
+        font-weight: 700 !important;
+        text-transform: uppercase !important;
+        line-height: 1 !important;
+    }
+}
+
+/* Move text up slightly on screens larger than mobile using a safer method */
+@media (min-width: 769px) {
+    .zep-consult-hero-container {
+        padding-top: 20px;
+        /* Reduced from 40px to lift content slightly without instability */
     }
 }

@@ -15,7 +15,7 @@
 }
 
 .why-choose-title .text-primary {
-    color: #2563eb;
+    color: #024bff;
 }
 
 .comparison-table {
@@ -46,7 +46,7 @@
 
 .header-right {
     text-align: left;
-    color: #2563eb;
+    color: #024bff;
 }
 
 .header-middle {
@@ -66,6 +66,7 @@
     align-items: center;
 }
 
+
 .legacy-box,
 .stage-box,
 .solution-box {
@@ -76,6 +77,17 @@
     min-height: 50px;
     display: flex;
     align-items: center;
+    transition: all 0.3s ease;
+    /* Add transition for smooth effect */
+    cursor: default;
+}
+
+/* Hover effects for the boxes */
+.legacy-box:hover,
+.stage-box:hover,
+.solution-box:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
 }
 
 .legacy-box p,
@@ -94,8 +106,18 @@
     font-weight: 600;
 }
 
+.stage-box:hover {
+    background: #e0e0e0;
+}
+
 .solution-box {
     background: #e8eeff;
+}
+
+.solution-box:hover {
+    background: #dbe6ff;
+    box-shadow: 0 4px 15px rgba(2, 75, 255, 0.15);
+    /* Blue-tinted shadow for solution */
 }
 
 .arrow-section {
@@ -121,14 +143,14 @@
 }
 
 .arrow-icon.blue {
-    background: #2563eb;
+    background: #024bff;
     color: #ffffff;
 }
 
 /* Responsive Design */
 @media (max-width: 1200px) {
     .why-choose-zepul-container {
-        padding: 3rem 3rem;
+        padding: 3rem 2rem;
     }
 
     .why-choose-title {
@@ -143,11 +165,16 @@
 
     .why-choose-title {
         font-size: 1.75rem;
+        margin-bottom: 2rem;
     }
 
     .comparison-row {
         grid-template-columns: 1fr;
-        gap: 0.5rem;
+        gap: 0.75rem;
+        margin-bottom: 1.5rem;
+        padding: 1rem;
+        background: #eee;
+        border-radius: 12px;
     }
 
     .table-headers {
@@ -160,26 +187,41 @@
 
     .legacy-box::before {
         content: "Legacy: ";
-        font-weight: 600;
-        color: #666666;
+        font-weight: 700;
+        color: #666;
+        display: block;
+        margin-bottom: 0.25rem;
+        font-size: 0.75rem;
+        text-transform: uppercase;
     }
 
     .stage-box::before {
         content: "Stage: ";
-        font-weight: 600;
-        color: #666666;
+        font-weight: 700;
+        color: #666;
+        display: block;
+        margin-bottom: 0.25rem;
+        font-size: 0.75rem;
+        text-transform: uppercase;
     }
 
     .solution-box::before {
         content: "Solution: ";
-        font-weight: 600;
+        font-weight: 700;
         color: #2563eb;
+        display: block;
+        margin-bottom: 0.25rem;
+        font-size: 0.75rem;
+        text-transform: uppercase;
     }
 
     .legacy-box,
     .stage-box,
     .solution-box {
-        min-height: 60px;
+        min-height: auto;
+        padding: 0.75rem;
+        flex-direction: column;
+        align-items: flex-start;
     }
 }
 

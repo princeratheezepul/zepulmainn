@@ -14,3 +14,9 @@
     /* Ensure high quality rendering if browser supports it */
     image-rendering: -webkit-optimize-contrast;
 }
+
+@media (max-width: 768px) {
+    .pro-recruiter-process-diagram-container {
+        padding: 10px 16px;
+    }
+}

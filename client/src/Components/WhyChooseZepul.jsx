@@ -48,7 +48,7 @@ const WhyChooseZepul = () => {
     return (
         <div className="why-choose-zepul-container">
             <h2 className="why-choose-title">
-                Why <span className="text-primary">Progressive Leaders & Forward-Thinking Enterprises</span> Choose Zepul ?
+                Why <span className="text-primary">Progressive Leaders & Forward-Thinking Enterprises</span> Choose Zepul&nbsp;?
             </h2>
 
             <div className="comparison-table">
