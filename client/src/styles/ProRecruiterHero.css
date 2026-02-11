@@ -1,9 +1,8 @@
 .pro-recruiter-hero-container {
     display: flex;
-    height: 100vh;
+    min-height: 70vh;
     font-family: 'DM Sans', sans-serif;
-    overflow: hidden;
-    /* Prevent scrolling if strictly 100vh */
+    overflow: visible;
 }
 
 .pro-recruiter-hero-left {
@@ -100,23 +99,25 @@
 
 .pro-recruiter-hero-right {
     flex: 1;
-    background-color: #000;
-    /* Fallback */
+    background-color: #f8f9fa;
+    /* Match left side background */
     display: flex;
     align-items: center;
     justify-content: center;
-    overflow: hidden;
-    height: 100vh;
+    padding: 40px;
 }
 
 .hero-image {
-    min-width: 100%;
-    min-height: 100%;
-    width: auto;
+    width: 95%;
     height: auto;
-    object-fit: cover;
-    object-position: center;
-    flex-shrink: 0;
+    object-fit: contain;
+    border-radius: 12px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+}
+
+.hero-image:hover {
+    transform: scale(1.02);
 }
 
 /* Responsiveness */

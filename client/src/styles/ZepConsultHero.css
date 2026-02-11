@@ -2,12 +2,15 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 40px 100px;
+    padding: 10px 100px;
+    /* Reduced vertical padding */
     background-color: #fcfcfc;
     /* Very light grey/white background */
     font-family: 'DM Sans', sans-serif;
-    gap: 60px;
-    min-height: auto;
+    gap: 80px;
+    /* Increased gap */
+    min-height: 70vh;
+    /* Added min-height for better presence */
 }
 
 .zep-consult-hero-left {
@@ -111,7 +114,17 @@
 /* Move text up slightly on screens larger than mobile using a safer method */
 @media (min-width: 769px) {
     .zep-consult-hero-container {
-        padding-top: 20px;
-        /* Reduced from 40px to lift content slightly without instability */
+        padding-top: 40px;
+    }
+
+    .zep-consult-hero-right {
+        flex: 1.4;
+        /* Increase flex ratio to make image larger */
+        padding-left: 70px;
+        /* Shift image slightly to the right */
+    }
+
+    .zep-consult-hero-left {
+        flex: 1;
     }
 }
