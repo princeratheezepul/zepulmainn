@@ -17,7 +17,7 @@ const Footer = () => {
             <img src="/assets/image.png" alt="ZEPUL" className="logo-img" />
           </div>
           <p className="footer-disclaimer">
-            Zepul™ partners, authorized vendors, and subsidiaries do not
+            Zepul™ , partners, authorized vendors, and subsidiaries do not
             charge any fees from job seekers for employment placements. If
             anyone claims otherwise, please report such violations
             immediately.
