@@ -6,17 +6,20 @@ const AboutTeam = () => {
         {
             name: 'Srikanth Dhanwada',
             role: 'Founder & CEO',
-            image: '/srikanth.png'
+            image: '/srikanth.png',
+            linkedin: 'https://www.linkedin.com/in/srikanth-dhanwada-b9a94787'
         },
         {
             name: 'Tarun Ghulati',
             role: 'Co-Founder',
-            image: '/tarun.png'
+            image: '/tarun.png',
+            linkedin: 'https://www.linkedin.com/in/tarunghulati'
         },
         {
             name: 'Syed Reena Sumera',
             role: 'CBO',
-            image: '/reena.png'
+            image: '/reena.png',
+            linkedin: 'https://www.linkedin.com/in/reena-sumera-93aa35a7'
         }
     ];
 
@@ -30,7 +33,13 @@ const AboutTeam = () => {
                             <img src={member.image} alt={member.name} className="team-image" />
                         </div>
                         <div className="team-info">
-                            <h3 className="team-name">{member.name}</h3>
+                            <h3
+                                className="team-name"
+                                onClick={() => window.open(member.linkedin, '_blank')}
+                                style={{ cursor: 'pointer' }}
+                            >
+                                {member.name}
+                            </h3>
                             <p className="team-role">{member.role}</p>
                         </div>
                     </div>

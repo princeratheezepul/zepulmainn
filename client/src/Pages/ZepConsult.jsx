@@ -16,7 +16,9 @@ const ZepConsult = () => {
             <ZepConsultServices />
             <ZepConsultStats />
             <ZepConsultServe />
-            <ZepConsultContact />
+            <div id="contact-form">
+                <ZepConsultContact />
+            </div>
         </div>
     );
 };

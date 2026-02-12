@@ -406,4 +406,8 @@
   .chamber-logo {
     height: 45px;
   }
+
+  .cert-title {
+    white-space: nowrap;
+  }
 }

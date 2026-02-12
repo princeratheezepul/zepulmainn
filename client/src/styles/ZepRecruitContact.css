@@ -143,3 +143,86 @@
         font-size: 14px;
     }
 }
+
+/* Multi-step Form Animations */
+.zep-recruit-contact-right {
+    position: relative;
+    overflow: hidden;
+    min-height: 400px;
+    transition: min-height 0.3s ease;
+}
+
+.form-step {
+    transition: all 0.5s ease;
+    opacity: 1;
+    transform: translateX(0);
+    width: 100%;
+}
+
+.form-step.inactive {
+    opacity: 0;
+    transform: translateX(-20px);
+    pointer-events: none;
+    position: absolute;
+    top: 40px;
+    left: 40px;
+    right: 40px;
+}
+
+.form-step.active {
+    opacity: 1;
+    transform: translateX(0);
+    position: relative;
+}
+
+.form-step-2 {
+    transform: translateX(20px);
+}
+
+.form-step-2.active {
+    transform: translateX(0);
+}
+
+.query-heading {
+    font-size: 24px;
+    font-weight: 700;
+    color: #000;
+    margin-bottom: 20px;
+}
+
+.query-textarea {
+    width: 100%;
+    padding: 15px 20px;
+    border-radius: 20px;
+    border: none;
+    font-size: 14px;
+    background-color: #f2f2f2;
+    color: #333;
+    outline: none;
+    resize: none;
+    min-height: 150px;
+    margin-bottom: 20px;
+    font-family: inherit;
+    transition: background-color 0.3s ease;
+}
+
+.query-textarea:focus {
+    background-color: #e6e6e6;
+}
+
+.back-btn {
+    background: transparent;
+    border: none;
+    color: #666;
+    cursor: pointer;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 20px;
+    padding: 0;
+}
+
+.back-btn:hover {
+    color: #0056b3;
+}

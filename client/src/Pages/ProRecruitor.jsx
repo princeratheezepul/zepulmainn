@@ -14,7 +14,9 @@ const ProRecruitor = () => {
       <HowProRecruiterWorks />
       <ProRecruiterProcessDiagram />
       <WhyZepProRecruiter />
-      <ZepRecruitContact />
+      <div id="contact-form">
+        <ZepRecruitContact />
+      </div>
     </div>
   );
 };

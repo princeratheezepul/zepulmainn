@@ -153,7 +153,15 @@ const NewHeroComponent = () => {
                         ))}
                     </div>
 
-                    <button className="book-demo-btn">
+                    <button
+                        className="book-demo-btn"
+                        onClick={() => {
+                            const element = document.getElementById('beyond-recruitment');
+                            if (element) {
+                                element.scrollIntoView({ behavior: 'smooth' });
+                            }
+                        }}
+                    >
                         Book a Demo <span className="arrow">→</span>
                     </button>
                 </div>

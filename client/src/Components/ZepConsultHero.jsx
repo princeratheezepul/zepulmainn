@@ -23,7 +23,15 @@ const ZepConsultHero = () => {
                         free of cost.
                     </p>
                 </div>
-                <button className="book-demo-btn">
+                <button
+                    className="book-demo-btn"
+                    onClick={() => {
+                        const element = document.getElementById('contact-form');
+                        if (element) {
+                            element.scrollIntoView({ behavior: 'smooth' });
+                        }
+                    }}
+                >
                     Book a Demo <FaArrowRight />
                 </button>
             </div>

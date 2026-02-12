@@ -54,7 +54,13 @@
     line-height: 1.8;
     color: #333;
     margin-bottom: 24px;
-    text-align: justify;
+    text-align: left;
+}
+
+@media (min-width: 769px) {
+    .about-text-content p {
+        text-align: justify;
+    }
 }
 
 /* Responsiveness */

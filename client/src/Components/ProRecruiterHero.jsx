@@ -13,7 +13,15 @@ const ProRecruiterHero = () => {
                         assessments, client-ready report cards, and performance insights that turn recruiters
                         into pro recruiters.
                     </p>
-                    <button className="book-demo-btn">
+                    <button
+                        className="book-demo-btn"
+                        onClick={() => {
+                            const element = document.getElementById('contact-form');
+                            if (element) {
+                                element.scrollIntoView({ behavior: 'smooth' });
+                            }
+                        }}
+                    >
                         Book a Demo <FaArrowRight className="arrow-icon" />
                     </button>
                 </div>

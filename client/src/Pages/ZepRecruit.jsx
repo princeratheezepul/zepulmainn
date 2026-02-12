@@ -18,7 +18,9 @@ function ZepRecruit() {
         <WhyZepRecruit />
       </section>
       {/* <ZepRecruitContact /> */}
-      <ContactForm />
+      <div id="contact-form">
+        <ContactForm />
+      </div>
     </Fragment>
   );
 }
