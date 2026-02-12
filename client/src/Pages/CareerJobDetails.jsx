@@ -27,7 +27,7 @@ const CareerJobDetails = () => {
             setError(null);
 
             try {
-                const response = await fetch(`/api/marketplace/public/jobs/${jobId}`);
+                const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/marketplace/public/jobs/${jobId}`);
 
                 if (!response.ok) {
                     throw new Error('Failed to load job details');

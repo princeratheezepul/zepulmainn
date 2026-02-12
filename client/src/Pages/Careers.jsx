@@ -15,7 +15,7 @@ const Careers = () => {
         try {
             setLoading(true);
             setError(null);
-            const response = await fetch(`/api/marketplace/public/jobs?query=${encodeURIComponent(query)}&page=${pageNum}&limit=9`);
+            const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/marketplace/public/jobs?query=${encodeURIComponent(query)}&page=${pageNum}&limit=9`);
 
             if (!response.ok) {
                 throw new Error('Failed to fetch jobs');

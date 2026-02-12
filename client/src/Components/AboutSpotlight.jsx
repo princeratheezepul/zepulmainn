@@ -36,7 +36,7 @@ const AboutSpotlight = () => {
             image: "/assets/spotlight4.jpg"
         }
     ];
-
+    
     const handleReadMore = (link) => {
         window.open(link, '_blank', 'noopener,noreferrer');
     };
