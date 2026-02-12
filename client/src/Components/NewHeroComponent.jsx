@@ -84,12 +84,11 @@ const CountUpStat = ({ value, label, delay }) => {
 
 const NewHeroComponent = () => {
     const scrollingItems = [
-        "DISTRIBUTED NETWORK",
-        "SKILL VALIDATION",
-        "AT SCREENING",
-        "DISTRIBUTED NETWORK",
-        "SKILL VALIDATION",
-        "AT SCREENING"
+        "Distributed Recruiter Network",
+        "Unified Operating System",
+        "100% AI Utilisation",
+        "Multi Channel Sourcing",
+        "Data & Performance Driven"
     ];
 
     const stats = [
