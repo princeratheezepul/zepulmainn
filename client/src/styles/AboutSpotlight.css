@@ -3,6 +3,8 @@
     margin: 0 auto;
     padding: 20px 20px;
     font-family: 'DM Sans', sans-serif;
+    position: relative;
+    /* For positioning navigation if needed */
 }
 
 .spotlight-title {
@@ -14,36 +16,53 @@
 
 .spotlight-slider-container {
     width: 100%;
-    overflow: hidden;
+    /* overflow: hidden;  Swiper handles overflow */
+    padding-bottom: 20px;
+    /* Space for shadow/hover effects */
 }
 
 .spotlight-card {
     display: flex;
     flex-direction: column;
-    width: 300px;
-    height: 440px;
-    /* Reduced further to move buttons up */
-    /* Fixed uniform height */
-    margin-right: 24px;
-    flex-shrink: 0;
+    width: 100%;
+    /* Swiper manages width */
+    height: 480px;
+    /* Increased height for better layout */
+    margin: 0 auto;
+    background: #fff;
+    border-radius: 8px;
+    /* Optional: add border radius to card */
+    overflow: hidden;
+    /* Ensure content stays inside */
+    /* Box shadow can be added here if desired */
 }
 
 
 .spotlight-image-container {
     width: 100%;
-    height: 168.75px;
-    /* Fixed height (300px * 9/16 for 16:9 ratio) */
-    background-color: #f0f0f0;
+    height: 200px;
+    /* Increased height */
+    background-color: #f8f8f8;
     border-radius: 8px;
     overflow: hidden;
     flex-shrink: 0;
-    /* Prevent shrinking */
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .spotlight-image {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    /* Changed to contain to show full image, or keep cover but ensure aspect ratio matches */
+    /* User said "images are being cut", usually means cover is cropping important parts. 
+       If we want "completely showing", 'contain' is best, but might leave whitespace. 
+       Let's try 'contain' with a nice background, or stick to 'cover' but with a better aspect ratio?
+       Actually, 'cover' is standard for cards. Maybe the issue is the aspect ratio of the container (16:9) vs the actual images.
+       I will set object-fit to contain to be safe as per "completely showing".
+    */
+    object-fit: contain;
     transition: transform 0.3s ease;
 }
 
@@ -55,8 +74,7 @@
     display: flex;
     flex-direction: column;
     flex: 1;
-    /* Take remaining space */
-    padding-top: 20px;
+    padding: 20px 0;
 }
 
 .spotlight-card-title {
@@ -66,7 +84,6 @@
     color: #000;
     margin: 0 0 12px 0;
     height: 50px;
-    /* Fixed height for 2 lines */
     overflow: hidden;
     display: -webkit-box;
     -webkit-line-clamp: 2;
@@ -79,11 +96,11 @@
     line-height: 1.6;
     color: #666;
     margin: 0 0 20px 0;
-    height: 90px;
-    /* Fixed height for ~4 lines */
+    height: 70px;
+    /* Adjusted height */
     overflow: hidden;
     display: -webkit-box;
-    -webkit-line-clamp: 4;
+    -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
 }
 
@@ -98,31 +115,60 @@
     border-radius: 4px;
     width: fit-content;
     transition: background-color 0.3s ease;
+    margin-top: auto;
+    /* Push to bottom */
 }
 
 .read-more-btn:hover {
     background-color: #0033cc;
 }
 
-/* Responsiveness */
-@media (max-width: 1024px) {
-    .spotlight-grid {
-        grid-template-columns: repeat(3, 1fr);
-    }
+/* Navigation Buttons */
+.spotlight-navigation {
+    display: flex;
+    justify-content: flex-end;
+    /* Align to right */
+    gap: 15px;
+    margin-top: 20px;
+    padding-right: 10px;
 }
 
-@media (max-width: 768px) {
-    .spotlight-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
+.nav-btn {
+    background-color: #f0f0f0;
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    /* Circular buttons */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: #333;
+    font-size: 16px;
+}
 
+.nav-btn:hover {
+    background-color: #0044ff;
+    color: white;
+}
+
+/* Swiper specific overrides if needed */
+.swiper-slide {
+    height: auto;
+    display: flex;
+    justify-content: center;
+}
+
+/* Responsiveness */
+@media (max-width: 768px) {
     .spotlight-title {
         font-size: 32px;
     }
-}
 
-@media (max-width: 480px) {
-    .spotlight-grid {
-        grid-template-columns: 1fr;
+    .spotlight-card {
+        height: auto;
+        min-height: 450px;
     }
 }
