@@ -87,7 +87,7 @@ const Home = () => {
           <section className="products-services-section">
             <ProductsServices />
           </section>
-          <section className="contact-form-section">
+          <section className="contact-form-section" id="beyond-recruitment">
             <ContactForm />
           </section>
           {/* <section className="d-flex row innovation py-md-2  align-items-center">

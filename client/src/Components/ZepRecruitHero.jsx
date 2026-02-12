@@ -145,7 +145,15 @@ const ZepRecruitHero = () => {
                     </div>
 
                     {/* CTA Button */}
-                    <button className="bg-blue-600 text-white px-5 py-2.5 border-none rounded font-semibold cursor-pointer inline-flex items-center gap-2 transition-all duration-300 hover:bg-blue-700 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-blue-600/40 w-fit self-start mt-2 md:mt-4 text-sm">
+                    <button
+                        className="bg-blue-600 text-white px-5 py-2.5 border-none rounded font-semibold cursor-pointer inline-flex items-center gap-2 transition-all duration-300 hover:bg-blue-700 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-blue-600/40 w-fit self-start mt-2 md:mt-4 text-sm"
+                        onClick={() => {
+                            const element = document.getElementById('contact-form');
+                            if (element) {
+                                element.scrollIntoView({ behavior: 'smooth' });
+                            }
+                        }}
+                    >
                         Book a Demo →
                     </button>
                 </div>
