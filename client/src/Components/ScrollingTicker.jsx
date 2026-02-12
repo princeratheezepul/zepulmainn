@@ -3,12 +3,11 @@ import "../styles/ScrollingTicker.css";
 
 const ScrollingTicker = () => {
     const scrollingItems = [
-        "DISTRIBUTED NETWORK",
-        "SKILL VALIDATION",
-        "AT SCREENING",
-        "DISTRIBUTED NETWORK",
-        "SKILL VALIDATION",
-        "AT SCREENING"
+        "Distributed Recruiter Network",
+        "Unified Operating System",
+        "100% AI Utilisation",
+        "Multi Channel Sourcing",
+        "Data & Performance Driven"
     ];
 
     return (
