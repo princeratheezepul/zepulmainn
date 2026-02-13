@@ -15,6 +15,13 @@
     image-rendering: -webkit-optimize-contrast;
 }
 
+@media (min-width: 769px) {
+    .pro-recruiter-process-image {
+        max-width: 70%;
+        width: auto;
+    }
+}
+
 @media (max-width: 768px) {
     .pro-recruiter-process-diagram-container {
         padding: 10px 16px;

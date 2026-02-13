@@ -390,24 +390,57 @@
   }
 
   .footer-bottom-right {
-    justify-content: flex-start;
-    flex-wrap: wrap;
-    gap: 1.5rem;
+    justify-content: space-between;
+    flex-wrap: nowrap;
+    gap: 0.5rem;
+    width: 100%;
+    overflow-x: hidden;
+    /* Prevent overflow if somehow it still overflows */
+    align-items: flex-start;
+  }
+
+  .certification-item {
+    gap: 0;
+    min-width: 0;
+    /* Allow shrinking */
   }
 
   .cert-logo {
-    height: 45px;
+    height: 30px;
+    width: auto;
   }
 
   .dpiit-logo {
-    height: 40px;
+    height: 25px;
   }
 
   .chamber-logo {
-    height: 45px;
+    height: 35px;
   }
 
   .cert-title {
+    font-size: 0.6rem;
     white-space: nowrap;
+  }
+
+  .cert-subtitle {
+    font-size: 0.45rem;
+    margin-top: 0;
+  }
+
+  .cert-number {
+    font-size: 0.45rem;
+  }
+
+  .dpiit-text {
+    gap: 0;
+  }
+
+  .dpiit-subtitle {
+    font-size: 0.4rem;
+  }
+
+  .dpiit-cert-number {
+    font-size: 0.4rem;
   }
 }

@@ -5,7 +5,7 @@ const ProRecruiterProcessDiagram = () => {
     return (
         <div className="pro-recruiter-process-diagram-container">
             <img
-                src="/assets/pro_recruit_process.png"
+                src="/prorecruiter-home.png"
                 alt="Zep Pro Recruit Process"
                 className="pro-recruiter-process-image"
             />

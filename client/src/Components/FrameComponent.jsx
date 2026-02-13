@@ -8,7 +8,7 @@ const FrameComponent = () => {
                 How <span className="text-primary">Zepul</span> Works ?
             </h2>
             <img
-                src="/Hompage.png"
+                src="/homepage-flow.png"
                 alt="Frame visualization"
                 className="frame-image"
             />

@@ -83,7 +83,7 @@ const ZepRecruitContact = () => {
                             />
                             <div className="input-group">
                                 <input
-                                    type="url"
+                                    type="text"
                                     name="website"
                                     placeholder="Website link"
                                     value={formData.website}
