@@ -85,6 +85,13 @@ const AboutSpotlight = () => {
             link: "https://www.linkedin.com/feed/update/urn:li:activity:7360908535439781889",
             image: "/1769680210860.jpg"
         }
+        ,
+        {
+            title: "It was a true pleasure to serve on a panel in support of the University of Westminster’s South Asian Student Community.",
+            description: "The discussion and student engagement session was organised by the University of Westminster  in partnership with the London Chamber of Commerce and Industry – Asian Business Association. We shared practical insights on navigating professional spaces, leveraging networks, and building visibility and credibility.",
+            link: "https://www.linkedin.com/posts/tarunghulati_it-was-a-true-pleasure-to-serve-on-a-panel-ugcPost-7427748963094806528-6Cag",
+            image: "/1770913352377.jpg"
+        }
         
     ];
     

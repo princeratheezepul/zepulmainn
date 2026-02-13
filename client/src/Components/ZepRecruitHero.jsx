@@ -126,10 +126,10 @@ const ZepRecruitHero = () => {
                         ZEP RECRUIT
                     </div>
                     <p className="text-base md:text-lg text-black font-semibold mt-0 mb-2">
-                        A Traditional Hiring Model Re-Imagined with AI
+                        Recruitment, Reengineered by AI 
                     </p>
                     <p className="text-sm text-gray-600 leading-relaxed mb-6 max-w-[450px]">
-                        A legacy "pay after successful placement" model re-engineered with AI empowering entities and partner delivery agencies - delivering superior quality while reducing cost, time & complexity
+                        Reimagining recruitment with AI — from traditional success-based hiring to fully integrated RaaS, RPO, and Retainer models
                     </p>
 
                     {/* Statistics */}

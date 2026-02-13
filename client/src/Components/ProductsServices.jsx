@@ -10,7 +10,7 @@ const ProductsServices = () => {
             iconType: "users",
             title: "Zep Recruit",
             description:
-                "A Legacy Pay After Successful Placement Model, Reimagined with AI to Reduce Cost, Time, and Complexity.",
+                "Reimagining recruitment with AI — from traditional success-based hiring to fully integrated RaaS, RPO, and Retainer models",
             path: "/zepRecruit"
         },
         {
