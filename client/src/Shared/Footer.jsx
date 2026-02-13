@@ -91,7 +91,7 @@ const Footer = () => {
               <FaXTwitter />
             </a>
             <a
-              href="https://www.linkedin.com/company/tryzepul/"
+              href="https://www.linkedin.com/company/zepul/"
               target="_blank"
               rel="noreferrer"
               className="social-icon"
