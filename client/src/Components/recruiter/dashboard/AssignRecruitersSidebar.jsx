@@ -21,42 +21,29 @@ export default function AssignRecruitersSidebar({
   const [saving, setSaving] = useState(false);
   const [allRecruiters, setAllRecruiters] = useState([]);
 
-  // Fetch all recruiters when component opens
+  // Fetch all recruiters from the database when component opens
   useEffect(() => {
-    if (!open || !managerId || !token) {
-      console.log('Missing required props:', { open, managerId: !!managerId, token: !!token });
-      return;
-    }
-    
+    if (!open) return;
+
     const fetchRecruiters = async () => {
       try {
         setSearchLoading(true);
-        console.log('Fetching recruiters with:', { managerId, token: token.substring(0, 20) + '...' });
-        
-        const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/recruiter/getrecruiter?creatorId=${managerId}&type=manager`, {
-          headers: { 
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
-        
-        console.log('Response status:', response.status);
-        
+
+        const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/accountmanager/recruiters`);
+
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
-          console.error('API Error:', errorData);
           throw new Error(errorData.message || `HTTP ${response.status}: Failed to fetch recruiters`);
         }
-        
+
         const data = await response.json();
-        console.log('API Response:', data);
-        
+
+        // Show all active recruiters that are not already assigned
         const activeRecruiters = (data.recruiters || []).filter(r =>
           ((r.isActive === true) || (r.status && r.status.toLowerCase() === 'active')) &&
           !assigned.some(a => a._id === r._id)
         );
-        
-        console.log('Filtered active recruiters:', activeRecruiters.length);
+
         setAllRecruiters(activeRecruiters);
       } catch (error) {
         console.error('Error fetching recruiters:', error);
@@ -68,7 +55,7 @@ export default function AssignRecruitersSidebar({
     };
 
     fetchRecruiters();
-  }, [open, managerId, token, assigned]);
+  }, [open, assigned]);
 
   // Filter recruiters based on search
   useEffect(() => {
@@ -79,8 +66,8 @@ export default function AssignRecruitersSidebar({
 
     const lowerSearch = search.toLowerCase();
     const filtered = allRecruiters.filter(r =>
-      (r.fullname?.toLowerCase().includes(lowerSearch) || 
-       r.email?.toLowerCase().includes(lowerSearch))
+    (r.fullname?.toLowerCase().includes(lowerSearch) ||
+      r.email?.toLowerCase().includes(lowerSearch))
     );
     setSearchResults(filtered);
   }, [search, allRecruiters]);
