@@ -96,10 +96,10 @@ const Meeting = () => {
             setTimeWarning("grace");
             return 0;
           }
-          
+
           const minutesRemaining = Math.floor(prev / 60000);
           const secondsRemaining = Math.floor((prev % 60000) / 1000);
-          
+
           // Progressive warnings
           if (minutesRemaining === 10 && !warningsShownRef.current.has("10min")) {
             setTimeWarning("10min");
@@ -117,7 +117,7 @@ const Meeting = () => {
             setTimeWarning("30sec");
             warningsShownRef.current.add("30sec");
           }
-          
+
           return prev - 1000;
         });
       }, 1000);
@@ -134,16 +134,16 @@ const Meeting = () => {
   useEffect(() => {
     if (gracePeriodActive && isConnected) {
       let graceTimeRemaining = 2 * 60 * 1000; // 2 minutes grace period
-      
+
       gracePeriodRef.current = setInterval(() => {
         graceTimeRemaining -= 1000;
-        
+
         if (graceTimeRemaining <= 0) {
           // Grace period expired - now end the interview
           const autoEndInterview = async () => {
             // Mark as ending to prevent error handlers from showing errors
             setIsConnected(false);
-            
+
             if (vapiRef.current) {
               try {
                 vapiRef.current.stop();
@@ -154,7 +154,7 @@ const Meeting = () => {
             if (mediaStreamRef.current) {
               mediaStreamRef.current.getTracks().forEach((t) => t.stop());
             }
-            
+
             // Notify backend
             try {
               await fetch(getApiUrl(`/api/meetings/${token}/end`), {
@@ -168,7 +168,7 @@ const Meeting = () => {
             } catch (err) {
               console.error("Error notifying backend:", err);
             }
-            
+
             setIsSpeaking(false);
             setTimeRemaining(null);
             setInterviewStartTime(null);
@@ -177,7 +177,7 @@ const Meeting = () => {
             setError("Interview time has ended. Thank you for your participation.");
           };
           autoEndInterview();
-          
+
           if (gracePeriodRef.current) {
             clearInterval(gracePeriodRef.current);
             gracePeriodRef.current = null;
@@ -219,6 +219,7 @@ const Meeting = () => {
       vapiRef.current = vapi;
 
       vapi.on("call-start", () => {
+        setStarting(false);
         setIsConnected(true);
         setInterviewStartTime(new Date());
         // Start timer
@@ -271,23 +272,22 @@ const Meeting = () => {
     } catch (err) {
       console.error(err);
       setError(err.message || "Unable to start interview");
-    } finally {
       setStarting(false);
     }
   };
 
   const endInterview = async () => {
     if (!vapiRef.current) return;
-    
+
     try {
       // Stop the Vapi call
       vapiRef.current.stop();
-      
+
       // Stop camera
       if (mediaStreamRef.current) {
         mediaStreamRef.current.getTracks().forEach((t) => t.stop());
       }
-      
+
       // Clear timers
       if (timerIntervalRef.current) {
         clearInterval(timerIntervalRef.current);
@@ -297,11 +297,11 @@ const Meeting = () => {
         clearInterval(gracePeriodRef.current);
         gracePeriodRef.current = null;
       }
-      
+
       setGracePeriodActive(false);
       setTimeWarning(null);
       warningsShownRef.current.clear();
-      
+
       // Notify backend that meeting was ended
       await fetch(getApiUrl(`/api/meetings/${token}/end`), {
         method: "POST",
@@ -312,7 +312,7 @@ const Meeting = () => {
         console.error("Failed to notify backend of meeting end:", err);
         // Don't show error to user, call is already stopped
       });
-      
+
       setIsConnected(false);
       setIsSpeaking(false);
       setTimeRemaining(null);
@@ -403,13 +403,12 @@ const Meeting = () => {
                   {/* Timer */}
                   {isConnected && timeRemaining !== null && (
                     <div
-                      className={`px-3 py-1 rounded-pill d-flex align-items-center gap-2 ${
-                        timeRemaining < 300000
+                      className={`px-3 py-1 rounded-pill d-flex align-items-center gap-2 ${timeRemaining < 300000
                           ? "bg-danger text-white"
                           : timeRemaining < 600000
-                          ? "bg-warning text-dark"
-                          : "bg-info text-white"
-                      }`}
+                            ? "bg-warning text-dark"
+                            : "bg-info text-white"
+                        }`}
                       style={{ fontSize: "14px", fontWeight: "600" }}
                     >
                       <Clock size={16} />
@@ -417,9 +416,8 @@ const Meeting = () => {
                     </div>
                   )}
                   <div
-                    className={`rounded-circle d-flex align-items-center justify-content-center ${
-                      isSpeaking ? "bg-success" : "bg-secondary"
-                    }`}
+                    className={`rounded-circle d-flex align-items-center justify-content-center ${isSpeaking ? "bg-success" : "bg-secondary"
+                      }`}
                     style={{
                       width: 48,
                       height: 48,
@@ -437,15 +435,14 @@ const Meeting = () => {
                 {/* AI Agent Avatar */}
                 <div className="text-center">
                   <div
-                    className={`rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center ${
-                      isSpeaking ? "bg-primary shadow-lg" : "bg-secondary"
-                    }`}
+                    className={`rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center ${isSpeaking ? "bg-primary shadow-lg" : "bg-secondary"
+                      }`}
                     style={{
                       width: 120,
                       height: 120,
                       transition: "all 0.3s ease",
-                      boxShadow: isSpeaking 
-                        ? "0 0 20px rgba(13, 110, 253, 0.5)" 
+                      boxShadow: isSpeaking
+                        ? "0 0 20px rgba(13, 110, 253, 0.5)"
                         : "0 4px 6px rgba(0, 0, 0, 0.1)",
                     }}
                   >
@@ -504,13 +501,12 @@ const Meeting = () => {
                   </>
                 )}
                 {isConnected && (
-                  <div className={`alert mb-3 ${
-                    gracePeriodActive
+                  <div className={`alert mb-3 ${gracePeriodActive
                       ? "alert-danger"
                       : timeWarning === "1min" || timeWarning === "30sec"
-                      ? "alert-warning"
-                      : "alert-info"
-                  }`}>
+                        ? "alert-warning"
+                        : "alert-info"
+                    }`}>
                     <div className="d-flex justify-content-between align-items-center mb-2">
                       <strong>
                         {gracePeriodActive
