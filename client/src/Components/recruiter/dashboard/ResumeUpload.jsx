@@ -177,7 +177,7 @@ const ResumeUpload = ({ onBack, jobDetails }) => {
 
   const fetchATSScore = async (resumeText) => {
     try {
-      const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
+      const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
       const prompt = `
       You are a strict, realistic ATS evaluator. Calculate ATS score out of 100 using weighted criteria below. BE CONSERVATIVE with scoring - most resumes should score 60-80, with only exceptional candidates scoring 85+.
@@ -320,7 +320,7 @@ const ResumeUpload = ({ onBack, jobDetails }) => {
   };
 
   const analyzeResume = async (resumeText, job) => {
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
     const prompt = `
       You are an expert AI recruiter analyzing a resume for a specific job.
       Job Details:

@@ -60,7 +60,7 @@ export const generateAssessment = async (req, res) => {
 
     // Try AI generation first with timeout
     try {
-      const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
+      const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
       const prompt = `
 Generate 3 DISTINCT coding problems suitable for a ${job.jobtitle} role.
 
