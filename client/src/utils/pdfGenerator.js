@@ -2,10 +2,12 @@ import { toast } from 'react-hot-toast';
 
 // Circular progress bar component as string template
 const getCircularProgressSVG = (percentage, size = 160, strokeWidth = 14) => {
+  const isNA = percentage === 'NA';
+  const numericPercentage = isNA ? 0 : percentage;
   const radius = (size - strokeWidth) / 2;
   const circumference = radius * 2 * Math.PI;
   const strokeDasharray = circumference;
-  const strokeDashoffset = circumference - (percentage / 100) * circumference;
+  const strokeDashoffset = circumference - (numericPercentage / 100) * circumference;
 
   return `
     <div class="relative flex items-center justify-center" style="width: ${size}px; height: ${size}px; margin: 0 auto;">
@@ -46,7 +48,7 @@ const getCircularProgressSVG = (percentage, size = 160, strokeWidth = 14) => {
           class="font-bold text-gray-900" 
           style="font-size: 32px; line-height: 1; text-align: center; display: block; margin: 0; padding: 0;"
         >
-          ${percentage}%
+          ${isNA ? 'NA' : percentage + '%'}
         </span>
       </div>
     </div>
@@ -94,9 +96,9 @@ const generatePDFContent = (resumeData, note = '') => {
 
   const metricsRowHTML = `
     <div class="grid grid-cols-3 gap-4 mb-6">
-      ${getMetricCard('Coding Performance', codingScore, 'Strong Match', 'text-green-600')}
-      ${getMetricCard('CV Strength', score, 'Less Match', 'text-red-600')}
-      ${getMetricCard('Interview Performance', finalInterviewScore, 'Less Match', 'text-red-600')}
+      ${getMetricCard('Coding Performance', codingScore || 'NA', 'Strong Match', 'text-green-600')}
+      ${getMetricCard('CV Strength', score || 'NA', 'Less Match', 'text-red-600')}
+      ${getMetricCard('Interview Performance', finalInterviewScore || 'NA', 'Less Match', 'text-red-600')}
     </div>
   `;
 
