@@ -570,19 +570,55 @@ export const handleVapiWebhook = async (req, res) => {
     // Signature verification if secret is configured
     const webhookSecret = process.env.VAPI_WEBHOOK_SECRET;
     if (webhookSecret) {
-      const signature = req.headers["x-vapi-signature"];
+      const normalizeHeader = (value) =>
+        Array.isArray(value) ? value[0] : value;
+      const signature = normalizeHeader(
+        req.headers["x-vapi-signature"] || req.headers["x-signature"]
+      );
+      const timestamp = normalizeHeader(req.headers["x-timestamp"]);
+
       if (!signature) {
         console.warn("Webhook received without signature (secret is configured)");
         return res.status(401).json({ message: "Missing webhook signature" });
       }
-      const payloadString = JSON.stringify(req.body || {});
-      const computed = crypto
+
+      const payloadString = req.rawBody || JSON.stringify(req.body || {});
+      const computedLegacy = crypto
         .createHmac("sha256", webhookSecret)
         .update(payloadString)
         .digest("hex");
-      const valid =
-        signature.length === computed.length &&
-        crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(computed));
+
+      const candidates = [computedLegacy];
+      if (timestamp) {
+        // Support timestamped signature formats used by Vapi HMAC credentials.
+        candidates.push(
+          crypto
+            .createHmac("sha256", webhookSecret)
+            .update(`${timestamp}.${payloadString}`)
+            .digest("hex"),
+          crypto
+            .createHmac("sha256", webhookSecret)
+            .update(`${timestamp}:${payloadString}`)
+            .digest("hex"),
+          crypto
+            .createHmac("sha256", webhookSecret)
+            .update(`${timestamp}${payloadString}`)
+            .digest("hex")
+        );
+      }
+
+      const normalizedSig = String(signature).trim().toLowerCase();
+      const valid = candidates.some((computed) => {
+        const normalizedComputed = String(computed).trim().toLowerCase();
+        return (
+          normalizedSig.length === normalizedComputed.length &&
+          crypto.timingSafeEqual(
+            Buffer.from(normalizedSig),
+            Buffer.from(normalizedComputed)
+          )
+        );
+      });
+
       if (!valid) {
         console.warn("Webhook signature mismatch");
         return res.status(401).json({ message: "Invalid webhook signature" });
@@ -860,5 +896,4 @@ export const handleVapiWebhook = async (req, res) => {
     return res.status(500).json({ message: "Webhook processing failed" });
   }
 };
-
 
