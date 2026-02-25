@@ -20,6 +20,10 @@ const trimText = (text = "", limit = 2500) => {
   return text.length > limit ? `${text.slice(0, limit)}...` : text;
 };
 
+const isSyntheticCallId = (callId) =>
+  typeof callId === "string" &&
+  (callId.startsWith("web-call-") || callId.startsWith("mock-call-"));
+
 export const createMeeting = async (req, res) => {
   try {
     const { jobId, resumeId, candidateEmail, scheduledAt, durationMinutes } =
@@ -407,7 +411,9 @@ export const startMeeting = async (req, res) => {
     }
 
     meeting.status = "active";
-    meeting.vapiCallId = callId;
+    if (callId && !isSyntheticCallId(callId)) {
+      meeting.vapiCallId = callId;
+    }
     meeting.joinConfig = joinConfig;
     await meeting.save();
 
@@ -476,16 +482,19 @@ export const endMeeting = async (req, res) => {
     // If we have a callId but no transcript, try to fetch it from Vapi API
     // This is a fallback in case webhooks didn't deliver the transcript (e.g., on ejection)
     if (meeting.vapiCallId && !meeting.transcript) {
-      console.log("⚠️ No transcript found in database, attempting to fetch from Vapi API...");
-      const transcript = await fetchTranscriptFromVapi(meeting.vapiCallId);
-      if (transcript) {
-        meeting.transcript = transcript;
-        console.log("✅ Transcript fetched from Vapi API, length:", transcript.length);
+      if (isSyntheticCallId(meeting.vapiCallId)) {
+        console.warn("Skipping transcript fetch for synthetic callId:", meeting.vapiCallId);
       } else {
-        console.warn("⚠️ Could not fetch transcript from Vapi API - may not be available yet");
+        const transcript = await fetchTranscriptFromVapi(meeting.vapiCallId);
+        if (transcript) {
+          meeting.transcript = transcript;
+          console.log("Transcript fetched from Vapi API, length:", transcript.length);
+        } else {
+          console.warn("Could not fetch transcript from Vapi API - may not be available yet");
+        }
       }
     } else if (meeting.transcript) {
-      console.log("✅ Transcript already exists in database, length:", meeting.transcript.length);
+      console.log("Transcript already exists in database, length:", meeting.transcript.length);
     }
 
     meeting.status = "completed";
@@ -531,8 +540,10 @@ export const handleVapiFunctionCall = async (req, res) => {
     if (functionCall?.name === "end_interview") {
       console.log("✅ AI called end_interview function. Reason:", functionCall.arguments?.reason || "Not provided");
 
-      // Mark meeting as completed
-      meeting.status = "completed";
+      // Do not mark completed here. Wait for end-of-call webhook so transcript/report can persist.
+      meeting.meta = meeting.meta || {};
+      meeting.meta.endInterviewRequested = true;
+      meeting.meta.endInterviewRequestedAt = new Date();
       await meeting.save();
 
       // Return success - Vapi will end the call gracefully
@@ -596,7 +607,10 @@ export const handleVapiWebhook = async (req, res) => {
 
     // If not found by callId, try to find by assistantId (for web calls, callId might be different)
     if (!meeting && call?.assistantId) {
-      meeting = await Meeting.findOne({ vapiAssistantId: call.assistantId, status: { $in: ["active", "scheduled"] } });
+      meeting = await Meeting.findOne({
+        vapiAssistantId: call.assistantId,
+        status: { $in: ["active", "scheduled", "completed"] },
+      }).sort({ updatedAt: -1 });
       if (meeting) {
         // Update the callId for future webhooks
         meeting.vapiCallId = callId;
@@ -607,12 +621,21 @@ export const handleVapiWebhook = async (req, res) => {
     if (!meeting) {
       console.error("Meeting not found for callId:", callId);
       // Log all active meetings for debugging
-      const activeMeetings = await Meeting.find({ status: { $in: ["active", "scheduled"] } }).select("vapiCallId vapiAssistantId token status");
+      const activeMeetings = await Meeting.find({ status: { $in: ["active", "scheduled", "completed"] } }).select("vapiCallId vapiAssistantId token status");
       console.log("Active meetings:", JSON.stringify(activeMeetings, null, 2));
       return res.status(404).json({ message: "Meeting not found for call" });
     }
 
     console.log("Found meeting:", meeting._id, "Status:", meeting.status);
+    // Promote real callId from webhook if initial value was synthetic/missing/stale.
+    if (
+      callId &&
+      (!meeting.vapiCallId ||
+        isSyntheticCallId(meeting.vapiCallId) ||
+        meeting.vapiCallId !== callId)
+    ) {
+      meeting.vapiCallId = callId;
+    }
 
     // Handle different webhook event types
     switch (type) {
@@ -660,14 +683,27 @@ export const handleVapiWebhook = async (req, res) => {
 
         // Handle end_interview function call
         if (functionCall?.name === "end_interview") {
-          const reason = functionCall?.arguments?.reason ||
-            functionCall?.parameters?.reason ||
-            (typeof functionCall?.arguments === "string" ? JSON.parse(functionCall.arguments).reason : null) ||
-            "Interview completed";
-          console.log("✅ AI requested to end interview. Reason:", reason);
+          let parsedReason = null;
+          if (typeof functionCall?.arguments === "string") {
+            try {
+              parsedReason = JSON.parse(functionCall.arguments)?.reason || null;
+            } catch (error) {
+              parsedReason = null;
+            }
+          }
 
-          // Mark meeting as completed
-          meeting.status = "completed";
+          const reason =
+            functionCall?.arguments?.reason ||
+            functionCall?.parameters?.reason ||
+            parsedReason ||
+            "Interview completed";
+          console.log("AI requested to end interview. Reason:", reason);
+
+          // Do not mark completed on function call. Wait for end-of-call webhook to persist final transcript/report.
+          meeting.meta = meeting.meta || {};
+          meeting.meta.endInterviewRequested = true;
+          meeting.meta.endInterviewReason = reason;
+          meeting.meta.endInterviewRequestedAt = new Date();
 
           // Save the meeting first
           await meeting.save();
@@ -824,4 +860,5 @@ export const handleVapiWebhook = async (req, res) => {
     return res.status(500).json({ message: "Webhook processing failed" });
   }
 };
+
 
