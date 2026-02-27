@@ -301,7 +301,9 @@ export const startWebCallForMeeting = async ({ assistantId, context }) => {
   }
 
   return {
-    callId: `web-call-${crypto.randomBytes(6).toString("hex")}`,
+    // Real Vapi call ID is emitted via webhook events after call start.
+    // Do not generate a synthetic call ID here, as it breaks webhook matching.
+    callId: null,
     joinConfig: {
       assistantId: resolvedAssistantId,
       publicApiKey: VAPI_PUBLIC_API_KEY,
@@ -309,4 +311,3 @@ export const startWebCallForMeeting = async ({ assistantId, context }) => {
     },
   };
 };
-
