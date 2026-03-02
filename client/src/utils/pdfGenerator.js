@@ -78,25 +78,15 @@ const generatePDFContent = (resumeData, note = '') => {
   `;
 
   // 1. Top Metrics Row
-  const codingScore = resumeData.oa?.evaluation?.score || 0;
-  const interviewScore = resumeData.score || (resumeData.interviewEvaluation?.evaluationResults?.reduce((acc, curr) => acc + (curr.score || 0), 0) / (resumeData.interviewEvaluation?.evaluationResults?.length || 1) * 10) || 0; // Normalize to 100 if needed, assuming score is out of 10? No, wait.
-  // Actually, let's check the data. interviewEvaluation.evaluationResults has score out of 10. So average * 10 gives %.
-  // But wait, resumeData.score is likely the interview score. Let's use that if available.
-  // For now, let's assume resumeData.score is the interview score percentage.
-  // If not, we might need to calculate it.
-  // Let's stick to the plan: resumeData.score or average.
-
-  // Let's refine the interview score calculation just in case
   let finalInterviewScore = resumeData.score || 0;
   if (!finalInterviewScore && resumeData.interviewEvaluation?.evaluationResults?.length > 0) {
     const total = resumeData.interviewEvaluation.evaluationResults.reduce((sum, r) => sum + (r.score || 0), 0);
-    finalInterviewScore = Math.round((total / resumeData.interviewEvaluation.evaluationResults.length) * 10); // Convert 0-10 scale to 0-100
+    finalInterviewScore = Math.round((total / resumeData.interviewEvaluation.evaluationResults.length) * 10);
   }
 
 
   const metricsRowHTML = `
-    <div class="grid grid-cols-3 gap-4 mb-6">
-      ${getMetricCard('Coding Performance', codingScore || 'NA', 'Strong Match', 'text-green-600')}
+    <div class="grid grid-cols-2 gap-4 mb-6">
       ${getMetricCard('CV Strength', score || 'NA', 'Less Match', 'text-red-600')}
       ${getMetricCard('Interview Performance', finalInterviewScore || 'NA', 'Less Match', 'text-red-600')}
     </div>
@@ -139,57 +129,7 @@ const generatePDFContent = (resumeData, note = '') => {
     </div>
   `;
 
-  // 3. Coding Assessment Summary
-  const oaStatus = resumeData.oa?.evaluation?.pass ? 'Passed' : 'Failed';
-  const oaStatusColor = resumeData.oa?.evaluation?.pass ? 'text-green-700 bg-green-100' : 'text-red-700 bg-red-100';
-  const oaScore = resumeData.oa?.evaluation?.score || 0;
-  const questionsCompleted = resumeData.oa?.submissions?.length || 0;
-
-  const codingAssessmentHTML = `
-    <div class="bg-white rounded-xl border border-gray-200 p-6 mb-6">
-      <div class="flex justify-between items-center mb-4">
-        <div class="text-lg font-bold text-gray-900">Coding Assessment Summary</div>
-        <div class="flex items-center gap-4">
-            <span class="px-3 py-1 rounded-full text-sm font-bold ${oaStatusColor} flex items-center gap-1">
-                ${resumeData.oa?.evaluation?.pass ? '✓' : '✕'} ${oaStatus}
-            </span>
-            <span class="font-bold text-gray-900">Score: ${oaScore}/100</span>
-        </div>
-      </div>
-      
-      <div class="mb-4">
-        <div class="flex items-center gap-2 text-blue-600 font-semibold mb-2">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-            Questions Completed: ${questionsCompleted}
-        </div>
-      </div>
-
-      <div class="space-y-4">
-        <div class="bg-gray-50 rounded-lg p-3 border border-gray-100">
-            <div class="font-semibold text-gray-700 mb-1">General Feedback</div>
-            <div class="text-sm text-gray-600">${resumeData.oa?.evaluation?.feedback || 'No feedback available.'}</div>
-        </div>
-        
-        <div class="bg-blue-50 rounded-lg p-3 border border-blue-100">
-            <div class="flex items-center gap-2 font-semibold text-blue-800 mb-1">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                Complexity Analysis
-            </div>
-            <div class="text-sm text-blue-700">${resumeData.oa?.evaluation?.complexityAnalysis || 'Multi-question assessment'}</div>
-        </div>
-
-        <div class="bg-gray-50 rounded-lg p-3 border border-gray-100">
-            <div class="flex items-center gap-2 font-semibold text-gray-700 mb-1">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-                Suggestions for Improvement
-            </div>
-            <div class="text-sm text-gray-600">${resumeData.oa?.evaluation?.improvementSuggestions || 'Excellent performance! Keep practicing to maintain your skills.'}</div>
-        </div>
-      </div>
-    </div>
-  `;
-
-  // 4. AI Resume Summary (Updated Layout)
+  // 3. AI Resume Summary (Updated Layout)
   const aiResumeSummaryHTML = `
     <div class="bg-white rounded-xl border border-gray-200 p-6 mb-6">
         <div class="text-lg font-bold text-gray-900 mb-4">AI Resume Summary</div>
@@ -258,7 +198,6 @@ const generatePDFContent = (resumeData, note = '') => {
         ${metricsRowHTML}
         ${keyStrengthHTML}
         ${potentialConcernHTML}
-        ${codingAssessmentHTML}
         ${aiResumeSummaryHTML}
         ${addedNotesHTML}
       </div>
