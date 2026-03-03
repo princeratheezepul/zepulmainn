@@ -136,7 +136,7 @@ const NewHeroComponent = () => {
                         <span className="text-[#024bff]">Recruitment</span> Is Here.
                     </h1>
                     <p className="new-hero-description">
-                        A unified, technology-driven talent acquisition operating model that combines AI, analytics, and a distributed partner network to deliver consistent, governed, decision-ready talent at scale
+                        An AI-powered, full-stack Talent Acquisition operating system combining intelligent sourcing, AI-assessed evaluations, advanced analytics, and a global partner network to deliver governed, decision-ready talent at scale — powered by agile and lean execution for operational excellence, all on one unified platform.
                     </p>
                     <p className="new-hero-subtitle-blue">
                         Your Trusted Talent and Technology Partner for Enterprise and GCC Success
