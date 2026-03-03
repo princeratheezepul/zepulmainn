@@ -390,8 +390,14 @@ function ${functionName}(...args) {
     const performSubmit = async (autoSubmit) => {
         setSubmitting(true);
         try {
+            // Derive questions from current assessment state (avoid using render-scope variables)
+            const currentAssessment = assessment;
+            const qs = currentAssessment
+                ? (currentAssessment.questions || [currentAssessment.question])
+                : [];
+
             // Prepare all submissions
-            const submissions = questions.map((_, idx) => ({
+            const submissions = qs.map((_, idx) => ({
                 questionIndex: idx,
                 code: codes[idx] || '',
                 language: languages[idx] || 'java'

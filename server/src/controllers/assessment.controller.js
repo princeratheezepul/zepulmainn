@@ -328,18 +328,19 @@ export const runCode = async (req, res) => {
 
     if (language === 'java') {
       const result = await executeJava(code, question.examples, question.functionName);
+      // executeJava returns { error, results } on failure — always respond 200
+      // so the frontend's `if (data.error)` path can handle it gracefully.
       return res.status(200).json(result);
     }
 
-    // Fallback for JS (still client-side for now, or we could move it here too)
-    // For now, if frontend sends JS here, we can just return a message saying "Run locally"
-    // or implement JS execution via Piston too.
-    // Let's assume frontend handles JS locally for now as per plan.
-    return res.status(400).json({ message: "Language not supported for backend execution" });
+    // JS is handled client-side; frontend won't call this for JS.
+    // Return a user-friendly 200 with error field so frontend doesn't crash.
+    return res.status(200).json({ error: "JavaScript execution is handled in the browser." });
 
   } catch (error) {
     console.error("Error running code:", error);
-    res.status(500).json({ message: "Failed to run code", error: error.message });
+    // Return 200 with error message so frontend can show it in the terminal output
+    res.status(200).json({ error: `Execution failed: ${error.message}` });
   }
 };
 
