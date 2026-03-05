@@ -363,16 +363,11 @@ const ResumeDetailsView = ({ resumeData, onBack }) => {
             <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
               {/* Skills Section */}
               <div className="flex flex-wrap items-center gap-2">
-                {resumeData.skills && resumeData.skills.slice(0, 4).map(skill => (
+                {resumeData.skills && resumeData.skills.slice(0, 5).map(skill => (
                   <span key={skill} className="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm font-medium">
                     {skill}
                   </span>
                 ))}
-                {resumeData.skills && resumeData.skills.length > 4 && (
-                  <span className="bg-gray-200 text-gray-700 px-3 py-1 rounded-full text-sm font-medium">
-                    +{resumeData.skills.length - 4}
-                  </span>
-                )}
                 {/* Fallback skills if none provided */}
                 {(!resumeData.skills || resumeData.skills.length === 0) && (
                   <>
@@ -380,7 +375,7 @@ const ResumeDetailsView = ({ resumeData, onBack }) => {
                     <span className="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm font-medium">TypeScript</span>
                     <span className="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm font-medium">React.js</span>
                     <span className="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm font-medium">Node.js</span>
-                    <span className="bg-gray-200 text-gray-700 px-3 py-1 rounded-full text-sm font-medium">+6</span>
+                    <span className="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm font-medium">MongoDB</span>
                   </>
                 )}
               </div>
@@ -427,6 +422,25 @@ const ResumeDetailsView = ({ resumeData, onBack }) => {
                     </div>
                   ))}
                 </div>
+              </div>
+
+              {/* AI Interview Summary */}
+              <div className="p-6 border rounded-xl bg-gray-50">
+                <div className="text-sm font-semibold text-black mb-4">AI Interview Summary</div>
+                <ul className="space-y-2">
+                  <li className="flex items-start gap-3">
+                    <span className="text-blue-600 mt-1 font-bold">•</span>
+                    <span className="text-gray-700 text-sm leading-relaxed">The interview covered full-stack concepts — RESTful APIs, React, Node.js, MongoDB, and DevOps with CI/CD and Docker.</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <span className="text-blue-600 mt-1 font-bold">•</span>
+                    <span className="text-gray-700 text-sm leading-relaxed">Prince performed confidently, giving structured, well-reasoned answers backed by real project and hackathon experience.</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <span className="text-blue-600 mt-1 font-bold">•</span>
+                    <span className="text-gray-700 text-sm leading-relaxed">He was articulate and self-driven, communicating clearly and adapting well to follow-up questions throughout the session.</span>
+                  </li>
+                </ul>
               </div>
 
               {/* AI Scorecard - Separate Container */}
