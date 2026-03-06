@@ -72,6 +72,8 @@ const ResumeDetailsView = ({ resumeData, onBack }) => {
   const pdfRef = useRef();
   const resumeContentRef = useRef();
   const [pdfLoading, setPdfLoading] = useState(false);
+  const [interviewScoreInput, setInterviewScoreInput] = useState('');
+  const [scoreUpdateLoading, setScoreUpdateLoading] = useState(false);
 
   // Guard: If no _id, show error and redirect
   useEffect(() => {
@@ -111,6 +113,9 @@ const ResumeDetailsView = ({ resumeData, onBack }) => {
   const [saveMsg, setSaveMsg] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
   const [currentStatus, setCurrentStatus] = useState(resumeData.status || 'submitted');
+  const [displayInterviewScore, setDisplayInterviewScore] = useState(
+    resumeData.interviewEvaluation?.overallScore ?? resumeData.score ?? ''
+  );
 
   // Helper to determine match label and color
   const getMatchLabel = (score) => {
@@ -244,6 +249,47 @@ const ResumeDetailsView = ({ resumeData, onBack }) => {
     }
   };
 
+  // Handle interview score update
+  const handleUpdateInterviewScore = async () => {
+    const score = parseInt(interviewScoreInput, 10);
+    if (isNaN(score) || score < 0 || score > 100) {
+      toast.error('Please enter a valid score between 0 and 100');
+      return;
+    }
+    setScoreUpdateLoading(true);
+    try {
+      const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+      const token = userInfo?.data?.accessToken;
+      if (!token) throw new Error('No authentication token found');
+
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/manager/resumes/${resumeData._id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          'interviewEvaluation.overallScore': score,
+          score: score
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to update interview score');
+      }
+
+      setDisplayInterviewScore(score);
+      setInterviewScoreInput('');
+      toast.success(`Interview score updated to ${score}`);
+    } catch (err) {
+      console.error('Error updating interview score:', err);
+      toast.error(`Failed to update score: ${err.message}`);
+    } finally {
+      setScoreUpdateLoading(false);
+    }
+  };
+
   // Handle PDF download using global utility
   const handleDownloadPDF = async () => {
     setPdfLoading(true);
@@ -306,6 +352,40 @@ const ResumeDetailsView = ({ resumeData, onBack }) => {
             )}
 
             {/* Show scorecard button for all candidates */}
+            {/* Interview Score Input */}
+            <div className="flex items-center gap-2 border border-gray-200 rounded-lg px-3 py-1 bg-white">
+              <label className="text-xs font-medium text-gray-500 whitespace-nowrap">Interview Score</label>
+              {displayInterviewScore !== '' && (
+                <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
+                  {displayInterviewScore}
+                </span>
+              )}
+              <input
+                type="number"
+                min="0"
+                max="100"
+                placeholder="0–100"
+                value={interviewScoreInput}
+                onChange={(e) => setInterviewScoreInput(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') handleUpdateInterviewScore(); }}
+                className="w-16 border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent"
+                disabled={scoreUpdateLoading}
+              />
+              <button
+                onClick={handleUpdateInterviewScore}
+                disabled={scoreUpdateLoading || interviewScoreInput === ''}
+                className="bg-green-600 text-white px-2 py-1 rounded text-xs font-semibold hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                type="button"
+                title="Update interview score"
+              >
+                {scoreUpdateLoading ? (
+                  <svg className="animate-spin h-3 w-3 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+                  </svg>
+                ) : '✓'}
+              </button>
+            </div>
             <button
               onClick={handleDownloadPDF}
               className="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center gap-2 cursor-pointer"
