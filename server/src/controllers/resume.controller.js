@@ -1,5 +1,5 @@
 import Resume from "../models/resume.model.js";
-import {Admin} from "../models/admin.model.js";
+import { Admin } from "../models/admin.model.js";
 import mongoose from "mongoose";
 import { Job } from "../models/job.model.js";
 import Recruiter from "../models/recruiter.model.js";
@@ -12,7 +12,7 @@ export const saveResumeWithJob = async (req, res) => {
     console.log("Resume data:", req.body);
     console.log("User ID:", req.id);
     console.log("User role:", req.role);
-    
+
     const resumeData = req.body;
     const { jobId } = req.params;
     const userId = req.id; // Get user ID from auth middleware
@@ -58,7 +58,7 @@ export const saveResumeWithJob = async (req, res) => {
     } else {
       // For recruiters, add recruiterId and also fetch their managerId
       resumeObject.recruiterId = userId;
-      
+
       // Fetch recruiter details to get their managerId
       try {
         const recruiter = await Recruiter.findById(userId);
@@ -82,7 +82,7 @@ export const saveResumeWithJob = async (req, res) => {
 
     // Increment totalApplication_number for the job
     await Job.findByIdAndUpdate(jobId, { $inc: { totalApplication_number: 1 } });
-    
+
     res.status(201).json({ message: "Resume saved successfully", resume: saved });
   } catch (err) {
     console.error("Error saving resume:", err);
@@ -121,7 +121,7 @@ export const saveResume = async (req, res) => {
     } else {
       // For recruiters, add recruiterId and also fetch their managerId
       resumeObject.recruiterId = userId;
-      
+
       // Fetch recruiter details to get their managerId
       try {
         const recruiter = await Recruiter.findById(userId);
@@ -155,7 +155,7 @@ export const getResumesByJob = async (req, res) => {
     const userRole = req.role; // Get user role from auth middleware
 
     let query = { jobId };
-    
+
     // If user is a manager, only show resumes they uploaded
     if (userRole === 'manager') {
       query.managerId = userId;
@@ -192,13 +192,13 @@ export const getResumesByRecruiter = async (req, res) => {
     const userId = req.id; // Get user ID from auth middleware
     const userRole = req.role; // Get user role from auth middleware
     const recruiterId = req.params.recruiterId; // Get recruiter ID from URL params
-    
+
     if (!userId) {
       return res.status(400).json({ message: "User ID is required" });
     }
 
     let query = {};
-    
+
     // If recruiterId is provided in URL, use that specific recruiter
     if (recruiterId) {
       query.recruiterId = recruiterId;
@@ -212,7 +212,7 @@ export const getResumesByRecruiter = async (req, res) => {
     }
 
     const resumes = await Resume.find(query).populate('jobId');
-    
+
     // Return in the expected format for the frontend
     res.status(200).json({
       success: true,
@@ -220,10 +220,10 @@ export const getResumesByRecruiter = async (req, res) => {
     });
   } catch (err) {
     console.error("Error fetching resumes by user:", err);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
-      message: "Failed to retrieve resumes", 
-      error: err.message 
+      message: "Failed to retrieve resumes",
+      error: err.message
     });
   }
 };
@@ -277,7 +277,7 @@ export const getResumesByTag = async (req, res) => {
   try {
     const { tag } = req.params;
     const validTags = ['Engineering', 'Marketing', 'Sales', 'Customer Support', 'Finance'];
-    
+
     if (!validTags.includes(tag)) {
       return res.status(400).json({ message: "Invalid tag. Must be one of: Engineering, Marketing, Sales, Customer Support, Finance" });
     }
@@ -295,9 +295,9 @@ export const updateResumeTag = async (req, res) => {
   try {
     const { resumeId } = req.params;
     const { tag } = req.body;
-    
+
     const validTags = ['Engineering', 'Marketing', 'Sales', 'Customer Support', 'Finance'];
-    
+
     if (!validTags.includes(tag)) {
       return res.status(400).json({ message: "Invalid tag. Must be one of: Engineering, Marketing, Sales, Customer Support, Finance" });
     }
@@ -348,7 +348,7 @@ const sendAnotherRoundEmail = async (toEmail, adminName,) => {
 };
 
 export const requestAnotherRound = async (req, res) => {
-  const { resumeId, requestAnotherRound,userId } = req.body;
+  const { resumeId, requestAnotherRound, userId } = req.body;
   console.log("req recieved")
   try {
     // Update the scorecard
@@ -364,7 +364,7 @@ export const requestAnotherRound = async (req, res) => {
 
     // Send email to candidate
     const toEmail = updatedScorecard.resume?.email;
-    const admin=await Admin.findById(userId);
+    const admin = await Admin.findById(userId);
 
 
     if (toEmail) {
@@ -379,7 +379,7 @@ export const requestAnotherRound = async (req, res) => {
 };
 
 
-export const submitToManager=async(req,res)=>{
+export const submitToManager = async (req, res) => {
   const { resumeId, isApproved, feedback } = req.body;
   try {
     await Resume.findByIdAndUpdate(resumeId, {
@@ -397,12 +397,12 @@ export const updateResumeStatus = async (req, res) => {
   try {
     const { resumeId } = req.params;
     const recruiterId = req.id; // Get recruiter ID from JWT token
-    
+
     console.log('PATCH /api/resumes/:resumeId called');
     console.log('resumeId:', resumeId);
     console.log('recruiterId:', recruiterId);
     console.log('req.body:', req.body);
-    
+
     // If only addedNotes is present, only update that field
     if (
       Object.keys(req.body).length === 1 &&
@@ -425,16 +425,25 @@ export const updateResumeStatus = async (req, res) => {
     if (status && !validStatuses.includes(status)) {
       return res.status(400).json({ message: 'Invalid status value' });
     }
-    
+
     // Build update object
     const updateObj = {};
     if (status) updateObj.status = status;
     if (typeof referredToManager === 'boolean') updateObj.referredToManager = referredToManager;
     if (typeof redFlagged === 'boolean') updateObj.redFlagged = redFlagged;
+
+    // Support updating interviewer scores
+    if (req.body.score !== undefined) {
+      updateObj.score = req.body.score;
+    }
+    if (req.body['interviewEvaluation.overallScore'] !== undefined) {
+      updateObj['interviewEvaluation.overallScore'] = req.body['interviewEvaluation.overallScore'];
+    }
+
     if (Object.keys(updateObj).length === 0) {
       return res.status(400).json({ message: 'No valid fields to update' });
     }
-    
+
     const updatedResume = await Resume.findByIdAndUpdate(
       resumeId,
       updateObj,
@@ -443,7 +452,7 @@ export const updateResumeStatus = async (req, res) => {
     if (!updatedResume) {
       return res.status(404).json({ message: 'Resume not found' });
     }
-    
+
     // If status is being set to 'shortlisted', increment offersAccepted for the recruiter
     if (status === 'shortlisted' && updatedResume.recruiterId) {
       try {
@@ -457,7 +466,7 @@ export const updateResumeStatus = async (req, res) => {
         // Don't fail the main request if this fails
       }
     }
-    
+
     // If referredToManager is being set to true, increment offersMade for the recruiter
     if (referredToManager === true && recruiterId) {
       try {
@@ -478,7 +487,7 @@ export const updateResumeStatus = async (req, res) => {
         // Import required models
         const { MpJob } = await import('../models/mpjobs.model.js');
         const { MpCompany } = await import('../models/mpcompany.model.js');
-        
+
         // Find the job to get its mpCompanies
         const job = await MpJob.findById(updatedResume.jobId);
         if (job) {
@@ -503,7 +512,7 @@ export const updateResumeStatus = async (req, res) => {
         // Don't fail the main request if this fails
       }
     }
-    
+
     res.status(200).json({ message: 'Status updated successfully', resume: updatedResume });
   } catch (error) {
     console.error('Error updating resume status:', error);
@@ -543,7 +552,7 @@ const sendInterviewEmail = async (toEmail, candidateName, interviewDay, intervie
       </div>
     `,
   };
-  
+
   await transporter.sendMail(mailOptions);
 };
 
@@ -596,9 +605,9 @@ export const scheduleInterview = async (req, res) => {
     //   message: "Interview scheduled successfully", 
     //   resume: updatedResume 
     // });
-    res.status(200).json({ 
-      message: "Interview scheduled successfully", 
-       
+    res.status(200).json({
+      message: "Interview scheduled successfully",
+
     });
 
   } catch (error) {
@@ -612,7 +621,7 @@ export const getResumeStatsByRecruiter = async (req, res) => {
   try {
     const userId = req.id; // Get user ID from auth middleware
     const userRole = req.role; // Get user role from auth middleware
-    
+
     if (!userId) {
       return res.status(400).json({ message: "User ID is required" });
     }
@@ -622,16 +631,16 @@ export const getResumeStatsByRecruiter = async (req, res) => {
 
     // Build query based on user role
     let matchQuery = {};
-    
+
     if (userRole === 'manager') {
       // For managers: find resumes associated with jobs where managerId matches
       matchQuery = {
         $or: [
           { managerId: new mongoose.Types.ObjectId(userId) },
-          { 
-            jobId: { 
-              $in: await Job.distinct('_id', { managerId: new mongoose.Types.ObjectId(userId) }) 
-            } 
+          {
+            jobId: {
+              $in: await Job.distinct('_id', { managerId: new mongoose.Types.ObjectId(userId) })
+            }
           }
         ]
       };
@@ -640,10 +649,10 @@ export const getResumeStatsByRecruiter = async (req, res) => {
       matchQuery = {
         $or: [
           { recruiterId: new mongoose.Types.ObjectId(userId) },
-          { 
-            jobId: { 
-              $in: await Job.distinct('_id', { assignedRecruiters: new mongoose.Types.ObjectId(userId) }) 
-            } 
+          {
+            jobId: {
+              $in: await Job.distinct('_id', { assignedRecruiters: new mongoose.Types.ObjectId(userId) })
+            }
           }
         ]
       };
@@ -666,7 +675,7 @@ export const getResumeStatsByRecruiter = async (req, res) => {
 
     // Define all valid tags
     const validTags = ['Engineering', 'Marketing', 'Sales', 'Customer Support', 'Finance'];
-    
+
     // Create a map of tag counts
     const tagCountMap = {};
     tagBreakdown.forEach(item => {
@@ -683,7 +692,7 @@ export const getResumeStatsByRecruiter = async (req, res) => {
     const otherCount = tagBreakdown
       .filter(item => !validTags.includes(item._id) || !item._id)
       .reduce((sum, item) => sum + item.count, 0);
-    
+
     formattedData.push({
       name: 'Other',
       value: otherCount
@@ -812,7 +821,7 @@ export const getResumeForScorecard = async (req, res) => {
 
     // Get the full resume details
     const resume = await Resume.findById(resumeId);
-    
+
     if (!resume) {
       return res.status(404).json({ message: "Resume not found" });
     }
@@ -831,7 +840,7 @@ export const getMonthlySubmissionData = async (req, res) => {
   try {
     const userId = req.id; // Get user ID from auth middleware
     const userRole = req.role; // Get user role from auth middleware
-    
+
     if (!userId) {
       return res.status(400).json({ message: "User ID is required" });
     }
@@ -885,11 +894,11 @@ export const getMonthlySubmissionData = async (req, res) => {
     for (let i = 6; i >= 0; i--) {
       const date = new Date();
       date.setMonth(currentDate.getMonth() - i);
-      
+
       const year = date.getFullYear();
       const month = date.getMonth() + 1; // getMonth() returns 0-11
       const key = `${year}-${month.toString().padStart(2, '0')}`;
-      
+
       result.push({
         name: monthNames[month - 1],
         uv: monthCountMap[key] || 0
@@ -902,10 +911,10 @@ export const getMonthlySubmissionData = async (req, res) => {
     });
   } catch (err) {
     console.error("Error fetching monthly submission data:", err);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
-      message: "Failed to retrieve monthly submission data", 
-      error: err.message 
+      message: "Failed to retrieve monthly submission data",
+      error: err.message
     });
   }
 };
@@ -915,7 +924,7 @@ export const getMonthlyShortlistData = async (req, res) => {
   try {
     const userId = req.id; // Get user ID from auth middleware
     const userRole = req.role; // Get user role from auth middleware
-    
+
     if (!userId) {
       return res.status(400).json({ message: "User ID is required" });
     }
@@ -960,7 +969,7 @@ export const getMonthlyShortlistData = async (req, res) => {
       if (!monthStatusMap[key]) {
         monthStatusMap[key] = { shortlisted: 0, total: 0 };
       }
-      
+
       if (item._id.status === 'shortlisted') {
         monthStatusMap[key].shortlisted += item.count;
       }
@@ -977,14 +986,14 @@ export const getMonthlyShortlistData = async (req, res) => {
     for (let i = 6; i >= 0; i--) {
       const date = new Date();
       date.setMonth(currentDate.getMonth() - i);
-      
+
       const year = date.getFullYear();
       const month = date.getMonth() + 1; // getMonth() returns 0-11
       const key = `${year}-${month.toString().padStart(2, '0')}`;
-      
+
       const monthData = monthStatusMap[key] || { shortlisted: 0, total: 0 };
       const notShortlisted = monthData.total - monthData.shortlisted;
-      
+
       result.push({
         name: monthNames[month - 1],
         Shortlist: monthData.shortlisted,
@@ -998,10 +1007,10 @@ export const getMonthlyShortlistData = async (req, res) => {
     });
   } catch (err) {
     console.error("Error fetching monthly shortlist data:", err);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
-      message: "Failed to retrieve monthly shortlist data", 
-      error: err.message 
+      message: "Failed to retrieve monthly shortlist data",
+      error: err.message
     });
   }
 };
@@ -1011,7 +1020,7 @@ export const getAverageScoreData = async (req, res) => {
   try {
     const userId = req.id; // Get user ID from auth middleware
     const userRole = req.role; // Get user role from auth middleware
-    
+
     if (!userId) {
       return res.status(400).json({ message: "User ID is required" });
     }
@@ -1042,7 +1051,7 @@ export const getAverageScoreData = async (req, res) => {
     // Calculate total score and total totalscore
     const totalScore = resumes.reduce((sum, resume) => sum + (resume.score || 0), 0);
     const totalTotalScore = resumes.reduce((sum, resume) => sum + (resume.totalscore || 0), 0);
-    
+
     // Calculate average score percentage
     const averageScore = totalTotalScore > 0 ? Math.round((totalScore / totalTotalScore) * 100) : 0;
 
@@ -1057,10 +1066,10 @@ export const getAverageScoreData = async (req, res) => {
     });
   } catch (err) {
     console.error("Error fetching average score data:", err);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
-      message: "Failed to retrieve average score data", 
-      error: err.message 
+      message: "Failed to retrieve average score data",
+      error: err.message
     });
   }
 };
@@ -1126,9 +1135,9 @@ export const saveInterviewEvaluation = async (req, res) => {
       console.log('Incremented interviewed_number for job:', updatedResume.jobId);
     }
 
-    res.status(200).json({ 
-      message: "Interview evaluation saved successfully", 
-      resume: updatedResume 
+    res.status(200).json({
+      message: "Interview evaluation saved successfully",
+      resume: updatedResume
     });
   } catch (error) {
     console.error("Error saving interview evaluation:", error);
@@ -1140,7 +1149,7 @@ export const saveInterviewEvaluation = async (req, res) => {
 export const getResumesByManager = async (req, res) => {
   try {
     const { managerId } = req.params;
-    
+
     if (!managerId) {
       return res.status(400).json({ message: "Manager ID is required" });
     }
@@ -1155,7 +1164,7 @@ export const getResumesByManager = async (req, res) => {
 
     // Calculate statistics
     const totalResumes = resumes.length;
-    const reviewedResumes = resumes.filter(resume => 
+    const reviewedResumes = resumes.filter(resume =>
       resume.status === 'shortlisted' || resume.status === 'rejected' || resume.status === 'offered' || resume.status === 'hired'
     ).length;
     const pendingResumes = totalResumes - reviewedResumes;
@@ -1177,10 +1186,10 @@ export const getResumesByManager = async (req, res) => {
     });
   } catch (err) {
     console.error("Error fetching resumes by manager:", err);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
-      message: "Failed to retrieve resumes by manager", 
-      error: err.message 
+      message: "Failed to retrieve resumes by manager",
+      error: err.message
     });
   }
 };
