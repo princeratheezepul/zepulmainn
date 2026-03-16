@@ -227,6 +227,185 @@ const generatePDFContent = (resumeData, note = '') => {
       </div>`
     : '';
 
+  // Build appended resume section from structured ResumeData fields or raw_text
+  const buildResumeHTML = () => {
+    // Source 1: Populated resumeDataId object (structured data from ResumeData model)
+    const rd = resumeData.resumeDataId;
+    if (rd && typeof rd === 'object' && (rd.projects || rd.experience || rd.education || rd.skills || rd.achievements)) {
+      let html = '';
+
+      // Experience section
+      if (rd.experience && rd.experience.length > 0) {
+        html += `<div class="mb-6">
+          <div class="text-lg font-bold text-gray-900 mb-3" style="border-bottom: 2px solid #2563eb; padding-bottom: 6px;">Experience</div>
+          ${rd.experience.map(exp => `
+            <div class="mb-4">
+              <div class="font-semibold text-gray-900">${exp.title || ''}</div>
+              <div class="text-sm text-gray-600">${exp.company || ''}${exp.duration ? ' | ' + exp.duration : ''}</div>
+              ${exp.points && exp.points.length > 0 ? `<ul style="margin: 4px 0 0 16px; padding: 0; list-style: disc;">
+                ${exp.points.map(p => `<li class="text-sm text-gray-700" style="margin-bottom: 2px;">${p}</li>`).join('')}
+              </ul>` : ''}
+            </div>
+          `).join('')}
+        </div>`;
+      }
+
+      // Projects section
+      if (rd.projects && rd.projects.length > 0) {
+        html += `<div class="mb-6">
+          <div class="text-lg font-bold text-gray-900 mb-3" style="border-bottom: 2px solid #2563eb; padding-bottom: 6px;">Projects</div>
+          ${rd.projects.map(proj => `
+            <div class="mb-4">
+              <div class="font-semibold text-gray-900">${proj.title || ''}</div>
+              ${proj.points && proj.points.length > 0 ? `<ul style="margin: 4px 0 0 16px; padding: 0; list-style: disc;">
+                ${proj.points.map(p => `<li class="text-sm text-gray-700" style="margin-bottom: 2px;">${p}</li>`).join('')}
+              </ul>` : ''}
+            </div>
+          `).join('')}
+        </div>`;
+      }
+
+      // Education section
+      if (rd.education && rd.education.length > 0) {
+        html += `<div class="mb-6">
+          <div class="text-lg font-bold text-gray-900 mb-3" style="border-bottom: 2px solid #2563eb; padding-bottom: 6px;">Education</div>
+          ${rd.education.map(edu => `
+            <div class="mb-3">
+              <div class="font-semibold text-gray-900">${edu.degree || ''}</div>
+              <div class="text-sm text-gray-600">${edu.institution || ''}</div>
+              ${edu.points && edu.points.length > 0 ? `<ul style="margin: 4px 0 0 16px; padding: 0; list-style: disc;">
+                ${edu.points.map(p => `<li class="text-sm text-gray-700" style="margin-bottom: 2px;">${p}</li>`).join('')}
+              </ul>` : ''}
+            </div>
+          `).join('')}
+        </div>`;
+      }
+
+      // Skills section
+      if (rd.skills && rd.skills.points && rd.skills.points.length > 0) {
+        html += `<div class="mb-6">
+          <div class="text-lg font-bold text-gray-900 mb-3" style="border-bottom: 2px solid #2563eb; padding-bottom: 6px;">Skills</div>
+          <div class="flex flex-wrap gap-2">
+            ${rd.skills.points.map(skill => `<span style="background: #f3f4f6; color: #374151; padding: 4px 12px; border-radius: 6px; font-size: 13px; border: 1px solid #e5e7eb;">${skill}</span>`).join('')}
+          </div>
+        </div>`;
+      }
+
+      // Achievements section
+      if (rd.achievements && rd.achievements.points && rd.achievements.points.length > 0) {
+        html += `<div class="mb-6">
+          <div class="text-lg font-bold text-gray-900 mb-3" style="border-bottom: 2px solid #2563eb; padding-bottom: 6px;">Achievements</div>
+          <ul style="margin: 0 0 0 16px; padding: 0; list-style: disc;">
+            ${rd.achievements.points.map(a => `<li class="text-sm text-gray-700" style="margin-bottom: 4px;">${a}</li>`).join('')}
+          </ul>
+        </div>`;
+      }
+
+      if (html) {
+        return `
+          <div style="page-break-before: always;">
+            <div class="bg-white rounded-xl border border-gray-200 p-8" style="margin-top: 20px;">
+              <div class="text-2xl font-bold text-gray-900 mb-6" style="border-bottom: 2px solid #111827; padding-bottom: 8px;">Candidate Resume</div>
+              ${html}
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    // Source 2: searchableText from populated resumeDataId
+    if (rd && rd.searchableText) {
+      return `
+        <div style="page-break-before: always;">
+          <div class="bg-white rounded-xl border border-gray-200 p-8" style="margin-top: 20px;">
+            <div class="text-2xl font-bold text-gray-900 mb-6" style="border-bottom: 2px solid #111827; padding-bottom: 8px;">Candidate Resume</div>
+            <div class="text-gray-800 text-sm leading-relaxed" style="white-space: pre-wrap;">${rd.searchableText}</div>
+          </div>
+        </div>
+      `;
+    }
+
+    // Source 3: raw_text directly on the Resume object
+    const rawText = resumeData.raw_text || resumeData.resumeText || '';
+    if (rawText) {
+      return `
+        <div style="page-break-before: always;">
+          <div class="bg-white rounded-xl border border-gray-200 p-8" style="margin-top: 20px;">
+            <div class="text-2xl font-bold text-gray-900 mb-6" style="border-bottom: 2px solid #111827; padding-bottom: 8px;">Candidate Resume</div>
+            <div class="text-gray-800 text-sm leading-relaxed" style="white-space: pre-wrap;">${rawText}</div>
+          </div>
+        </div>
+      `;
+    }
+
+    // Source 4: Build from Resume model's own fields (work_experience, education, skills, about)
+    let fallbackHTML = '';
+
+    if (resumeData.about) {
+      fallbackHTML += `<div class="mb-6">
+        <div class="text-lg font-bold text-gray-900 mb-3" style="border-bottom: 2px solid #2563eb; padding-bottom: 6px;">About</div>
+        <p class="text-sm text-gray-700 leading-relaxed">${resumeData.about}</p>
+      </div>`;
+    }
+
+    if (resumeData.work_experience) {
+      const workExp = Array.isArray(resumeData.work_experience) ? resumeData.work_experience : [resumeData.work_experience];
+      if (workExp.length > 0) {
+        fallbackHTML += `<div class="mb-6">
+          <div class="text-lg font-bold text-gray-900 mb-3" style="border-bottom: 2px solid #2563eb; padding-bottom: 6px;">Work Experience</div>
+          ${workExp.map(exp => {
+          if (typeof exp === 'string') return `<p class="text-sm text-gray-700 mb-2">${exp}</p>`;
+          return `<div class="mb-3">
+              <div class="font-semibold text-gray-900">${exp.title || exp.role || exp.position || ''}</div>
+              <div class="text-sm text-gray-600">${exp.company || ''}${exp.duration || exp.period ? ' | ' + (exp.duration || exp.period) : ''}</div>
+              ${exp.description ? `<p class="text-sm text-gray-700 mt-1">${exp.description}</p>` : ''}
+            </div>`;
+        }).join('')}
+        </div>`;
+      }
+    }
+
+    if (resumeData.education) {
+      const edu = Array.isArray(resumeData.education) ? resumeData.education : [resumeData.education];
+      if (edu.length > 0) {
+        fallbackHTML += `<div class="mb-6">
+          <div class="text-lg font-bold text-gray-900 mb-3" style="border-bottom: 2px solid #2563eb; padding-bottom: 6px;">Education</div>
+          ${edu.map(e => {
+          if (typeof e === 'string') return `<p class="text-sm text-gray-700 mb-2">${e}</p>`;
+          return `<div class="mb-3">
+              <div class="font-semibold text-gray-900">${e.degree || e.qualification || ''}</div>
+              <div class="text-sm text-gray-600">${e.institution || e.school || e.university || ''}</div>
+            </div>`;
+        }).join('')}
+        </div>`;
+      }
+    }
+
+    if (resumeData.skills && resumeData.skills.length > 0) {
+      fallbackHTML += `<div class="mb-6">
+        <div class="text-lg font-bold text-gray-900 mb-3" style="border-bottom: 2px solid #2563eb; padding-bottom: 6px;">Skills</div>
+        <div class="flex flex-wrap gap-2">
+          ${resumeData.skills.map(skill => `<span style="background: #f3f4f6; color: #374151; padding: 4px 12px; border-radius: 6px; font-size: 13px; border: 1px solid #e5e7eb;">${skill}</span>`).join('')}
+        </div>
+      </div>`;
+    }
+
+    if (fallbackHTML) {
+      return `
+        <div style="page-break-before: always;">
+          <div class="bg-white rounded-xl border border-gray-200 p-8" style="margin-top: 20px;">
+            <div class="text-2xl font-bold text-gray-900 mb-6" style="border-bottom: 2px solid #111827; padding-bottom: 8px;">Candidate Resume</div>
+            ${fallbackHTML}
+          </div>
+        </div>
+      `;
+    }
+
+    return ''; // No resume data available
+  };
+
+  const appendedResumeHTML = buildResumeHTML();
+
   return `
     <div class="bg-white p-2 md:p-3 lg:p-4">
       <div class="max-w-7xl mx-auto">
@@ -261,6 +440,8 @@ const generatePDFContent = (resumeData, note = '') => {
         ${codingAssessmentHTML}
         ${aiResumeSummaryHTML}
         ${addedNotesHTML}
+        
+        ${appendedResumeHTML}
       </div>
     </div>
   `;

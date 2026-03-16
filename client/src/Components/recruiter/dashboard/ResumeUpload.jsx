@@ -86,6 +86,12 @@ const ResumeUpload = ({ onBack, jobDetails }) => {
       const saved = await saveResumeToDB(finalData, jobDetails.jobId);
       setParsedData(saved.resume); // Use the DB object with _id
 
+      // Save structured resume data (projects, experience, achievements, skills, education)
+      if (analysis.resumeContent) {
+        setLoadingMessage("Saving structured resume data...");
+        await saveResumeDataToDB(analysis.resumeContent);
+      }
+
     } catch (error) {
       console.error("Error processing resume:", error);
       toast.error(error.message || "Failed to process the resume.");
@@ -286,7 +292,10 @@ const ResumeUpload = ({ onBack, jobDetails }) => {
 
       const response = await result.response;
       const aiText = await response.text();
-      const cleanedText = aiText.replace(/```json|```/g, "").trim();
+      const cleanedText = aiText
+        .replace(/```json|```/g, "")
+        .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "") // remove bad control chars
+        .trim();
       const parsed = JSON.parse(cleanedText);
 
       return {
@@ -316,6 +325,27 @@ const ResumeUpload = ({ onBack, jobDetails }) => {
       } else {
         throw new Error(`Error retrieving ATS score: ${errorMessage}`);
       }
+    }
+  };
+
+  const saveResumeDataToDB = async (resumeContent) => {
+    try {
+      console.log('Saving structured resume data:', resumeContent);
+      const response = await post(`${import.meta.env.VITE_BACKEND_URL}/api/resume-data/save`, resumeContent);
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Failed to save resume data:', errorData);
+        return null;
+      }
+
+      const result = await response.json();
+      console.log('Resume data saved successfully:', result);
+      return result;
+    } catch (error) {
+      console.error('Error saving resume data:', error);
+      // Don't throw - this is non-critical and shouldn't block the main flow
+      return null;
     }
   };
 
@@ -366,13 +396,51 @@ const ResumeUpload = ({ onBack, jobDetails }) => {
             "date": "${new Date().toLocaleDateString()}",
             "noticePeriod": "Extract from resume if available, otherwise 'N/A'",
             "source": "Website"
+        },
+        "resumeContent": {
+          "name": "Full Name (same as above)",
+          "role": "Primary professional role/title (e.g., 'Full Stack Developer', 'Data Scientist', 'Product Manager')",
+          "experienceYears": "Total years of professional experience as a NUMBER (e.g., 2, 5, 0.5). Extract from resume dates or stated experience. Use 0 if unclear.",
+          "projects": [
+            {
+              "title": "Project Title",
+              "points": ["Bullet point 1 exactly as in resume", "Bullet point 2 exactly as in resume"]
+            }
+          ],
+          "experience": [
+            {
+              "title": "Job Title",
+              "company": "Company Name",
+              "duration": "Duration string (e.g., 'Jan 2022 - Present', '2 years')",
+              "points": ["Bullet point 1 exactly as in resume", "Bullet point 2 exactly as in resume"]
+            }
+          ],
+          "achievements": {
+            "points": ["Achievement 1 exactly as in resume", "Achievement 2 exactly as in resume"]
+          },
+          "skills": {
+            "points": ["Skill 1", "Skill 2", "Skill 3"]
+          },
+          "education": [
+            {
+              "institution": "University/School Name",
+              "degree": "Degree Name",
+              "points": ["Detail 1 as in resume", "Detail 2 as in resume"]
+            }
+          ]
         }
       }
 
-      IMPORTANT: For the new fields in aiSummary:
-      - skillMatch: Analyze the candidate's technical skills against the job requirements and provide a clear assessment
-      - competitiveFit: Evaluate their market position and competitiveness for this specific role
-      - consistencyCheck: Assess their career stability, progression, and professional development patterns
+      IMPORTANT:
+      - For the aiSummary fields:
+        - skillMatch: Analyze the candidate's technical skills against the job requirements and provide a clear assessment
+        - competitiveFit: Evaluate their market position and competitiveness for this specific role
+        - consistencyCheck: Assess their career stability, progression, and professional development patterns
+      - For the resumeContent field:
+        - Extract ALL projects, experience entries, achievements, skills, and education EXACTLY as they appear in the resume
+        - Preserve the original wording and bullet points from the resume
+        - Do NOT summarize or rephrase - copy the content as-is from the resume text
+        - If a section is missing from the resume, use an empty array
       
       Make sure all fields in aiSummary contain meaningful, detailed content that provides valuable insights for the recruiter.
     `;
@@ -387,7 +455,11 @@ const ResumeUpload = ({ onBack, jobDetails }) => {
 
     const response = await result.response;
     const text = response.text();
-    const cleanedText = text.replace(/```json|```/g, "").trim();
+    // Remove markdown fences, then strip control characters that are illegal in JSON
+    const cleanedText = text
+      .replace(/```json|```/g, "")
+      .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "") // remove bad control chars
+      .trim();
     return JSON.parse(cleanedText);
   };
 

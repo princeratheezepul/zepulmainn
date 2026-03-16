@@ -28,13 +28,17 @@ const ScorecardSchema = new mongoose.Schema({
       total: mongoose.Schema.Types.Mixed
     }
   ],
-  jobId:{
+  jobId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Job'
   },
   note: {
     type: String,
     default: ''
+  },
+  resumeId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'ResumeData'
   },
   submittedAt: Date
 });

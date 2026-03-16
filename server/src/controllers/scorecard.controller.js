@@ -1,9 +1,10 @@
 // POST /api/save-scorecard
 import Scorecard from "../models/scorecard.model.js";
+import ResumeData from "../models/resumeData.model.js";
 import nodemailer from "nodemailer";
-export const savescorecard= async (req, res) => {
+export const savescorecard = async (req, res) => {
   try {
-    console.log("recieved",req.body);
+    console.log("recieved", req.body);
     const {
       candidateId,
       resume,
@@ -11,7 +12,8 @@ export const savescorecard= async (req, res) => {
       averageScore,
       skillScores,
       evaluatedAnswers,
-      jobId
+      jobId,
+      resumeDataId
     } = req.body;
 
     const scorecard = new Scorecard({
@@ -22,11 +24,19 @@ export const savescorecard= async (req, res) => {
       skillScores,
       evaluatedAnswers,
       jobId,
+      resumeId: resumeDataId || undefined,
       submittedAt: new Date()
     });
 
     await scorecard.save();
-    res.status(200).json({ success: true, message: "Scorecard saved successfully." });
+
+    // If resumeDataId is provided, update the ResumeData with the scorecardId
+    if (resumeDataId) {
+      await ResumeData.findByIdAndUpdate(resumeDataId, { scorecardId: scorecard._id });
+      console.log("Linked ResumeData", resumeDataId, "with Scorecard", scorecard._id);
+    }
+
+    res.status(200).json({ success: true, message: "Scorecard saved successfully.", scorecardId: scorecard._id });
   } catch (err) {
     console.error("Error saving scorecard:", err);
     res.status(500).json({ success: false, message: "Failed to save scorecard." });
@@ -36,16 +46,16 @@ export const savescorecard= async (req, res) => {
 
 
 export const getscorecard = async (req, res) => {
-    try {
-        const scorecards = await Scorecard.find();
-        res.status(200).json(scorecards);
-    } catch (err) {
-        console.error("Error fetching scorecards:", err);
-        res.status(500).json({ success: false, message: "Failed to fetch scorecards." });
-    }
+  try {
+    const scorecards = await Scorecard.find();
+    res.status(200).json(scorecards);
+  } catch (err) {
+    console.error("Error fetching scorecards:", err);
+    res.status(500).json({ success: false, message: "Failed to fetch scorecards." });
+  }
 }
 
-export const updatescorecard= async (req, res) => {
+export const updatescorecard = async (req, res) => {
   const { id } = req.params;
   const updateData = req.body;
 
@@ -97,7 +107,7 @@ const sendAnotherRoundEmail = async (toEmail, managerName,) => {
 };
 
 export const emailforanotherround = async (req, res) => {
-  const { toEmail, managerName} = req.body;
+  const { toEmail, managerName } = req.body;
 
   try {
     await sendAnotherRoundEmail(toEmail, managerName);

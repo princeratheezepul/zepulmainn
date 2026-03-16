@@ -248,6 +248,13 @@ const ResumeSchema = new mongoose.Schema(
       default: false
     },
 
+    // ResumeData Link (for resumes submitted from ZepDB)
+    resumeDataId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'ResumeData',
+      default: null
+    },
+
     // Career Application Flag (for public career page applications)
     isCareer: {
       type: Boolean,
