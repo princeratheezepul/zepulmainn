@@ -1,5 +1,42 @@
 import BulkUploadJob from "../models/bulkUpload.model.js";
 import Resume from "../models/resume.model.js";
+import ResumeData from "../models/resumeData.model.js";
+
+/** Check if buffer contains HTML instead of actual file content */
+const isHtmlContent = (buffer) => {
+  const sample = buffer.slice(0, 1000).toString('utf-8').toLowerCase();
+  return sample.includes('<html') || sample.includes('<!doctype html');
+};
+
+/** Try to extract Google Drive virus-scan confirmation token from HTML */
+const extractConfirmToken = (htmlBuffer) => {
+  const html = htmlBuffer.toString('utf-8');
+  // Look for the confirm token in the download warning page
+  const match = html.match(/confirm=([0-9A-Za-z_-]+)/) ||
+    html.match(/id="uc-download-link"[^>]*href="[^"]*confirm=([^&"]+)/) ||
+    html.match(/name="uuid" value="([^"]+)"/);
+  return match ? match[1] : null;
+};
+
+/** Build searchable text for ResumeData */
+const buildSearchableText = (data) => {
+  const parts = [];
+  if (data.name) parts.push(data.name);
+  if (data.role) parts.push(data.role);
+  if (data.projects) data.projects.forEach(p => { if (p.title) parts.push(p.title); if (p.points) parts.push(...p.points); });
+  if (data.experience) data.experience.forEach(e => { if (e.title) parts.push(e.title); if (e.company) parts.push(e.company); if (e.duration) parts.push(e.duration); if (e.points) parts.push(...e.points); });
+  if (data.achievements?.points) parts.push(...data.achievements.points);
+  if (data.skills?.points) parts.push(...data.skills.points);
+  if (data.education) data.education.forEach(e => { if (e.institution) parts.push(e.institution); if (e.degree) parts.push(e.degree); if (e.points) parts.push(...e.points); });
+  return parts.filter(Boolean).join(' ');
+};
+
+/** Build searchable skills for ResumeData */
+const buildSearchableSkills = (data) => {
+  const skills = [];
+  if (data.skills?.points) data.skills.points.forEach(s => { if (s) skills.push(s.toLowerCase().trim()); });
+  return skills;
+};
 import { Job } from "../models/job.model.js";
 import Recruiter from "../models/recruiter.model.js";
 import mongoose from "mongoose";
@@ -37,11 +74,11 @@ let drive = null;
 try {
   // Check if we have Google credentials from environment variables
   const googleCredentials = process.env.GOOGLE_CREDENTIALS;
-  
+
   if (googleCredentials) {
     // Parse the JSON string from environment variable
     const credentials = JSON.parse(googleCredentials);
-    
+
     drive = google.drive({
       version: 'v3',
       auth: new google.auth.GoogleAuth({
@@ -106,7 +143,7 @@ export const startBulkUpload = async (req, res) => {
     // Add user ID based on role
     console.log('Creating bulk job - User ID:', userId, 'Type:', typeof userId);
     console.log('Creating bulk job - User Role:', userRole);
-    
+
     if (userRole === 'manager') {
       bulkJobData.managerId = userId;
       console.log('Creating bulk job - Set managerId:', userId);
@@ -134,7 +171,7 @@ export const startBulkUpload = async (req, res) => {
 
     console.log('Created bulk upload job:', bulkJob._id);
 
-        // Start processing based on upload method
+    // Start processing based on upload method
     if (uploadMethod === 'folder' && req.files) {
       // Process uploaded files
       await processUploadedFiles(bulkJob._id, req.files, job);
@@ -151,22 +188,22 @@ export const startBulkUpload = async (req, res) => {
     // Check if the job was marked as failed during processing
     const updatedJob = await BulkUploadJob.findById(bulkJob._id);
     if (updatedJob.status === 'failed') {
-      return res.status(400).json({ 
-        message: updatedJob.error || "Bulk upload failed", 
-        jobId: bulkJob._id 
+      return res.status(400).json({
+        message: updatedJob.error || "Bulk upload failed",
+        jobId: bulkJob._id
       });
     }
 
-    res.status(201).json({ 
-      message: "Bulk upload started successfully", 
-      jobId: bulkJob._id 
+    res.status(201).json({
+      message: "Bulk upload started successfully",
+      jobId: bulkJob._id
     });
 
   } catch (error) {
     console.error('Error starting bulk upload:', error);
-    res.status(500).json({ 
-      message: "Failed to start bulk upload", 
-      error: error.message 
+    res.status(500).json({
+      message: "Failed to start bulk upload",
+      error: error.message
     });
   }
 };
@@ -204,7 +241,7 @@ export const getBulkUploadStatus = async (req, res) => {
       console.log('Access denied - Recruiter ID mismatch');
       return res.status(403).json({ message: "Access denied" });
     }
-    
+
     console.log('Access granted for bulk upload status check');
 
     res.status(200).json({
@@ -219,9 +256,9 @@ export const getBulkUploadStatus = async (req, res) => {
 
   } catch (error) {
     console.error('Error getting bulk upload status:', error);
-    res.status(500).json({ 
-      message: "Failed to get bulk upload status", 
-      error: error.message 
+    res.status(500).json({
+      message: "Failed to get bulk upload status",
+      error: error.message
     });
   }
 };
@@ -259,7 +296,7 @@ export const getBulkUploadResults = async (req, res) => {
       console.log('Access denied - Recruiter ID mismatch for results');
       return res.status(403).json({ message: "Access denied" });
     }
-    
+
     console.log('Access granted for bulk upload results check');
 
     // Get successful resumes
@@ -280,9 +317,9 @@ export const getBulkUploadResults = async (req, res) => {
 
   } catch (error) {
     console.error('Error getting bulk upload results:', error);
-    res.status(500).json({ 
-      message: "Failed to get bulk upload results", 
-      error: error.message 
+    res.status(500).json({
+      message: "Failed to get bulk upload results",
+      error: error.message
     });
   }
 };
@@ -320,9 +357,9 @@ export const cancelBulkUpload = async (req, res) => {
 
   } catch (error) {
     console.error('Error cancelling bulk upload:', error);
-    res.status(500).json({ 
-      message: "Failed to cancel bulk upload", 
-      error: error.message 
+    res.status(500).json({
+      message: "Failed to cancel bulk upload",
+      error: error.message
     });
   }
 };
@@ -338,13 +375,13 @@ const processUploadedFiles = async (bulkJobId, files, job) => {
 
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
-      
+
       try {
         bulkJob.currentFile = file.originalname;
         await bulkJob.save();
 
         const result = await processResumeFile(file, job, bulkJob);
-        
+
         // Save result
         bulkJob.results.push({
           fileName: file.originalname,
@@ -352,10 +389,10 @@ const processUploadedFiles = async (bulkJobId, files, job) => {
           resumeId: result._id
         });
         bulkJob.successfulFiles++;
-        
+
       } catch (error) {
         console.error(`Error processing file ${file.originalname}:`, error);
-        
+
         bulkJob.results.push({
           fileName: file.originalname,
           status: 'failed',
@@ -363,7 +400,7 @@ const processUploadedFiles = async (bulkJobId, files, job) => {
         });
         bulkJob.failedFiles++;
       }
-      
+
       bulkJob.processedFiles++;
       await bulkJob.save();
     }
@@ -387,41 +424,41 @@ const processUploadedFiles = async (bulkJobId, files, job) => {
 const processGoogleSheets = async (bulkJobId, file, job) => {
   try {
     console.log('Processing Google Sheets file:', file.originalname);
-    
+
     // Parse the file to extract URLs
     const urls = await parseGoogleSheets(file.buffer, file.mimetype);
-    
+
     if (!urls || urls.length === 0) {
       throw new Error('No valid Google Drive/Docs URLs found in the file');
     }
-    
+
     console.log(`Found ${urls.length} valid URLs in Google Sheets file`);
-    
+
     const bulkJob = await BulkUploadJob.findById(bulkJobId);
     bulkJob.totalFiles = urls.length;
     await bulkJob.save();
-    
+
     console.log(`Processing ${urls.length} files from Google Sheets for bulk job ${bulkJobId}`);
-    
+
     for (let i = 0; i < urls.length; i++) {
       const url = urls[i];
-      
+
       try {
         bulkJob.currentFile = `URL ${i + 1}: ${url.substring(0, 50)}...`;
         await bulkJob.save();
-        
+
         // Download file from Google URL
         const buffer = await downloadFromGoogleUrl(url);
-        
+
         // Determine file type
         let mimeType = 'application/pdf';
         if (url.includes('/document/')) {
           mimeType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
         }
-        
+
         // Process the file
         const result = await processResumeBuffer(buffer, `resume_${i + 1}`, mimeType, job, bulkJob);
-        
+
         // Save result
         bulkJob.results.push({
           fileName: `resume_${i + 1}`,
@@ -430,10 +467,10 @@ const processGoogleSheets = async (bulkJobId, file, job) => {
           url: url
         });
         bulkJob.successfulFiles++;
-        
+
       } catch (error) {
         console.error(`Error processing URL ${i + 1}:`, error);
-        
+
         bulkJob.results.push({
           fileName: `resume_${i + 1}`,
           status: 'failed',
@@ -442,17 +479,17 @@ const processGoogleSheets = async (bulkJobId, file, job) => {
         });
         bulkJob.failedFiles++;
       }
-      
+
       bulkJob.processedFiles++;
       await bulkJob.save();
     }
-    
+
     bulkJob.status = 'completed';
     bulkJob.currentFile = null;
     await bulkJob.save();
-    
+
     console.log(`Bulk job ${bulkJobId} completed: ${bulkJob.successfulFiles} successful, ${bulkJob.failedFiles} failed`);
-    
+
   } catch (error) {
     console.error('Error in processGoogleSheets:', error);
     const bulkJob = await BulkUploadJob.findById(bulkJobId);
@@ -471,12 +508,12 @@ const processDriveFiles = async (bulkJobId, driveLink, job) => {
     }
 
     let files = [];
-    
+
     if (drive) {
       // Use Google Drive API if credentials are available
       console.log('Using Google Drive API method');
       console.log('Folder ID:', folderId);
-      
+
       try {
         const response = await drive.files.list({
           q: `'${folderId}' in parents and (mimeType='application/pdf' or mimeType='application/vnd.openxmlformats-officedocument.wordprocessingml.document')`,
@@ -511,17 +548,17 @@ const processDriveFiles = async (bulkJobId, driveLink, job) => {
 
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
-      
+
       try {
         bulkJob.currentFile = file.name;
         await bulkJob.save();
 
         // Download file from Drive
         const buffer = await downloadFileFromDrive(file.id);
-        
+
         // Process the file
         const result = await processResumeBuffer(buffer, file.name, file.mimeType, job, bulkJob);
-        
+
         // Save result
         bulkJob.results.push({
           fileName: file.name,
@@ -529,10 +566,10 @@ const processDriveFiles = async (bulkJobId, driveLink, job) => {
           resumeId: result._id
         });
         bulkJob.successfulFiles++;
-        
+
       } catch (error) {
         console.error(`Error processing Drive file ${file.name}:`, error);
-        
+
         bulkJob.results.push({
           fileName: file.name,
           status: 'failed',
@@ -540,7 +577,7 @@ const processDriveFiles = async (bulkJobId, driveLink, job) => {
         });
         bulkJob.failedFiles++;
       }
-      
+
       bulkJob.processedFiles++;
       await bulkJob.save();
     }
@@ -563,7 +600,7 @@ const processDriveFiles = async (bulkJobId, driveLink, job) => {
 // Process a single resume file
 const processResumeFile = async (file, job, bulkJobData = null) => {
   let text = "";
-  
+
   if (file.mimetype === "application/pdf") {
     text = await extractTextFromPDF(file.buffer);
   } else if (file.mimetype === "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
@@ -574,7 +611,7 @@ const processResumeFile = async (file, job, bulkJobData = null) => {
 
   // Analyze resume with AI
   const analysis = await analyzeResume(text, job);
-  
+
   // Calculate ATS score
   const atsResult = await calculateATSScore(text, job);
 
@@ -584,18 +621,20 @@ const processResumeFile = async (file, job, bulkJobData = null) => {
 // Process resume buffer (for Drive files)
 const processResumeBuffer = async (buffer, fileName, mimeType, job, bulkJobData = null) => {
   let text = "";
-  
-  if (mimeType === "application/pdf") {
+
+  try {
     text = await extractTextFromPDF(buffer);
-  } else if (mimeType === "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
-    text = await extractTextFromDocx(buffer);
-  } else {
-    throw new Error("Unsupported file format");
+  } catch {
+    try {
+      text = await extractTextFromDocx(buffer);
+    } catch (err) {
+      throw new Error('Unsupported file format or failed to extract text from buffer: ' + err.message);
+    }
   }
 
   // Analyze resume with AI
   const analysis = await analyzeResume(text, job);
-  
+
   // Calculate ATS score
   const atsResult = await calculateATSScore(text, job);
 
@@ -644,7 +683,7 @@ const extractTextFromPDF = async (buffer) => {
   } catch (err) {
     console.error("PDF parsing error:", err.message);
     console.error("PDF parsing stack:", err.stack);
-    
+
     // If pdfjs-dist fails, try alternative approach
     if (err.message.includes('Cannot find module') || err.message.includes('pdfjs-dist')) {
       console.log('PDF extraction - Falling back to alternative method');
@@ -653,21 +692,21 @@ const extractTextFromPDF = async (buffer) => {
         const { PDFExtract } = require('pdf.js-extract');
         const pdfExtract = new PDFExtract();
         const options = {};
-        
+
         const data = await pdfExtract.extractBuffer(buffer, options);
         const text = data.pages.map(page => page.content.map(item => item.str).join(' ')).join(' ');
-        
+
         if (text.trim().length === 0) {
           throw new Error("PDF contains no readable text");
         }
-        
+
         return text.trim();
       } catch (fallbackErr) {
         console.error("PDF fallback parsing error:", fallbackErr.message);
         throw new Error(`Failed to read PDF: ${err.message}`);
       }
     }
-    
+
     throw new Error(`Failed to read PDF: ${err.message}`);
   }
 };
@@ -687,7 +726,7 @@ const analyzeResume = async (resumeText, job) => {
   if (!genAI) {
     throw new Error('Gemini API is not configured. Please set up GEMINI_API_KEY environment variable. Get your API key from: https://aistudio.google.com/app/apikey');
   }
-  
+
   const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
   const prompt = `
     You are an expert AI recruiter analyzing a resume for a specific job.
@@ -734,6 +773,38 @@ const analyzeResume = async (resumeText, job) => {
           "date": "${new Date().toLocaleDateString()}",
           "noticePeriod": "Extract from resume if available, otherwise 'N/A'",
           "source": "Website"
+      },
+      "resumeContent": {
+          "name": "Full candidate name",
+          "role": "Requested job role",
+          "experienceYears": "integer representing years of experience",
+          "projects": [
+              {
+                  "title": "Project name",
+                  "points": ["Details about what was done in project"]
+              }
+          ],
+          "experience": [
+              {
+                  "title": "Job title",
+                  "company": "Company name",
+                  "duration": "date range",
+                  "points": ["Responsibilities and achievements"]
+              }
+          ],
+          "achievements": {
+              "points": ["List of awards, certifications, or major accomplishments"]
+          },
+          "skills": {
+              "points": ["List of all skills mentioned in the resume"]
+          },
+          "education": [
+              {
+                  "institution": "University/School name",
+                  "degree": "Degree obtained",
+                  "points": ["Grade/GPA or noteworthy academic details"]
+              }
+          ]
       }
     }
 
@@ -748,25 +819,25 @@ const analyzeResume = async (resumeText, job) => {
   const result = await model.generateContent(prompt);
   const response = await result.response;
   const text = response.text();
-  
+
   // More robust JSON cleaning
   let cleanedText = text.replace(/```json|```/g, "").trim();
-  
+
   // Remove any leading/trailing non-JSON content
   const jsonStart = cleanedText.indexOf('{');
   const jsonEnd = cleanedText.lastIndexOf('}');
-  
+
   if (jsonStart !== -1 && jsonEnd !== -1) {
     cleanedText = cleanedText.substring(jsonStart, jsonEnd + 1);
   }
-  
+
   try {
     return JSON.parse(cleanedText);
   } catch (parseError) {
     console.error('JSON parsing error for resume analysis:', parseError);
     console.error('Raw response:', text);
     console.error('Cleaned text:', cleanedText);
-    
+
     // Return a fallback structure if parsing fails
     return {
       name: "Unknown",
@@ -913,21 +984,21 @@ const calculateATSScore = async (resumeText, job) => {
   const result = await model.generateContent(prompt);
   const response = await result.response;
   const aiText = await response.text();
-  
+
   // More robust JSON cleaning for ATS score
   let cleanedText = aiText.replace(/```json|```/g, "").trim();
-  
+
   // Remove any leading/trailing non-JSON content
   const jsonStart = cleanedText.indexOf('{');
   const jsonEnd = cleanedText.lastIndexOf('}');
-  
+
   if (jsonStart !== -1 && jsonEnd !== -1) {
     cleanedText = cleanedText.substring(jsonStart, jsonEnd + 1);
   }
-  
+
   try {
     const parsed = JSON.parse(cleanedText);
-    
+
     return {
       ats_score: parsed.ats_score || 50,
       ats_reason: parsed.reason || "ATS score calculated with limited data",
@@ -946,7 +1017,7 @@ const calculateATSScore = async (resumeText, job) => {
     console.error('JSON parsing error for ATS score:', parseError);
     console.error('Raw ATS response:', aiText);
     console.error('Cleaned ATS text:', cleanedText);
-    
+
     // Return fallback ATS score
     return {
       ats_score: 50,
@@ -970,6 +1041,27 @@ const saveResumeToDatabase = async (analysis, atsResult, job, rawText, bulkJobDa
   // Determine tag based on job title and description
   const tag = determineResumeTag(job.jobtitle, job.description);
 
+  let resumeDataId = null;
+  if (analysis.resumeContent) {
+    console.log('   💾 Saving ResumeData...');
+    const rc = analysis.resumeContent;
+    const resumeData = new ResumeData({
+      name: rc.name || analysis.name || 'Unknown',
+      role: rc.role || '',
+      experienceYears: rc.experienceYears || 0,
+      projects: rc.projects || [],
+      experience: rc.experience || [],
+      achievements: rc.achievements || { points: [] },
+      skills: rc.skills || { points: [] },
+      education: rc.education || [],
+      searchableText: buildSearchableText(rc),
+      searchableSkills: buildSearchableSkills(rc),
+    });
+    const savedResumeData = await resumeData.save();
+    resumeDataId = savedResumeData._id;
+    console.log(`   ✅ ResumeData saved: ${resumeDataId}`);
+  }
+
   const resumeObject = {
     jobId: job._id,
     tag,
@@ -978,14 +1070,18 @@ const saveResumeToDatabase = async (analysis, atsResult, job, rawText, bulkJobDa
     ats_score: atsResult.ats_score,
     ats_reason: atsResult.ats_reason,
     ats_breakdown: atsResult.ats_breakdown,
-    raw_text: rawText
+    raw_text: rawText,
+    resumeDataId: resumeDataId || undefined
   };
+
+  // Remove resumeContent from the Resume doc (it's stored in ResumeData)
+  delete resumeObject.resumeContent;
 
   // Add recruiter/manager information if available from bulk job
   if (bulkJobData) {
     if (bulkJobData.recruiterId) {
       resumeObject.recruiterId = bulkJobData.recruiterId;
-      
+
       // Try to get manager ID from recruiter
       try {
         const recruiter = await Recruiter.findById(bulkJobData.recruiterId);
@@ -1010,10 +1106,10 @@ const saveResumeToDatabase = async (analysis, atsResult, job, rawText, bulkJobDa
 
   const newResume = new Resume(resumeObject);
   const savedResume = await newResume.save();
-  
+
   // Increment totalApplication_number for the job
   await Job.findByIdAndUpdate(job._id, { $inc: { totalApplication_number: 1 } });
-  
+
   console.log('Resume saved successfully with ID:', savedResume._id);
   return savedResume;
 };
@@ -1029,11 +1125,11 @@ const extractFileIdFromLink = (link) => {
   // Google Drive file
   const driveMatch = link.match(/\/file\/d\/([a-zA-Z0-9-_]+)/);
   if (driveMatch) return driveMatch[1];
-  
+
   // Google Docs
   const docsMatch = link.match(/\/document\/d\/([a-zA-Z0-9-_]+)/);
   if (docsMatch) return docsMatch[1];
-  
+
   return null;
 };
 
@@ -1044,7 +1140,7 @@ const isValidGoogleUrl = (url) => {
     /^https:\/\/docs\.google\.com\/document\/d\/[a-zA-Z0-9-_]+/,
     /^https:\/\/drive\.google\.com\/open\?id=[a-zA-Z0-9-_]+/
   ];
-  
+
   return validPatterns.some(pattern => pattern.test(url));
 };
 
@@ -1052,13 +1148,13 @@ const isValidGoogleUrl = (url) => {
 const parseGoogleSheets = async (fileBuffer, fileType) => {
   try {
     let urls = [];
-    
+
     if (fileType === 'text/csv' || fileType === 'application/vnd.ms-excel') {
       // Parse CSV
       return new Promise((resolve, reject) => {
         const results = [];
         const stream = Readable.from(fileBuffer);
-        
+
         stream
           .pipe(csv())
           .on('data', (data) => {
@@ -1074,14 +1170,14 @@ const parseGoogleSheets = async (fileBuffer, fileType) => {
           })
           .on('error', reject);
       });
-    } else if (fileType === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' || 
-               fileType === 'application/vnd.ms-excel') {
+    } else if (fileType === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
+      fileType === 'application/vnd.ms-excel') {
       // Parse Excel
       const workbook = XLSX.read(fileBuffer, { type: 'buffer' });
       const sheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[sheetName];
       const data = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-      
+
       // Extract URLs from all cells
       data.forEach(row => {
         if (Array.isArray(row)) {
@@ -1092,20 +1188,20 @@ const parseGoogleSheets = async (fileBuffer, fileType) => {
           });
         }
       });
-      
+
       return urls;
     } else {
       // Parse as plain text (one URL per line)
       const text = fileBuffer.toString('utf-8');
       const lines = text.split('\n');
-      
+
       lines.forEach(line => {
         const trimmedLine = line.trim();
         if (trimmedLine && isValidGoogleUrl(trimmedLine)) {
           urls.push(trimmedLine);
         }
       });
-      
+
       return urls;
     }
   } catch (error) {
@@ -1121,13 +1217,13 @@ const downloadFromGoogleUrl = async (url) => {
     if (!fileId) {
       throw new Error('Invalid Google Drive/Docs URL');
     }
-    
+
     // Determine file type from URL
     let mimeType = 'application/pdf'; // default
     if (url.includes('/document/')) {
       mimeType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
     }
-    
+
     if (drive) {
       // Use Google Drive API if available
       try {
@@ -1137,7 +1233,7 @@ const downloadFromGoogleUrl = async (url) => {
         }, {
           responseType: 'stream'
         });
-        
+
         // Convert stream to buffer
         const chunks = [];
         return new Promise((resolve, reject) => {
@@ -1151,35 +1247,73 @@ const downloadFromGoogleUrl = async (url) => {
       }
     } else {
       // Use direct download method with multiple fallbacks
+      const axiosConfig = {
+        responseType: 'arraybuffer',
+        maxRedirects: 5,
+        timeout: 60000,
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+          'Accept-Language': 'en-US,en;q=0.5',
+        }
+      };
+
       const fallbackUrls = [
+        `https://drive.usercontent.google.com/download?id=${fileId}&export=download&authuser=0`,
         `https://drive.google.com/uc?export=download&id=${fileId}`,
         `https://drive.google.com/file/d/${fileId}/preview`,
         `https://docs.google.com/document/d/${fileId}/export?format=pdf`
       ];
-      
+
+      let lastHtmlBuffer = null;
+
       for (const downloadUrl of fallbackUrls) {
         try {
           console.log(`Trying download URL: ${downloadUrl}`);
-          const response = await axios.get(downloadUrl, {
-            responseType: 'arraybuffer',
-            maxRedirects: 5,
-            timeout: 10000,
-            headers: {
-              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-            }
-          });
-          
+          const response = await axios.get(downloadUrl, axiosConfig);
+
           if (response.data && response.data.length > 0) {
+            const buffer = Buffer.from(response.data);
+
+            if (isHtmlContent(buffer)) {
+              console.log('⚠️  Got HTML response (login/permission page or virus warning), trying next URL...');
+              lastHtmlBuffer = buffer;
+
+              const confirmToken = extractConfirmToken(buffer);
+              if (confirmToken) {
+                console.log(`⚠️  Found virus-scan confirmation token: ${confirmToken}`);
+                const confirmUrl = `https://drive.google.com/uc?export=download&id=${fileId}&confirm=${confirmToken}`;
+                console.log(`Trying with confirm token: ${confirmUrl}`);
+                try {
+                  const confirmResponse = await axios.get(confirmUrl, axiosConfig);
+                  if (confirmResponse.data && confirmResponse.data.length > 0) {
+                    const finalBuffer = Buffer.from(confirmResponse.data);
+                    if (!isHtmlContent(finalBuffer)) {
+                      console.log(`✅ Successfully downloaded using confirm token`);
+                      return finalBuffer;
+                    }
+                  }
+                } catch (err) {
+                  console.log('Failed download with confirm token');
+                }
+              }
+              continue;
+            }
+
             console.log(`Successfully downloaded from: ${downloadUrl}`);
-            return Buffer.from(response.data);
+            return buffer;
           }
         } catch (urlError) {
           console.log(`Failed to download from ${downloadUrl}:`, urlError.message);
+          if (urlError.response && urlError.response.status === 401) {
+            console.log('❌ 401 Unauthorized Error: File is private!');
+            throw new Error(`File is PRIVATE. Change its Google Drive sharing settings to "Anyone with the link".`);
+          }
           continue;
         }
       }
-      
-      throw new Error('All download methods failed. File may be private or not accessible.');
+
+      throw new Error('All download methods failed. The file is likely PRIVATE (not shared as "Anyone with the link").');
     }
   } catch (error) {
     console.error('Error downloading from Google URL:', error);
@@ -1195,7 +1329,7 @@ const downloadFileFromDrive = async (fileId) => {
   }, {
     responseType: 'stream'
   });
-  
+
   // Convert stream to buffer
   const chunks = [];
   return new Promise((resolve, reject) => {
@@ -1209,11 +1343,11 @@ const downloadFileFromDrive = async (fileId) => {
 const getFilesFromPublicDrive = async (folderId) => {
   try {
     console.log('Attempting to access public Google Drive folder:', folderId);
-    
+
     // For public folders, we'll try to extract file information from the folder
     // This is a simplified approach that works for most public folders
     const folderUrl = `https://drive.google.com/drive/folders/${folderId}`;
-    
+
     // Return a structure that indicates this is a public folder
     // The frontend will handle the user experience
     return {
