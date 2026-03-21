@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import Editor from '@monaco-editor/react';
 import { Loader2, Play, Send, CheckCircle, AlertCircle, Clock, Check, X, ChevronLeft, ChevronRight, Award } from 'lucide-react';
 import toast from 'react-hot-toast';
+import initSqlJs from 'sql.js';
 
 const CandidateAssessmentPage = () => {
     const { assessmentId } = useParams();
@@ -21,6 +22,8 @@ const CandidateAssessmentPage = () => {
     const [isRunning, setIsRunning] = useState(false);
     const [error, setError] = useState(null);
     const [timeRemaining, setTimeRemaining] = useState(45 * 60); // 45 minutes in seconds
+    const [assessmentType, setAssessmentType] = useState('standard'); // 'standard' or 'avaloq'
+    const sqlDbRef = useRef(null);
 
     useEffect(() => {
         fetchAssessment();
@@ -61,46 +64,111 @@ const CandidateAssessmentPage = () => {
 
             setAssessment(data);
 
+            const isAvaloq = data.assessmentType === 'avaloq';
+            setAssessmentType(isAvaloq ? 'avaloq' : 'standard');
+
+            // Set timer based on assessment type
+            if (isAvaloq) {
+                setTimeRemaining(90 * 60); // 90 minutes for Avaloq
+            }
+
+            // Initialize sql.js for Avaloq assessments
+            if (isAvaloq) {
+                try {
+                    const SQL = await initSqlJs({
+                        locateFile: () => '/sql-wasm.wasm'
+                    });
+                    const db = new SQL.Database();
+
+                    // Create tables separately for reliability
+                    db.run(`CREATE TABLE customers (
+                        customer_id INTEGER PRIMARY KEY,
+                        name TEXT,
+                        email TEXT,
+                        account_type TEXT,
+                        created_at TEXT
+                    )`);
+                    db.run(`CREATE TABLE accounts (
+                        account_id INTEGER PRIMARY KEY,
+                        customer_id INTEGER,
+                        account_type TEXT,
+                        balance REAL,
+                        currency TEXT,
+                        status TEXT,
+                        opened_at TEXT,
+                        FOREIGN KEY (customer_id) REFERENCES customers(customer_id)
+                    )`);
+                    db.run(`CREATE TABLE transactions (
+                        txn_id INTEGER PRIMARY KEY,
+                        from_account_id INTEGER,
+                        to_account_id INTEGER,
+                        amount REAL,
+                        txn_type TEXT,
+                        status TEXT,
+                        created_at TEXT,
+                        FOREIGN KEY (from_account_id) REFERENCES accounts(account_id),
+                        FOREIGN KEY (to_account_id) REFERENCES accounts(account_id)
+                    )`);
+
+                    // Insert sample banking data
+                    const inserts = [
+                        "INSERT INTO customers VALUES (1, 'Alice Johnson', 'alice@bank.com', 'premium', '2023-01-15')",
+                        "INSERT INTO customers VALUES (2, 'Bob Smith', 'bob@bank.com', 'standard', '2023-03-20')",
+                        "INSERT INTO customers VALUES (3, 'Charlie Lee', 'charlie@bank.com', 'premium', '2023-06-10')",
+                        "INSERT INTO customers VALUES (4, 'Diana Ross', 'diana@bank.com', 'standard', '2024-01-05')",
+                        "INSERT INTO customers VALUES (5, 'Eve Walker', 'eve@bank.com', 'premium', '2024-02-14')",
+                        "INSERT INTO accounts VALUES (1001, 1, 'savings', 75000.00, 'USD', 'active', '2023-01-15')",
+                        "INSERT INTO accounts VALUES (1002, 1, 'checking', 25000.00, 'USD', 'active', '2023-02-01')",
+                        "INSERT INTO accounts VALUES (1003, 2, 'savings', 50000.00, 'USD', 'active', '2023-03-20')",
+                        "INSERT INTO accounts VALUES (1004, 2, 'checking', 12000.00, 'USD', 'inactive', '2023-04-10')",
+                        "INSERT INTO accounts VALUES (1005, 3, 'savings', 120000.00, 'USD', 'active', '2023-06-10')",
+                        "INSERT INTO accounts VALUES (1006, 3, 'checking', 45000.00, 'USD', 'active', '2023-07-01')",
+                        "INSERT INTO accounts VALUES (1007, 4, 'savings', 8000.00, 'USD', 'active', '2024-01-05')",
+                        "INSERT INTO accounts VALUES (1008, 5, 'savings', 95000.00, 'USD', 'active', '2024-02-14')",
+                        "INSERT INTO accounts VALUES (1009, 5, 'checking', 30000.00, 'USD', 'active', '2024-03-01')",
+                        "INSERT INTO transactions VALUES (1, 1001, 1003, 5000.00, 'debit', 'success', '2024-01-10')",
+                        "INSERT INTO transactions VALUES (2, 1003, 1001, 3000.00, 'credit', 'success', '2024-01-15')",
+                        "INSERT INTO transactions VALUES (3, 1005, 1006, 10000.00, 'debit', 'success', '2024-02-01')",
+                        "INSERT INTO transactions VALUES (4, 1001, 1005, 2000.00, 'debit', 'success', '2024-02-10')",
+                        "INSERT INTO transactions VALUES (5, 1006, 1001, 7500.00, 'credit', 'success', '2024-02-15')",
+                        "INSERT INTO transactions VALUES (6, 1008, 1009, 15000.00, 'debit', 'success', '2024-03-01')",
+                        "INSERT INTO transactions VALUES (7, 1001, 1002, 1000.00, 'debit', 'success', '2024-03-05')",
+                        "INSERT INTO transactions VALUES (8, 1005, 1003, 8000.00, 'debit', 'success', '2024-03-10')",
+                        "INSERT INTO transactions VALUES (9, 1002, 1007, 500.00, 'debit', 'failed', '2024-03-12')",
+                        "INSERT INTO transactions VALUES (10, 1009, 1001, 2500.00, 'credit', 'success', '2024-03-15')",
+                        "INSERT INTO transactions VALUES (11, 1001, 1008, 6000.00, 'debit', 'success', '2024-03-18')",
+                        "INSERT INTO transactions VALUES (12, 1003, 1006, 4000.00, 'debit', 'success', '2024-03-20')"
+                    ];
+                    inserts.forEach(sql => db.run(sql));
+
+                    sqlDbRef.current = db;
+                    console.log('✓ SQLite database initialized with banking data');
+                } catch (sqlErr) {
+                    console.error('Failed to initialize SQL.js:', sqlErr);
+                }
+            }
+
             // Initialize code for all questions
             const initialCodes = {};
             const initialLanguages = {};
-            const questions = data.questions || [data.question]; // Handle both array and legacy single object
+            const questions = data.questions || [data.question];
 
             questions.forEach((q, idx) => {
                 const functionName = q.functionName || 'solution';
-                // Default to Java as requested
-                initialLanguages[idx] = 'java';
+                const section = (q.section || '').toLowerCase();
 
-                // JavaScript Boilerplate
-                const jsBoilerplate = `// ${q.title}
-// Write your solution below
-
-/**
- * @param {any[]} args - Arguments passed as an array
- * @return {any} - Return the result
- */
-function ${functionName}(...args) {
-    // Note: args is an array of arguments passed to the function
-    // For example, if input is [1, 2], args[0] is 1, args[1] is 2
-    
-    // Your code here
-    return null;
-}`;
-
-                // Java Boilerplate (Keep as backup)
-                const javaBoilerplate = `// ${q.title}
-// Write your solution below
-
-import java.util.*;
-
-class Solution {
-    public Object ${functionName}(Object... args) {
-        // Your code here
-        return null;
-    }
-}`;
-
-                initialCodes[idx] = javaBoilerplate;
+                // For Avaloq assessments, set language based on question section
+                if (isAvaloq && (section.includes('sql') || section.includes('banking') || section.includes('debugging'))) {
+                    initialLanguages[idx] = 'sql';
+                    initialCodes[idx] = `-- ${q.title}\n-- Write your SQL query below\n-- Available tables: customers, accounts, transactions\n\n-- customers(customer_id, name, email, account_type, created_at)\n-- accounts(account_id, customer_id, account_type, balance, currency, status, opened_at)\n-- transactions(txn_id, from_account_id, to_account_id, amount, txn_type, status, created_at)\n\nSELECT * FROM customers;\n`;
+                } else if (isAvaloq && section.includes('coding')) {
+                    initialLanguages[idx] = 'java';
+                    initialCodes[idx] = `// ${q.title}\n// Write your solution below\n\nimport java.util.*;\n\nclass Solution {\n    public Object ${functionName}(Object... args) {\n        // Your code here\n        return null;\n    }\n}`;
+                } else {
+                    // Standard assessment - default to Java
+                    initialLanguages[idx] = 'java';
+                    initialCodes[idx] = `// ${q.title}\n// Write your solution below\n\nimport java.util.*;\n\nclass Solution {\n    public Object ${functionName}(Object... args) {\n        // Your code here\n        return null;\n    }\n}`;
+                }
             });
             setCodes(initialCodes);
             setLanguages(initialLanguages);
@@ -138,7 +206,18 @@ class Solution {
         const functionName = currentQuestion?.functionName || 'solution';
 
         let newCode = '';
-        if (newLang === 'java') {
+        if (newLang === 'sql') {
+            newCode = `-- ${currentQuestion?.title || 'Question'}
+-- Write your SQL query below
+-- Available tables: customers, accounts, transactions
+
+-- customers(customer_id, name, email, account_type, created_at)
+-- accounts(account_id, customer_id, account_type, balance, currency, status, opened_at)
+-- transactions(txn_id, from_account_id, to_account_id, amount, txn_type, status, created_at)
+
+SELECT * FROM customers;
+`;
+        } else if (newLang === 'java') {
             newCode = `// ${currentQuestion?.title || 'Question'}
 // Write your solution below
 
@@ -168,10 +247,6 @@ function ${functionName}(...args) {
 }`;
         }
 
-        // Only update code if it's the default boilerplate or user confirms? 
-        // For this task, we'll force update to ensure they get the right signature, 
-        // as preserving wrong code is useless. 
-        // A better UX would confirm, but we'll specificially target the request "not correct... change it".
         setCodes(prev => ({
             ...prev,
             [currentQuestionIndex]: newCode
@@ -261,7 +336,92 @@ function ${functionName}(...args) {
             const currentQuestion = getCurrentQuestion();
             const currentCode = codes[currentQuestionIndex];
 
-            if (currentLang === 'java') {
+            if (currentLang === 'sql') {
+                // SQL execution via sql.js (client-side SQLite)
+                try {
+                    // Auto-initialize if not ready yet
+                    if (!sqlDbRef.current) {
+                        const SQL = await initSqlJs({
+                            locateFile: () => '/sql-wasm.wasm'
+                        });
+                        const db = new SQL.Database();
+                        db.run(`CREATE TABLE IF NOT EXISTS customers (customer_id INTEGER PRIMARY KEY, name TEXT, email TEXT, account_type TEXT, created_at TEXT)`);
+                        db.run(`CREATE TABLE IF NOT EXISTS accounts (account_id INTEGER PRIMARY KEY, customer_id INTEGER, account_type TEXT, balance REAL, currency TEXT, status TEXT, opened_at TEXT)`);
+                        db.run(`CREATE TABLE IF NOT EXISTS transactions (txn_id INTEGER PRIMARY KEY, from_account_id INTEGER, to_account_id INTEGER, amount REAL, txn_type TEXT, status TEXT, created_at TEXT)`);
+                        const inserts = [
+                            "INSERT INTO customers VALUES (1, 'Alice Johnson', 'alice@bank.com', 'premium', '2023-01-15')",
+                            "INSERT INTO customers VALUES (2, 'Bob Smith', 'bob@bank.com', 'standard', '2023-03-20')",
+                            "INSERT INTO customers VALUES (3, 'Charlie Lee', 'charlie@bank.com', 'premium', '2023-06-10')",
+                            "INSERT INTO customers VALUES (4, 'Diana Ross', 'diana@bank.com', 'standard', '2024-01-05')",
+                            "INSERT INTO customers VALUES (5, 'Eve Walker', 'eve@bank.com', 'premium', '2024-02-14')",
+                            "INSERT INTO accounts VALUES (1001, 1, 'savings', 75000.00, 'USD', 'active', '2023-01-15')",
+                            "INSERT INTO accounts VALUES (1002, 1, 'checking', 25000.00, 'USD', 'active', '2023-02-01')",
+                            "INSERT INTO accounts VALUES (1003, 2, 'savings', 50000.00, 'USD', 'active', '2023-03-20')",
+                            "INSERT INTO accounts VALUES (1004, 2, 'checking', 12000.00, 'USD', 'inactive', '2023-04-10')",
+                            "INSERT INTO accounts VALUES (1005, 3, 'savings', 120000.00, 'USD', 'active', '2023-06-10')",
+                            "INSERT INTO accounts VALUES (1006, 3, 'checking', 45000.00, 'USD', 'active', '2023-07-01')",
+                            "INSERT INTO accounts VALUES (1007, 4, 'savings', 8000.00, 'USD', 'active', '2024-01-05')",
+                            "INSERT INTO accounts VALUES (1008, 5, 'savings', 95000.00, 'USD', 'active', '2024-02-14')",
+                            "INSERT INTO accounts VALUES (1009, 5, 'checking', 30000.00, 'USD', 'active', '2024-03-01')",
+                            "INSERT INTO transactions VALUES (1, 1001, 1003, 5000.00, 'debit', 'success', '2024-01-10')",
+                            "INSERT INTO transactions VALUES (2, 1003, 1001, 3000.00, 'credit', 'success', '2024-01-15')",
+                            "INSERT INTO transactions VALUES (3, 1005, 1006, 10000.00, 'debit', 'success', '2024-02-01')",
+                            "INSERT INTO transactions VALUES (4, 1001, 1005, 2000.00, 'debit', 'success', '2024-02-10')",
+                            "INSERT INTO transactions VALUES (5, 1006, 1001, 7500.00, 'credit', 'success', '2024-02-15')",
+                            "INSERT INTO transactions VALUES (6, 1008, 1009, 15000.00, 'debit', 'success', '2024-03-01')",
+                            "INSERT INTO transactions VALUES (7, 1001, 1002, 1000.00, 'debit', 'success', '2024-03-05')",
+                            "INSERT INTO transactions VALUES (8, 1005, 1003, 8000.00, 'debit', 'success', '2024-03-10')",
+                            "INSERT INTO transactions VALUES (9, 1002, 1007, 500.00, 'debit', 'failed', '2024-03-12')",
+                            "INSERT INTO transactions VALUES (10, 1009, 1001, 2500.00, 'credit', 'success', '2024-03-15')",
+                            "INSERT INTO transactions VALUES (11, 1001, 1008, 6000.00, 'debit', 'success', '2024-03-18')",
+                            "INSERT INTO transactions VALUES (12, 1003, 1006, 4000.00, 'debit', 'success', '2024-03-20')"
+                        ];
+                        inserts.forEach(sql => db.run(sql));
+                        sqlDbRef.current = db;
+                        console.log('✓ SQLite database initialized on-demand');
+                    }
+
+                    // Execute the SQL query
+                    const results = sqlDbRef.current.exec(currentCode);
+
+                    if (results.length === 0) {
+                        setOutputsMap(prev => ({
+                            ...prev,
+                            [currentQuestionIndex]: 'Query executed successfully. No rows returned.'
+                        }));
+                        setTestResultsMap(prev => ({ ...prev, [currentQuestionIndex]: [] }));
+                    } else {
+                        // Format results as a readable table
+                        let outputStr = '';
+                        results.forEach((result, rIdx) => {
+                            const { columns, values } = result;
+                            // Column headers
+                            outputStr += columns.join(' | ') + '\n';
+                            outputStr += columns.map(() => '---').join(' | ') + '\n';
+                            // Rows
+                            values.forEach(row => {
+                                outputStr += row.map(v => v === null ? 'NULL' : String(v)).join(' | ') + '\n';
+                            });
+                            outputStr += `\n(${values.length} row${values.length !== 1 ? 's' : ''} returned)`;
+                            if (rIdx < results.length - 1) outputStr += '\n\n';
+                        });
+
+                        setOutputsMap(prev => ({
+                            ...prev,
+                            [currentQuestionIndex]: outputStr
+                        }));
+                        setTestResultsMap(prev => ({ ...prev, [currentQuestionIndex]: [] }));
+                    }
+                } catch (sqlErr) {
+                    setOutputsMap(prev => ({
+                        ...prev,
+                        [currentQuestionIndex]: `SQL Error: ${sqlErr.message}`
+                    }));
+                }
+                setIsRunning(false);
+                return;
+
+            } else if (currentLang === 'java') {
                 const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/assessment/${assessmentId}/run`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -310,9 +470,6 @@ function ${functionName}(...args) {
                         }));
                     }
                 }, 800);
-                // Return early to avoid setting isRunning false too soon if we used timeout
-                // But here we can just await the timeout if we wrapped it, or just let it run.
-                // To keep it simple, I'll move setIsRunning(false) to finally block or after logic.
             }
 
         } catch (err) {
@@ -714,6 +871,7 @@ function ${functionName}(...args) {
                                 onChange={handleLanguageChange}
                                 className="px-2 py-1 bg-gray-100 text-gray-600 text-xs font-bold rounded border-none focus:ring-0 cursor-pointer"
                             >
+                                {assessmentType === 'avaloq' && <option value="sql">SQL</option>}
                                 <option value="java">Java</option>
                                 <option value="javascript">JavaScript</option>
                             </select>
@@ -762,7 +920,7 @@ function ${functionName}(...args) {
                             height="100%"
                             defaultLanguage="java"
                             theme="vs-dark"
-                            language={languages[currentQuestionIndex] || 'java'}
+                            language={languages[currentQuestionIndex] === 'sql' ? 'sql' : (languages[currentQuestionIndex] || 'java')}
                             value={codes[currentQuestionIndex] || ''}
                             onChange={handleCodeChange}
                             options={{

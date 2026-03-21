@@ -78,7 +78,7 @@ const generatePDFContent = (resumeData, note = '') => {
   `;
 
   // 1. Top Metrics Row
-  const codingScore = resumeData.oa?.evaluation?.score || 0;
+  const codingScore = resumeData.oa?.evaluation?.score || resumeData.avaloqOa?.evaluation?.score || 0;
   const interviewScore = resumeData.score || (resumeData.interviewEvaluation?.evaluationResults?.reduce((acc, curr) => acc + (curr.score || 0), 0) / (resumeData.interviewEvaluation?.evaluationResults?.length || 1) * 10) || 0; // Normalize to 100 if needed, assuming score is out of 10? No, wait.
   // Actually, let's check the data. interviewEvaluation.evaluationResults has score out of 10. So average * 10 gives %.
   // But wait, resumeData.score is likely the interview score. Let's use that if available.
@@ -187,7 +187,55 @@ const generatePDFContent = (resumeData, note = '') => {
         </div>
       </div>
     </div>
-  `;
+  `;  // Avaloq Banking Assessment Summary
+  const avaloqOaStatus = resumeData.avaloqOa?.evaluation?.pass ? 'Passed' : 'Failed';
+  const avaloqOaStatusColor = resumeData.avaloqOa?.evaluation?.pass ? 'text-green-700 bg-green-100' : 'text-red-700 bg-red-100';
+  const avaloqOaScore = resumeData.avaloqOa?.evaluation?.score || 0;
+  const avaloqQuestionsCompleted = resumeData.avaloqOa?.submissions?.length || 0;
+
+  const avaloqAssessmentHTML = resumeData.avaloqOa?.evaluation ? `
+    <div class="bg-white rounded-xl border border-gray-200 p-6 mb-6">
+      <div class="flex justify-between items-center mb-4">
+        <div class="text-lg font-bold text-gray-900">Avaloq Banking Assessment Summary</div>
+        <div class="flex items-center gap-4">
+            <span class="px-3 py-1 rounded-full text-sm font-bold ${avaloqOaStatusColor} flex items-center gap-1">
+                ${resumeData.avaloqOa?.evaluation?.pass ? '✓' : '✕'} ${avaloqOaStatus}
+            </span>
+            <span class="font-bold text-gray-900">Score: ${avaloqOaScore}/100</span>
+        </div>
+      </div>
+      
+      <div class="mb-4">
+        <div class="flex items-center gap-2 text-blue-600 font-semibold mb-2">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+            Questions Completed: ${avaloqQuestionsCompleted}
+        </div>
+      </div>
+
+      <div class="space-y-4">
+        <div class="bg-gray-50 rounded-lg p-3 border border-gray-100">
+            <div class="font-semibold text-gray-700 mb-1">General Feedback</div>
+            <div class="text-sm text-gray-600">${resumeData.avaloqOa?.evaluation?.feedback || 'No feedback available.'}</div>
+        </div>
+        
+        <div class="bg-blue-50 rounded-lg p-3 border border-blue-100">
+            <div class="flex items-center gap-2 font-semibold text-blue-800 mb-1">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                Complexity Analysis
+            </div>
+            <div class="text-sm text-blue-700">${resumeData.avaloqOa?.evaluation?.complexityAnalysis || 'Avaloq Banking Assessment'}</div>
+        </div>
+
+        <div class="bg-gray-50 rounded-lg p-3 border border-gray-100">
+            <div class="flex items-center gap-2 font-semibold text-gray-700 mb-1">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                Suggestions for Improvement
+            </div>
+            <div class="text-sm text-gray-600">${resumeData.avaloqOa?.evaluation?.improvementSuggestions || 'Keep improving your SQL and banking domain skills.'}</div>
+        </div>
+      </div>
+    </div>
+  ` : '';
 
   // 4. AI Resume Summary (Updated Layout)
   const aiResumeSummaryHTML = `
@@ -438,6 +486,7 @@ const generatePDFContent = (resumeData, note = '') => {
         ${keyStrengthHTML}
         ${potentialConcernHTML}
         ${codingAssessmentHTML}
+        ${avaloqAssessmentHTML}
         ${aiResumeSummaryHTML}
         ${addedNotesHTML}
         
