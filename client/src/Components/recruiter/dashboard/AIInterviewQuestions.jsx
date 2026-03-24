@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, RefreshCw, HelpCircle, Copy, Plus, Code, Edit2, Upload } from 'lucide-react';
+import { ArrowLeft, RefreshCw, HelpCircle, Copy, Plus, Code, Edit2, Upload, Database } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { format, addDays } from 'date-fns';
 import ScheduleAssessmentModal from './ScheduleAssessmentModal';
 import AssessmentResultView from './AssessmentResultView';
+import ScheduleAvaloqAssessmentModal from './ScheduleAvaloqAssessmentModal';
 import AddAnswersPage from './AddAnswersPage';
 
 const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API);
@@ -18,6 +19,7 @@ const AIInterviewQuestions = ({ jobDetails, resumeData, onBack, onResumeUpdate }
   const [selectedScheduleData, setSelectedScheduleData] = useState(null);
   const [showAnswersPage, setShowAnswersPage] = useState(false);
   const [isOAModalOpen, setIsOAModalOpen] = useState(false);
+  const [isAvaloqOAModalOpen, setIsAvaloqOAModalOpen] = useState(false);
 
   const [schedule, setSchedule] = useState([]);
   const [selectedDate, setSelectedDate] = useState(0);
@@ -443,19 +445,30 @@ const AIInterviewQuestions = ({ jobDetails, resumeData, onBack, onResumeUpdate }
         </div>
 
         {/* Schedule Assessment Section - Only for technical roles */}
-        {!interviewScheduled && !resumeData?.oa?.scheduled && isTechnicalRole(resumeData?.jobId?.jobtitle) && (
+        {!interviewScheduled && !resumeData?.oa?.scheduled && isTechnicalRole(resumeData?.jobId?.jobtitle || jobDetails?.position || jobDetails?.jobtitle) && (
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200/80 mb-8">
             <div className="text-xl font-bold text-gray-800 mb-4">Schedule Assessment</div>
             <p className="text-gray-600 mb-6">
               Send a coding assessment to the candidate. They will receive an email with a unique link to complete the test.
             </p>
-            <button
-              onClick={() => setIsOAModalOpen(true)}
-              className="w-full md:w-auto flex items-center justify-center gap-2 px-6 py-3 border-2 border-green-600 rounded-lg font-semibold text-green-700 hover:bg-green-50 transition-colors cursor-pointer"
-            >
-              <Code size={20} />
-              Schedule OA
-            </button>
+            <div className="flex flex-wrap gap-4">
+              <button
+                onClick={() => setIsOAModalOpen(true)}
+                className="w-full md:w-auto flex items-center justify-center gap-2 px-6 py-3 border-2 border-green-600 rounded-lg font-semibold text-green-700 hover:bg-green-50 transition-colors cursor-pointer"
+              >
+                <Code size={20} />
+                Schedule OA
+              </button>
+              {!resumeData?.avaloqOa?.scheduled && (
+                <button
+                  onClick={() => setIsAvaloqOAModalOpen(true)}
+                  className="w-full md:w-auto flex items-center justify-center gap-2 px-6 py-3 border-2 border-amber-600 rounded-lg font-semibold text-amber-700 hover:bg-amber-50 transition-colors cursor-pointer"
+                >
+                  <Database size={20} />
+                  Avaloq Assessment
+                </button>
+              )}
+            </div>
           </div>
         )}
 
@@ -560,6 +573,31 @@ const AIInterviewQuestions = ({ jobDetails, resumeData, onBack, onResumeUpdate }
           </div>
         )}
 
+        {/* Avaloq Assessment Result Section */}
+        {resumeData?.avaloqOa?.scheduled && (
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-amber-200/80 mb-8">
+            <div className="flex justify-between items-center mb-4">
+              <div className="text-xl font-bold text-gray-800">Avaloq Assessment Status</div>
+              <span className={`px-3 py-1 rounded-full text-sm font-semibold ${resumeData.avaloqOa.status === 'evaluated' ? 'bg-green-100 text-green-800' :
+                resumeData.avaloqOa.status === 'completed' ? 'bg-blue-100 text-blue-800' :
+                  'bg-amber-100 text-amber-800'
+                }`}>
+                {resumeData.avaloqOa.status === 'evaluated' ? 'Evaluated' :
+                  resumeData.avaloqOa.status === 'completed' ? 'Submitted' : 'Invited'}
+              </span>
+            </div>
+
+            {resumeData.avaloqOa.status === 'evaluated' ? (
+              <AssessmentResultView assessmentData={resumeData.avaloqOa} />
+            ) : (
+              <div className="text-gray-600">
+                <p>Avaloq Banking Assessment has been scheduled and sent to the candidate.</p>
+                <p className="text-sm mt-2">Link: <span className="font-mono bg-gray-100 px-2 py-1 rounded">{`${window.location.origin}/assessment/${resumeData.avaloqOa.assessmentId}`}</span></p>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Smart Questions for Today Card */}
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200/80">
           <div className="text-xl font-bold text-gray-800 mb-6">Schedule Interview</div>
@@ -649,6 +687,17 @@ const AIInterviewQuestions = ({ jobDetails, resumeData, onBack, onResumeUpdate }
         <ScheduleAssessmentModal
           isOpen={isOAModalOpen}
           onClose={() => setIsOAModalOpen(false)}
+          candidateEmail={resumeData.email}
+          candidateName={resumeData.name}
+          resumeId={resumeData._id}
+          onScheduled={() => {
+            if (onResumeUpdate) onResumeUpdate(resumeData._id);
+          }}
+        />
+
+        <ScheduleAvaloqAssessmentModal
+          isOpen={isAvaloqOAModalOpen}
+          onClose={() => setIsAvaloqOAModalOpen(false)}
           candidateEmail={resumeData.email}
           candidateName={resumeData.name}
           resumeId={resumeData._id}

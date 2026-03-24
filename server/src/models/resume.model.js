@@ -169,6 +169,53 @@ const ResumeSchema = new mongoose.Schema(
       }
     },
 
+    // Avaloq Banking Assessment
+    avaloqOa: {
+      scheduled: { type: Boolean, default: false },
+      assessmentId: String,
+      status: { type: String, enum: ['invited', 'in_progress', 'completed', 'evaluated'], default: 'invited' },
+      inviteDate: Date,
+      completionDate: Date,
+
+      // The Problems
+      questions: [{
+        section: String, // SQL, Banking, Debugging, Optional Coding
+        title: String,
+        description: String,
+        difficulty: String,
+        constraints: String,
+        sampleInput: String,
+        sampleOutput: String,
+        expectedApproach: String,
+        evaluationCriteria: String,
+        maxScore: Number,
+        answerKey: String,
+        functionName: String,
+        examples: [{
+          input: mongoose.Schema.Types.Mixed,
+          output: mongoose.Schema.Types.Mixed,
+          explanation: String
+        }]
+      }],
+
+      // The Submissions
+      submissions: [{
+        questionIndex: Number,
+        code: String,
+        language: { type: String, default: 'sql' },
+        submittedAt: Date
+      }],
+
+      // AI Evaluation
+      evaluation: {
+        score: Number,
+        pass: Boolean,
+        feedback: String,
+        complexityAnalysis: String,
+        improvementSuggestions: String
+      }
+    },
+
     // Interview Management
     interviewScheduled: {
       type: Boolean,

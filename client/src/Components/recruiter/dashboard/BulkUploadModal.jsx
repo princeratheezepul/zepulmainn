@@ -101,7 +101,7 @@ const BulkUploadModal = ({ onClose, jobDetails }) => {
           credentials: 'include'
         }
       );
-      
+
       if (!response.ok) {
         if (response.status === 401) {
           handleAuthError();
@@ -118,7 +118,7 @@ const BulkUploadModal = ({ onClose, jobDetails }) => {
 
       if (progressData.status === 'completed' || progressData.status === 'failed') {
         setIsProcessing(false);
-        
+
         // Fetch results
         const resultsResponse = await fetch(
           `${import.meta.env.VITE_BACKEND_URL}/api/resumes/bulk-upload/${bulkJobId}/results`,
@@ -131,7 +131,7 @@ const BulkUploadModal = ({ onClose, jobDetails }) => {
             credentials: 'include'
           }
         );
-        
+
         if (resultsResponse.ok) {
           const resultsData = await resultsResponse.json();
           setResults(resultsData);
@@ -192,7 +192,7 @@ const BulkUploadModal = ({ onClose, jobDetails }) => {
 
       const authToken = localStorage.getItem('authToken');
       const response = await fetch(
-        `/api/resumes/bulk-upload/${jobDetails.jobId}/sheets`,
+        `${import.meta.env.VITE_BACKEND_URL}/api/resumes/bulk-upload/${jobDetails.jobId}/sheets`,
         {
           method: 'POST',
           headers: {
@@ -213,7 +213,7 @@ const BulkUploadModal = ({ onClose, jobDetails }) => {
 
       const data = await response.json();
       toast.success('Excel Sheets processing started successfully!');
-      
+
       // Start polling for progress
       pollProgress(data.jobId);
 
@@ -244,7 +244,7 @@ const BulkUploadModal = ({ onClose, jobDetails }) => {
   // Show results if processing is complete
   if (results) {
     const successRate = results.total > 0 ? Math.round((results.successful / results.total) * 100) : 0;
-    
+
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
         <div className="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
@@ -257,7 +257,7 @@ const BulkUploadModal = ({ onClose, jobDetails }) => {
               <X size={24} />
             </button>
           </div>
-          
+
           <div className="p-6">
             <div className="text-center mb-6">
               <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
@@ -331,16 +331,16 @@ const BulkUploadModal = ({ onClose, jobDetails }) => {
             <Loader2 className="w-16 h-16 text-blue-600 animate-spin mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-gray-900 mb-2">Processing Resumes</h3>
             <p className="text-gray-600 mb-6">Please wait while we analyze your resumes...</p>
-            
+
             {progress && (
               <div className="space-y-4">
                 <div className="bg-gray-200 rounded-full h-2">
-                  <div 
+                  <div
                     className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                    style={{ 
-                      width: progress.totalFiles > 0 
-                        ? `${(progress.processedFiles / progress.totalFiles) * 100}%` 
-                        : '0%' 
+                    style={{
+                      width: progress.totalFiles > 0
+                        ? `${(progress.processedFiles / progress.totalFiles) * 100}%`
+                        : '0%'
                     }}
                   ></div>
                 </div>
@@ -384,34 +384,34 @@ const BulkUploadModal = ({ onClose, jobDetails }) => {
               <p className="text-gray-600 text-center">
                 Choose how you want to upload multiple resumes
               </p>
-              
-                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                 {/* Google Drive Link */}
-                 <div 
-                   className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-all"
-                   onClick={() => setUploadMethod('drive')}
-                 >
-                   <Link className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                   <h3 className="text-lg font-semibold text-gray-900 mb-2">Google Drive Link</h3>
-                   <p className="text-sm text-gray-600">
-                     Provide a Google Drive folder link containing resumes
-                   </p>
-                 </div>
 
-                 {/* Excel Sheets Upload */}
-                 <div 
-                   className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-all"
-                   onClick={() => setUploadMethod('sheets')}
-                 >
-                   <FileSpreadsheet className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                   <h3 className="text-lg font-semibold text-gray-900 mb-2">Excel Sheets</h3>
-                   <p className="text-sm text-gray-600">
-                     Upload CSV/Excel file with resume links
-                   </p>
-                 </div>
-               </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Google Drive Link */}
+                <div
+                  className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-all"
+                  onClick={() => setUploadMethod('drive')}
+                >
+                  <Link className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Google Drive Link</h3>
+                  <p className="text-sm text-gray-600">
+                    Provide a Google Drive folder link containing resumes
+                  </p>
+                </div>
+
+                {/* Excel Sheets Upload */}
+                <div
+                  className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-all"
+                  onClick={() => setUploadMethod('sheets')}
+                >
+                  <FileSpreadsheet className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Excel Sheets</h3>
+                  <p className="text-sm text-gray-600">
+                    Upload CSV/Excel file with resume links
+                  </p>
+                </div>
+              </div>
             </div>
-                      ) : uploadMethod === 'drive' ? (
+          ) : uploadMethod === 'drive' ? (
             <div className="space-y-6">
               <button
                 onClick={() => setUploadMethod('')}
@@ -419,10 +419,10 @@ const BulkUploadModal = ({ onClose, jobDetails }) => {
               >
                 ← Back to options
               </button>
-              
+
               <div className="text-center">
                 <h3 className="text-xl font-semibold text-gray-900 mb-4">Google Drive Folder</h3>
-                
+
                 <div className="max-w-md mx-auto space-y-4">
                   <input
                     type="text"
@@ -431,7 +431,7 @@ const BulkUploadModal = ({ onClose, jobDetails }) => {
                     onChange={(e) => setDriveLink(e.target.value)}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
-                  
+
                   <button
                     onClick={handleDriveUpload}
                     disabled={!driveLink.trim()}
@@ -450,12 +450,12 @@ const BulkUploadModal = ({ onClose, jobDetails }) => {
               >
                 ← Back to options
               </button>
-              
+
               <div className="text-center">
                 <h3 className="text-xl font-semibold text-gray-900 mb-4">Excel Sheets Upload</h3>
-                
+
                 <div className="max-w-md mx-auto space-y-4">
-                  <div 
+                  <div
                     {...getSheetsRootProps()}
                     className="border-2 border-dashed border-gray-300 rounded-xl p-8 cursor-pointer hover:border-purple-400 hover:bg-purple-50 transition-all"
                   >
@@ -468,7 +468,7 @@ const BulkUploadModal = ({ onClose, jobDetails }) => {
                       File should contain Google Drive/Docs resume links
                     </p>
                   </div>
-                  
+
                   {sheetsFile && (
                     <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                       <div className="flex items-center">
@@ -479,7 +479,7 @@ const BulkUploadModal = ({ onClose, jobDetails }) => {
                       </div>
                     </div>
                   )}
-                  
+
                   <button
                     onClick={handleSheetsUpload}
                     disabled={!sheetsFile || isProcessing}
@@ -493,7 +493,7 @@ const BulkUploadModal = ({ onClose, jobDetails }) => {
           ) : null}
         </div>
       </div>
-      
+
       {showDriveHelper && (
         <GoogleDriveHelper
           driveLink={driveLink}
