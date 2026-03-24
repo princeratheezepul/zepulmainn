@@ -48,7 +48,7 @@ ${userImports.join('\n')}
 import java.util.*;
 import java.util.stream.*;
 
-public class Main {
+class Main {
     public static void main(String[] args) {
         Solution solution = new Solution();
         int passed = 0;
