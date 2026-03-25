@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { MapPin, Briefcase, Calendar, Users, IndianRupee, CalendarDays } from 'lucide-react';
+import { MapPin, Briefcase, Calendar, Users, IndianRupee, CalendarDays, Pencil, X } from 'lucide-react';
 import Sidebar from '../Components/recruiter/dashboard/Sidebar';
 import Settings from '../Components/recruiter/dashboard/Settings';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import ResumeUpload from '../Components/recruiter/dashboard/ResumeUpload';
 import SavedResumes from '../Components/recruiter/dashboard/SavedResumes';
+import toast from 'react-hot-toast';
 
 const RecruiterJobDetailPage = () => {
   const [activeComponent, setActiveComponent] = useState('Jobs');
@@ -20,6 +21,10 @@ const RecruiterJobDetailPage = () => {
   const [resumeCount, setResumeCount] = useState(0);
   const [preloadedResumes, setPreloadedResumes] = useState([]);
   const [resumesLoading, setResumesLoading] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editSaving, setEditSaving] = useState(false);
+  const [editForm, setEditForm] = useState(null);
+  const [editNewSkill, setEditNewSkill] = useState('');
   // Handle sidebar navigation
   const handleSidebarNavigation = (component) => {
     if (component === 'Dashboard') {
@@ -46,6 +51,86 @@ const RecruiterJobDetailPage = () => {
       console.error('Error fetching job:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const openEditModal = () => {
+    setEditForm({
+      jobtitle: jobData?.jobtitle || '',
+      description: jobData?.description || '',
+      location: jobData?.location || '',
+      salary: jobData?.salary || '',
+      openpositions: jobData?.openpositions || '',
+      experience: jobData?.experience || '',
+      employmentType: jobData?.employmentType || '',
+      hiringDeadline: jobData?.hiringDeadline ? jobData.hiringDeadline.split('T')[0] : '',
+      keyResponsibilities: Array.isArray(jobData?.keyResponsibilities)
+        ? jobData.keyResponsibilities.join('\n')
+        : (jobData?.keyResponsibilities || ''),
+      preferredQualifications: Array.isArray(jobData?.preferredQualifications)
+        ? jobData.preferredQualifications.join('\n')
+        : (jobData?.preferredQualifications || ''),
+      internalNotes: jobData?.internalNotes || '',
+      skills: jobData?.skills || [],
+      priority: (jobData?.priority && jobData.priority.length > 0) ? jobData.priority[0] : 'High',
+    });
+    setShowEditModal(true);
+  };
+
+  const handleEditChange = (e) => {
+    setEditForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+  const handleEditAddSkill = () => {
+    const trimmed = editNewSkill.trim();
+    if (trimmed && editForm && !editForm.skills.includes(trimmed)) {
+      setEditForm((prev) => ({ ...prev, skills: [...prev.skills, trimmed] }));
+      setEditNewSkill('');
+    }
+  };
+
+  const handleEditRemoveSkill = (skill) => {
+    setEditForm((prev) => ({ ...prev, skills: prev.skills.filter((s) => s !== skill) }));
+  };
+
+  const handleEditSave = async (e) => {
+    e.preventDefault();
+    if (!editForm?.jobtitle?.trim()) { toast.error('Job title is required'); return; }
+    const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+    const token = userInfo?.data?.accessToken;
+    setEditSaving(true);
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_BACKEND_URL}/api/jobs/updatejob/${jobData._id}`,
+        {
+          method: 'PUT',
+          headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            jobtitle: editForm.jobtitle,
+            description: editForm.description,
+            location: editForm.location,
+            salary: editForm.salary,
+            openpositions: editForm.openpositions,
+            experience: editForm.experience,
+            employmentType: editForm.employmentType,
+            hiringDeadline: editForm.hiringDeadline || null,
+            keyResponsibilities: editForm.keyResponsibilities.split('\n').filter(Boolean),
+            preferredQualifications: editForm.preferredQualifications.split('\n').filter(Boolean),
+            internalNotes: editForm.internalNotes,
+            skills: editForm.skills,
+            priority: [editForm.priority],
+          }),
+        }
+      );
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || 'Failed to update job');
+      toast.success('Job updated successfully');
+      setJobData(data.job);
+      setShowEditModal(false);
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setEditSaving(false);
     }
   };
 
@@ -210,7 +295,7 @@ const RecruiterJobDetailPage = () => {
                   <div className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-3 py-2 rounded-full text-sm cursor-pointer hover:shadow-md" onClick={() => setShowResumeUpload(true)}>Submit Resume</div>
                 </div>
               </div>
-              <div className="flex items-center justify-between w-full gap-2 flex-wrap mt-1">
+                <div className="flex items-center justify-between w-full gap-2 flex-wrap mt-1">
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="flex items-center gap-1 text-xs text-gray-700 font-medium">
                     <div className={`w-5 h-5 ${getCompanyAvatarColor(job.company)} text-white rounded-full flex items-center justify-center text-xs font-semibold`}>
@@ -226,7 +311,15 @@ const RecruiterJobDetailPage = () => {
                   <span className="h-5 w-px bg-gray-200 hidden md:inline-block"></span>
                   <span className="flex items-center gap-1 px-2 py-1 rounded-full bg-gray-100 text-xs font-medium text-gray-700"><CalendarDays size={16} className="text-gray-500" />Posted {job.posted}</span>
                 </div>
-                <div className="flex items-center gap-2 bg-black text-white px-3 py-2 rounded-full text-sm font-semibold hover:bg-gray-900 transition-colors cursor-pointer" onClick={() => setShowSavedResumes(true)}><Users size={18} className="text-white" />{resumeCount} Candidate List <svg xmlns='http://www.w3.org/2000/svg' className='inline ml-1' width='18' height='18' fill='none' viewBox='0 0 24 24' stroke='currentColor'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M9 5l7 7-7 7' /></svg></div>
+                <div className="flex items-center gap-2">
+                  <div
+                    className="flex items-center gap-2 border border-blue-600 text-blue-700 px-3 py-2 rounded-full text-sm font-semibold hover:bg-blue-50 transition-colors cursor-pointer"
+                    onClick={openEditModal}
+                  >
+                    <Pencil size={16} /> Edit Job
+                  </div>
+                  <div className="flex items-center gap-2 bg-black text-white px-3 py-2 rounded-full text-sm font-semibold hover:bg-gray-900 transition-colors cursor-pointer" onClick={() => setShowSavedResumes(true)}><Users size={18} className="text-white" />{resumeCount} Candidate List <svg xmlns='http://www.w3.org/2000/svg' className='inline ml-1' width='18' height='18' fill='none' viewBox='0 0 24 24' stroke='currentColor'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M9 5l7 7-7 7' /></svg></div>
+                </div>
               </div>
             </div>
             {/* Main Content Row */}
@@ -311,8 +404,147 @@ const RecruiterJobDetailPage = () => {
         </div>        
       )}
     </div>
+
+    {/* Edit Job Modal */}
+    {showEditModal && editForm && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+          {/* Modal Header */}
+          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+            <div>
+              <div className="text-xs text-blue-600 font-semibold mb-0.5">EDIT JOB</div>
+              <div className="text-xl font-bold text-gray-900">Edit Job Details</div>
+            </div>
+            <button onClick={() => setShowEditModal(false)} className="text-gray-400 hover:text-gray-700 cursor-pointer">
+              <X size={24} />
+            </button>
+          </div>
+          {/* Modal Body */}
+          <form onSubmit={handleEditSave} className="overflow-y-auto flex-1 px-6 py-5 space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Job Title <span className="text-red-500">*</span></label>
+              <input name="jobtitle" value={editForm.jobtitle} onChange={handleEditChange}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="e.g. Senior Software Engineer" />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
+                <input name="location" value={editForm.location} onChange={handleEditChange}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="e.g. London, UK" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Employment Type</label>
+                <select name="employmentType" value={editForm.employmentType} onChange={handleEditChange}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+                  <option value="">Select type</option>
+                  <option value="Full-time">Full-time</option>
+                  <option value="Part-time">Part-time</option>
+                  <option value="Contract">Contract</option>
+                  <option value="Internship">Internship</option>
+                  <option value="Freelance">Freelance</option>
+                </select>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Salary</label>
+                <input name="salary" value={editForm.salary} onChange={handleEditChange}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="e.g. £60,000 - £80,000" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Open Positions</label>
+                <input name="openpositions" value={editForm.openpositions} onChange={handleEditChange}
+                  type="number" min="1"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="e.g. 3" />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Experience Required</label>
+                <input name="experience" value={editForm.experience} onChange={handleEditChange}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="e.g. 3+ years" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+                <select name="priority" value={editForm.priority} onChange={handleEditChange}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+                  <option value="High">High</option>
+                  <option value="Medium">Medium</option>
+                  <option value="Low">Low</option>
+                </select>
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Hiring Deadline</label>
+              <input name="hiringDeadline" value={editForm.hiringDeadline} onChange={handleEditChange}
+                type="date"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+              <textarea name="description" value={editForm.description} onChange={handleEditChange}
+                rows={3} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                placeholder="Job description..." />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Key Responsibilities <span className="text-gray-400 text-xs">(one per line)</span></label>
+              <textarea name="keyResponsibilities" value={editForm.keyResponsibilities} onChange={handleEditChange}
+                rows={3} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                placeholder="Each responsibility on a new line..." />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Preferred Qualifications <span className="text-gray-400 text-xs">(one per line)</span></label>
+              <textarea name="preferredQualifications" value={editForm.preferredQualifications} onChange={handleEditChange}
+                rows={3} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                placeholder="Each qualification on a new line..." />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Skills / Tags</label>
+              <div className="flex flex-wrap gap-2 mb-2">
+                {editForm.skills.map((skill, idx) => (
+                  <span key={idx} className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1">
+                    {skill}
+                    <button type="button" className="ml-1 text-blue-400 hover:text-red-500 cursor-pointer" onClick={() => handleEditRemoveSkill(skill)}>×</button>
+                  </span>
+                ))}
+              </div>
+              <div className="flex gap-2">
+                <input type="text" value={editNewSkill} onChange={(e) => setEditNewSkill(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleEditAddSkill(); } }}
+                  className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm flex-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Add a skill..." />
+                <button type="button" onClick={handleEditAddSkill}
+                  className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded-lg text-sm border border-gray-300 cursor-pointer">Add</button>
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Internal Notes</label>
+              <textarea name="internalNotes" value={editForm.internalNotes} onChange={handleEditChange}
+                rows={2} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                placeholder="Internal notes visible only to your team..." />
+            </div>
+          </form>
+          {/* Modal Footer */}
+          <div className="px-6 py-4 border-t border-gray-200 flex justify-end gap-3">
+            <button type="button" onClick={() => setShowEditModal(false)}
+              className="px-5 py-2 rounded-xl border border-gray-300 text-gray-700 font-semibold hover:bg-gray-50 cursor-pointer">
+              Cancel
+            </button>
+            <button onClick={handleEditSave} disabled={editSaving}
+              className="px-6 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold disabled:opacity-50 cursor-pointer">
+              {editSaving ? 'Saving...' : 'Save Changes'}
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
     </div>
   );
 };
 
-export default RecruiterJobDetailPage; 
+export default RecruiterJobDetailPage;

@@ -595,9 +595,36 @@ function ${functionName}(...args) {
         );
     }
 
-    // ... (Error and Completed states remain same) ...
-    if (error) { /* ... */ }
-    if (assessment?.completed) { /* ... */ }
+    if (error) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+                <div className="bg-white p-8 rounded-xl shadow-lg max-w-md text-center">
+                    <AlertCircle className="mx-auto text-red-500 mb-4" size={48} />
+                    <h2 className="text-2xl font-bold text-gray-800 mb-2">Error Loading Assessment</h2>
+                    <p className="text-gray-600">{error}</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (assessment?.completed) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+                <div className="bg-white p-10 rounded-2xl shadow-xl max-w-md w-full text-center">
+                    <div className="flex items-center justify-center w-20 h-20 rounded-full bg-green-100 mx-auto mb-6">
+                        <CheckCircle className="text-green-500" size={44} />
+                    </div>
+                    <h2 className="text-3xl font-bold text-gray-900 mb-3">Assessment Submitted!</h2>
+                    <p className="text-gray-500 text-base mb-6">
+                        Your answers have been recorded successfully. You may now close this window.
+                    </p>
+                    <div className="bg-gray-50 rounded-xl p-4 text-sm text-gray-400 border border-gray-100">
+                        Assessment ID: <span className="font-mono text-gray-600">{assessmentId}</span>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     // Security overlays disabled for testing
 
