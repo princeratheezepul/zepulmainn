@@ -229,6 +229,28 @@ class Solution {
         return null;
     }
 }`;
+        } else if (newLang === 'cpp') {
+            newCode = `#include <iostream>
+#include <vector>
+#include <string>
+
+class Solution {
+public:
+    // Update the return type and arguments based on the problem
+    int ${functionName}(std::vector<int>& nums, int target) {
+        // Your code here
+        return 0;
+    }
+};`;
+        } else if (newLang === 'python') {
+            newCode = `def ${functionName}(nums, target):
+    \"\"\"
+    :type nums: List[int]
+    :type target: int
+    :rtype: List[int]
+    \"\"\"
+    # Your code here
+    pass`;
         } else {
             // JavaScript
             newCode = `// ${currentQuestion?.title || 'Question'}
@@ -421,13 +443,13 @@ function ${functionName}(...args) {
                 setIsRunning(false);
                 return;
 
-            } else if (currentLang === 'java') {
+            } else if (currentLang === 'java' || currentLang === 'cpp' || currentLang === 'python') {
                 const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/assessment/${assessmentId}/run`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         code: currentCode,
-                        language: 'java',
+                        language: currentLang,
                         questionIndex: currentQuestionIndex
                     })
                 });
@@ -451,7 +473,6 @@ function ${functionName}(...args) {
                         [currentQuestionIndex]: `Test Results: ${passedCount}/${data.results.length} test cases passed\n\nOutput:\n${data.output || ''}`
                     }));
                 }
-
             } else {
                 // Legacy JS Client-side execution
                 setTimeout(() => {
@@ -743,6 +764,8 @@ function ${functionName}(...args) {
                             >
                                 {assessmentType === 'avaloq' && <option value="sql">SQL</option>}
                                 <option value="java">Java</option>
+                                <option value="cpp">C++</option>
+                                <option value="python">Python</option>
                                 <option value="javascript">JavaScript</option>
                             </select>
                         </div>
