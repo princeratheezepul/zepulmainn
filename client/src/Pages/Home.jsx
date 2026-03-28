@@ -102,16 +102,16 @@ const Home = () => {
       </section>
       <div className="container h-full">
         <div className="row ">
-          <section className="frame-section">
+          {/* <section className="frame-section">
             <FrameComponent />
-          </section>
-          <section className="why-choose-zepul-section">
+          </section> */}
+          {/* <section className="why-choose-zepul-section">
             <WhyChooseZepul />
-          </section>
-          <section className="products-services-section">
+          </section> */}
+          {/* <section className="products-services-section">
             <ProductsServices />
-          </section>
-          <section className="contact-form-section" id="beyond-recruitment">
+          </section> */}
+          <section className="contact-form-section" id="beyond-recruitment" style={{ marginTop: "2rem" }}>
             <ContactForm />
           </section>
           {/* <section className="d-flex row innovation py-md-2  align-items-center">

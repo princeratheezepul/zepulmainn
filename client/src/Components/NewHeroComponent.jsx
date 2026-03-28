@@ -82,9 +82,9 @@ const NewHeroComponent = () => {
                 {/* Left — headline */}
                 <div className="foh-left">
                     <h1 className="foh-title">
-                        The <span className="foh-blue">Future Of</span>
+                        The <span className="text-[#0449FF]">Future Of</span>
                         <br />
-                        <span className="foh-blue">Recruitment</span> Is Here.
+                        <span className="text-[#0449FF]">Recruitment</span> Is Here.
                     </h1>
                 </div>
 
@@ -112,7 +112,7 @@ const NewHeroComponent = () => {
             </div>
 
             {/* Infinite Scrolling Ticker */}
-            <div className="scrolling-ticker-wrapper">
+            {/* <div className="scrolling-ticker-wrapper">
                 <div className="scrolling-ticker">
                     <div className="scrolling-ticker-track">
                         {scrollingItems.map((item, index) => (
@@ -129,7 +129,7 @@ const NewHeroComponent = () => {
                         ))}
                     </div>
                 </div>
-            </div>
+            </div> */}
         </div>
     );
 };

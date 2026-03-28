@@ -44,7 +44,7 @@ const WhyRecruitment = () => {
                 </p>
             </div>
 
-            <div className="reinvention-cards">
+            {/* <div className="reinvention-cards">
                 {reinventionData.map((item, index) => (
                     <div className="reinvention-card" key={index}>
                         <div className="card-icon">
@@ -54,7 +54,7 @@ const WhyRecruitment = () => {
                         <p className="card-description">{item.description}</p>
                     </div>
                 ))}
-            </div>
+            </div> */}
         </div>
     );
 };

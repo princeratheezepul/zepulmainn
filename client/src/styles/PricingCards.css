@@ -53,7 +53,7 @@
 
 .pc-badge--light {
     background: #dde1f5;
-    color: #3652cc;
+    color: #0449FF;
 }
 
 .pc-badge--white {
@@ -88,7 +88,7 @@
 }
 
 .pc-card--light .pc-tagline {
-    color: #5a6aaa;
+    color: #0449FF;
 }
 
 .pc-card--dark .pc-tagline {
@@ -114,7 +114,7 @@
 }
 
 .pc-card--light .pc-feature-item {
-    color: #3a54cc;
+    color: #0449FF;
 }
 
 .pc-card--dark .pc-feature-item {
