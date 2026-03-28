@@ -13,7 +13,6 @@ const CountUpStat = ({ value, label, delay }) => {
                     setHasAnimated(true);
 
                     setTimeout(() => {
-                        // Extract number from value string
                         const numbers = value.match(/\d+/g);
                         if (!numbers) {
                             setCount(value);
@@ -21,7 +20,7 @@ const CountUpStat = ({ value, label, delay }) => {
                         }
 
                         const targetNumber = parseInt(numbers[0]);
-                        const duration = 1500; // 1.5 seconds
+                        const duration = 1500;
                         const steps = 60;
                         const increment = targetNumber / steps;
                         let current = 0;
@@ -32,7 +31,6 @@ const CountUpStat = ({ value, label, delay }) => {
                                 setCount(value);
                                 clearInterval(timer);
                             } else {
-                                // Reconstruct the value with current number
                                 let displayValue = value.replace(/\d+/, Math.floor(current).toString());
                                 setCount(displayValue);
                             }
@@ -55,29 +53,9 @@ const CountUpStat = ({ value, label, delay }) => {
     }, [value, delay, hasAnimated]);
 
     return (
-        <div
-            ref={elementRef}
-            className="stat-item"
-            style={{
-                animation: hasAnimated ? 'slideInUp 0.6s ease-out' : 'none',
-                animationDelay: `${delay}ms`,
-                opacity: hasAnimated ? 1 : 0
-            }}
-        >
-            <h2
-                className="text-4xl font-bold mb-1 leading-none transition-all duration-300 hover:scale-105 transform origin-left"
-                style={{
-                    color: '#024bff',
-                    filter: hasAnimated ? 'drop-shadow(0 0 8px rgba(37, 99, 235, 0.3))' : 'none',
-                    fontFamily: 'inherit',
-                    marginTop: 0
-                }}
-            >
-                {count || value}
-            </h2>
-            <p className="stat-label">
-                {label}
-            </p>
+        <div ref={elementRef} className="foh-stat-item">
+            <span className="foh-stat-value">{count || value}</span>
+            <span className="foh-stat-label">{label}</span>
         </div>
     );
 };
@@ -92,57 +70,35 @@ const NewHeroComponent = () => {
     ];
 
     const stats = [
-        {
-            value: "3",
-            label: <>PARALLEL TALENT<br />SOURCING CHANNELS</>
-        },
-        {
-            value: "48 hours",
-            label: <>DECISION READY TALENT<br />DATA ASSURED</>
-        },
-        {
-            value: "100%",
-            label: "AI DRIVEN"
-        },
-        {
-            value: "200k",
-            label: <>ACTIVE DATABASE<br />- ZEPDB</>
-        },
-        {
-            value: "150+",
-            label: <>ACTIVE RECRUITER<br />NETWORK</>
-        }
+        { value: "3X", label: "Increase in Productivity" },
+        { value: "40%", label: "Increase in Hiring Speed" },
+        { value: "80%", label: "Improved Quality Hire" },
     ];
 
     return (
-        <div className="new-hero-container">
-            <style>{`
-                @keyframes slideInUp {
-                    from {
-                        opacity: 0;
-                        transform: translateY(30px);
-                    }
-                    to {
-                        opacity: 1;
-                        transform: translateY(0);
-                    }
-                }
-            `}</style>
-            <div className="new-hero-content">
-                <div className="new-hero-left">
-                    <h1 className="new-hero-title">
-                        The <span className="text-[#024bff]">Future Of</span>
+        <div className="foh-container">
+            {/* Main banner */}
+            <div className="foh-banner">
+                {/* Left — headline */}
+                <div className="foh-left">
+                    <h1 className="foh-title">
+                        The <span className="text-[#0449FF]">Future Of</span>
                         <br />
-                        <span className="text-[#024bff]">Recruitment</span> Is Here.
+                        <span className="text-[#0449FF]">Recruitment</span> Is Here.
                     </h1>
-                    <p className="new-hero-description">
-                        An AI-powered, full-stack Talent Acquisition operating system combining intelligent sourcing, AI-assessed evaluations, advanced analytics, and a global partner network to deliver governed, decision-ready talent at scale — powered by agile and lean execution for operational excellence, all on one unified platform.
-                    </p>
-                    <p className="new-hero-subtitle-blue">
-                        Your Trusted Talent and Technology Partner for Enterprise and GCC Success
+                </div>
+
+                {/* Right — description + stats */}
+                <div className="foh-right">
+                    <p className="foh-description">
+                        An AI-powered, full-stack Talent Acquisition operating system combining
+                        intelligent sourcing, AI-assessed evaluations, advanced analytics, and
+                        a global partner network to deliver governed, decision-ready talent at
+                        scale — powered by agile and lean execution for operational excellence,
+                        all on one unified platform.
                     </p>
 
-                    <div className="new-hero-stats">
+                    <div className="foh-stats">
                         {stats.map((stat, index) => (
                             <CountUpStat
                                 key={index}
@@ -152,31 +108,11 @@ const NewHeroComponent = () => {
                             />
                         ))}
                     </div>
-
-                    <button
-                        className="book-demo-btn"
-                        onClick={() => {
-                            const element = document.getElementById('beyond-recruitment');
-                            if (element) {
-                                element.scrollIntoView({ behavior: 'smooth' });
-                            }
-                        }}
-                    >
-                        Book a Demo <span className="arrow">→</span>
-                    </button>
-                </div>
-
-                <div className="new-hero-right">
-                    <img
-                        src="/Rectangle 161123822(2).png"
-                        alt="Future of Recruitment"
-                        className="hero-image"
-                    />
                 </div>
             </div>
 
             {/* Infinite Scrolling Ticker */}
-            <div className="scrolling-ticker-wrapper">
+            {/* <div className="scrolling-ticker-wrapper">
                 <div className="scrolling-ticker">
                     <div className="scrolling-ticker-track">
                         {scrollingItems.map((item, index) => (
@@ -193,7 +129,7 @@ const NewHeroComponent = () => {
                         ))}
                     </div>
                 </div>
-            </div>
+            </div> */}
         </div>
     );
 };

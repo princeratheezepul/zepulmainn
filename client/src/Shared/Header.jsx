@@ -41,19 +41,24 @@ const Header = () => {
               <div className="attr-nav">
                 <div className="dropdown">
                   <button
-                    className="btn btn-secondary w-[8rem]"
+                    className="btn"
                     type="button"
                     id="loginDropdown"
                     style={{
-                      backgroundColor: location.pathname === "/about" ? "white" : "black",
-                      color: location.pathname === "/about" ? "black" : "white",
-                      borderRadius: "0",
-                      transition: "all 0.3s ease",
-                      border: "none"
+                      backgroundColor: "black",
+                      color: "white",
+                      borderRadius: "6px",
+                      border: "none",
+                      padding: "0.55rem 1.4rem",
+                      fontFamily: "'DM Sans', system-ui, sans-serif",
+                      fontWeight: 500,
+                      fontSize: "0.95rem",
+                      letterSpacing: "0.01em",
+                      whiteSpace: "nowrap",
                     }}
                     onClick={handleTryZepulClick}
                   >
-                    Sign In
+                    Book a Demo →
                   </button>
                 </div>
               </div>
