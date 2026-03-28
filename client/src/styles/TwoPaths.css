@@ -1,0 +1,175 @@
+/* =============================================
+   Two Paths Cards Section
+   ============================================= */
+
+.two-paths-section {
+    width: 100%;
+    background: #ffffff;
+    padding: 2rem 1.25rem 4rem;
+}
+
+.two-paths-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* ---- Base card ---- */
+.tp-card {
+    border-radius: 20px;
+    padding: 2.5rem 2.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+/* Light card */
+.tp-card--light {
+    background: #f9f9fb;
+    border: 1px solid #e4e4e9;
+}
+
+/* Dark card */
+.tp-card--dark {
+    background: #0b1437;
+    border: 1px solid #1a2550;
+}
+
+/* ---- Pill badges ---- */
+.tp-pill {
+    display: inline-block;
+    font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 0.4rem 1rem;
+    border-radius: 999px;
+    width: fit-content;
+}
+
+.tp-pill--light {
+    background: #dfe3f8;
+    color: #3652cc;
+}
+
+.tp-pill--dark {
+    background: #ffffff;
+    color: #111111;
+}
+
+/* ---- Headings ---- */
+.tp-heading {
+    font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+    font-size: clamp(1.6rem, 2.5vw, 2rem);
+    font-weight: 700;
+    line-height: 1.1;
+    margin: 0.25rem 0 0;
+}
+
+.tp-heading--blue {
+    color: #2563eb;
+}
+
+.tp-heading--white {
+    color: #ffffff;
+}
+
+/* ---- Taglines ---- */
+.tp-tagline {
+    font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+    font-size: 0.95rem;
+    font-weight: 400;
+    color: #333333;
+    margin: 0;
+    line-height: 1.4;
+}
+
+.tp-tagline--white {
+    color: #c8d0e8;
+}
+
+/* ---- Body text ---- */
+.tp-body {
+    font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+    font-size: 0.92rem;
+    font-weight: 400;
+    color: #444444;
+    line-height: 1.65;
+    margin: 0.25rem 0 0.75rem;
+    flex: 1;
+}
+
+.tp-body--white {
+    color: #d0d8ef;
+}
+
+/* ---- Buttons ---- */
+.tp-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.85rem 1.75rem;
+    font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+    font-size: 0.95rem;
+    font-weight: 600;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    width: fit-content;
+    margin-top: auto;
+}
+
+.tp-btn:hover {
+    opacity: 0.88;
+    transform: translateY(-1px);
+}
+
+.tp-btn--dark {
+    background: #111111;
+    color: #ffffff;
+}
+
+.tp-btn--blue {
+    background: #2563eb;
+    color: #ffffff;
+}
+
+/* =============================================
+   Responsive
+   ============================================= */
+
+/* Tablet */
+@media (max-width: 900px) {
+    .two-paths-grid {
+        gap: 1rem;
+    }
+
+    .tp-card {
+        padding: 2rem 1.75rem;
+    }
+}
+
+/* Mobile — stack vertically */
+@media (max-width: 700px) {
+    .two-paths-section {
+        padding: 1.5rem 1rem 3rem;
+    }
+
+    .two-paths-grid {
+        grid-template-columns: 1fr;
+        gap: 1.25rem;
+    }
+
+    .tp-heading {
+        font-size: 1.6rem;
+    }
+
+    .tp-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}

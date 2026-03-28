@@ -1,0 +1,147 @@
+/* =============================================
+   Pricing Cards Section
+   ============================================= */
+
+.pc-wrapper {
+    width: 100%;
+    background: #eef0f8;
+    padding: 0 1.5rem 4rem;
+}
+
+.pc-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.25rem;
+    max-width: 1100px;
+    margin: 0 auto;
+    align-items: stretch;
+}
+
+/* ---- Base card ---- */
+.pc-card {
+    border-radius: 20px;
+    padding: 2.25rem 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+}
+
+/* Light variant */
+.pc-card--light {
+    background: #ffffff;
+    border: 1px solid #e4e4ee;
+}
+
+/* Dark variant */
+.pc-card--dark {
+    background: #0b1437;
+    border: 1px solid #1a2550;
+}
+
+/* ---- Badge pills ---- */
+.pc-badge {
+    display: inline-block;
+    font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 0.4rem 1rem;
+    border-radius: 999px;
+    width: fit-content;
+}
+
+.pc-badge--light {
+    background: #dde1f5;
+    color: #3652cc;
+}
+
+.pc-badge--white {
+    background: #ffffff;
+    color: #111111;
+}
+
+/* ---- Name / heading ---- */
+.pc-name {
+    font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+    font-size: 1.7rem;
+    font-weight: 700;
+    line-height: 1.1;
+    margin: 0.25rem 0 0;
+}
+
+.pc-card--light .pc-name {
+    color: #0d0f1a;
+}
+
+.pc-card--dark .pc-name {
+    color: #ffffff;
+}
+
+/* ---- Tagline ---- */
+.pc-tagline {
+    font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+    font-size: 0.9rem;
+    font-weight: 400;
+    margin: 0;
+    line-height: 1.4;
+}
+
+.pc-card--light .pc-tagline {
+    color: #5a6aaa;
+}
+
+.pc-card--dark .pc-tagline {
+    color: #a0b0d8;
+}
+
+/* ---- Feature list ---- */
+.pc-features {
+    list-style: none;
+    padding: 0;
+    margin: 0.5rem 0 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.pc-feature-item {
+    font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+    font-size: 0.88rem;
+    font-weight: 400;
+    line-height: 1.45;
+    padding-left: 1.25rem;
+}
+
+.pc-card--light .pc-feature-item {
+    color: #3a54cc;
+}
+
+.pc-card--dark .pc-feature-item {
+    color: #d0d8f0;
+}
+
+/* =============================================
+   Responsive — vertical on mobile
+   ============================================= */
+@media (max-width: 900px) {
+    .pc-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+        max-width: 500px;
+    }
+
+    .pc-wrapper {
+        padding: 0 1rem 3rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .pc-card {
+        padding: 1.75rem 1.5rem;
+    }
+
+    .pc-name {
+        font-size: 1.45rem;
+    }
+}
