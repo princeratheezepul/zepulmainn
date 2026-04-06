@@ -11,15 +11,15 @@
 .two-paths-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 1.5rem;
-    max-width: 1200px;
+    gap: 3rem;
+    max-width: 900px;
     margin: 0 auto;
 }
 
 /* ---- Base card ---- */
 .tp-card {
     border-radius: 20px;
-    padding: 2.5rem 2.25rem;
+    padding: 3rem 2.25rem;
     display: flex;
     flex-direction: column;
     gap: 1rem;
@@ -33,8 +33,8 @@
 
 /* Dark card */
 .tp-card--dark {
-    background: #0b1437;
-    border: 1px solid #1a2550;
+    background: #e8e8e8;
+    border: 1px solid #d5d9ec;
 }
 
 /* ---- Pill badges ---- */
@@ -56,8 +56,8 @@
 }
 
 .tp-pill--dark {
-    background: #ffffff;
-    color: #111111;
+    background: #0f172a;
+    color: #ffffff;
 }
 
 /* ---- Headings ---- */
@@ -73,8 +73,8 @@
     color: #0449FF;
 }
 
-.tp-heading--white {
-    color: #ffffff;
+.tp-card--dark .tp-heading--white {
+    color: #0d0f1a;
 }
 
 /* ---- Taglines ---- */
@@ -87,8 +87,8 @@
     line-height: 1.4;
 }
 
-.tp-tagline--white {
-    color: #c8d0e8;
+.tp-card--dark .tp-tagline--white {
+    color: #0449FF;
 }
 
 /* ---- Body text ---- */
@@ -102,8 +102,8 @@
     flex: 1;
 }
 
-.tp-body--white {
-    color: #d0d8ef;
+.tp-card--dark .tp-body--white {
+    color: #444444;
 }
 
 /* ---- Buttons ---- */
@@ -145,7 +145,7 @@
 /* Tablet */
 @media (max-width: 900px) {
     .two-paths-grid {
-        gap: 1rem;
+        gap: 1.5rem;
     }
 
     .tp-card {

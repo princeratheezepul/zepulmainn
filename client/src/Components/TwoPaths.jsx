@@ -15,7 +15,7 @@ const TwoPaths = () => {
 
                 {/* Card 1 — Zepul Recruiter (Light) */}
                 <div className="tp-card tp-card--light">
-                    <span className="tp-pill tp-pill--light">ZEPUL RECRUITER</span>
+                    <span className="tp-pill tp-pill--light">ZEP RECRUIT</span>
                     <h2 className="tp-heading tp-heading--blue">AI Recruiting Service</h2>
                     <p className="tp-tagline">AI + experts, augmenting your recruiting team</p>
                     <p className="tp-body">
