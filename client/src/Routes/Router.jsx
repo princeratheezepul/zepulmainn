@@ -81,6 +81,7 @@ import InterviewResults from "../Pages/InterviewResults";
 
 
 const Home = lazy(() => import("../Pages/Home"));
+const LandingPage = lazy(() => import("../Pages/LandingPage"));
 const Companies = lazy(() => import("../Pages/Companies"));
 const Recruitement = lazy(() => import("../Pages/Recruitement"));
 const JobsSeeker = lazy(() => import("../Pages/JobsSeeker"));
@@ -137,9 +138,14 @@ const Router = () => {
             }}
           />
           <Routes>
+            {/* Standalone Landing Page — has its own Nav & Footer */}
+            <Route path="/" element={<LandingPage />} />
+
             {/* Public routes with Header and Footer */}
-            <Route path="/" element={<PublicLayout />}>
+            <Route path="/old-home" element={<PublicLayout />}>
               <Route index element={<Home />} />
+            </Route>
+            <Route path="/" element={<PublicLayout />}>
               <Route path="zepTalentHub" element={<TalentHub />} />
               <Route path="zeprecruit" element={<ZepRecruit />} />
               <Route path="companies" element={<Companies />} />
