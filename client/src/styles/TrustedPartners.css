@@ -5,7 +5,7 @@
 .tp-wrapper {
     width: 100%;
     background: #eef0f8;
-    padding: 4rem 2rem 3rem;
+    padding: 4rem 2rem 1.5rem;
     text-align: center;
     overflow: hidden;
 }
@@ -18,18 +18,28 @@
     color: #0449FF;
     line-height: 1.25;
     letter-spacing: -0.02em;
-    margin: 0 0 3rem;
+    margin: 0 0 1.5rem;
 }
 
-/* ---- Static company names row ---- */
+/* ---- Scrolling marquee ---- */
 .tp-companies-row {
+    width: 100%;
+    overflow: hidden;
+    display: flex;
+    padding-top: 0.5rem;
+}
+
+.tp-companies-track {
     display: flex;
     align-items: center;
-    justify-content: center;
-    flex-wrap: wrap;
     gap: 0;
-    border-top: 1px solid #d5d9ec;
-    padding-top: 1.75rem;
+    width: max-content;
+    animation: tp-scroll 45s linear infinite;
+}
+
+@keyframes tp-scroll {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
 }
 
 .tp-company {

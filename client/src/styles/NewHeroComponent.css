@@ -12,9 +12,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 3rem;
-  padding: 3rem 0.5rem;
-  border-bottom: 1px solid #e5e7eb;
+  gap: 8rem;
+  padding: 3rem 0;
   max-width: 1400px;
   margin: 0 auto;
   box-sizing: border-box;
@@ -23,11 +22,11 @@
 /* ---- Left column — headline ---- */
 .foh-left {
   flex: 0 0 auto;
-  width: 48%;
+  width: 38%;
 }
 
 .foh-title {
-  font-size: 76px;
+  font-size: 58px;
   font-weight: 500;
   color: #111111;
   line-height: 0.90;
@@ -49,7 +48,9 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 3.5rem;
+  margin-left: auto;
+  max-width: 520px;
+  gap: 1.5rem;
 }
 
 .foh-description {
@@ -60,8 +61,7 @@
   line-height: 1.10;
   letter-spacing: -0.02em;
   color: rgba(0, 0, 0, 0.80);
-  margin: 0;
-  max-width: 520px;
+  margin: 2.5rem 0 0 0;
 }
 
 /* ---- Stats row ---- */
@@ -159,12 +159,12 @@
 /* Tablet (768px – 1024px) */
 @media (max-width: 1024px) {
   .foh-banner {
-    padding: 2.5rem 3rem;
-    gap: 2rem;
+    padding: 2.5rem 1.5rem;
+    gap: 6rem;
   }
 
   .foh-left {
-    width: 45%;
+    width: 38%;
   }
 
   .foh-stats {
@@ -177,7 +177,7 @@
   .foh-banner {
     flex-direction: column;
     align-items: flex-start;
-    padding: 2.5rem 1.5rem;
+    padding: 2.5rem 0.75rem;
     gap: 2rem;
     border-bottom: none;
   }
@@ -187,18 +187,21 @@
   }
 
   .foh-title {
-    font-size: clamp(2.2rem, 10vw, 48px);
+    font-size: clamp(1.8rem, 8vw, 40px);
     line-height: 0.90;
   }
 
   .foh-right {
     width: 100%;
+    margin-left: 0;
+    max-width: 100%;
     gap: 2rem;
   }
 
   .foh-description {
     font-size: 0.9rem;
     max-width: 100%;
+    margin-top: 0;
   }
 
   .foh-stats {
@@ -231,7 +234,7 @@
 /* Small mobile (<= 480px) */
 @media (max-width: 480px) {
   .foh-banner {
-    padding: 2rem 1.25rem;
+    padding: 2rem 0.5rem;
   }
 
   .foh-title {
