@@ -39,7 +39,7 @@ const LandingNav = () => {
         <nav className="lp-nav" ref={navRef}>
             <div className="lp-logo">
                 <Link to="/">
-                    <img src="/assets/zepul-logo.png" alt="Zepul" onError={e => { e.target.style.display = 'none'; e.target.insertAdjacentHTML('afterend', '<span style="font-family:Lora,serif;font-size:20px;font-weight:700;color:#0C0E16;letter-spacing:-.02em;">Zepul</span>'); }} />
+                    <img src="/assets/logo.png" alt="Zepul" />
                 </Link>
             </div>
 
@@ -47,7 +47,6 @@ const LandingNav = () => {
                 <Link to="/zeprecruit" className="lp-nl">Zep Recruit</Link>
                 <Link to="/prorecruitor" className="lp-nl">Zep Pro Recruiter</Link>
                 <button className="lp-nl">Zep Jobs</button>
-                <Link to="/zepConsult" className="lp-nl">Zep Consult</Link>
                 <button className="lp-nl">Pricing</button>
                 <Link to="/about" className="lp-nl">About</Link>
             </div>

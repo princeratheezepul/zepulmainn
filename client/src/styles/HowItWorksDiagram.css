@@ -5,11 +5,12 @@
     margin: 0;
     display: flex;
     justify-content: center;
+    overflow-x: hidden;
 }
 
 .how-it-works-image {
-    width: 100%;
-    max-width: 1100px;
+    width: 70%;
+    max-width: 800px;
     height: auto;
     object-fit: contain;
 }
@@ -19,10 +20,21 @@
     .how-it-works-diagram-container {
         padding: 2rem 3rem 4rem;
     }
+
+    .how-it-works-image {
+        max-width: 680px;
+    }
 }
 
 @media (max-width: 768px) {
     .how-it-works-diagram-container {
         padding: 1rem 1.5rem 3rem;
+        overflow-x: auto;
+    }
+
+    .how-it-works-image {
+        max-width: none;
+        min-width: 600px;
+        width: 600px;
     }
 }

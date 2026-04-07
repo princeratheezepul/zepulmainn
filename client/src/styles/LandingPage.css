@@ -813,12 +813,20 @@
 
 .lp-sc-scroll-wrapper {
   width: 100%;
-  overflow-x: auto;
+  overflow-x: hidden;
   overflow-y: visible;
   padding-bottom: 24px;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(2, 75, 255, .3) transparent;
-  -webkit-overflow-scrolling: touch;
+  display: flex;
+  justify-content: center;
+}
+
+@media (max-width: 768px) {
+  .lp-sc-scroll-wrapper {
+    overflow-x: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(2, 75, 255, .3) transparent;
+    -webkit-overflow-scrolling: touch;
+  }
 }
 
 .lp-sc-scroll-wrapper::-webkit-scrollbar {
@@ -841,6 +849,30 @@
   min-width: 1180px;
   gap: 0;
   padding-bottom: 16px;
+}
+
+@media (min-width: 1251px) {
+  .lp-sc-flow {
+    zoom: 0.7;
+    width: fit-content;
+    margin: 0 auto;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1250px) {
+  .lp-sc-flow {
+    zoom: 0.58;
+    width: fit-content;
+    margin: 0 auto;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 960px) {
+  .lp-sc-flow {
+    zoom: 0.46;
+    width: fit-content;
+    margin: 0 auto;
+  }
 }
 
 .lp-sc-inputs {
@@ -1726,6 +1758,34 @@
   width: 13px;
   height: 13px;
   color: var(--lp-muted);
+}
+
+
+/* ── VERTICAL GAP REDUCTIONS FOR SCREENS LARGER THAN MOBILE ── */
+@media (min-width: 769px) {
+  .lp-why.lp-section-pad {
+    padding-top: 32px;
+    padding-bottom: 32px;
+  }
+
+  .lp-system-canvas {
+    padding-top: 32px;
+    padding-bottom: 32px;
+  }
+
+  .lp-paths.lp-section-pad {
+    padding-top: 32px;
+    padding-bottom: 32px;
+  }
+
+  .lp-paths-canvas {
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+
+  .lp-engage.lp-section-pad {
+    padding-top: 32px;
+  }
 }
 
 /* ── TABLET / SMALL LAPTOP (≤ 900px) ── */

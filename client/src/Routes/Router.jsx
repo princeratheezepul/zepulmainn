@@ -108,6 +108,7 @@ const CandidateAssessmentPage = lazy(() => import("../Pages/CandidateAssessmentP
 const ZepConsult = lazy(() => import("../Pages/ZepConsult"));
 const About = lazy(() => import("../Pages/About"));
 const ContactPage = lazy(() => import("../Pages/ContactPage"));
+const ZepJobs = lazy(() => import("../Pages/ZepJobs"));
 
 const Router = () => {
   return (
@@ -140,6 +141,8 @@ const Router = () => {
           <Routes>
             {/* Standalone Landing Page — has its own Nav & Footer */}
             <Route path="/" element={<LandingPage />} />
+            {/* Standalone ZepJobs Page */}
+            <Route path="/zepJobs" element={<ZepJobs />} />
 
             {/* Public routes with Header and Footer */}
             <Route path="/old-home" element={<PublicLayout />}>
