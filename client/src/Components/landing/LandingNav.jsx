@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
 
 const LandingNav = () => {
     const navRef = useRef(null);
@@ -37,16 +38,18 @@ const LandingNav = () => {
     return (
         <nav className="lp-nav" ref={navRef}>
             <div className="lp-logo">
-                <img src="/assets/zepul-logo.png" alt="Zepul" onError={e => { e.target.style.display = 'none'; e.target.insertAdjacentHTML('afterend', '<span style="font-family:Lora,serif;font-size:20px;font-weight:700;color:#0C0E16;letter-spacing:-.02em;">Zepul</span>'); }} />
+                <Link to="/">
+                    <img src="/assets/zepul-logo.png" alt="Zepul" onError={e => { e.target.style.display = 'none'; e.target.insertAdjacentHTML('afterend', '<span style="font-family:Lora,serif;font-size:20px;font-weight:700;color:#0C0E16;letter-spacing:-.02em;">Zepul</span>'); }} />
+                </Link>
             </div>
 
             <div className="lp-nav-links">
-                <button className="lp-nl">Zep Recruit</button>
-                <button className="lp-nl">Zep Pro Recruiter</button>
+                <Link to="/zeprecruit" className="lp-nl">Zep Recruit</Link>
+                <Link to="/prorecruitor" className="lp-nl">Zep Pro Recruiter</Link>
                 <button className="lp-nl">Zep Jobs</button>
-                <button className="lp-nl">Zep Consult</button>
+                <Link to="/zepConsult" className="lp-nl">Zep Consult</Link>
                 <button className="lp-nl">Pricing</button>
-                <button className="lp-nl">About</button>
+                <Link to="/about" className="lp-nl">About</Link>
             </div>
 
             <div className="lp-nav-right">

@@ -215,10 +215,8 @@ const Router = () => {
               </MarketplaceAuthProvider>
             } />
 
-            {/* Fallback route with Header and Footer */}
-            <Route path="*" element={<PublicLayout />}>
-              <Route path="*" element={<Home />} />
-            </Route>
+            {/* Fallback route — redirect unknown paths to the Landing Page */}
+            <Route path="*" element={<Navigate to="/" replace />} />
 
             {/* Unified Login Route - No Header/Footer */}
             <Route path="/login" element={<UnifiedLogin />} />

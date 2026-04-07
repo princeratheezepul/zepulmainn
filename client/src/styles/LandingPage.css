@@ -3,11 +3,16 @@
 
 @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=Lora:wght@400;500;600;700&display=swap');
 
-.lp-root *,
-.lp-root *::before,
-.lp-root *::after {
+.lp-root *:not(.footer-container):not(.footer-container *),
+.lp-root *::before:not(.footer-container *),
+.lp-root *::after:not(.footer-container *) {
   margin: 0;
   padding: 0;
+  box-sizing: border-box;
+}
+
+/* Explicitly ensure footer container respects its own padding if reset still interferes */
+.lp-root .footer-container {
   box-sizing: border-box;
 }
 
@@ -94,6 +99,8 @@
   white-space: nowrap;
   font-family: 'DM Sans', sans-serif;
   transition: color .15s, background .15s;
+  text-decoration: none;
+  display: inline-block;
 }
 
 .lp-nl:hover {
@@ -1981,5 +1988,22 @@
   .lp-why-card:nth-child(1),
   .lp-why-card:nth-child(2) {
     border-bottom: none;
+  }
+}
+
+/* FINAL OVERRIDE: Restore Footer Padding specifically for Landing Page */
+.lp-root .footer-container {
+  padding: 4.5rem 4rem 2.5rem 6.5rem !important;
+}
+
+@media (max-width: 1200px) {
+  .lp-root .footer-container {
+    padding: 3.5rem 2.5rem 2rem 4rem !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .lp-root .footer-container {
+    padding: 2.5rem 1.5rem 1.5rem 2rem !important;
   }
 }
