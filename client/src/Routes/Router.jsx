@@ -109,6 +109,7 @@ const ZepConsult = lazy(() => import("../Pages/ZepConsult"));
 const About = lazy(() => import("../Pages/About"));
 const ContactPage = lazy(() => import("../Pages/ContactPage"));
 const ZepJobs = lazy(() => import("../Pages/ZepJobs"));
+const Pricing = lazy(() => import("../Pages/Pricing"));
 
 const Router = () => {
   return (
@@ -143,6 +144,10 @@ const Router = () => {
             <Route path="/" element={<LandingPage />} />
             {/* Standalone ZepJobs Page */}
             <Route path="/zepJobs" element={<ZepJobs />} />
+            {/* Standalone ZepConsult Page */}
+            <Route path="/zepConsult" element={<ZepConsult />} />
+            {/* Standalone Pricing Page */}
+            <Route path="/pricing" element={<Pricing />} />
 
             {/* Public routes with Header and Footer */}
             <Route path="/old-home" element={<PublicLayout />}>
@@ -160,7 +165,7 @@ const Router = () => {
               <Route path="prorecruitor" element={<ProRecruitor />} />
               <Route path="careers" element={<Careers />} />
               <Route path="careers/job/:jobId" element={<CareerJobDetails />} />
-              <Route path="zepConsult" element={<ZepConsult />} />
+              {/* zepConsult moved to standalone route above */}
               <Route path="about" element={<About />} />
               <Route path="contact" element={<ContactPage />} />
             </Route>
