@@ -77,6 +77,7 @@ import MarketplaceSignup from "../Pages/MarketplaceSignup";
 import MarketplaceUnifiedLogin from "../Pages/MarketplaceUnifiedLogin";
 import Meeting from "../Pages/Meeting";
 import InterviewResults from "../Pages/InterviewResults";
+import DescribeJob from "../Pages/DescribeJob";
 
 
 
@@ -222,6 +223,8 @@ const Router = () => {
 
             {/* AI Interview Meeting - Public Route */}
             <Route path="/meeting/:token" element={<Meeting />} />
+            {/* Oral Job Description Creator - Public Route */}
+            <Route path="/describeJob" element={<DescribeJob />} />
             {/* Interview Results Dashboard - Recruiter Route */}
             <Route path="/recruiter/interview-results/:meetingId" element={
               <ProtectedRoute>
