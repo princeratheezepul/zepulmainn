@@ -8,6 +8,7 @@ import ZepConsultStats from '../Components/ZepConsultStats';
 import ZepConsultServe from '../Components/ZepConsultServe';
 import ZepConsultContact from '../Components/ZepConsultContact';
 import '../styles/LandingPage.css';
+import LandingBeyondCTA from '../Components/landing/LandingBeyondCTA';
 
 const ZepConsult = () => {
     return (
@@ -19,7 +20,8 @@ const ZepConsult = () => {
             <ZepConsultServices />
             <ZepConsultStats />
             <ZepConsultServe />
-            <ZepConsultContact />
+            {/* <ZepConsultContact /> */}
+            <LandingBeyondCTA />
         </div>
     );
 };
