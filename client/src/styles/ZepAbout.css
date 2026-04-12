@@ -364,6 +364,8 @@
 .zep-about-page .team-track-wrap {
   position: relative;
   overflow: hidden;
+  max-width: 760px;
+  margin: 0 auto;
 }
 
 .zep-about-page .team-track {
@@ -545,7 +547,7 @@
 .zep-about-page .os-section {
   background: #fff;
   border-bottom: 1px solid var(--rule);
-  padding: 120px 24px;
+  padding: 80px 24px;
   display: flex;
   gap: 80px;
   justify-content: center;
@@ -571,7 +573,7 @@
   max-width: 620px;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 14px;
 }
 
 .zep-about-page .os-section-content p {
