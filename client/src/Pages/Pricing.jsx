@@ -228,6 +228,110 @@ const Pricing = () => {
                 </div>
             </section>
 
+            {/* ── JOBSEEKER HERO & PLANS ── */}
+            <section className="pr-new-hero pr-jobseeker-section pr-reveal">
+                <div className="pr-new-hero-left">
+                    <div className="pr-new-hero-badge">FOR JOBSEEKERS &amp; RECRUITERS</div>
+                    <h1 className="pr-new-hero-title">
+                        AI agents that<br />
+                        accelerate your<br />
+                        growth at no cost
+                    </h1>
+                </div>
+
+                <div className="pr-new-hero-right">
+                    {/* ZEP JOBS CARD */}
+                    <div className="pr-new-card pr-js-card">
+                        <div className="pr-new-card-badge">AGENTIC JOB PORTAL</div>
+                        <h2 className="pr-new-card-title">Zep Jobs</h2>
+                        <p className="pr-new-card-desc">AI agentic job portal where Talent Meets Opportunity</p>
+
+                        <div className="pr-new-card-price-wrap">
+                            <span className="pr-new-card-currency">$</span>
+                            <span className="pr-new-card-price">0</span>
+                            <span className="pr-new-card-mo">/mo</span>
+                        </div>
+                        <p className="pr-new-card-billed">Lifetime Free</p>
+
+                        <div className="pr-new-card-features">
+                            <div className="pr-new-feature">
+                                <span className="pr-new-check faint-blue"><CheckIcon /></span>
+                                Agent to understand your aspirations
+                            </div>
+                            <div className="pr-new-feature">
+                                <span className="pr-new-check faint-blue"><CheckIcon /></span>
+                                AI Based Job Matching
+                            </div>
+                            <div className="pr-new-feature">
+                                <span className="pr-new-check faint-blue"><CheckIcon /></span>
+                                Access to Global Opportunities
+                            </div>
+                            <div className="pr-new-feature">
+                                <span className="pr-new-check faint-blue"><CheckIcon /></span>
+                                Free AI based Upskill and Interview Prep Help
+                            </div>
+                            <div className="pr-new-feature">
+                                <span className="pr-new-check faint-blue"><CheckIcon /></span>
+                                Direct Connection to Decision makers
+                            </div>
+                            <div className="pr-new-feature">
+                                <span className="pr-new-check faint-blue"><CheckIcon /></span>
+                                ZepDB access (read only)
+                            </div>
+                        </div>
+
+                        <a href="#" className="pr-new-btn ghost-btn">
+                            Talk to Our AI Agent <ArrowIcon />
+                        </a>
+                    </div>
+
+                    {/* ZEP ON DEMAND CARD */}
+                    <div className="pr-new-card pr-js-card">
+                        <div className="pr-new-card-badge">RECRUITMENT PARTNER</div>
+                        <h2 className="pr-new-card-title">Zep On Demand</h2>
+                        <p className="pr-new-card-desc">Opportunity for anyone to become Global Recruiter and access our AI tools and Business</p>
+
+                        <div className="pr-new-card-price-wrap">
+                            <span className="pr-new-card-currency">$</span>
+                            <span className="pr-new-card-price">0</span>
+                            <span className="pr-new-card-mo">/mo</span>
+                        </div>
+                        <p className="pr-new-card-billed">Conditional Free</p>
+
+                        <div className="pr-new-card-features">
+                            <div className="pr-new-feature">
+                                <span className="pr-new-check faint-blue"><CheckIcon /></span>
+                                Access to fullstack AI hiring platform
+                            </div>
+                            <div className="pr-new-feature">
+                                <span className="pr-new-check faint-blue"><CheckIcon /></span>
+                                Access to Global Business
+                            </div>
+                            <div className="pr-new-feature">
+                                <span className="pr-new-check faint-blue"><CheckIcon /></span>
+                                Access to Global job Market Intelligence
+                            </div>
+                            <div className="pr-new-feature">
+                                <span className="pr-new-check faint-blue"><CheckIcon /></span>
+                                Access to Market &amp; Candidate Specific Benchmarking
+                            </div>
+                            <div className="pr-new-feature">
+                                <span className="pr-new-check faint-blue"><CheckIcon /></span>
+                                Access to Intelligent Dashboards
+                            </div>
+                            <div className="pr-new-feature">
+                                <span className="pr-new-check faint-blue"><CheckIcon /></span>
+                                Opportunity to Outsmart agencies
+                            </div>
+                        </div>
+
+                        <a href="#" className="pr-new-btn ghost-btn">
+                            Start Free Trial <ArrowIcon />
+                        </a>
+                    </div>
+                </div>
+            </section>
+
             {/* ── COMPARE TABLE ── */}
             <section className="pr-compare">
                 <div className="pr-compare-header pr-reveal">

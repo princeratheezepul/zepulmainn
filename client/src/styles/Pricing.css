@@ -231,6 +231,39 @@
     flex-direction: column;
 }
 
+/* Jobseekers Section Extensions */
+.pr-jobseeker-section {
+    border-top: 1px solid var(--pr-rule);
+    margin-top: 0;
+    margin-bottom: 60px;
+}
+
+.pr-js-card {
+    background: #ffffff;
+    border: 1px solid var(--pr-rule);
+}
+
+.pr-js-card .pr-new-card-badge {
+    background: #f4f6fa;
+    color: var(--pr-muted);
+}
+
+.pr-new-check.faint-blue {
+    background: #edf2ff;
+    color: var(--pr-blue);
+}
+
+.pr-new-btn.ghost-btn {
+    background: #ffffff;
+    color: var(--pr-ink);
+    border: 1px solid var(--pr-rule);
+}
+
+.pr-new-btn.ghost-btn:hover {
+    border-color: var(--pr-muted);
+    background: #f4f6fa;
+}
+
 .pr-new-card-badge {
     background: #ffffff;
     color: var(--pr-ink);
