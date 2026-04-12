@@ -334,8 +334,8 @@
 
 /* ── PARTNERS / TEAM ── */
 .zep-about-page .partners {
-  background: var(--ink);
-  border-bottom: 1px solid rgba(255, 255, 255, .07);
+  background: #FFFFFF;
+  border-bottom: 1px solid var(--rule);
   padding: 100px 52px;
   overflow: hidden;
 }
@@ -349,7 +349,7 @@
   font-family: 'Lora', serif;
   font-size: clamp(28px, 4vw, 52px);
   font-weight: 400;
-  color: #fff;
+  color: var(--ink);
   letter-spacing: -.025em;
   line-height: 1.2;
   margin-bottom: 0;
@@ -357,7 +357,7 @@
 
 .zep-about-page .partners-header h2 em {
   font-style: italic;
-  color: rgba(255, 255, 255, .45);
+  color: var(--blue);
 }
 
 /* Team carousel */
@@ -498,19 +498,19 @@
   width: 42px;
   height: 42px;
   border-radius: 50%;
-  border: 1px solid rgba(255, 255, 255, .15);
+  border: 1px solid rgba(0, 0, 0, .15);
   background: transparent;
   cursor: pointer;
   display: grid;
   place-items: center;
   transition: all .2s ease;
-  color: rgba(255, 255, 255, .6);
+  color: var(--ink);
 }
 
 .zep-about-page .team-nav-btn:hover {
   border-color: var(--blue);
   background: rgba(2, 75, 255, .15);
-  color: #fff;
+  color: var(--blue);
 }
 
 .zep-about-page .team-nav-btn svg {
@@ -530,7 +530,7 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, .2);
+  background: rgba(0, 0, 0, .2);
   cursor: pointer;
   transition: all .2s ease;
 }
