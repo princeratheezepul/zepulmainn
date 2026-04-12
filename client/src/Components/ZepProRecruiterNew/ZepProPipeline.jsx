@@ -5,17 +5,30 @@ const ZepProPipeline = () => {
   return (
     <div id="ZepProPipeline-root" className="zep-pro-recruiter-page">
       <section className="zrw">
-        <div className="zrw-header reveal">
-          <h2 className="section-head">How <span className="blue">Zep Pro Recruiter</span> Works</h2>
-          <p className="section-sub">One platform. Endless possibilities. From requisition to onboarding, Zepul brings the entire talent acquisition lifecycle under one roof — multichannel sourcing, AI-driven screening and interviews, integrated coding assessments, and decision-ready talent scorecards supported by performance insights, market intelligence, and hundreds of recruitment partners worldwide.</p>
+        <div className="zrw-header reveal" style={{ padding: '0 52px', marginBottom: '40px' }}>
+          <h2 className="section-head" style={{ textAlign: 'left', width: '100%' }}>How <span className="blue">Zep Pro Recruiter</span>Works</h2>
+          <div className="zrw-subtitle-row reveal" style={{
+            fontFamily: "'Lora', serif",
+            fontWeight: 400,
+            fontSize: '32px',
+            lineHeight: '100%',
+            letterSpacing: '-1.25px',
+            color: '#0C0E16',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '12px',
+            marginTop: '20px',
+            width: '100%',
+            textAlign: 'center'
+          }}>
+            <span style={{ color: '#024BFF', fontSize: '24px', fontWeight: 800 }}>&raquo;</span>
+            <span>Global talent and recruiter network, without boundaries.</span>
+            <span style={{ color: '#024BFF', fontSize: '24px', fontWeight: 800 }}>&raquo;</span>
+          </div>
         </div>
 
-        {/*  Agile & Lean bar  */}
-        <div className="zrw-agile-bar reveal">
-          <span className="zrw-agile-arrows">&raquo;</span>
-          <span className="zrw-agile-text">Agile &amp; Lean Methodologies</span>
-          <span className="zrw-agile-arrows">&raquo;</span>
-        </div>
+
 
         <div className="zrw-image-container reveal" style={{
           display: 'flex',
