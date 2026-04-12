@@ -47,7 +47,7 @@ const LandingNav = () => {
                 <Link to="/zeprecruit" className="lp-nl">Zep Recruit</Link>
                 <Link to="/prorecruitor" className="lp-nl">Zep Pro Recruiter</Link>
                 <Link to="/zepJobs" className="lp-nl">Zep Jobs</Link>
-                <button className="lp-nl">Pricing</button>
+                <Link to="/pricing" className="lp-nl">Pricing</Link>
                 <Link to="/about" className="lp-nl">About</Link>
             </div>
 
