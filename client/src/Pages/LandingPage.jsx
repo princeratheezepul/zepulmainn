@@ -39,7 +39,7 @@ const LandingPage = () => {
             <LandingTwoPaths />
             <LandingEngagement />
             <LandingBeyondCTA />
-            <Footer />
+            
         </div>
     );
 };

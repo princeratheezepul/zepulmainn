@@ -6,7 +6,7 @@ import ZepPipeline from "../Components/ZepRecruitNew/ZepPipeline";
 import ZepFeatures from "../Components/ZepRecruitNew/ZepFeatures";
 import ZepWhyChoose from "../Components/ZepRecruitNew/ZepWhyChoose";
 import ZepEngagement from "../Components/ZepRecruitNew/ZepEngagement";
-import ZepBeyondCTA from "../Components/ZepRecruitNew/ZepBeyondCTA";
+import LandingBeyondCTA from "../Components/landing/LandingBeyondCTA";
 import ZepRecruitFooter from "../Components/ZepRecruitNew/ZepRecruitFooter";
 import "../styles/ZepRecruitNew.css";
 
@@ -20,8 +20,7 @@ function ZepRecruit() {
       <ZepFeatures />
       <ZepWhyChoose />
       <ZepEngagement />
-      <ZepBeyondCTA />
-      <ZepRecruitFooter />
+     
     </Fragment>
   );
 }

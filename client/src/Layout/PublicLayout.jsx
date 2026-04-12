@@ -9,7 +9,7 @@ const PublicLayout = () => {
       <div className="wrapper d-flex flex-column justify-content-between h-full overflow-hidden">
         <Header />
         <Outlet />
-        <Footer />
+      
       </div>
     </Fragment>
   );
