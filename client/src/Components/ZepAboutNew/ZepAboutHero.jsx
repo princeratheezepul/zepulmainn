@@ -9,7 +9,7 @@ const ZepAboutHero = () => {
       <section className="hero">
         <div className="hero-inner">
           <div className="hero-word">About</div>
-          <p className="hero-desc">Reimagining recruitment with AI — from traditional success-based hiring to a fully integrated RaaS, RPO and Retainer model — reducing cost, time, and complexity for the world's best teams.</p>
+          {/* <p className="hero-desc">Reimagining recruitment with AI — from traditional success-based hiring to a fully integrated RaaS, RPO and Retainer model — reducing cost, time, and complexity for the world's best teams.</p> */}
         </div>
 
         {/* Interactive COBE Globe */}
