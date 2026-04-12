@@ -3,7 +3,7 @@ import ZepProHero from "../Components/ZepProRecruiterNew/ZepProHero";
 import ZepProTicker from "../Components/ZepProRecruiterNew/ZepProTicker";
 import ZepProPipeline from "../Components/ZepProRecruiterNew/ZepProPipeline";
 import ZepProFeatures from "../Components/ZepProRecruiterNew/ZepProFeatures";
-import ZepProWhyChoose from "../Components/ZepProRecruiterNew/ZepProWhyChoose";
+import ZepProWhyBusinesses from "../Components/ZepProRecruiterNew/ZepProWhyBusinesses";
 import ZepProBeyondCTA from "../Components/ZepProRecruiterNew/ZepProBeyondCTA";
 import "../styles/ZepProRecruiter.css";
 
@@ -14,7 +14,7 @@ const ProRecruitor = () => {
       <ZepProTicker />
       <ZepProPipeline />
       <ZepProFeatures />
-      <ZepProWhyChoose />
+      <ZepProWhyBusinesses />
       <ZepProBeyondCTA />
     </Fragment>
   );

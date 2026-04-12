@@ -62,8 +62,8 @@ const Footer = () => {
             <MdLocationOn className="contact-icon" />
             <div className="contact-text">
               <div className="address-label">Services HQ</div>
-              <div className="address-text">#401, Fourth Floor B - Block, Asian Sun City,</div>
-              <div className="address-text">Kothaguda, Kondapur, Hyderabad</div>
+              <div className="address-text"> 401, Fourth Floor, Block - B, Asian Sun City, </div>
+              <div className="address-text">Kothaguda, Kondapur, Hyderabad - 81, India</div>
             </div>
           </div>
         </div>

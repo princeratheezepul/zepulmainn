@@ -9,7 +9,15 @@ const ZepProHero = () => {
   <div className="zr-hero-left">
     <h1 className="zr-headline">ZEP PRO<br /><span className="blue">RECRUITER</span></h1>
     <p className="zr-tagline">Turning Recruiters into Pro Recruiters.</p>
-    <p className="zr-desc">An AI-powered TA suite for end-to-end recruiting — AI-driven sourcing to assessments, client-ready report cards, and performance insights that turn recruiters into pro recruiters.</p>
+    <p className="zr-desc">Empower your recruiters with a unified, AI-driven
+platform to source talent, assess CV strength, run
+dynamic coding assessments, and conduct fully
+automated interviews—generating comprehensive,
+decision-ready report cards in one place. Real-time
+dashboards provide complete visibility into recruiter
+and business performance. The result: more
+productive recruiters, higher-quality hires, and
+significantly reduced time and cost to hire.</p>
     <div className="zr-stats">
       <div className="zr-stat">
         <div className="zr-stat-n"><span className="counter" data-target="40" data-suffix="%">40%</span></div>
@@ -17,11 +25,11 @@ const ZepProHero = () => {
       </div>
       <div className="zr-stat">
         <div className="zr-stat-n"><span className="counter" data-target="60" data-suffix="%">60%</span></div>
-        <div className="zr-stat-l">Talent Reach</div>
+        <div className="zr-stat-l">100% AI DIY Ready</div>
       </div>
       <div className="zr-stat">
         <div className="zr-stat-n"><span className="counter" data-target="90" data-suffix="%">90%</span></div>
-        <div className="zr-stat-l">Screening &amp; Evaluation</div>
+        <div className="zr-stat-l">Automated Screening &amp; Evaluation</div>
       </div>
       <div className="zr-stat">
         <div className="zr-stat-n"><span className="counter" data-target="45" data-suffix="%">45%</span></div>
