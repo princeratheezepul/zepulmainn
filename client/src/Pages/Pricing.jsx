@@ -126,113 +126,105 @@ const Pricing = () => {
                 </div>
             </section>
 
-            {/* ── PLANS ── */}
-            <section className="pr-plans">
-                <div className="pr-plans-grid pr-reveal">
+            {/* ── NEW HERO & PLANS ── */}
+            <section className="pr-new-hero pr-reveal">
+                <div className="pr-new-hero-left">
+                    <div className="pr-new-hero-badge">FOR EMPLOYERS</div>
+                    <h1 className="pr-new-hero-title">
+                        AI hiring, your way<br />
+                        choose your model,<br />
+                        choose your price
+                    </h1>
+                </div>
 
-                    {/* STARTER */}
-                    <div className="pr-plan-card">
-                        <div className="pr-plan-badge">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" /></svg>
-                            Starter
+                <div className="pr-new-hero-right">
+                    {/* PRODUCT CARD */}
+                    <div className="pr-new-card">
+                        <div className="pr-new-card-badge">PRODUCT</div>
+                        <h2 className="pr-new-card-title">Zep Pro Recruiter</h2>
+                        <p className="pr-new-card-desc">For high-growth orgs running full-cycle recruitment with AI at the core.</p>
+
+                        <div className="pr-new-card-price-wrap">
+                            <span className="pr-new-card-currency">$</span>
+                            <span className="pr-new-card-price">200</span>
+                            <span className="pr-new-card-mo">/mo</span>
                         </div>
-                        <div className="pr-plan-name">Starter</div>
-                        <div className="pr-plan-tagline">Perfect for startups and lean teams making their first strategic hires.</div>
-                        <div className="pr-plan-price">
-                            <span className="pr-price-currency">$</span>
-                            <span className="pr-price-amount">{prices.starter[billing]}</span>
-                            <span className="pr-price-period">/mo</span>
+                        <p className="pr-new-card-billed">Billed Annually.</p>
+
+                        <div className="pr-new-card-features">
+                            <div className="pr-new-feature">
+                                <span className="pr-new-check black"><CheckIcon /></span>
+                                100% Automated workflow
+                            </div>
+                            <div className="pr-new-feature">
+                                <span className="pr-new-check black"><CheckIcon /></span>
+                                Conversational AI agent for JD and Job Creation
+                            </div>
+                            <div className="pr-new-feature">
+                                <span className="pr-new-check black"><CheckIcon /></span>
+                                Job board integration - AI Sourcing
+                            </div>
+                            <div className="pr-new-feature">
+                                <span className="pr-new-check black"><CheckIcon /></span>
+                                <strong>CV Strength - Read , Rank, Match</strong>
+                            </div>
+                            <div className="pr-new-feature">
+                                <span className="pr-new-check black"><CheckIcon /></span>
+                                Customised Dynamic Coding test
+                            </div>
+                            <div className="pr-new-feature">
+                                <span className="pr-new-check black"><CheckIcon /></span>
+                                Automated Decision Ready Scorecard
+                            </div>
                         </div>
-                        <div className="pr-plan-price-note">Billed monthly · Up to 3 active roles</div>
-                        <hr className="pr-plan-divider" />
-                        <div className="pr-plan-features">
-                            <Feature bold="3 active job postings" text=" at a time" />
-                            <Feature text="AI-powered candidate sourcing" />
-                            <Feature text="Basic CV screening & ranking" />
-                            <Feature bold="1 recruiter seat" text=" included" />
-                            <Feature text="Email & chat support" />
-                            <Feature text="ZepDB access (read only)" />
-                        </div>
-                        <a href="#" className="pr-plan-cta">Start Free Trial <ArrowIcon /></a>
+
+                        <a href="#" className="pr-new-btn outlined">
+                            Get Started <ArrowIcon />
+                        </a>
                     </div>
 
-                    {/* GROWTH */}
-                    <div className="pr-plan-card">
-                        <div className="pr-plan-badge">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12" /></svg>
-                            Growth
-                        </div>
-                        <div className="pr-plan-name">Growth</div>
-                        <div className="pr-plan-tagline">For scaling companies hiring across multiple functions simultaneously.</div>
-                        <div className="pr-plan-price">
-                            <span className="pr-price-currency">$</span>
-                            <span className="pr-price-amount">{prices.growth[billing]}</span>
-                            <span className="pr-price-period">/mo</span>
-                        </div>
-                        <div className="pr-plan-price-note">Billed monthly · Up to 10 active roles</div>
-                        <hr className="pr-plan-divider" />
-                        <div className="pr-plan-features">
-                            <Feature bold="10 active job postings" text=" at a time" />
-                            <Feature text="Full AI sourcing + predictive matching" />
-                            <Feature text="AI coding tests & automated interviews" />
-                            <Feature bold="5 recruiter seats" text=" included" />
-                            <Feature text="Decision-Ready Report Cards" />
-                            <Feature text="Talent & market insights dashboard" />
-                        </div>
-                        <a href="#" className="pr-plan-cta">Start Free Trial <ArrowIcon /></a>
-                    </div>
+                    {/* SERVICES CARD */}
+                    <div className="pr-new-card">
+                        <div className="pr-new-card-badge">SERVICES</div>
+                        <h2 className="pr-new-card-title">Zep Recruit</h2>
+                        <p className="pr-new-card-desc">Custom Fullstack AI Hiring services for companies of every size</p>
 
-                    {/* SCALE — POPULAR */}
-                    <div className="pr-plan-card popular">
-                        <div className="pr-popular-bar"></div>
-                        <div className="pr-plan-badge">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>
-                            Most Popular
+                        <div className="pr-new-card-price-wrap custom">
+                            <span className="pr-new-card-price">Custom</span>
                         </div>
-                        <div className="pr-plan-name">Scale</div>
-                        <div className="pr-plan-tagline">For high-growth orgs running full-cycle recruitment with AI at the core.</div>
-                        <div className="pr-plan-price">
-                            <span className="pr-price-currency">$</span>
-                            <span className="pr-price-amount">{prices.scale[billing]}</span>
-                            <span className="pr-price-period">/mo</span>
-                        </div>
-                        <div className="pr-plan-price-note">Billed monthly · Unlimited active roles</div>
-                        <hr className="pr-plan-divider" />
-                        <div className="pr-plan-features">
-                            <Feature bold="Unlimited" text=" active job postings" />
-                            <Feature text="Full Zep Pro Recruiter suite" />
-                            <Feature text="Human validation + expert review layer" />
-                            <Feature bold="Unlimited recruiter seats" text="" />
-                            <Feature text="Dedicated account manager" />
-                            <Feature text="Benchmarking + negotiation experts" />
-                        </div>
-                        <a href="#" className="pr-plan-cta filled">Get Started <ArrowIcon /></a>
-                    </div>
+                        <p className="pr-new-card-billed">Tailored to your organisation size &amp; needs<br />100% AI-powered hiring, outsmarting traditional agencies</p>
 
-                    {/* ENTERPRISE */}
-                    <div className="pr-plan-card">
-                        <div className="pr-plan-badge">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="2" y="7" width="20" height="14" rx="2" /><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16" /></svg>
-                            Enterprise
+                        <div className="pr-new-card-features">
+                            <div className="pr-new-feature">
+                                <span className="pr-new-check blue"><CheckIcon /></span>
+                                Everything in Scale, plus:
+                            </div>
+                            <div className="pr-new-feature">
+                                <span className="pr-new-check blue"><CheckIcon /></span>
+                                Custom SLAs &amp; compliance (SOC2, GDPR)
+                            </div>
+                            <div className="pr-new-feature">
+                                <span className="pr-new-check blue"><CheckIcon /></span>
+                                Dedicated on-site recruiter team
+                            </div>
+                            <div className="pr-new-feature">
+                                <span className="pr-new-check blue"><CheckIcon /></span>
+                                API access &amp; ATS integrations
+                            </div>
+                            <div className="pr-new-feature">
+                                <span className="pr-new-check blue"><CheckIcon /></span>
+                                White-label reporting &amp; branded portals
+                            </div>
+                            <div className="pr-new-feature">
+                                <span className="pr-new-check blue"><CheckIcon /></span>
+                                24/7 priority support + CSM
+                            </div>
                         </div>
-                        <div className="pr-plan-name">Enterprise</div>
-                        <div className="pr-plan-tagline">Custom infrastructure, SLAs, and compliance for large-scale global hiring.</div>
-                        <div className="pr-plan-price" style={{ marginBottom: 6 }}>
-                            <span className="pr-price-custom">Custom</span>
-                        </div>
-                        <div className="pr-plan-price-note">Tailored to your organisation size &amp; needs</div>
-                        <hr className="pr-plan-divider" />
-                        <div className="pr-plan-features">
-                            <Feature text="Everything in Scale, plus:" />
-                            <Feature text="Custom SLAs & compliance (SOC2, GDPR)" />
-                            <Feature text="Dedicated on-site recruiter team" />
-                            <Feature text="API access & ATS integrations" />
-                            <Feature text="White-label reporting & branded portals" />
-                            <Feature text="24/7 priority support + CSM" />
-                        </div>
-                        <a href="#" className="pr-plan-cta">Talk to Sales <ArrowIcon /></a>
-                    </div>
 
+                        <a href="#" className="pr-new-btn solid">
+                            Talk to Sales <ArrowIcon />
+                        </a>
+                    </div>
                 </div>
             </section>
 
