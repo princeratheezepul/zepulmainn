@@ -1,0 +1,55 @@
+import React, { useEffect } from 'react';
+
+const ZepAboutFooter = () => {
+
+  return (
+    <div id="ZepAboutFooter-root" className="zep-about-page">
+      <footer className="footer-full">
+        <div className="footer-grid">
+          <div className="footer-brand">
+            <a href="/" className="logo"><img src="/assets/logo.png" alt="Zepul" /></a>
+            <p className="footer-brand-desc">Zepul™ and its partners, authorized vendors, and subsidiaries do not charge any fees from job seekers for employment placements. If anyone claims otherwise, please report such violations immediately.</p>
+            <div className="footer-compliance">
+              <span className="footer-compliance-badge">MSME / UDYAM</span>
+              <span className="footer-compliance-badge">DPIIT</span>
+              <span className="footer-compliance-badge">London Chamber</span>
+            </div>
+          </div>
+          <div>
+            <div className="footer-col-title">Products</div>
+            <div className="footer-col-links">
+              <a href="#">Zep Recruit</a><a href="#">Zep Pro Recruit</a>
+              <a href="#">Zep Jobs</a><a href="#">Zep Talent Hub</a>
+              <a href="#">About</a><a href="#">Contact</a>
+            </div>
+          </div>
+          <div>
+            <div className="footer-col-title">Legal</div>
+            <div className="footer-col-links">
+              <a href="#">Terms &amp; Conditions</a><a href="#">Privacy Policy</a><a href="#">Blog</a>
+            </div>
+          </div>
+          <div>
+            <div className="footer-col-title">Contact</div>
+            <div className="footer-contact-item"><div className="footer-contact-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" /><polyline points="22,6 12,13 2,6" /></svg></div><div className="footer-contact-text">support@zepul.com</div></div>
+            <div className="footer-contact-item"><div className="footer-contact-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.8a19.79 19.79 0 01-3.07-8.68A2 2 0 012 .82h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L6.09 8.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z" /></svg></div><div className="footer-contact-text">+91-77939 55555</div></div>
+            <div className="footer-contact-item"><div className="footer-contact-icon ink"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" /><circle cx="12" cy="10" r="3" /></svg></div><div className="footer-contact-text"><strong>Product HQ</strong>56 Weighton Road, Harrow, London, United Kingdom</div></div>
+            <div className="footer-contact-item"><div className="footer-contact-icon ink"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" /><circle cx="12" cy="10" r="3" /></svg></div><div className="footer-contact-text"><strong>Services HQ</strong>Floor 6, 610/B Sandhya Techno 1, Khajaguda, Hyderabad, India</div></div>
+          </div>
+        </div>
+        <div className="footer-bottom">
+          <div className="footer-bottom-left">
+            <span className="footer-copy">© 2026 Zepul. All rights reserved.</span>
+            <div className="footer-violations"><strong>Report Violations</strong>info@zepul.com · legal@zepul.com</div>
+          </div>
+          <div className="footer-social">
+            <a href="#" aria-label="Instagram"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z" /></svg></a>
+            <a href="#" aria-label="Twitter"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231z" /></svg></a>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+};
+
+export default ZepAboutFooter;

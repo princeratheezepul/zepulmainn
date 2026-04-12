@@ -1,17 +1,26 @@
-import React from 'react';
-import AboutHero from '../Components/AboutHero';
-import AboutTeam from '../Components/AboutTeam';
-import AboutFAQ from '../Components/AboutFAQ';
-import AboutSpotlight from '../Components/AboutSpotlight';
+import React, { Fragment } from 'react';
+import ZepAboutNav from '../Components/ZepAboutNew/ZepAboutNav';
+import ZepAboutHero from '../Components/ZepAboutNew/ZepAboutHero';
+import ZepAboutMission from '../Components/ZepAboutNew/ZepAboutMission';
+import ZepAboutPartners from '../Components/ZepAboutNew/ZepAboutPartners';
+import ZepAboutValues from '../Components/ZepAboutNew/ZepAboutValues';
+import ZepAboutFAQ from '../Components/ZepAboutNew/ZepAboutFAQ';
+import ZepAboutBeyondCTA from '../Components/ZepAboutNew/ZepAboutBeyondCTA';
+import ZepAboutFooter from '../Components/ZepAboutNew/ZepAboutFooter';
+import '../styles/ZepAbout.css';
 
 const About = () => {
     return (
-        <div className="about-page">
-            <AboutHero />
-            <AboutTeam />
-            <AboutFAQ />
-            <AboutSpotlight />
-        </div>
+        <Fragment>
+            <ZepAboutNav />
+            <ZepAboutHero />
+            <ZepAboutMission />
+            <ZepAboutPartners />
+            <ZepAboutValues />
+            <ZepAboutFAQ />
+            <ZepAboutBeyondCTA />
+            <ZepAboutFooter />
+        </Fragment>
     );
 };
 
