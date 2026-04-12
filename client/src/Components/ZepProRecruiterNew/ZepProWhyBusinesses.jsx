@@ -68,7 +68,7 @@ const ZepProWhyBusinesses = () => {
                     <Card
                         title="Multi-Channel Sourcing"
                         badText="Manual keyword searches & limited databases"
-                        goodText="AI-powered discovery across job boards, databases & partners"
+                        goodText="AI-powered discovery across job boards, databases "
                         icon={<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="18" height="18"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>}
                     />
                     <Card
@@ -97,16 +97,16 @@ const ZepProWhyBusinesses = () => {
                         icon={<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="18" height="18"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>}
                     />
                     <Card
-                        title="Offer Intelligence"
-                        badText="Guesswork and opaque market rate matching"
-                        goodText="Detailed salary benchmarking & dedicated negotiation"
+                        title="Full stack AI Hiring Platform"
+                        badText="Toggling between many SaaS tools for the hiring end goal"
+                        goodText="One integrated Agentic AI hiring platform, right from requisition to Selection"
                         icon={<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="18" height="18"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>}
                     />
 
                     <Card
-                        title="Scalable Network"
-                        badText="Bottlenecked by internal recruiter bandwidth"
-                        goodText="Infinite scaling via AI + Global on-demand recruiter network"
+                        title="Recruitment Lifecycle Control"
+                        badText="Too many middlemen. Too much delay. Too little control "
+                        goodText="Two AI agents. Zero middlemen. Faster, smarter hiring."
                         icon={<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="18" height="18"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>}
                     />
                 </div>
