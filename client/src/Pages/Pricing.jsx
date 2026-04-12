@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import LandingNav from '../Components/landing/LandingNav';
 import '../styles/LandingPage.css';
 import '../styles/Pricing.css';
+import LandingBeyondCTA from '../Components/landing/LandingBeyondCTA';
 
 // ── SVG helpers ──
 const CheckIcon = () => (
@@ -333,7 +334,7 @@ const Pricing = () => {
             </section>
 
             {/* ── COMPARE TABLE ── */}
-            <section className="pr-compare">
+            {/* <section className="pr-compare">
                 <div className="pr-compare-header pr-reveal">
                     <div>
                         <h2>Compare all<br /><span className="blue">plan features</span></h2>
@@ -441,7 +442,7 @@ const Pricing = () => {
                         </tbody>
                     </table>
                 </div>
-            </section>
+            </section> */}
 
             {/* ── FAQ ── */}
             <section className="pr-faq">
@@ -482,61 +483,9 @@ const Pricing = () => {
                     <span className="pr-beyond-logo-pill">Global Teams</span>
                 </div>
             </section>
+            <LandingBeyondCTA/>
 
-            {/* ── FOOTER ── */}
-            <footer className="pr-footer">
-                <div className="pr-footer-grid">
-                    <div>
-                        <a className="pr-footer-brand-logo" href="/">
-                            <img src="/assets/logo.png" alt="Zepul" />
-                        </a>
-                        <p className="pr-footer-brand-desc">AI-powered recruitment — from sourcing to onboarding, built for the world's best teams.</p>
-                    </div>
-                    <div>
-                        <div className="pr-footer-col-title">Product</div>
-                        <div className="pr-footer-col-links">
-                            <a href="/zeprecruit">Zep Recruit</a>
-                            <a href="/prorecruitor">Zep Pro Recruiter</a>
-                            <a href="/zepConsult">Zep Consult</a>
-                            <a href="/zepJobs">Zep Jobs</a>
-                            <a href="/pricing">Pricing</a>
-                        </div>
-                    </div>
-                    <div>
-                        <div className="pr-footer-col-title">Company</div>
-                        <div className="pr-footer-col-links">
-                            <a href="/about">About</a>
-                            <a href="/careers">Careers</a>
-                            <a href="#">Blog</a>
-                            <a href="#">Press</a>
-                        </div>
-                    </div>
-                    <div>
-                        <div className="pr-footer-col-title">Legal</div>
-                        <div className="pr-footer-col-links">
-                            <a href="/privacy">Privacy Policy</a>
-                            <a href="/terms">Terms of Service</a>
-                            <a href="#">Cookie Policy</a>
-                            <a href="#">GDPR</a>
-                        </div>
-                    </div>
-                </div>
-                <div className="pr-footer-bottom">
-                    <span className="pr-footer-copy">© 2026 Zepul. All rights reserved.</span>
-                    <div className="pr-footer-social">
-                        <a href="#" aria-label="LinkedIn">
-                            <svg viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452z" />
-                            </svg>
-                        </a>
-                        <a href="#" aria-label="Twitter">
-                            <svg viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231z" />
-                            </svg>
-                        </a>
-                    </div>
-                </div>
-            </footer>
+            
         </div>
     );
 };
