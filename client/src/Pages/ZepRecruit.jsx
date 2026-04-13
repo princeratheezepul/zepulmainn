@@ -1,5 +1,5 @@
 import React, { Fragment } from "react";
-import ZepRecruitNav from "../Components/ZepRecruitNew/ZepRecruitNav";
+import LandingNav from "../Components/landing/LandingNav";
 import ZepHero from "../Components/ZepRecruitNew/ZepHero";
 import ZepTicker from "../Components/ZepRecruitNew/ZepTicker";
 import ZepPipeline from "../Components/ZepRecruitNew/ZepPipeline";
@@ -13,7 +13,7 @@ import "../styles/ZepRecruitNew.css";
 function ZepRecruit() {
   return (
     <Fragment>
-      <ZepRecruitNav />
+      <LandingNav />
       <ZepHero />
       <ZepTicker />
       <ZepPipeline />

@@ -1,5 +1,5 @@
 import React, { Fragment } from 'react';
-import ZepAboutNav from '../Components/ZepAboutNew/ZepAboutNav';
+import LandingNav from '../Components/landing/LandingNav';
 import ZepAboutHero from '../Components/ZepAboutNew/ZepAboutHero';
 import ZepAboutOSSection from '../Components/ZepAboutNew/ZepAboutOSSection';
 import ZepAboutPartners from '../Components/ZepAboutNew/ZepAboutPartners';
@@ -13,7 +13,7 @@ import LandingBeyondCTA from '../Components/landing/LandingBeyondCTA';
 const About = () => {
     return (
         <Fragment>
-            <ZepAboutNav />
+            <LandingNav />
             <ZepAboutHero />
             <ZepAboutOSSection />
             <ZepAboutPartners />
@@ -21,7 +21,7 @@ const About = () => {
             <ZepAboutFAQ />
             {/* <ZepAboutBeyondCTA /> */}
             {/* <ZepAboutFooter /> */}
-            <LandingBeyondCTA/>
+            <LandingBeyondCTA />
         </Fragment>
     );
 };

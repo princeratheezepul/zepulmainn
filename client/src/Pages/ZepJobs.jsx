@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import './ZepJobs.css';
 import LandingBeyondCTA from '../Components/landing/LandingBeyondCTA';
+import LandingNav from '../Components/landing/LandingNav';
 
 const ZepJobs = () => {
   const [scrolled, setScrolled] = useState(false);
@@ -68,24 +69,7 @@ const ZepJobs = () => {
   return (
     <div className="zep-jobs-page">
 
-
-      {/* NAV */}
-      <nav className={`nav ${scrolled ? "scrolled" : ""} ${hidden ? "hidden" : ""}`}>
-        <a className="logo" href="#"><img src="logo.png" alt="Zepul" /></a>
-        <div className="nav-links">
-          <button className="nl">Zep Recruit</button>
-          <button className="nl">Zep Pro Recruiter</button>
-          <button className="nl active">Zep Jobs</button>
-          <button className="nl">Zep Talent Hub</button>
-          <button className="nl">About</button>
-        </div>
-        <div className="nav-right">
-          <button className="nav-btn">
-            Sign In
-            <svg viewBox="0 0 11 11" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M2 5.5h7M6 2.5l3 3-3 3" /></svg>
-          </button>
-        </div>
-      </nav>
+      <LandingNav />
 
       {/* HERO */}
       <section className="hero">
@@ -360,9 +344,9 @@ const ZepJobs = () => {
       </section>
 
       <LandingBeyondCTA />
-      
 
-      
+
+
 
 
     </div>
