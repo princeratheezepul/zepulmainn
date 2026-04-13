@@ -80,12 +80,8 @@ const Pricing = () => {
             answer: 'Yes — you can upgrade or downgrade at any time from your account dashboard. Upgrades take effect immediately with a prorated charge. Downgrades take effect at the start of your next billing cycle.',
         },
         {
-            question: 'Is there a free trial available?',
-            answer: 'Absolutely. All Starter and Growth plans come with a 14-day free trial — no credit card required. You\'ll have full access to the platform for the duration of your trial.',
-        },
-        {
             question: 'What happens if I exceed my active role limit?',
-            answer: 'You\'ll receive a notification when you approach your limit. You can archive older roles to free up slots, or upgrade your plan to accommodate more active postings at any time.',
+            answer: "You'll receive a notification when you approach your limit. You can contact us for further process",
         },
         {
             question: 'Do you offer discounts for annual billing?',
@@ -93,11 +89,11 @@ const Pricing = () => {
         },
         {
             question: 'What is ZepDB and how does it factor into pricing?',
-            answer: 'ZepDB is Zepul\'s unified talent data layer — our proprietary database of screened, benchmarked candidates. Starter plans have read-only access, while Growth and above get full query and proactive sourcing capabilities from ZepDB.',
+            answer: "ZepDB is Zepul’s unified talent data repository containing screened and evaluated candidates. When a job is created on the Zepul platform, AI automatically matches the role with relevant candidates from ZepDB to help accelerate the hiring process.",
         },
         {
             question: 'How does Enterprise pricing work?',
-            answer: 'Enterprise is tailored to your organisation — volume, geography, compliance needs, and integrations. Contact our sales team for a custom quote and we\'ll put together a proposal within 24 hours.',
+            answer: "Zep Recruit is tailored to your organisation — volume, geography, engagement model, compliance needs, and integrations. Contact our sales team for a custom quote and we'll put together a proposal just for you.",
         },
     ];
 
@@ -177,10 +173,7 @@ const Pricing = () => {
                                 <span className="pr-new-check blue"><CheckIcon /></span>
                                 Automated Decision Ready Scorecard
                             </div>
-                            <div className="pr-new-feature">
-                                <span className="pr-new-check blue"><CheckIcon /></span>
-                                Customised AI Interview
-                            </div>
+
                             <div className="pr-new-feature">
                                 <span className="pr-new-check blue"><CheckIcon /></span>
                                 Intelligent Performance Dashboards

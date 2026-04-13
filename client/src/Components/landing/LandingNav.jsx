@@ -54,7 +54,10 @@ const LandingNav = () => {
             </div>
 
             <div className="lp-nav-right">
-                <button className="lp-nav-btn">
+                <button className="lp-nav-btn" onClick={() => {
+                    const cta = document.getElementById('beyond-cta');
+                    if (cta) cta.scrollIntoView({ behavior: 'smooth' });
+                }}>
                     Start Hiring
                     <svg viewBox="0 0 11 11" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M2 5.5h7M6 2.5l3 3-3 3" />

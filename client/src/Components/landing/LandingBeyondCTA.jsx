@@ -21,7 +21,7 @@ const LandingBeyondCTA = () => {
   }, []);
 
   return (
-    <section className="lp-beyond">
+    <section className="lp-beyond" id="beyond-cta">
       <div className="lp-beyond-left lp-reveal">
         <div>
           <h2 className="lp-section-head">Beyond recruitment, we architect talent <span className="lp-blue"><br />intelligently, consistently,<br />and at scale.</span></h2>
