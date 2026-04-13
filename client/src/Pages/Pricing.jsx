@@ -132,7 +132,7 @@ const Pricing = () => {
                 <div className="pr-new-hero-left">
                     <div className="pr-new-hero-badge">FOR EMPLOYERS</div>
                     <h1 className="pr-new-hero-title">
-                        AI hiring, your way<br />
+                        AI hiring, your way-<br />
                         choose your model,<br />
                         choose your price
                     </h1>
@@ -148,7 +148,7 @@ const Pricing = () => {
                         <div className="pr-new-card-price-wrap">
                             <span className="pr-new-card-currency">$</span>
                             <span className="pr-new-card-price">200</span>
-                            <span className="pr-new-card-mo">/mo</span>
+                            <span className="pr-new-card-mo">/mo/user</span>
                         </div>
                         <p className="pr-new-card-billed">Billed Annually.</p>
 
@@ -351,7 +351,7 @@ const Pricing = () => {
                         </div>
 
                         <a href="#" className="pr-new-btn ghost-btn">
-                            Start Free Trial <ArrowIcon />
+                            Talk To Us <ArrowIcon />
                         </a>
                     </div>
                 </div>
