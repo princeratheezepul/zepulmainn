@@ -10,7 +10,7 @@ const LandingHero = () => {
                     <div className="lp-hl-top">
                         <h1>
                             <span className="lp-hl-line1"><span className="lp-wi">The Future Of</span></span>
-                            <span className="lp-hl-line2"><span className="lp-wi">Recruitment Is Here.</span></span>
+                            <span className="lp-hl-line2"><span className="lp-wi"><span style={{ color: 'var(--lp-blue)' }}>Recruitment</span> Is Here.</span></span>
                         </h1>
                     </div>
                     <p className="lp-desc">

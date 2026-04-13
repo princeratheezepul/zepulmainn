@@ -7,7 +7,7 @@ const ZepPipeline = () => {
       <section className="zrw" style={{ paddingBottom: '100px', display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: '100vh' }}>
         <div className="zrw-header reveal">
           <h2 className="section-head">How <span className="blue">Zep Recruit</span> Works</h2>
-          <p className="section-sub">An end-to-end, AI-powered recruitment pipeline — from talent sourcing to right candidate hired.</p>
+          <p className="section-sub">An End to end Fullstack AI Powered Recruitment Services.</p>
         </div>
 
         {/*  Agile & Lean bar  */}

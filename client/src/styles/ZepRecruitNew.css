@@ -137,9 +137,9 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   min-height: auto;
-  margin-top: 20px;
+  margin-top: 86px;
   border-bottom: 1px solid var(--rule);
-  align-items: center;
+  align-items: stretch;
   background: #fff;
 }
 
@@ -147,7 +147,7 @@
   padding: 40px 52px 40px;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
 }
 
 .zep-recruit-page .zr-pre-rule {
@@ -291,13 +291,13 @@
 
 /* Hero right - visual */
 .zep-recruit-page .zr-hero-right {
-  padding: 52px 60px;
+  padding: 40px 60px;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   position: relative;
   min-height: auto;
-  background: var(--soft);
+  background: transparent;
   overflow: visible;
 }
 
@@ -1392,10 +1392,11 @@
   margin-top: 56px;
   display: grid;
   grid-template-columns: repeat(6, 1fr);
-  gap: 16px;
+  gap: 24px;
 }
 
 .zep-recruit-page .zrw-bento-card {
+  grid-column: span 2;
   background: #fff;
   border: 1px solid var(--rule);
   border-radius: 20px;
@@ -2081,6 +2082,15 @@
   .zep-recruit-page .zrw-outcomes {
     grid-template-columns: 1fr !important;
     max-width: 100% !important;
+  }
+
+  .zep-recruit-page .zrw-bento {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+
+  .zep-recruit-page .zrw-bento-card {
+    grid-column: span 1 !important;
   }
 
   /* Paddings & Layout */

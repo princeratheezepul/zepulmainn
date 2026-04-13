@@ -111,7 +111,7 @@ const ZepConsultContact = () => {
                     <div className="zc-footer-links">
                         <a href="#">Privacy</a>
                         <a href="#">Terms</a>
-                        <a href="#">Careers</a>
+                        <a href="/zepJobs">Careers</a>
                         <a href="#">Contact</a>
                     </div>
                 </div>

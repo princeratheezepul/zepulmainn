@@ -137,9 +137,9 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   min-height: auto;
-  margin-top: 20px;
+  margin-top: 86px;
   border-bottom: 1px solid var(--rule);
-  align-items: center;
+  align-items: stretch;
   background: #fff;
 }
 
@@ -147,7 +147,7 @@
   padding: 40px 52px 40px;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
 }
 
 .zep-pro-recruiter-page .zr-pre-rule {
@@ -310,13 +310,13 @@
 
 /* Hero right - visual */
 .zep-pro-recruiter-page .zr-hero-right {
-  padding: 52px 52px 52px 52px;
+  padding: 40px 52px;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   position: relative;
   min-height: auto;
-  background: var(--soft);
+  background: transparent;
 }
 
 /* ── V4: FLOWING PATHS ── */

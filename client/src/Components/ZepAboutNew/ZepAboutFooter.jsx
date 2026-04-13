@@ -19,7 +19,7 @@ const ZepAboutFooter = () => {
             <div className="footer-col-title">Products</div>
             <div className="footer-col-links">
               <a href="#">Zep Recruit</a><a href="#">Zep Pro Recruit</a>
-              <a href="#">Zep Jobs</a><a href="#">Zep Talent Hub</a>
+              <a href="/zepJobs">Zep Jobs</a><a href="#">Zep Talent Hub</a>
               <a href="#">About</a><a href="#">Contact</a>
             </div>
           </div>

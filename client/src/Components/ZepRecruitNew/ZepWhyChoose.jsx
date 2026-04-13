@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 
 const Card = ({ icon, title, badText, goodText }) => (
-  <div className="zrw-bento-card span-2 reveal" style={{
+  <div className="zrw-bento-card reveal" style={{
     background: '#fff', border: '1px solid #E3E5EE',
     borderRadius: '16px', padding: '32px',
     position: 'relative', overflow: 'hidden', transition: 'all 0.3s'
@@ -63,7 +63,7 @@ const ZepWhyChoose = () => {
           </p>
         </div>
 
-        <div className="zrw-bento" style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '16px' }}>
+        <div className="zrw-bento">
           <Card
             title="Multi-Channel Sourcing"
             badText="Manual keyword searches & limited databases"

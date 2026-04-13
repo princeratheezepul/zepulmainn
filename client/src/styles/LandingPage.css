@@ -152,7 +152,7 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   min-height: auto;
-  margin-top: 40px;
+  margin-top: 86px;
   border-bottom: 1px solid var(--lp-rule);
   background: #ffffff;
   align-items: center;
