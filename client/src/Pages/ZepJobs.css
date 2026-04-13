@@ -145,15 +145,15 @@ body {
 
 /* ── HERO ── */
 .hero {
-  padding: 130px 52px 80px;
-  margin-top: 62px;
+  padding: 80px 52px 60px;
+  margin-top: 20px;
   border-bottom: 1px solid var(--rule);
   background: #fff;
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 80px;
   align-items: start;
-  min-height: calc(100vh - 62px);
+  min-height: auto;
 }
 
 .hero-left {
@@ -476,7 +476,7 @@ body {
 /* ── AVAILABLE JOBS ── */
 .jobs {
   background: #fff;
-  padding: 80px 52px 100px;
+  padding: 40px 52px 40px;
   border-bottom: 1px solid var(--rule);
 }
 
@@ -745,7 +745,7 @@ body {
 
 /* Load more */
 .jobs-more {
-  margin-top: 32px;
+  margin-top: 20px;
   text-align: center;
 }
 
