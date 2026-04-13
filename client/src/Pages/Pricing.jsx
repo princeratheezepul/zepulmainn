@@ -167,7 +167,7 @@ const Pricing = () => {
                             </div>
                             <div className="pr-new-feature">
                                 <span className="pr-new-check blue"><CheckIcon /></span>
-                                <strong>CV Strength - Read , Rank, Match</strong>
+                                CV Strength - Read , Rank, Match
                             </div>
                             <div className="pr-new-feature">
                                 <span className="pr-new-check blue"><CheckIcon /></span>

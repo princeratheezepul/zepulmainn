@@ -294,11 +294,23 @@
     min-height: 36px;
 }
 
+@media (min-width: 768px) {
+    .pr-new-card-desc {
+        min-height: 54px;
+    }
+}
+
 .pr-new-card-price-wrap {
     display: flex;
     align-items: flex-end;
     gap: 4px;
     margin-bottom: 4px;
+}
+
+@media (min-width: 768px) {
+    .pr-new-card-price-wrap {
+        min-height: 56px;
+    }
 }
 
 .pr-new-card-currency {
@@ -335,6 +347,12 @@
     color: var(--pr-ink);
     margin-bottom: 24px;
     line-height: 1.5;
+}
+
+@media (min-width: 768px) {
+    .pr-new-card-billed {
+        min-height: 50px;
+    }
 }
 
 .pr-new-card-features {

@@ -162,7 +162,7 @@ const NewHeroComponent = () => {
                             }
                         }}
                     >
-                        Book a Demo <span className="arrow">→</span>
+                        Start Hiring <span className="arrow">→</span>
                     </button>
                 </div>
 

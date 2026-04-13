@@ -379,8 +379,8 @@
   width: 240px;
   border-radius: 12px;
   overflow: hidden;
-  background: #1a1d2e;
-  border: 1px solid rgba(255, 255, 255, .07);
+  background: #fff;
+  border: 1px solid var(--rule);
   transition: transform .3s ease, border-color .3s ease, box-shadow .3s ease;
   cursor: pointer;
   position: relative;
@@ -399,7 +399,7 @@
 
 .zep-about-page .team-card-avatar {
   width: 100%;
-  height: 220px;
+  height: 180px;
   position: relative;
   overflow: hidden;
   background: #fff;
@@ -443,16 +443,16 @@
   font-family: 'Lora', serif;
   font-size: 17px;
   font-weight: 500;
-  color: #fff;
+  color: var(--ink);
   letter-spacing: -.01em;
   margin-bottom: 4px;
 }
 
 .zep-about-page .team-card-role {
   font-size: 11.5px;
-  color: rgba(255, 255, 255, .4);
+  color: var(--muted);
   font-weight: 400;
-  margin-bottom: 12px;
+  margin-bottom: 0px;
 }
 
 .zep-about-page .team-card-desc {
