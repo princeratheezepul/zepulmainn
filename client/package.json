@@ -19,6 +19,7 @@
     "@vapi-ai/web": "^1.0.0",
     "axios": "^1.10.0",
     "bootstrap": "^5.3.3",
+    "cobe": "^2.0.1",
     "date-fns": "^4.1.0",
     "html2canvas": "^1.4.1",
     "html2pdf.js": "^0.10.3",

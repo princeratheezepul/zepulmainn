@@ -81,6 +81,7 @@ import InterviewResults from "../Pages/InterviewResults";
 
 
 const Home = lazy(() => import("../Pages/Home"));
+const LandingPage = lazy(() => import("../Pages/LandingPage"));
 const Companies = lazy(() => import("../Pages/Companies"));
 const Recruitement = lazy(() => import("../Pages/Recruitement"));
 const JobsSeeker = lazy(() => import("../Pages/JobsSeeker"));
@@ -107,6 +108,8 @@ const CandidateAssessmentPage = lazy(() => import("../Pages/CandidateAssessmentP
 const ZepConsult = lazy(() => import("../Pages/ZepConsult"));
 const About = lazy(() => import("../Pages/About"));
 const ContactPage = lazy(() => import("../Pages/ContactPage"));
+const ZepJobs = lazy(() => import("../Pages/ZepJobs"));
+const Pricing = lazy(() => import("../Pages/Pricing"));
 
 const Router = () => {
   return (
@@ -137,22 +140,39 @@ const Router = () => {
             }}
           />
           <Routes>
+            {/* Standalone Landing Page — has its own Nav & Footer */}
+            <Route path="/" element={<LandingPage />} />
+            {/* Standalone ZepJobs Page */}
+            <Route path="/zepJobs" element={<ZepJobs />} />
+            {/* Standalone ZepConsult Page */}
+            <Route path="/zepConsult" element={<ZepConsult />} />
+            {/* Standalone Pricing Page */}
+            <Route path="/pricing" element={<Pricing />} />
+
+            {/* Standalone About Page */}
+            <Route path="/about" element={<About />} />
+
+            {/* Standalone ZepRecruit Page */}
+            <Route path="/zeprecruit" element={<ZepRecruit />} />
+
+            {/* Standalone ProRecruiter Page */}
+            <Route path="/prorecruitor" element={<ProRecruitor />} />
+
             {/* Public routes with Header and Footer */}
-            <Route path="/" element={<PublicLayout />}>
+            <Route path="/old-home" element={<PublicLayout />}>
               <Route index element={<Home />} />
+            </Route>
+            <Route path="/" element={<PublicLayout />}>
               <Route path="zepTalentHub" element={<TalentHub />} />
-              <Route path="zeprecruit" element={<ZepRecruit />} />
               <Route path="companies" element={<Companies />} />
               <Route path="recruitment" element={<Recruitement />} />
               <Route path="jobseeker" element={<JobsSeeker />} />
               <Route path="privacy" element={<Privacy />} />
               <Route path="terms" element={<Terms />} />
               <Route path="support" element={<Support />} />
-              <Route path="prorecruitor" element={<ProRecruitor />} />
               <Route path="careers" element={<Careers />} />
               <Route path="careers/job/:jobId" element={<CareerJobDetails />} />
-              <Route path="zepConsult" element={<ZepConsult />} />
-              <Route path="about" element={<About />} />
+              {/* zepConsult moved to standalone route above */}
               <Route path="contact" element={<ContactPage />} />
             </Route>
 
@@ -209,10 +229,8 @@ const Router = () => {
               </MarketplaceAuthProvider>
             } />
 
-            {/* Fallback route with Header and Footer */}
-            <Route path="*" element={<PublicLayout />}>
-              <Route path="*" element={<Home />} />
-            </Route>
+            {/* Fallback route — redirect unknown paths to the Landing Page */}
+            <Route path="*" element={<Navigate to="/" replace />} />
 
             {/* Unified Login Route - No Header/Footer */}
             <Route path="/login" element={<UnifiedLogin />} />

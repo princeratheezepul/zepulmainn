@@ -1,23 +1,25 @@
-import React from 'react';
-import ProRecruiterHero from '../Components/ProRecruiterHero';
-import ScrollingTicker from '../Components/ScrollingTicker';
-import HowProRecruiterWorks from '../Components/HowProRecruiterWorks';
-import ProRecruiterProcessDiagram from '../Components/ProRecruiterProcessDiagram';
-import WhyZepProRecruiter from '../Components/WhyZepProRecruiter';
-import ZepRecruitContact from '../Components/ZepRecruitContact';
+import React, { Fragment } from "react";
+import LandingNav from "../Components/landing/LandingNav";
+import ZepProHero from "../Components/ZepProRecruiterNew/ZepProHero";
+import ZepProTicker from "../Components/ZepProRecruiterNew/ZepProTicker";
+import ZepProPipeline from "../Components/ZepProRecruiterNew/ZepProPipeline";
+import ZepProFeatures from "../Components/ZepProRecruiterNew/ZepProFeatures";
+import ZepProWhyBusinesses from "../Components/ZepProRecruiterNew/ZepProWhyBusinesses";
+import LandingBeyondCTA from "../Components/landing/LandingBeyondCTA";
+import "../styles/LandingPage.css";
+import "../styles/ZepProRecruiter.css";
 
 const ProRecruitor = () => {
   return (
-    <div className="font-sans text-black">
-      <ProRecruiterHero />
-      <ScrollingTicker />
-      <HowProRecruiterWorks />
-      <ProRecruiterProcessDiagram />
-      <WhyZepProRecruiter />
-      <div id="contact-form">
-        <ZepRecruitContact />
-      </div>
-    </div>
+    <Fragment>
+      <LandingNav />
+      <ZepProHero />
+      <ZepProTicker />
+      <ZepProPipeline />
+      <ZepProFeatures />
+      <ZepProWhyBusinesses />
+      <LandingBeyondCTA />
+    </Fragment>
   );
 };
 

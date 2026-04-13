@@ -154,7 +154,7 @@ const ZepRecruitHero = () => {
                             }
                         }}
                     >
-                        Book a Demo →
+                        Start Hiring →
                     </button>
                 </div>
 
