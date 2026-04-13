@@ -1,0 +1,151 @@
+/* =============================================
+   Zepul Comparison Table
+   ============================================= */
+
+.zc-wrapper {
+    width: 100%;
+    background: #eef0f8;
+    padding: 0 1.5rem 4rem;
+}
+
+.zc-table {
+    max-width: 1100px;
+    margin: 0 auto;
+    background: #ffffff;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 2px 16px rgba(0, 0, 0, 0.06);
+}
+
+/* ---- Header row ---- */
+.zc-header {
+    display: grid;
+    grid-template-columns: 1fr 180px 1fr;
+    background: #0f172a;
+    padding: 0;
+}
+
+.zc-header-cell {
+    font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    font-style: normal;
+    line-height: 1.00;
+    letter-spacing: 1.94px;
+    text-transform: uppercase;
+    color: #ffffff;
+    padding: 1.1rem 1.75rem;
+}
+
+.zc-header-cell--blue {
+    color: #0449FF;
+    text-align: center;
+    text-transform: none;
+    font-size: 0.95rem;
+    letter-spacing: 0;
+}
+
+.zc-col--right.zc-header-cell {
+    text-align: right;
+}
+
+/* ---- Data rows ---- */
+.zc-row {
+    display: grid;
+    grid-template-columns: 1fr 180px 1fr;
+    border-top: 1px solid #e8eaf0;
+    align-items: center;
+}
+
+.zc-row:hover {
+    background: #f8f9ff;
+}
+
+.zc-col {
+    padding: 1.25rem 1.75rem;
+}
+
+.zc-col--center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.25rem 0.75rem;
+}
+
+/* ---- Legacy Limitation text ---- */
+.zc-legacy {
+    font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+    font-size: 0.9rem;
+    font-weight: 400;
+    color: #555555;
+    line-height: 1.4;
+}
+
+/* ---- Zepul Layer pill badge ---- */
+.zc-pill {
+    display: inline-block;
+    background: #0f172a;
+    color: #ffffff;
+    font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 0.45rem 1rem;
+    border-radius: 999px;
+    white-space: nowrap;
+    text-align: center;
+}
+
+/* ---- Zepul Solution text ---- */
+.zc-solution {
+    font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+    font-size: 0.9rem;
+    font-weight: 400;
+    color: #111111;
+    line-height: 1.4;
+    text-align: right;
+}
+
+/* =============================================
+   Mobile — hide center column
+   ============================================= */
+@media (max-width: 700px) {
+    .zc-wrapper {
+        padding: 0 1rem 3rem;
+    }
+
+    .zc-hide-mobile {
+        display: none;
+    }
+
+    .zc-header {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .zc-row {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .zc-table {
+        border-radius: 12px;
+    }
+
+    .zc-header-cell {
+        padding: 1rem 1.25rem;
+        font-size: 0.72rem;
+    }
+
+    .zc-col {
+        padding: 1rem 1.25rem;
+    }
+
+    .zc-solution {
+        text-align: left;
+    }
+
+    .zc-legacy,
+    .zc-solution {
+        font-size: 0.85rem;
+    }
+}

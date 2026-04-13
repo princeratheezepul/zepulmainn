@@ -1,0 +1,77 @@
+/* =============================================
+   Engagement Models Section
+   ============================================= */
+
+.em-wrapper {
+    width: 100%;
+    background: #eef0f8;
+    padding: 0.75rem 2rem 2rem;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.25rem;
+}
+
+/* ---- Pill badge ---- */
+.em-pill {
+    display: inline-block;
+    background: #dde1f5;
+    color: #0449FF;
+    font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 0.45rem 1.1rem;
+    border-radius: 999px;
+}
+
+/* ---- Heading ---- */
+.em-heading {
+    font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+    font-size: clamp(2rem, 5vw, 3.25rem);
+    font-weight: 700;
+    color: #0d0f1a;
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    margin: 0;
+}
+
+/* ---- Subtitle ---- */
+.em-subtitle {
+    font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+    font-size: 1rem;
+    font-weight: 400;
+    color: #555555;
+    line-height: 1.6;
+    margin: 0;
+}
+
+/* =============================================
+   Responsive
+   ============================================= */
+@media (max-width: 768px) {
+    .em-wrapper {
+        padding: 3rem 1.25rem 2.5rem;
+        gap: 1rem;
+    }
+
+    .em-heading {
+        font-size: clamp(1.75rem, 7vw, 2.5rem);
+    }
+
+    .em-subtitle br {
+        display: none;
+    }
+
+    .em-subtitle {
+        font-size: 0.92rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .em-heading {
+        font-size: 1.75rem;
+    }
+}
