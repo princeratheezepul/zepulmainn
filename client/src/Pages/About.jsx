@@ -10,6 +10,7 @@ import ZepAboutFooter from '../Components/ZepAboutNew/ZepAboutFooter';
 import '../styles/LandingPage.css';
 import '../styles/ZepAbout.css';
 import LandingBeyondCTA from '../Components/landing/LandingBeyondCTA';
+import AboutSpotlight from '../Components/AboutSpotlight';
 
 const About = () => {
     return (
@@ -20,6 +21,7 @@ const About = () => {
             <ZepAboutPartners />
             {/* <ZepAboutValues /> */}
             <ZepAboutFAQ />
+            <AboutSpotlight />
             {/* <ZepAboutBeyondCTA /> */}
             {/* <ZepAboutFooter /> */}
             <LandingBeyondCTA />
