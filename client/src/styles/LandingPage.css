@@ -16,13 +16,16 @@
   box-sizing: border-box;
 }
 
-.lp-root {
+:root {
   --lp-blue: #024BFF;
   --lp-ink: #0C0E16;
   --lp-muted: #7A7E92;
   --lp-rule: #E3E5EE;
   --lp-soft: #F6F7FB;
   --lp-white: #ffffff;
+}
+
+.lp-root {
   background: var(--lp-white);
   font-family: 'DM Sans', sans-serif;
   font-size: 16px;
@@ -120,7 +123,7 @@
   align-items: center;
   gap: 6px;
   padding: 9px 20px;
-  background: var(--lp-ink);
+  background: var(--lp-blue);
   color: #fff;
   font-family: 'DM Sans', sans-serif;
   font-size: 13px;
@@ -134,7 +137,7 @@
 }
 
 .lp-nav-btn:hover {
-  background: var(--lp-blue);
+  background: var(--lp-ink);
   transform: translateY(-1px);
   box-shadow: 0 4px 16px rgba(2, 75, 255, .2);
 }

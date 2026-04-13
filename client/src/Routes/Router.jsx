@@ -155,6 +155,9 @@ const Router = () => {
             {/* Standalone ZepRecruit Page */}
             <Route path="/zeprecruit" element={<ZepRecruit />} />
 
+            {/* Standalone ProRecruiter Page */}
+            <Route path="/prorecruitor" element={<ProRecruitor />} />
+
             {/* Public routes with Header and Footer */}
             <Route path="/old-home" element={<PublicLayout />}>
               <Route index element={<Home />} />
@@ -167,7 +170,6 @@ const Router = () => {
               <Route path="privacy" element={<Privacy />} />
               <Route path="terms" element={<Terms />} />
               <Route path="support" element={<Support />} />
-              <Route path="prorecruitor" element={<ProRecruitor />} />
               <Route path="careers" element={<Careers />} />
               <Route path="careers/job/:jobId" element={<CareerJobDetails />} />
               {/* zepConsult moved to standalone route above */}
