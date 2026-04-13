@@ -32,7 +32,7 @@ const ZepAboutPartners = () => {
     <div id="ZepAboutPartners-root" className="zep-about-page">
       <section className="partners">
         <div className="partners-header reveal">
-          <h2>Partnered with most of the<br /><em>top people at each industry</em></h2>
+          <h2>Meet Our Team</h2>
         </div>
         <div className="team-track-wrap reveal">
           <div className="team-track" id="teamTrack">

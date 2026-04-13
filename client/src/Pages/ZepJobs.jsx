@@ -82,7 +82,7 @@ const ZepJobs = () => {
 
           <h1 className="hero-h1">
             Find The Role<br />You Want,<br />
-            <span className="blue">With Zepul Jobs.</span>
+            <span className="blue">With ZepJobs.</span>
           </h1>
 
           <p className="hero-desc">Search for your desired jobs here. Zepul helps you discover opportunities, prepares you for interviews, and connects you directly with hiring managers — all powered by AI.</p>
@@ -92,12 +92,12 @@ const ZepJobs = () => {
             <label className="search-label">Describe your dream job</label>
             <textarea className="search-textarea" placeholder="Senior Product Designer At An Early-Stage Startup..."></textarea>
             <div className="search-actions">
-              <button className="search-btn dark">
+              {/* <button className="search-btn dark">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" /><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16" /></svg>
                 Hiring? Meet Zepul Jobs
-              </button>
+              </button> */}
               <button className="search-btn blue-btn">
-                Talk to Zepul
+                Talk to Zepul Works AI agent
                 <svg viewBox="0 0 11 11" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M2 5.5h7M6 2.5l3 3-3 3" /></svg>
               </button>
             </div>
@@ -107,7 +107,7 @@ const ZepJobs = () => {
           <div className="trust-badges">
             <div className="trust-badge">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
-              See jobs in 10 minutes
+              See jobs across the globe
             </div>
             <div className="trust-badge">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
@@ -344,7 +344,7 @@ const ZepJobs = () => {
         </div>
       </section>
 
-      <LandingBeyondCTA />
+      {/* <LandingBeyondCTA /> */}
 
 
 

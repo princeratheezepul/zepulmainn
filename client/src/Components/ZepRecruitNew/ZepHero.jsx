@@ -24,7 +24,7 @@ const ZepHero = () => {
               <div className="zr-stat-l">Automated Screening &amp; Evaluation</div>
             </div>
             <div className="zr-stat">
-              <div className="zr-stat-n" style={{ display: 'flex', alignItems: 'center' }}><span className="counter" data-target="45" data-suffix="%">45%</span><svg width="0.8em" height="0.8em" viewBox="0 0 24 24" fill="none" stroke="#222" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" style={{ marginLeft: '12px', verticalAlign: '-0.05em' }}><line x1="12" y1="21" x2="12" y2="3"></line><polyline points="5 10 12 3 19 10"></polyline></svg></div>
+              <div className="zr-stat-n" style={{ display: 'flex', alignItems: 'center' }}><span className="counter" data-target="45" data-suffix="%">45%</span><svg width="0.8em" height="0.8em" viewBox="0 0 24 24" fill="none" stroke="#222" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" style={{ marginLeft: '12px', verticalAlign: '-0.05em' }}><line x1="12" y1="3" x2="12" y2="21"></line><polyline points="19 14 12 21 5 14"></polyline></svg></div>
               <div className="zr-stat-l">Overall Hiring Cost Reduction</div>
             </div>
           </div>

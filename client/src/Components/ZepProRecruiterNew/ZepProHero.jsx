@@ -50,7 +50,7 @@ const ZepProHero = () => {
               <div className="zr-stat-n">
                 <span className="counter" data-target="45" data-suffix="%">45%</span>
                 <span className="zr-stat-arrow">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M12 19V5M5 12l7-7 7 7" /></svg>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12l7 7 7-7" /></svg>
                 </span>
               </div>
               <div className="zr-stat-l">Overall Hiring Cost Reduction</div>
