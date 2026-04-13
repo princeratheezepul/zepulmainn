@@ -154,39 +154,39 @@ const Pricing = () => {
 
                         <div className="pr-new-card-features">
                             <div className="pr-new-feature">
-                                <span className="pr-new-check black"><CheckIcon /></span>
+                                <span className="pr-new-check blue"><CheckIcon /></span>
                                 100% Automated workflow
                             </div>
                             <div className="pr-new-feature">
-                                <span className="pr-new-check black"><CheckIcon /></span>
+                                <span className="pr-new-check blue"><CheckIcon /></span>
                                 Conversational AI agent for JD and Job Creation
                             </div>
                             <div className="pr-new-feature">
-                                <span className="pr-new-check black"><CheckIcon /></span>
+                                <span className="pr-new-check blue"><CheckIcon /></span>
                                 Job board integration - AI Sourcing
                             </div>
                             <div className="pr-new-feature">
-                                <span className="pr-new-check black"><CheckIcon /></span>
+                                <span className="pr-new-check blue"><CheckIcon /></span>
                                 <strong>CV Strength - Read , Rank, Match</strong>
                             </div>
                             <div className="pr-new-feature">
-                                <span className="pr-new-check black"><CheckIcon /></span>
+                                <span className="pr-new-check blue"><CheckIcon /></span>
                                 Customised Dynamic Coding test
                             </div>
                             <div className="pr-new-feature">
-                                <span className="pr-new-check black"><CheckIcon /></span>
+                                <span className="pr-new-check blue"><CheckIcon /></span>
                                 Automated Decision Ready Scorecard
                             </div>
                             <div className="pr-new-feature">
-                                <span className="pr-new-check black"><CheckIcon /></span>
+                                <span className="pr-new-check blue"><CheckIcon /></span>
                                 Customised AI Interview
                             </div>
                             <div className="pr-new-feature">
-                                <span className="pr-new-check black"><CheckIcon /></span>
+                                <span className="pr-new-check blue"><CheckIcon /></span>
                                 Intelligent Performance Dashboards
                             </div>
                             <div className="pr-new-feature">
-                                <span className="pr-new-check black"><CheckIcon /></span>
+                                <span className="pr-new-check blue"><CheckIcon /></span>
                                 24*7 Chat Support
                             </div>
                         </div>
@@ -280,27 +280,27 @@ const Pricing = () => {
 
                         <div className="pr-new-card-features">
                             <div className="pr-new-feature">
-                                <span className="pr-new-check faint-blue"><CheckIcon /></span>
+                                <span className="pr-new-check blue"><CheckIcon /></span>
                                 Agent to understand your aspirations
                             </div>
                             <div className="pr-new-feature">
-                                <span className="pr-new-check faint-blue"><CheckIcon /></span>
+                                <span className="pr-new-check blue"><CheckIcon /></span>
                                 AI Based Job Matching
                             </div>
                             <div className="pr-new-feature">
-                                <span className="pr-new-check faint-blue"><CheckIcon /></span>
+                                <span className="pr-new-check blue"><CheckIcon /></span>
                                 Access to Global Opportunities
                             </div>
                             <div className="pr-new-feature">
-                                <span className="pr-new-check faint-blue"><CheckIcon /></span>
+                                <span className="pr-new-check blue"><CheckIcon /></span>
                                 Free AI based Upskill and Interview Prep Help
                             </div>
                             <div className="pr-new-feature">
-                                <span className="pr-new-check faint-blue"><CheckIcon /></span>
+                                <span className="pr-new-check blue"><CheckIcon /></span>
                                 Direct Connection to Decision makers
                             </div>
                             <div className="pr-new-feature">
-                                <span className="pr-new-check faint-blue"><CheckIcon /></span>
+                                <span className="pr-new-check blue"><CheckIcon /></span>
                                 ZepDB access (read only)
                             </div>
                         </div>
@@ -325,27 +325,27 @@ const Pricing = () => {
 
                         <div className="pr-new-card-features">
                             <div className="pr-new-feature">
-                                <span className="pr-new-check faint-blue"><CheckIcon /></span>
+                                <span className="pr-new-check blue"><CheckIcon /></span>
                                 Access to fullstack AI hiring platform
                             </div>
                             <div className="pr-new-feature">
-                                <span className="pr-new-check faint-blue"><CheckIcon /></span>
+                                <span className="pr-new-check blue"><CheckIcon /></span>
                                 Access to Global Business
                             </div>
                             <div className="pr-new-feature">
-                                <span className="pr-new-check faint-blue"><CheckIcon /></span>
+                                <span className="pr-new-check blue"><CheckIcon /></span>
                                 Access to Global job Market Intelligence
                             </div>
                             <div className="pr-new-feature">
-                                <span className="pr-new-check faint-blue"><CheckIcon /></span>
+                                <span className="pr-new-check blue"><CheckIcon /></span>
                                 Access to Market &amp; Candidate Specific Benchmarking
                             </div>
                             <div className="pr-new-feature">
-                                <span className="pr-new-check faint-blue"><CheckIcon /></span>
+                                <span className="pr-new-check blue"><CheckIcon /></span>
                                 Access to Intelligent Dashboards
                             </div>
                             <div className="pr-new-feature">
-                                <span className="pr-new-check faint-blue"><CheckIcon /></span>
+                                <span className="pr-new-check blue"><CheckIcon /></span>
                                 Opportunity to Outsmart agencies
                             </div>
                         </div>
@@ -507,9 +507,9 @@ const Pricing = () => {
                     <span className="pr-beyond-logo-pill">Global Teams</span>
                 </div>
             </section>
-            <LandingBeyondCTA/>
+            <LandingBeyondCTA />
 
-            
+
         </div>
     );
 };
