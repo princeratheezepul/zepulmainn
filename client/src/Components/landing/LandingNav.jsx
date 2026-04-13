@@ -1,8 +1,10 @@
 import React, { useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 
 const LandingNav = () => {
     const navRef = useRef(null);
+    const location = useLocation();
+    const isAbout = location.pathname === '/about';
 
     useEffect(() => {
         const nav = navRef.current;
@@ -36,7 +38,7 @@ const LandingNav = () => {
     }, []);
 
     return (
-        <nav className="lp-nav" ref={navRef}>
+        <nav className={`lp-nav${isAbout ? ' about-theme' : ''}`} ref={navRef}>
             <div className="lp-logo">
                 <Link to="/">
                     <img src="/assets/logo.png" alt="Zepul" />

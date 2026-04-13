@@ -5,8 +5,8 @@ const ZepProPipeline = () => {
   return (
     <div id="ZepProPipeline-root" className="zep-pro-recruiter-page">
       <section className="zrw">
-        <div className="zrw-header reveal" style={{ padding: '0 52px', marginBottom: '40px' }}>
-          <h2 className="section-head" style={{ textAlign: 'left', width: '100%' }}>How <span className="blue">Zep Pro Recruiter</span>Works</h2>
+        <div className="zrw-header reveal" style={{ padding: '0 52px', marginBottom: '20px' }}>
+          <h2 className="section-head" style={{ textAlign: 'left', width: '100%' }}>How <span className="blue">Zep Pro Recruiter</span> Works</h2>
           <div className="zrw-subtitle-row reveal" style={{
             fontFamily: "'Lora', serif",
             fontWeight: 400,
@@ -18,7 +18,7 @@ const ZepProPipeline = () => {
             alignItems: 'center',
             justifyContent: 'center',
             gap: '12px',
-            marginTop: '20px',
+            marginTop: '84px',
             width: '100%',
             textAlign: 'center'
           }}>
