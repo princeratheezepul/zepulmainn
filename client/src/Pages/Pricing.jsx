@@ -177,6 +177,18 @@ const Pricing = () => {
                                 <span className="pr-new-check black"><CheckIcon /></span>
                                 Automated Decision Ready Scorecard
                             </div>
+                            <div className="pr-new-feature">
+                                <span className="pr-new-check black"><CheckIcon /></span>
+                                Customised AI Interview
+                            </div>
+                            <div className="pr-new-feature">
+                                <span className="pr-new-check black"><CheckIcon /></span>
+                                Intelligent Performance Dashboards
+                            </div>
+                            <div className="pr-new-feature">
+                                <span className="pr-new-check black"><CheckIcon /></span>
+                                24*7 Chat Support
+                            </div>
                         </div>
 
                         <a href="#" className="pr-new-btn outlined">
@@ -198,27 +210,39 @@ const Pricing = () => {
                         <div className="pr-new-card-features">
                             <div className="pr-new-feature">
                                 <span className="pr-new-check blue"><CheckIcon /></span>
-                                Everything in Scale, plus:
+                                Conversational AI agent for JD and Job Creation
                             </div>
                             <div className="pr-new-feature">
                                 <span className="pr-new-check blue"><CheckIcon /></span>
-                                Custom SLAs &amp; compliance (SOC2, GDPR)
+                                Multiple engagement Model support - DH, C2H,C, RaaS
                             </div>
                             <div className="pr-new-feature">
                                 <span className="pr-new-check blue"><CheckIcon /></span>
-                                Dedicated on-site recruiter team
+                                Lowest TAT & Highest Quality Compared to agencies / legacy models
                             </div>
                             <div className="pr-new-feature">
                                 <span className="pr-new-check blue"><CheckIcon /></span>
-                                API access &amp; ATS integrations
+                                Balanced Cost & Commitment
                             </div>
                             <div className="pr-new-feature">
                                 <span className="pr-new-check blue"><CheckIcon /></span>
-                                White-label reporting &amp; branded portals
+                                Dedicated Account Manager
                             </div>
                             <div className="pr-new-feature">
                                 <span className="pr-new-check blue"><CheckIcon /></span>
                                 24/7 priority support + CSM
+                            </div>
+                            <div className="pr-new-feature">
+                                <span className="pr-new-check blue"><CheckIcon /></span>
+                                Comprehensive Decision Ready Reportcards that replace CVs
+                            </div>
+                            <div className="pr-new-feature">
+                                <span className="pr-new-check blue"><CheckIcon /></span>
+                                End to End lifecycle support from Requisition to Onboarding
+                            </div>
+                            <div className="pr-new-feature">
+                                <span className="pr-new-check blue"><CheckIcon /></span>
+                                Scale recruiting capacity instantly, up or down
                             </div>
                         </div>
 
