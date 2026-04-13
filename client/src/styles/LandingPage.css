@@ -1542,13 +1542,13 @@
 .lp-beyond {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  min-height: 100vh;
+  min-height: 60vh;
   background: #000;
 }
 
 .lp-beyond-left {
   background: linear-gradient(160deg, #000 0%, #0a0c14 40%, #0d1020 100%);
-  padding: 20px 52px 72px;
+  padding: 60px 52px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -1606,7 +1606,7 @@
 
 .lp-beyond-right {
   background: #ffffff;
-  padding: 20px 80px 60px;
+  padding: 60px 80px;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -2087,12 +2087,12 @@
 
 /* FINAL OVERRIDE: Restore Footer Padding specifically for Landing Page */
 .lp-root .footer-container {
-  padding: 4.5rem 4rem 2.5rem 6.5rem !important;
+  padding: 2rem 2rem 2.5rem 2rem !important;
 }
 
 @media (max-width: 1200px) {
   .lp-root .footer-container {
-    padding: 3.5rem 2.5rem 2rem 4rem !important;
+    padding: 2rem 1.5rem 2rem 1.5rem !important;
   }
 }
 
