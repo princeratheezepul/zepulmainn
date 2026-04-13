@@ -229,6 +229,28 @@ class Solution {
         return null;
     }
 }`;
+        } else if (newLang === 'cpp') {
+            newCode = `#include <iostream>
+#include <vector>
+#include <string>
+
+class Solution {
+public:
+    // Update the return type and arguments based on the problem
+    int ${functionName}(std::vector<int>& nums, int target) {
+        // Your code here
+        return 0;
+    }
+};`;
+        } else if (newLang === 'python') {
+            newCode = `def ${functionName}(nums, target):
+    \"\"\"
+    :type nums: List[int]
+    :type target: int
+    :rtype: List[int]
+    \"\"\"
+    # Your code here
+    pass`;
         } else {
             // JavaScript
             newCode = `// ${currentQuestion?.title || 'Question'}
@@ -421,13 +443,13 @@ function ${functionName}(...args) {
                 setIsRunning(false);
                 return;
 
-            } else if (currentLang === 'java') {
+            } else if (currentLang === 'java' || currentLang === 'cpp' || currentLang === 'python') {
                 const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/assessment/${assessmentId}/run`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         code: currentCode,
-                        language: 'java',
+                        language: currentLang,
                         questionIndex: currentQuestionIndex
                     })
                 });
@@ -451,7 +473,6 @@ function ${functionName}(...args) {
                         [currentQuestionIndex]: `Test Results: ${passedCount}/${data.results.length} test cases passed\n\nOutput:\n${data.output || ''}`
                     }));
                 }
-
             } else {
                 // Legacy JS Client-side execution
                 setTimeout(() => {
@@ -585,105 +606,7 @@ function ${functionName}(...args) {
         }
     };
 
-    // Security State
-    const [warnings, setWarnings] = useState(0);
-    const [isFullScreen, setIsFullScreen] = useState(false);
-    const [securityStarted, setSecurityStarted] = useState(false);
-    const MAX_WARNINGS = 3;
-
-    useEffect(() => {
-        if (!securityStarted || !assessment || assessment.completed) return;
-
-        // 1. Full Screen Detection
-        const handleFullScreenChange = () => {
-            const isFull = !!document.fullscreenElement;
-            setIsFullScreen(isFull);
-            if (!isFull) {
-                handleViolation("Exited full screen mode");
-            }
-        };
-
-        // 2. Tab/Window Switch Detection
-        const handleVisibilityChange = () => {
-            if (document.hidden) {
-                handleViolation("Tab switched or minimized window");
-            }
-        };
-
-        const handleBlur = () => {
-            // Some browsers fire blur when clicking inside iframe/editor, so we need to be careful.
-            // For rigorous testing, we can warn, but let's stick to visibility for now to avoid false positives with Editor interactions.
-            // console.log("Window blurred");
-            // handleViolation("Lost window focus"); 
-        };
-
-        // 3. Disable Context Menu
-        const handleContextMenu = (e) => {
-            e.preventDefault();
-            toast.error("Right-click is disabled");
-        };
-
-        // 4. Disable Copy/Paste (Keyboard)
-        const handleKeyDown = (e) => {
-            if ((e.ctrlKey || e.metaKey) && (e.key === 'c' || e.key === 'v' || e.key === 'x')) {
-                e.preventDefault();
-                toast.error("Copy/Paste is disabled");
-            }
-        };
-
-        document.addEventListener('fullscreenchange', handleFullScreenChange);
-        document.addEventListener('visibilitychange', handleVisibilityChange);
-        document.addEventListener('contextmenu', handleContextMenu);
-        document.addEventListener('keydown', handleKeyDown);
-        window.addEventListener('blur', handleBlur);
-
-        return () => {
-            document.removeEventListener('fullscreenchange', handleFullScreenChange);
-            document.removeEventListener('visibilitychange', handleVisibilityChange);
-            document.removeEventListener('contextmenu', handleContextMenu);
-            document.removeEventListener('keydown', handleKeyDown);
-            window.removeEventListener('blur', handleBlur);
-        };
-    }, [securityStarted, assessment]);
-
-    const handleViolation = (reason) => {
-        if (submitting || (assessment && assessment.completed)) return;
-
-        setWarnings(prev => {
-            const newVal = prev + 1;
-
-            if (newVal >= MAX_WARNINGS) {
-                handleSubmit(true); // Auto-submit
-                toast.error(`Violation: ${reason}. Max warnings reached. Submitting test...`);
-            } else {
-                toast((t) => (
-                    <div className="flex flex-col gap-1">
-                        <div className="font-bold text-red-600 flex items-center gap-2">
-                            <AlertCircle size={16} />
-                            Warning {newVal}/{MAX_WARNINGS}
-                        </div>
-                        <div className="text-sm text-gray-800">
-                            {reason}. Please stay on this screen.
-                        </div>
-                    </div>
-                ), { duration: 5000, icon: '⚠️' });
-            }
-            return newVal;
-        });
-    };
-
-    const enterFullScreen = () => {
-        const elem = document.documentElement;
-        if (elem.requestFullscreen) {
-            elem.requestFullscreen().then(() => {
-                setIsFullScreen(true);
-                setSecurityStarted(true);
-            }).catch(err => {
-                console.error("Error attempting to enable full-screen mode:", err);
-                toast.error("Could not enter full screen. Please allow permissions.");
-            });
-        }
-    };
+    // Security disabled for testing
 
     if (loading) {
         return (
@@ -693,65 +616,38 @@ function ${functionName}(...args) {
         );
     }
 
-    // ... (Error and Completed states remain same) ...
-    if (error) { /* ... */ }
-    if (assessment?.completed) { /* ... */ }
-
-    // Security Overlay
-    if (!securityStarted && assessment) {
+    if (error) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-                <div className="bg-white p-8 rounded-xl shadow-lg max-w-lg text-center">
-                    <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                        <Award className="text-blue-600" size={32} />
-                    </div>
-                    <h2 className="text-2xl font-bold text-gray-900 mb-4">Ready to Start Assessment?</h2>
-
-                    <div className="text-left bg-blue-50 p-4 rounded-lg mb-6 text-sm text-blue-800 space-y-2">
-                        <p className="font-semibold">Security Rules:</p>
-                        <ul className="list-disc pl-5 space-y-1">
-                            <li>Full Screen mode is mandatory.</li>
-                            <li>Do not switch tabs or windows.</li>
-                            <li>Copy/Paste is disabled.</li>
-                            <li><strong>{MAX_WARNINGS} violations will auto-submit the test.</strong></li>
-                        </ul>
-                    </div>
-
-                    <button
-                        onClick={enterFullScreen}
-                        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-colors flex items-center justify-center gap-2"
-                    >
-                        Enter Full Screen & Start
-                        <ChevronRight size={20} />
-                    </button>
+                <div className="bg-white p-8 rounded-xl shadow-lg max-w-md text-center">
+                    <AlertCircle className="mx-auto text-red-500 mb-4" size={48} />
+                    <h2 className="text-2xl font-bold text-gray-800 mb-2">Error Loading Assessment</h2>
+                    <p className="text-gray-600">{error}</p>
                 </div>
             </div>
         );
     }
 
-    // Warning Overlay if Full Screen Exited mid-test
-    if (securityStarted && !isFullScreen && !assessment?.completed) {
+    if (assessment?.completed) {
         return (
-            <div className="fixed inset-0 z-50 bg-gray-900/90 backdrop-blur-sm flex items-center justify-center p-4">
-                <div className="bg-white p-8 rounded-xl shadow-2xl max-w-md text-center animate-bounce-in">
-                    <AlertCircle className="mx-auto text-red-600 mb-4" size={56} />
-                    <h2 className="text-2xl font-bold text-gray-900 mb-2">Security Violation</h2>
-                    <p className="text-gray-600 mb-6">
-                        You have exited full screen mode. Please return to full screen immediately to continue your assessment.
+            <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+                <div className="bg-white p-10 rounded-2xl shadow-xl max-w-md w-full text-center">
+                    <div className="flex items-center justify-center w-20 h-20 rounded-full bg-green-100 mx-auto mb-6">
+                        <CheckCircle className="text-green-500" size={44} />
+                    </div>
+                    <h2 className="text-3xl font-bold text-gray-900 mb-3">Assessment Submitted!</h2>
+                    <p className="text-gray-500 text-base mb-6">
+                        Your answers have been recorded successfully. You may now close this window.
                     </p>
-                    <p className="text-red-500 font-bold mb-6">
-                        Warnings: {warnings}/{MAX_WARNINGS}
-                    </p>
-                    <button
-                        onClick={enterFullScreen}
-                        className="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-lg shadow-lg hover:shadow-xl transition-all"
-                    >
-                        Return to Assessment
-                    </button>
+                    <div className="bg-gray-50 rounded-xl p-4 text-sm text-gray-400 border border-gray-100">
+                        Assessment ID: <span className="font-mono text-gray-600">{assessmentId}</span>
+                    </div>
                 </div>
             </div>
         );
     }
+
+    // Security overlays disabled for testing
 
     const formatDisplayValue = (value) => {
         if (typeof value === 'string') return value;
@@ -781,7 +677,7 @@ function ${functionName}(...args) {
     }
 
     return (
-        <div className="flex flex-col h-screen bg-gray-100 overflow-hidden select-none">
+        <div className="flex flex-col h-screen bg-gray-100 overflow-hidden">
             {/* Header */}
             <header className="bg-white border-b border-gray-200 px-6 py-3 flex justify-between items-center shadow-sm z-10">
                 <div className="flex items-center gap-3">
@@ -790,11 +686,6 @@ function ${functionName}(...args) {
                         <h1 className="font-bold text-gray-800 text-lg">Coding Assessment</h1>
                         <div className="flex items-center gap-2 text-xs text-gray-500">
                             <span>Candidate: {assessment.candidateName}</span>
-                            {warnings > 0 && (
-                                <span className="text-red-500 font-bold bg-red-50 px-1 rounded">
-                                    Warnings: {warnings}/{MAX_WARNINGS}
-                                </span>
-                            )}
                         </div>
                     </div>
                 </div>
@@ -873,6 +764,8 @@ function ${functionName}(...args) {
                             >
                                 {assessmentType === 'avaloq' && <option value="sql">SQL</option>}
                                 <option value="java">Java</option>
+                                <option value="cpp">C++</option>
+                                <option value="python">Python</option>
                                 <option value="javascript">JavaScript</option>
                             </select>
                         </div>
@@ -929,7 +822,7 @@ function ${functionName}(...args) {
                                 scrollBeyondLastLine: false,
                                 automaticLayout: true,
                                 padding: { top: 20, bottom: 20 },
-                                contextmenu: false, // Disable right-click in editor
+                                contextmenu: true,
                             }}
                         />
                     </div>

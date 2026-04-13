@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { MapPin, Briefcase, Calendar, Users, IndianRupee, CalendarDays } from 'lucide-react';
+import { MapPin, Briefcase, Calendar, Users, IndianRupee, CalendarDays, Pencil, X } from 'lucide-react';
 import Sidebar from '../Components/recruiter/dashboard/Sidebar';
 import Settings from '../Components/recruiter/dashboard/Settings';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import ResumeUpload from '../Components/recruiter/dashboard/ResumeUpload';
 import SavedResumes from '../Components/recruiter/dashboard/SavedResumes';
+import toast from 'react-hot-toast';
 
 const RecruiterJobDetailPage = () => {
   const [activeComponent, setActiveComponent] = useState('Jobs');
@@ -20,6 +21,7 @@ const RecruiterJobDetailPage = () => {
   const [resumeCount, setResumeCount] = useState(0);
   const [preloadedResumes, setPreloadedResumes] = useState([]);
   const [resumesLoading, setResumesLoading] = useState(false);
+
   // Handle sidebar navigation
   const handleSidebarNavigation = (component) => {
     if (component === 'Dashboard') {
@@ -78,7 +80,6 @@ const RecruiterJobDetailPage = () => {
   };
 
   useEffect(() => {
-
     if (jobId) {
       fetchJob();
       fetchResumeCount();
@@ -202,7 +203,7 @@ const RecruiterJobDetailPage = () => {
                   <div className="text-xs text-blue-600 font-semibold mb-1">JOB DETAILS</div>
                   <div className="flex items-center gap-2 mb-1">
                     <div className="text-2xl md:text-xl font-bold text-gray-900">{job.jobtitle}</div>
-                    {/* {job.isNew && <s  pan className="ml-2 px-2 py-0.5 rounded-full bg-green-100 text-green-700 text-xs font-semibold">New</span>} */}
+                    {/* {job.isNew && <span className="ml-2 px-2 py-0.5 rounded-full bg-green-100 text-green-700 text-xs font-semibold">New</span>} */}
                   </div>
                 </div>
                 <div className="flex gap-3">
@@ -210,7 +211,7 @@ const RecruiterJobDetailPage = () => {
                   <div className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-3 py-2 rounded-full text-sm cursor-pointer hover:shadow-md" onClick={() => setShowResumeUpload(true)}>Submit Resume</div>
                 </div>
               </div>
-              <div className="flex items-center justify-between w-full gap-2 flex-wrap mt-1">
+                <div className="flex items-center justify-between w-full gap-2 flex-wrap mt-1">
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="flex items-center gap-1 text-xs text-gray-700 font-medium">
                     <div className={`w-5 h-5 ${getCompanyAvatarColor(job.company)} text-white rounded-full flex items-center justify-center text-xs font-semibold`}>
@@ -226,7 +227,9 @@ const RecruiterJobDetailPage = () => {
                   <span className="h-5 w-px bg-gray-200 hidden md:inline-block"></span>
                   <span className="flex items-center gap-1 px-2 py-1 rounded-full bg-gray-100 text-xs font-medium text-gray-700"><CalendarDays size={16} className="text-gray-500" />Posted {job.posted}</span>
                 </div>
-                <div className="flex items-center gap-2 bg-black text-white px-3 py-2 rounded-full text-sm font-semibold hover:bg-gray-900 transition-colors cursor-pointer" onClick={() => setShowSavedResumes(true)}><Users size={18} className="text-white" />{resumeCount} Candidate List <svg xmlns='http://www.w3.org/2000/svg' className='inline ml-1' width='18' height='18' fill='none' viewBox='0 0 24 24' stroke='currentColor'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M9 5l7 7-7 7' /></svg></div>
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 bg-black text-white px-3 py-2 rounded-full text-sm font-semibold hover:bg-gray-900 transition-colors cursor-pointer" onClick={() => setShowSavedResumes(true)}><Users size={18} className="text-white" />{resumeCount} Candidate List <svg xmlns='http://www.w3.org/2000/svg' className='inline ml-1' width='18' height='18' fill='none' viewBox='0 0 24 24' stroke='currentColor'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M9 5l7 7-7 7' /></svg></div>
+                </div>
               </div>
             </div>
             {/* Main Content Row */}
@@ -307,12 +310,12 @@ const RecruiterJobDetailPage = () => {
                 </div>
               </div>
             </div>
-          {/* </div> */}
+            {/* </div> */}
         </div>        
       )}
     </div>
-    </div>
-  );
+  </div>
+);
 };
 
-export default RecruiterJobDetailPage; 
+export default RecruiterJobDetailPage;

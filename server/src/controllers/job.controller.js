@@ -90,10 +90,10 @@ export const getAllJobs = async (req, res) => {
 
 export const updateJob = async (req, res) => {
     try {
-        const { jobtitle, description, location, salary, openpositions, skills, experience, companyId, internalNotes } = req.body;
+        const { jobtitle, description, location, salary, openpositions, skills, experience, companyId, internalNotes, keyResponsibilities, preferredQualifications, employmentType, hiringDeadline, priority } = req.body;
         const jobId = req.params.id;
 
-        const job = await Job.findByIdAndUpdate(jobId, {
+        const updateData = {
             jobtitle,
             description,
             location,
@@ -101,9 +101,17 @@ export const updateJob = async (req, res) => {
             openpositions,
             skills,
             experience,
-            companyId,
-            internalNotes: internalNotes || ""
-        }, { new: true });
+            internalNotes: internalNotes || "",
+        };
+
+        if (companyId !== undefined) updateData.companyId = companyId;
+        if (keyResponsibilities !== undefined) updateData.keyResponsibilities = keyResponsibilities;
+        if (preferredQualifications !== undefined) updateData.preferredQualifications = preferredQualifications;
+        if (employmentType !== undefined) updateData.employmentType = employmentType;
+        if (hiringDeadline !== undefined) updateData.hiringDeadline = hiringDeadline ? new Date(hiringDeadline) : null;
+        if (priority !== undefined) updateData.priority = priority;
+
+        const job = await Job.findByIdAndUpdate(jobId, updateData, { new: true });
 
         if (!job) {
             return res.status(404).json({
@@ -125,6 +133,7 @@ export const updateJob = async (req, res) => {
         });
     }
 };
+
 
 export const deleteJob = async (req, res) => {
     try {

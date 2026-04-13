@@ -4,6 +4,7 @@ import JobDetails from './JobDetails.jsx';
 import CandidateList from './CandidateList.jsx';
 import CreateJobManager from './CreateJobManager.jsx';
 import JobSidebar from './JobSidebar.jsx';
+import EditJobPanel from './EditJobPanel.jsx';
 
 const Jobs = () => {
   const [jobs, setJobs] = useState([]);
@@ -16,6 +17,7 @@ const Jobs = () => {
   const [selectedJob, setSelectedJob] = useState(null);
   const [showCandidateList, setShowCandidateList] = useState(false);
   const [showCreateJob, setShowCreateJob] = useState(false);
+  const [showEditJob, setShowEditJob] = useState(false);
 
   // Fetch jobs on component mount and when page/filter changes
   useEffect(() => {
@@ -175,14 +177,26 @@ const Jobs = () => {
   const handleBack = () => {
     setSelectedJob(null);
     setShowCandidateList(false);
+    setShowEditJob(false);
   };
 
   const handleShowCandidates = () => {
     setShowCandidateList(true);
+    setShowEditJob(false);
   };
 
   const handleBackToJobDetails = () => {
     setShowCandidateList(false);
+    setShowEditJob(false);
+  };
+
+  const handleShowEditJob = () => {
+    setShowEditJob(true);
+    setShowCandidateList(false);
+  };
+
+  const handleBackFromEditJob = () => {
+    setShowEditJob(false);
   };
 
   const handleJobUpdated = (updatedJob) => {
@@ -301,11 +315,14 @@ const Jobs = () => {
       )}
       {/* Sidebar for Job Details */}
       <JobSidebar open={!!selectedJob} onClose={handleBack}>
-        {selectedJob && !showCandidateList && (
-          <JobDetails job={selectedJob} onBack={handleBack} onShowCandidates={handleShowCandidates} onJobUpdated={handleJobUpdated} />
+        {selectedJob && !showCandidateList && !showEditJob && (
+          <JobDetails job={selectedJob} onBack={handleBack} onShowCandidates={handleShowCandidates} onShowEditJob={handleShowEditJob} onJobUpdated={handleJobUpdated} />
         )}
         {selectedJob && showCandidateList && (
           <CandidateList job={selectedJob} onBack={handleBackToJobDetails} />
+        )}
+        {selectedJob && showEditJob && (
+          <EditJobPanel job={selectedJob} onBack={handleBackFromEditJob} onJobUpdated={handleJobUpdated} />
         )}
       </JobSidebar>
     </div>

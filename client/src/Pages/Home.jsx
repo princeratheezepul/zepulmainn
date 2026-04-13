@@ -4,6 +4,12 @@ import "../styles/Home.css";
 
 import NewHeroComponent from "../Components/NewHeroComponent";
 import WhyRecruitment from "../Components/WhyRecruitment";
+import TwoPaths from "../Components/TwoPaths";
+import TrustedPartners from "../Components/TrustedPartners";
+import WhyZepul from "../Components/WhyZepul";
+import ZepulComparison from "../Components/ZepulComparison";
+import EngagementModels from "../Components/EngagementModels";
+import PricingCards from "../Components/PricingCards";
 import FrameComponent from "../Components/FrameComponent";
 import WhyChooseZepul from "../Components/WhyChooseZepul";
 import ProductsServices from "../Components/ProductsServices";
@@ -76,18 +82,36 @@ const Home = () => {
       <section className="why-recruitment-section">
         <WhyRecruitment />
       </section>
+      <section className="two-paths-section-wrapper">
+        <TwoPaths />
+      </section>
+      <section className="trusted-partners-section-wrapper">
+        <TrustedPartners />
+      </section>
+      <section className="why-zepul-section-wrapper">
+        <WhyZepul />
+      </section>
+      <section className="zepul-comparison-section-wrapper">
+        <ZepulComparison />
+      </section>
+      <section className="engagement-models-section-wrapper">
+        <EngagementModels />
+      </section>
+      <section className="pricing-cards-section-wrapper">
+        <PricingCards />
+      </section>
       <div className="container h-full">
         <div className="row ">
-          <section className="frame-section">
+          {/* <section className="frame-section">
             <FrameComponent />
-          </section>
-          <section className="why-choose-zepul-section">
+          </section> */}
+          {/* <section className="why-choose-zepul-section">
             <WhyChooseZepul />
-          </section>
-          <section className="products-services-section">
+          </section> */}
+          {/* <section className="products-services-section">
             <ProductsServices />
-          </section>
-          <section className="contact-form-section" id="beyond-recruitment">
+          </section> */}
+          <section className="contact-form-section" id="beyond-recruitment" style={{ marginTop: "2rem" }}>
             <ContactForm />
           </section>
           {/* <section className="d-flex row innovation py-md-2  align-items-center">
