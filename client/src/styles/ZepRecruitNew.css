@@ -2511,3 +2511,21 @@
     border-bottom: none;
   }
 }
+
+/* ── MOBILE: tighten gaps in How Zep Recruit Works ── */
+@media (max-width: 767px) {
+  .zep-recruit-page .zrw {
+    padding-bottom: 20px !important;
+    min-height: unset !important;
+  }
+
+  .zep-recruit-page .zrw-agile-bar {
+    margin-bottom: 8px;
+  }
+
+  .zep-recruit-page .zrw-canvas-wrapper {
+    padding: 0 !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+  }
+}
