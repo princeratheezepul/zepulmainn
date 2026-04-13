@@ -136,15 +136,15 @@
 .zep-pro-recruiter-page .zr-hero {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  min-height: calc(100vh - 62px);
-  margin-top: 62px;
+  min-height: auto;
+  margin-top: 20px;
   border-bottom: 1px solid var(--rule);
   align-items: center;
   background: #fff;
 }
 
 .zep-pro-recruiter-page .zr-hero-left {
-  padding: 72px 52px 64px;
+  padding: 40px 52px 40px;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -246,6 +246,25 @@
   line-height: 1;
   letter-spacing: -.04em;
   margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.zep-pro-recruiter-page .zr-stat-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  color: var(--ink);
+  opacity: 0.8;
+}
+
+.zep-pro-recruiter-page .zr-stat-arrow svg {
+  width: 20px;
+  height: 20px;
+  stroke-width: 3.5;
 }
 
 .zep-pro-recruiter-page .zr-stat-l {
@@ -296,7 +315,7 @@
   align-items: center;
   justify-content: center;
   position: relative;
-  min-height: calc(100vh - 62px);
+  min-height: auto;
   background: var(--soft);
 }
 
@@ -386,7 +405,7 @@
 .zep-pro-recruiter-page .zrw {
   background: #fff;
   border-bottom: 1px solid var(--rule);
-  padding: 100px 0 80px;
+  padding: 40px 0 15px;
   overflow-x: auto;
   overflow-y: visible;
   position: relative;
@@ -1022,7 +1041,7 @@
 .zep-pro-recruiter-page .zrw-features {
   background: var(--soft);
   border-bottom: 1px solid var(--rule);
-  padding: 80px 52px;
+  padding: 15px 52px;
 }
 
 .zep-pro-recruiter-page .zrw-features-header {
@@ -1121,7 +1140,7 @@
 .zep-pro-recruiter-page .zrw-why {
   background: #fff;
   border-bottom: 1px solid var(--rule);
-  padding: 100px 52px;
+  padding: 15px 52px;
   max-width: 100%;
   overflow: hidden;
 }
