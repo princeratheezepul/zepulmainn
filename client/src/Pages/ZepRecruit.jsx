@@ -8,6 +8,7 @@ import ZepWhyChoose from "../Components/ZepRecruitNew/ZepWhyChoose";
 import ZepEngagement from "../Components/ZepRecruitNew/ZepEngagement";
 import LandingBeyondCTA from "../Components/landing/LandingBeyondCTA";
 import ZepRecruitFooter from "../Components/ZepRecruitNew/ZepRecruitFooter";
+import "../styles/LandingPage.css";
 import "../styles/ZepRecruitNew.css";
 
 function ZepRecruit() {

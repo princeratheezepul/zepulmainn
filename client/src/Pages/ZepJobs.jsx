@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import './ZepJobs.css';
 import LandingBeyondCTA from '../Components/landing/LandingBeyondCTA';
 import LandingNav from '../Components/landing/LandingNav';
+import '../styles/LandingPage.css';
 
 const ZepJobs = () => {
   const [scrolled, setScrolled] = useState(false);

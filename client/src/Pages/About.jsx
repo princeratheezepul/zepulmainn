@@ -7,6 +7,7 @@ import ZepAboutValues from '../Components/ZepAboutNew/ZepAboutValues';
 import ZepAboutFAQ from '../Components/ZepAboutNew/ZepAboutFAQ';
 import ZepAboutBeyondCTA from '../Components/ZepAboutNew/ZepAboutBeyondCTA';
 import ZepAboutFooter from '../Components/ZepAboutNew/ZepAboutFooter';
+import '../styles/LandingPage.css';
 import '../styles/ZepAbout.css';
 import LandingBeyondCTA from '../Components/landing/LandingBeyondCTA';
 

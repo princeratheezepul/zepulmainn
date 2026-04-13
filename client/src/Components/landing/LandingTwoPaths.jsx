@@ -41,7 +41,7 @@ const LandingTwoPaths = () => {
                         <div className="lp-pc-body">
                             <div className="lp-pc-tag lp-outline">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" /></svg>
-                                ZEP PRO RECRUIT
+                                ZEP PRO RECRUITER
                             </div>
                             <div className="lp-pc-title">Zep Pro Recruiter - AI Recruitment Product</div>
                             <div className="lp-pc-desc">Empower your recruiters with a unified, AI-driven platform to source talent, assess CV strength, run dynamic coding assessments, and conduct fully automated interviews—generating comprehensive, decision-ready report cards in one place. Real-time dashboards provide complete visibility into recruiter and business performance. The result: more productive recruiters, higher-quality hires, and significantly reduced time and cost to hire.</div>
