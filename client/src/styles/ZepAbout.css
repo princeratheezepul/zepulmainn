@@ -520,6 +520,14 @@
   height: 16px;
 }
 
+@media (min-width: 768px) {
+
+  .zep-about-page .team-nav,
+  .zep-about-page .team-dots {
+    display: none;
+  }
+}
+
 /* Carousel dots */
 .zep-about-page .team-dots {
   display: flex;
