@@ -1548,7 +1548,7 @@
 
 .lp-beyond-left {
   background: linear-gradient(160deg, #000 0%, #0a0c14 40%, #0d1020 100%);
-  padding: 72px 52px;
+  padding: 20px 52px 72px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -1606,7 +1606,7 @@
 
 .lp-beyond-right {
   background: #ffffff;
-  padding: 60px 80px;
+  padding: 20px 80px 60px;
   display: flex;
   flex-direction: column;
   justify-content: center;

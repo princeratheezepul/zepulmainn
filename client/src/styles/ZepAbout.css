@@ -336,7 +336,7 @@
 .zep-about-page .partners {
   background: #FFFFFF;
   border-bottom: 1px solid var(--rule);
-  padding: 100px 52px;
+  padding: 20px 52px 20px;
   overflow: hidden;
 }
 
@@ -718,7 +718,7 @@
 .zep-about-page .faq {
   background: #fff;
   border-bottom: 1px solid var(--rule);
-  padding: 100px 52px;
+  padding: 20px 52px 20px;
 }
 
 .zep-about-page .faq-header {
