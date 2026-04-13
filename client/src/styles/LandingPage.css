@@ -151,15 +151,15 @@
 .lp-hero {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  min-height: calc(100vh - 62px);
-  margin-top: 62px;
+  min-height: auto;
+  margin-top: 40px;
   border-bottom: 1px solid var(--lp-rule);
   background: #ffffff;
   align-items: center;
 }
 
 .lp-hero-left {
-  padding: 64px 52px 52px;
+  padding: 30px 52px 52px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -174,7 +174,7 @@
   line-height: 1.06;
   letter-spacing: -.03em;
   color: var(--lp-ink);
-  margin-bottom: 36px;
+  margin-bottom: 15px;
 }
 
 .lp-hl-line1 {
@@ -231,9 +231,10 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  padding: 52px 32px;
+  padding: 30px 32px;
   position: relative;
   overflow: visible;
+  min-height: auto;
 }
 
 .lp-hero-orbit {
@@ -498,7 +499,7 @@
 }
 
 .lp-stat {
-  padding: 36px 52px;
+  padding: 24px 52px;
   border-right: 1px solid var(--lp-rule);
   display: flex;
   align-items: flex-end;
@@ -1410,6 +1411,7 @@
   border-bottom: 1px solid var(--lp-rule);
   text-align: center;
   background: #fff;
+  padding-bottom: 30px;
 }
 
 .lp-engage .lp-section-head {
@@ -1427,6 +1429,14 @@
   gap: 0;
 }
 
+@media (min-width: 769px) {
+  .lp-engage-grid {
+    gap: 40px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+}
+
 .lp-engage-card {
   border: 1px solid var(--lp-rule);
   padding: 0;
@@ -1439,8 +1449,11 @@
   flex-direction: column;
 }
 
-.lp-engage-card+.lp-engage-card {
-  border-left: 0;
+/* Logic for touching cards - handled by media query now */
+@media (max-width: 768px) {
+  .lp-engage-card+.lp-engage-card {
+    border-top: 0;
+  }
 }
 
 .lp-engage-card:hover {
@@ -1548,7 +1561,7 @@
 
 .lp-beyond-left {
   background: linear-gradient(160deg, #000 0%, #0a0c14 40%, #0d1020 100%);
-  padding: 60px 52px;
+  padding: 30px 52px 60px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -1606,7 +1619,7 @@
 
 .lp-beyond-right {
   background: #ffffff;
-  padding: 60px 80px;
+  padding: 30px 80px 60px;
   display: flex;
   flex-direction: column;
   justify-content: center;
