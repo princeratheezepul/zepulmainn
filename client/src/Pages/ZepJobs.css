@@ -1172,3 +1172,95 @@ body {
     transform: translateX(-50%);
   }
 }
+
+/* ── MOBILE RESPONSIVENESS ── */
+@media (max-width: 768px) {
+  .jobs {
+    padding: 30px 20px;
+  }
+
+  .jobs-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .jobs-filters {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding-bottom: 12px;
+    -webkit-overflow-scrolling: touch;
+    gap: 8px;
+  }
+
+  .filter-pill {
+    white-space: nowrap;
+  }
+
+  /* Hide the scrollbar for the filters on mobile for cleaner look */
+  .jobs-filters::-webkit-scrollbar {
+    display: none;
+  }
+
+  .jobs-filters {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .job-card {
+    padding: 20px 16px;
+  }
+
+  .jc-inner {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 16px 14px;
+    align-items: flex-start;
+  }
+
+  .jc-logo {
+    grid-column: 1;
+    grid-row: 1;
+    width: 40px;
+    height: 40px;
+  }
+
+  .jc-body {
+    grid-column: 2;
+    grid-row: 1;
+    min-width: 0;
+  }
+
+  .jc-action {
+    grid-column: 2;
+    grid-row: 2;
+    justify-content: flex-start;
+    margin-top: 0px;
+  }
+
+  .jc-title-row {
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+
+  .jc-title {
+    font-size: 15px;
+  }
+
+  .jc-desc {
+    font-size: 13px;
+    line-height: 1.5;
+    margin-bottom: 14px;
+  }
+
+  /* Keep standard gap and flex-wrap for meta items to display like the image */
+  .jc-meta {
+    gap: 8px 16px;
+  }
+
+  /* The image hides the Company Name in the meta list on mobile */
+  .jc-meta-item:first-child {
+    display: none;
+  }
+}
