@@ -136,15 +136,15 @@
 .zep-recruit-page .zr-hero {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  min-height: calc(100vh - 62px);
-  margin-top: 62px;
+  min-height: auto;
+  margin-top: 20px;
   border-bottom: 1px solid var(--rule);
   align-items: center;
   background: #fff;
 }
 
 .zep-recruit-page .zr-hero-left {
-  padding: 72px 52px 64px;
+  padding: 40px 52px 40px;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -296,7 +296,7 @@
   align-items: center;
   justify-content: center;
   position: relative;
-  min-height: calc(100vh - 62px);
+  min-height: auto;
   background: var(--soft);
   overflow: visible;
 }
@@ -622,7 +622,7 @@
 .zep-recruit-page .zrw {
   background: #fff;
   border-bottom: 1px solid var(--rule);
-  padding: 100px 0 240px;
+  padding: 40px 0 40px;
   overflow-x: auto;
   overflow-y: visible;
   position: relative;
@@ -684,7 +684,6 @@
   .zep-recruit-page .zrw-canvas-wrapper {
     width: 100%;
     overflow: visible;
-    zoom: 0.70;
   }
 
   .zep-recruit-page .zrw-canvas {
@@ -1276,7 +1275,7 @@
 .zep-recruit-page .zrw-features {
   background: var(--soft);
   border-bottom: 1px solid var(--rule);
-  padding: 80px 52px;
+  padding: 40px 52px;
 }
 
 .zep-recruit-page .zrw-features-header {
@@ -1375,7 +1374,7 @@
 .zep-recruit-page .zrw-why {
   background: #fff;
   border-bottom: 1px solid var(--rule);
-  padding: 100px 52px;
+  padding: 40px 52px;
   max-width: 100%;
   overflow: hidden;
 }
@@ -2367,7 +2366,7 @@
 
 
 .zep-recruit-page .zr-engage {
-  padding: 100px 52px;
+  padding: 40px 52px;
   background: #fff;
   border-bottom: 1px solid var(--rule);
 }

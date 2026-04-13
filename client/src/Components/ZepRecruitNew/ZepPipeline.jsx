@@ -18,7 +18,7 @@ const ZepPipeline = () => {
         </div>
 
         <div className="zrw-canvas-wrapper" style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '0', flexGrow: 1 }}>
-          <img src="/zeprecruitFlow.png" alt="ZepRecruit Flow" style={{ width: '95vw', maxWidth: '100vw', height: 'auto', objectFit: 'contain' }} className="reveal" />
+          <img src="/zeprecruitFlow.png" alt="ZepRecruit Flow" style={{ width: '90vw', maxWidth: '100vw', height: 'auto', objectFit: 'contain' }} className="reveal" />
         </div>
       </section>
     </div>
