@@ -402,7 +402,7 @@
   height: 220px;
   position: relative;
   overflow: hidden;
-  background: linear-gradient(135deg, #1a1d2e, #0d1020);
+  background: #fff;
 }
 
 .zep-about-page .team-card-avatar-bg {
