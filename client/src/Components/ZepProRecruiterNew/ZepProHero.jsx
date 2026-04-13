@@ -24,8 +24,8 @@ significantly reduced time and cost to hire.</p>
         <div className="zr-stat-l">Better Talent Match Accuracy</div>
       </div>
       <div className="zr-stat">
-        <div className="zr-stat-n"><span className="counter" data-target="60" data-suffix="%">60%</span></div>
-        <div className="zr-stat-l">100% AI DIY Ready</div>
+        <div className="zr-stat-n"><span className="counter" data-target="60" data-suffix="%">100%</span></div>
+        <div className="zr-stat-l">AI DIY Ready</div>
       </div>
       <div className="zr-stat">
         <div className="zr-stat-n"><span className="counter" data-target="90" data-suffix="%">90%</span></div>
