@@ -17,16 +17,16 @@ const ZepAboutGlobe = () => {
             height: 500 * 2,
             phi: 0,
             theta: 0.25,
-            dark: 1,
+            dark: 0,
             diffuse: 1.2,
             mapSamples: 16000,
             mapBrightness: 6,
-            baseColor: [0.15, 0.2, 0.4],
+            baseColor: [0.85, 0.85, 0.9],
             markerColor: [0.1, 0.3, 1],
-            glowColor: [0.06, 0.12, 0.35],
+            glowColor: [1, 1, 1],
             markers: [
                 { location: [51.5074, -0.1278], size: 0.06 }, // UK (London)
-                { location: [28.6139, 77.209], size: 0.07 },  // India (New Delhi)
+                { location: [17.3850, 78.4867], size: 0.07 }, // India (Hyderabad)
                 { location: [25.2048, 55.2708], size: 0.05 }, // UAE (Dubai)
                 { location: [53.3498, -6.2603], size: 0.05 }, // Ireland (Dublin)
                 { location: [1.3521, 103.8198], size: 0.05 }, // Singapore
