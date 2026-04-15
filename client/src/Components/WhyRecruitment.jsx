@@ -31,23 +31,20 @@ const WhyRecruitment = () => {
 
     return (
         <div className="why-recruitment-container">
+            {/* Centered header section */}
             <div className="why-recruitment-header">
-                <div className="why-recruitment-intro">
-                    <p className="intro-text">
-                        Recruitment needs reinvention because traditional hiring is slow,
-                        biased, outdated, and failing to adapt to AI and technology, missing
-                        real skills, modern work models, and evolving candidate expectations.
-                    </p>
-                </div>
-
-                <div className="why-recruitment-title-wrapper">
-                    <h2 className="why-recruitment-title">
-                        Why Recruitment <span className="text-primary">Needs Reinvention</span>?
-                    </h2>
-                </div>
+                <span className="why-recruitment-pill">CHOOSE YOUR PATH</span>
+                <h2 className="why-recruitment-title">
+                    Two Paths to Great Hires.
+                </h2>
+                <p className="why-recruitment-subtitle">
+                    Whether you want AI to handle everything or want AI in your
+                    <br />
+                    team's hands Zepul fits your workflow.
+                </p>
             </div>
 
-            <div className="reinvention-cards">
+            {/* <div className="reinvention-cards">
                 {reinventionData.map((item, index) => (
                     <div className="reinvention-card" key={index}>
                         <div className="card-icon">
@@ -57,7 +54,7 @@ const WhyRecruitment = () => {
                         <p className="card-description">{item.description}</p>
                     </div>
                 ))}
-            </div>
+            </div> */}
         </div>
     );
 };

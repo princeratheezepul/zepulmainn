@@ -1,0 +1,1262 @@
+:root {
+  --blue: #024BFF;
+  --ink: #0C0E16;
+  --muted: #7A7E92;
+  --rule: #E3E5EE;
+  --soft: #F6F7FB;
+  --white: #ffffff;
+}
+
+
+
+/* ── NAV ── */
+.zep-about-page .nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 52px;
+  height: 62px;
+  border-bottom: 1px solid transparent;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  background: transparent;
+  opacity: 0;
+  animation: up .5s ease .05s both;
+  transition: transform .45s cubic-bezier(.22, 1, .36, 1), background .35s ease, border-color .35s ease, box-shadow .35s ease;
+}
+
+.zep-about-page .nav.scrolled {
+  background: rgba(2, 75, 255, .95);
+  backdrop-filter: blur(16px);
+  border-bottom-color: rgba(255, 255, 255, .1);
+  box-shadow: 0 1px 12px rgba(0, 0, 0, .15);
+}
+
+.zep-about-page .nav.scrolled .nl {
+  color: rgba(255, 255, 255, .65);
+}
+
+.zep-about-page .nav.scrolled .nl:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, .1);
+}
+
+.zep-about-page .nav.scrolled .nav-btn {
+  background: #fff;
+  color: var(--blue);
+}
+
+.zep-about-page .nav.scrolled .nav-btn:hover {
+  background: rgba(255, 255, 255, .9);
+}
+
+.zep-about-page .nav.hidden {
+  transform: translateY(-100%) !important;
+}
+
+.zep-about-page .logo {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  text-decoration: none;
+}
+
+.zep-about-page .logo img {
+  height: 28px;
+  width: auto;
+  display: block;
+  filter: brightness(0) invert(1);
+}
+
+.zep-about-page .nav-links {
+  display: flex;
+  align-items: center;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  gap: 0;
+}
+
+.zep-about-page .nl {
+  font-size: 13px;
+  font-weight: 400;
+  color: rgba(255, 255, 255, .7);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 7px 13px;
+  border-radius: 6px;
+  letter-spacing: -.01em;
+  white-space: nowrap;
+  font-family: 'DM Sans', sans-serif;
+  transition: color .15s, background .15s;
+}
+
+.zep-about-page .nl:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, .12);
+}
+
+.zep-about-page .nl.active {
+  color: #fff;
+  font-weight: 500;
+}
+
+.zep-about-page .nav-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.zep-about-page .nav-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 20px;
+  background: #fff;
+  color: var(--blue);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  border: none;
+  border-radius: 0;
+  cursor: pointer;
+  letter-spacing: .01em;
+  transition: all .2s ease;
+}
+
+.zep-about-page .nav-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, .12);
+}
+
+/* ── HERO — BLUE FULLSCREEN ── */
+.zep-about-page .hero {
+  background: var(--blue);
+  min-height: 100vh;
+  padding: 62px 0 0;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+}
+
+/* Subtle dot grid on blue */
+.zep-about-page .hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(255, 255, 255, .08) 1px, transparent 1px);
+  background-size: 32px 32px;
+  pointer-events: none;
+}
+
+.zep-about-page .hero-inner {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  padding: 80px 52px 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Giant "About" */
+.zep-about-page .hero-word {
+  font-family: 'Lora', serif;
+  font-size: clamp(100px, 16vw, 200px);
+  font-weight: 400;
+  color: #fff;
+  letter-spacing: -.05em;
+  line-height: .9;
+  opacity: 0;
+  clip-path: inset(0 100% 0 0);
+  animation: wipe .9s cubic-bezier(.22, 1, .36, 1) .3s forwards;
+  margin-bottom: 36px;
+}
+
+.zep-about-page .hero-desc {
+  font-size: clamp(14px, 1.5vw, 17px);
+  line-height: 1.65;
+  color: rgba(255, 255, 255, .65);
+  max-width: 420px;
+  font-weight: 400;
+  opacity: 0;
+  animation: up .7s ease .8s both;
+}
+
+/* Interactive COBE Globe */
+.zep-about-page .hero-globe {
+  position: absolute;
+  top: 50%;
+  right: 5%;
+  transform: translateY(-50%);
+  width: 500px;
+  height: 500px;
+  pointer-events: auto;
+  opacity: 0;
+  animation: globeFadeIn 1.2s ease .5s forwards;
+  z-index: 1;
+}
+
+.zep-about-page .hero-globe canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+@keyframes globeFadeIn {
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes wipe {
+  to {
+    opacity: 1;
+    clip-path: inset(0 0% 0 0);
+  }
+}
+
+/* ── MISSION ── */
+.mission {
+  background: #fff;
+  border-bottom: 1px solid var(--rule);
+  padding: 80px 52px;
+}
+
+.zep-about-page .mission-header {
+  text-align: center;
+  margin-bottom: 48px;
+}
+
+.zep-about-page .mission-header .section-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--blue);
+  margin-bottom: 16px;
+}
+
+.zep-about-page .mission-header h2 {
+  font-family: 'Lora', serif;
+  font-size: clamp(30px, 4vw, 52px);
+  font-weight: 400;
+  color: var(--ink);
+  letter-spacing: -.025em;
+  line-height: 1.15;
+  margin-bottom: 20px;
+}
+
+.zep-about-page .mission-header h2 em {
+  font-style: italic;
+  color: var(--blue);
+}
+
+.zep-about-page .mission-header p {
+  font-size: 15px;
+  line-height: 1.75;
+  color: var(--muted);
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.zep-about-page .mission-cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.zep-about-page .mission-card {
+  background: #fff;
+  border: 1px solid var(--rule);
+  border-right: none;
+  padding: 36px 28px;
+  text-align: center;
+  transition: box-shadow .3s, transform .3s;
+}
+
+.zep-about-page .mission-card:last-child {
+  border-right: 1px solid var(--rule);
+}
+
+.zep-about-page .mission-card:hover {
+  box-shadow: 0 8px 32px rgba(2, 75, 255, .07);
+  transform: translateY(-3px);
+  z-index: 2;
+  position: relative;
+}
+
+.zep-about-page .mission-card-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background: rgba(2, 75, 255, .06);
+  display: grid;
+  place-items: center;
+  margin: 0 auto 16px;
+}
+
+.zep-about-page .mission-card-icon svg {
+  width: 20px;
+  height: 20px;
+  color: var(--blue);
+}
+
+.zep-about-page .mission-card-num {
+  font-family: 'Lora', serif;
+  font-size: clamp(32px, 4vw, 48px);
+  font-weight: 400;
+  color: var(--ink);
+  letter-spacing: -.04em;
+  line-height: 1;
+  margin-bottom: 8px;
+}
+
+.zep-about-page .mission-card-num span {
+  color: var(--blue);
+}
+
+.zep-about-page .mission-card-label {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+/* ── PARTNERS / TEAM ── */
+.zep-about-page .partners {
+  background: #FFFFFF;
+  border-bottom: 1px solid var(--rule);
+  padding: 20px 52px 20px;
+  overflow: hidden;
+}
+
+.zep-about-page .partners-header {
+  text-align: center;
+  margin-bottom: 64px;
+}
+
+.zep-about-page .partners-header h2 {
+  font-family: 'Lora', serif;
+  font-size: clamp(28px, 4vw, 52px);
+  font-weight: 400;
+  color: var(--ink);
+  letter-spacing: -.025em;
+  line-height: 1.2;
+  margin-bottom: 0;
+}
+
+.zep-about-page .partners-header h2 em {
+  font-style: italic;
+  color: var(--blue);
+}
+
+/* Team carousel */
+.zep-about-page .team-track-wrap {
+  position: relative;
+  overflow: hidden;
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.zep-about-page .team-track {
+  display: flex;
+  gap: 20px;
+  padding: 12px 0 20px;
+}
+
+.zep-about-page .team-card {
+  flex-shrink: 0;
+  width: 240px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid var(--rule);
+  transition: transform .3s ease, border-color .3s ease, box-shadow .3s ease;
+  cursor: pointer;
+  position: relative;
+}
+
+.zep-about-page .team-card:hover {
+  transform: translateY(-6px);
+  border-color: rgba(2, 75, 255, .4);
+  box-shadow: 0 16px 48px rgba(2, 75, 255, .15);
+}
+
+.zep-about-page .team-card.featured {
+  border-color: var(--blue);
+  box-shadow: 0 8px 40px rgba(2, 75, 255, .25);
+}
+
+.zep-about-page .team-card-avatar {
+  width: 100%;
+  height: 180px;
+  position: relative;
+  overflow: hidden;
+  background: #fff;
+}
+
+.zep-about-page .team-card-avatar-bg {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 72px;
+  line-height: 1;
+}
+
+.zep-about-page .team-card-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 40%, rgba(12, 14, 22, .8) 100%);
+}
+
+.zep-about-page .team-card-tag {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 100px;
+  background: var(--blue);
+  color: #fff;
+}
+
+.zep-about-page .team-card-body {
+  padding: 18px 18px 20px;
+}
+
+.zep-about-page .team-card-name {
+  font-family: 'Lora', serif;
+  font-size: 17px;
+  font-weight: 500;
+  color: var(--ink);
+  letter-spacing: -.01em;
+  margin-bottom: 4px;
+}
+
+.zep-about-page .team-card-role {
+  font-size: 11.5px;
+  color: var(--muted);
+  font-weight: 400;
+  margin-bottom: 0px;
+}
+
+.zep-about-page .team-card-desc {
+  font-size: 11.5px;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, .35);
+  margin-bottom: 14px;
+}
+
+.zep-about-page .team-card-socials {
+  display: flex;
+  gap: 7px;
+}
+
+.zep-about-page .team-social-dot {
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, .06);
+  display: grid;
+  place-items: center;
+  transition: background .15s;
+  cursor: pointer;
+}
+
+.zep-about-page .team-social-dot:hover {
+  background: rgba(2, 75, 255, .3);
+}
+
+.zep-about-page .team-social-dot svg {
+  width: 11px;
+  height: 11px;
+  color: rgba(255, 255, 255, .5);
+}
+
+/* Nav arrows */
+.zep-about-page .team-nav {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 40px;
+}
+
+.zep-about-page .team-nav-btn {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, .15);
+  background: transparent;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition: all .2s ease;
+  color: var(--ink);
+}
+
+.zep-about-page .team-nav-btn:hover {
+  border-color: var(--blue);
+  background: rgba(2, 75, 255, .15);
+  color: var(--blue);
+}
+
+.zep-about-page .team-nav-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+@media (min-width: 768px) {
+
+  .zep-about-page .team-nav,
+  .zep-about-page .team-dots {
+    display: none;
+  }
+}
+
+/* Carousel dots */
+.zep-about-page .team-dots {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 20px;
+}
+
+.zep-about-page .team-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, .2);
+  cursor: pointer;
+  transition: all .2s ease;
+}
+
+.zep-about-page .team-dot.active {
+  background: var(--blue);
+  width: 24px;
+  border-radius: 3px;
+}
+
+/* ── OS SECTION ── */
+.zep-about-page .os-section {
+  background: #fff;
+  border-bottom: 1px solid var(--rule);
+  padding: 20px 24px 80px;
+  display: flex;
+  gap: 80px;
+  justify-content: center;
+  align-items: flex-start;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.zep-about-page .os-section-title {
+  font-family: 'Lora', serif;
+  font-size: 52px;
+  font-weight: 400;
+  color: var(--ink);
+  line-height: 1;
+  letter-spacing: -1.3px;
+  flex: 1;
+  max-width: 650px;
+  margin: 0;
+}
+
+.zep-about-page .os-section-content {
+  flex: 1;
+  max-width: 620px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.zep-about-page .os-section-content p {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 16px;
+  color: #7A7E92;
+  line-height: 1.5;
+  margin: 0;
+}
+
+@media (max-width: 1100px) {
+  .zep-about-page .os-section {
+    flex-direction: column;
+    gap: 40px;
+  }
+
+  .zep-about-page .os-section-title {
+    max-width: 100%;
+  }
+}
+
+/* ── VALUES ── */
+.zep-about-page .values {
+  background: var(--soft);
+  border-bottom: 1px solid var(--rule);
+  padding: 100px 52px;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.zep-about-page .values-header {
+  margin-bottom: 56px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+}
+
+.zep-about-page .values-header h2 {
+  font-family: 'Lora', serif;
+  font-size: clamp(30px, 3.8vw, 48px);
+  font-weight: 400;
+  color: var(--ink);
+  letter-spacing: -.025em;
+  line-height: 1.15;
+}
+
+.zep-about-page .values-header h2 span {
+  color: var(--blue);
+}
+
+.zep-about-page .values-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0;
+  width: 100%;
+  max-width: 100%;
+}
+
+.zep-about-page .value-card {
+  padding: 36px 32px;
+  background: #fff;
+  border: 1px solid var(--rule);
+  border-right: none;
+  border-bottom: none;
+  transition: box-shadow .3s, transform .3s;
+  overflow: hidden;
+}
+
+.zep-about-page .value-card:nth-child(3),
+.zep-about-page .value-card:nth-child(6) {
+  border-right: 1px solid var(--rule);
+}
+
+.zep-about-page .value-card:nth-child(1),
+.zep-about-page .value-card:nth-child(2),
+.zep-about-page .value-card:nth-child(3) {
+  border-top: 1px solid var(--rule);
+}
+
+.zep-about-page .value-card:nth-child(4),
+.zep-about-page .value-card:nth-child(5),
+.zep-about-page .value-card:nth-child(6) {
+  border-bottom: 1px solid var(--rule);
+}
+
+.zep-about-page .value-card:hover {
+  box-shadow: 0 8px 32px rgba(2, 75, 255, .07);
+  transform: translateY(-3px);
+  z-index: 2;
+  position: relative;
+}
+
+.zep-about-page .value-num {
+  font-family: 'Lora', serif;
+  font-size: 28px;
+  font-weight: 400;
+  color: rgba(2, 75, 255, .15);
+  margin-bottom: 16px;
+}
+
+.zep-about-page .value-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 9px;
+  background: rgba(2, 75, 255, .07);
+  display: grid;
+  place-items: center;
+  margin-bottom: 16px;
+}
+
+.zep-about-page .value-icon svg {
+  width: 18px;
+  height: 18px;
+  color: var(--blue);
+}
+
+.zep-about-page .value-title {
+  font-family: 'Lora', serif;
+  font-size: 20px;
+  font-weight: 500;
+  color: var(--ink);
+  letter-spacing: -.02em;
+  margin-bottom: 10px;
+  line-height: 1.3;
+}
+
+.zep-about-page .value-desc {
+  font-size: 13.5px;
+  line-height: 1.65;
+  color: var(--muted);
+}
+
+/* ── FAQ ── */
+.zep-about-page .faq {
+  background: #fff;
+  border-bottom: 1px solid var(--rule);
+  padding: 20px 52px 20px;
+}
+
+.zep-about-page .faq-header {
+  text-align: center;
+  margin-bottom: 56px;
+}
+
+.zep-about-page .faq-pre {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+  color: var(--blue);
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.zep-about-page .faq-pre::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--blue);
+}
+
+.zep-about-page .faq-header h2 {
+  font-family: 'Lora', serif;
+  font-size: clamp(30px, 4vw, 48px);
+  font-weight: 400;
+  color: var(--ink);
+  letter-spacing: -.025em;
+  line-height: 1.15;
+  position: relative;
+  display: inline-block;
+}
+
+.zep-about-page .faq-header h2::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  width: 60%;
+  height: 2px;
+  background: var(--blue);
+  opacity: .3;
+}
+
+.zep-about-page .faq-header p {
+  font-size: 14px;
+  color: var(--muted);
+  margin-top: 16px;
+  max-width: 440px;
+  margin-left: auto;
+  margin-right: auto;
+  line-height: 1.65;
+}
+
+.zep-about-page .faq-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 40px;
+}
+
+.zep-about-page .faq-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.zep-about-page .faq-item {
+  border-bottom: 1px solid var(--rule);
+}
+
+.zep-about-page .faq-item:first-child {
+  border-top: 1px solid var(--rule);
+}
+
+.zep-about-page .faq-q {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px 0;
+  cursor: pointer;
+  font-size: 14.5px;
+  font-weight: 500;
+  color: var(--ink);
+  transition: color .2s;
+}
+
+.zep-about-page .faq-q:hover {
+  color: var(--blue);
+}
+
+.zep-about-page .faq-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1.5px solid var(--ink);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  transition: background .2s, border-color .2s, transform .25s;
+}
+
+.zep-about-page .faq-icon svg {
+  width: 13px;
+  height: 13px;
+  color: var(--ink);
+  transition: color .2s;
+}
+
+.zep-about-page .faq-item.open .faq-icon {
+  background: var(--ink);
+  border-color: var(--ink);
+  transform: rotate(45deg);
+}
+
+.zep-about-page .faq-item.open .faq-icon svg {
+  color: #fff;
+}
+
+.zep-about-page .faq-item.open .faq-q {
+  color: var(--blue);
+}
+
+.zep-about-page .faq-a {
+  font-size: 13.5px;
+  line-height: 1.7;
+  color: var(--muted);
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height .35s cubic-bezier(.22, 1, .36, 1), padding .35s ease;
+}
+
+.zep-about-page .faq-item.open .faq-a {
+  max-height: 200px;
+  padding-bottom: 18px;
+}
+
+/* Community section removed */
+
+/* ── BEYOND CTA ── */
+.zep-about-page .beyond {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-height: 90vh;
+  background: #000;
+}
+
+.zep-about-page .beyond-left {
+  background: linear-gradient(160deg, #000 0%, #0a0c14 40%, #0d1020 100%);
+  padding: 80px 52px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  overflow: hidden;
+}
+
+.zep-about-page .beyond-left::before {
+  content: '';
+  position: absolute;
+  top: -60%;
+  right: -40%;
+  width: 80%;
+  height: 80%;
+  background: radial-gradient(ellipse, rgba(2, 75, 255, .08) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.zep-about-page .beyond-left .section-head {
+  color: #fff;
+  margin-bottom: 20px;
+  font-family: 'Lora', serif;
+  font-size: clamp(28px, 3.8vw, 48px);
+  font-weight: 400;
+  letter-spacing: -.025em;
+  line-height: 1.2;
+}
+
+.zep-about-page .beyond-left .section-head .blue {
+  color: var(--blue);
+}
+
+.zep-about-page .beyond-social {
+  display: flex;
+  gap: 12px;
+}
+
+.zep-about-page .beyond-social a {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, .15);
+  display: grid;
+  place-items: center;
+  transition: border-color .2s, background .2s;
+}
+
+.zep-about-page .beyond-social a:hover {
+  border-color: var(--blue);
+  background: rgba(2, 75, 255, .15);
+}
+
+.zep-about-page .beyond-social svg {
+  width: 14px;
+  height: 14px;
+  color: rgba(255, 255, 255, .6);
+}
+
+.zep-about-page .beyond-right {
+  background: linear-gradient(160deg, #0a0c14 0%, #0d1020 60%, #000 100%);
+  padding: 80px 52px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.zep-about-page .beyond-right form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.zep-about-page .form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.zep-about-page .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.zep-about-page .form-group label {
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, .4);
+}
+
+.zep-about-page .form-group input,
+.zep-about-page .form-group select,
+.zep-about-page .form-group textarea {
+  background: rgba(255, 255, 255, .05);
+  border: 1px solid rgba(255, 255, 255, .1);
+  border-radius: 0;
+  padding: 11px 14px;
+  color: #fff;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  outline: none;
+  width: 100%;
+  transition: border-color .2s;
+}
+
+.zep-about-page .form-group input::placeholder,
+.zep-about-page .form-group textarea::placeholder {
+  color: rgba(255, 255, 255, .2);
+}
+
+.zep-about-page .form-group input:focus,
+.zep-about-page .form-group select:focus,
+.zep-about-page .form-group textarea:focus {
+  border-color: rgba(2, 75, 255, .5);
+  background: rgba(2, 75, 255, .04);
+}
+
+.zep-about-page .form-group select {
+  appearance: none;
+  cursor: pointer;
+  color: rgba(255, 255, 255, .5);
+}
+
+.zep-about-page .form-group select:focus {
+  color: #fff;
+}
+
+.zep-about-page .form-group textarea {
+  height: 90px;
+  resize: none;
+}
+
+.zep-about-page .form-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 13px 30px;
+  background: var(--blue);
+  color: #fff;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  border: none;
+  border-radius: 0;
+  cursor: pointer;
+  transition: all .25s ease;
+  align-self: flex-start;
+}
+
+.zep-about-page .form-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(2, 75, 255, .35);
+}
+
+.zep-about-page .form-btn svg {
+  width: 11px;
+  height: 11px;
+}
+
+/* ── FOOTER ── */
+.zep-about-page .footer-full {
+  background: #0a0c14;
+  border-top: 1px solid rgba(255, 255, 255, .07);
+  padding: 56px 52px 0;
+}
+
+.zep-about-page .footer-grid {
+  display: grid;
+  grid-template-columns: 280px 1fr 1fr 1fr;
+  gap: 48px;
+  padding-bottom: 48px;
+  border-bottom: 1px solid rgba(255, 255, 255, .07);
+}
+
+.zep-about-page .footer-brand .logo {
+  margin-bottom: 16px;
+  display: block;
+}
+
+.zep-about-page .footer-brand .logo img {
+  filter: brightness(0) invert(1);
+  height: 26px;
+}
+
+.zep-about-page .footer-brand-desc {
+  font-size: 12px;
+  line-height: 1.7;
+  color: rgba(255, 255, 255, .3);
+  margin-bottom: 20px;
+  max-width: 240px;
+}
+
+.zep-about-page .footer-compliance {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.zep-about-page .footer-compliance-badge {
+  border: 1px solid rgba(255, 255, 255, .12);
+  border-radius: 4px;
+  padding: 5px 10px;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, .4);
+}
+
+.zep-about-page .footer-col-title {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, .3);
+  margin-bottom: 16px;
+}
+
+.zep-about-page .footer-col-links {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.zep-about-page .footer-col-links a {
+  font-size: 13px;
+  color: rgba(255, 255, 255, .55);
+  text-decoration: none;
+  transition: color .15s;
+}
+
+.zep-about-page .footer-col-links a:hover {
+  color: #fff;
+}
+
+.zep-about-page .footer-contact-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.zep-about-page .footer-contact-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.zep-about-page .footer-contact-icon.blue {
+  background: rgba(2, 75, 255, .2);
+}
+
+.zep-about-page .footer-contact-icon.green {
+  background: rgba(16, 185, 129, .15);
+}
+
+.zep-about-page .footer-contact-icon.ink {
+  background: rgba(255, 255, 255, .08);
+}
+
+.zep-about-page .footer-contact-icon svg {
+  width: 13px;
+  height: 13px;
+}
+
+.zep-about-page .footer-contact-icon.blue svg {
+  color: #4d83ff;
+}
+
+.zep-about-page .footer-contact-icon.green svg {
+  color: #10b981;
+}
+
+.zep-about-page .footer-contact-icon.ink svg {
+  color: rgba(255, 255, 255, .6);
+}
+
+.zep-about-page .footer-contact-text {
+  font-size: 12px;
+  color: rgba(255, 255, 255, .45);
+  line-height: 1.5;
+}
+
+.zep-about-page .footer-contact-text strong {
+  color: rgba(255, 255, 255, .7);
+  font-weight: 500;
+  display: block;
+  margin-bottom: 2px;
+}
+
+.zep-about-page .footer-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 0;
+}
+
+.zep-about-page .footer-bottom-left {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.zep-about-page .footer-copy {
+  font-size: 11.5px;
+  color: rgba(255, 255, 255, .25);
+}
+
+.zep-about-page .footer-violations {
+  font-size: 11.5px;
+  color: rgba(255, 255, 255, .2);
+}
+
+.zep-about-page .footer-violations strong {
+  color: rgba(255, 255, 255, .4);
+  display: block;
+  font-weight: 500;
+  font-size: 10.5px;
+}
+
+.zep-about-page .footer-social {
+  display: flex;
+  gap: 8px;
+}
+
+.zep-about-page .footer-social a {
+  width: 32px;
+  height: 32px;
+  border: 1px solid rgba(255, 255, 255, .1);
+  border-radius: 6px;
+  display: grid;
+  place-items: center;
+  transition: border-color .15s, background .15s;
+}
+
+.zep-about-page .footer-social a:hover {
+  border-color: var(--blue);
+  background: rgba(2, 75, 255, .1);
+}
+
+.zep-about-page .footer-social svg {
+  width: 13px;
+  height: 13px;
+  color: rgba(255, 255, 255, .4);
+}
+
+/* ── SHARED ── */
+.zep-about-page .reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity .8s cubic-bezier(.22, 1, .36, 1), transform .8s cubic-bezier(.22, 1, .36, 1);
+}
+
+.zep-about-page .reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@keyframes up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-50%);
+  }
+}

@@ -1,0 +1,59 @@
+/* ── Globe wrapper ── */
+.globe-wrapper {
+    position: relative;
+    display: inline-block;
+    /* shrink-wraps the canvas */
+    line-height: 0;
+    /* remove any extra inline gap */
+}
+
+/* ── CSS-anchor labels (COBE native API) ── */
+/*
+  COBE sets:
+    --cobe-{id}            → anchor name for the marker
+    --cobe-visible-{id}    → 1 when facing camera, 0 when on the back
+
+  We use `position: absolute` + anchor() to pin labels.
+  Note: anchor() is a CSS4 draft; modern Chromium supports it behind a flag
+  and it is enabled in most up-to-date Chrome/Edge. For Firefox/Safari we
+  include a JS fallback below.
+*/
+.marker-label {
+    position: absolute;
+    /* Align the bottom-center of the label to the top-center of the marker */
+    bottom: anchor(top);
+    left: anchor(center);
+    translate: -50% 0;
+    margin-bottom: 10px;
+
+    display: flex;
+    align-items: center;
+    gap: 5px;
+
+    padding: 4px 10px 4px 6px;
+    background: rgba(10, 20, 60, 0.82);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    color: #e8eeff;
+    font-family: 'Inter', 'Outfit', sans-serif;
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    border-radius: 20px;
+    white-space: nowrap;
+    pointer-events: none;
+
+    /* Visibility driven by COBE's CSS variable */
+    transition: opacity 0.35s ease;
+}
+
+/* Small coloured dot inside each label */
+.marker-dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #3b6fff;
+    flex-shrink: 0;
+    box-shadow: 0 0 5px 2px rgba(59, 111, 255, 0.55);
+}

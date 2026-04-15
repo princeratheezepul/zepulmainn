@@ -24,7 +24,7 @@ const ProductsServices = () => {
             iconType: "laptop",
             title: "Zep Jobs",
             description: "Where Talent Meets Opportunity",
-            path: "/careers"
+            path: "/zepJobs"
         },
         {
             iconType: "chart",

@@ -29,7 +29,7 @@ const Footer = () => {
           <div className="footer-links-column">
             <Link to="/ZepRecruit" className="footer-link">Zep Recruit</Link>
             <Link to="/prorecruitor" className="footer-link">Zep Pro Recruiter</Link>
-            <Link to="/careers" className="footer-link">Zep Jobs</Link>
+            <Link to="/zepJobs" className="footer-link">Zep Jobs</Link>
             <Link to="/zepConsult" className="footer-link">Zep Consult</Link>
             <Link to="/about" className="footer-link">About</Link>
           </div>
@@ -62,8 +62,8 @@ const Footer = () => {
             <MdLocationOn className="contact-icon" />
             <div className="contact-text">
               <div className="address-label">Services HQ</div>
-              <div className="address-text">#401, Fourth Floor B - Block, Asian Sun City,</div>
-              <div className="address-text">Kothaguda, Kondapur, Hyderabad</div>
+              <div className="address-text"> 401, Fourth Floor, Block - B, Asian Sun City, </div>
+              <div className="address-text">Kothaguda, Kondapur, Hyderabad - 81, India</div>
             </div>
           </div>
         </div>

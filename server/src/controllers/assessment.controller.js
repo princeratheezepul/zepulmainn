@@ -3,7 +3,7 @@ import Resume from "../models/resume.model.js";
 import { Job } from "../models/job.model.js";
 import crypto from 'crypto';
 import nodemailer from "nodemailer";
-import { executeJava } from "../services/codeExecution.service.js";
+import { executeJava, executeCpp, executePython } from "../services/codeExecution.service.js";
 
 const genAI = new GoogleGenerativeAI(process.env.VITE_GEMINI_API);
 
@@ -622,8 +622,16 @@ export const runCode = async (req, res) => {
 
     if (language === 'java') {
       const result = await executeJava(code, question.examples, question.functionName);
-      // executeJava returns { error, results } on failure — always respond 200
-      // so the frontend's `if (data.error)` path can handle it gracefully.
+      return res.status(200).json(result);
+    }
+
+    if (language === 'cpp') {
+      const result = await executeCpp(code, question.examples, question.functionName);
+      return res.status(200).json(result);
+    }
+
+    if (language === 'python') {
+      const result = await executePython(code, question.examples, question.functionName);
       return res.status(200).json(result);
     }
 
@@ -674,7 +682,13 @@ const evaluateSubmission = async (resumeId, submissions, questions, assessmentFi
 
       if (language === 'java') {
         const result = await executeJava(code, examples, question.functionName);
-        passedTests = result.results.filter(r => r.passed).length;
+        passedTests = (result.results || []).filter(r => r.passed).length;
+      } else if (language === 'cpp') {
+        const result = await executeCpp(code, examples, question.functionName);
+        passedTests = (result.results || []).filter(r => r.passed).length;
+      } else if (language === 'python') {
+        const result = await executePython(code, examples, question.functionName);
+        passedTests = (result.results || []).filter(r => r.passed).length;
       } else {
         // JavaScript Evaluation
         for (let j = 0; j < examples.length; j++) {
