@@ -71,6 +71,8 @@ import ManagerDashboard from '../Pages/Manager/ManagerDashboard.jsx';
 import AdminJobDetailPage from '../Pages/Admin/jobs/[jobid]';
 import AccountManagerJobDetailPage from '../Pages/AccountManager/jobs/[jobid]';
 import UnifiedLogin from "../Pages/UnifiedLogin";
+import SignIn from "../Pages/SignIn";
+import ProRecruiterSignup from "../Pages/ProRecruiterSignup";
 import AdminLogin from "../Pages/Admin/Login.jsx";
 import MarketplaceJobs from "../Pages/MarketplaceJobs";
 import MarketplaceSignup from "../Pages/MarketplaceSignup";
@@ -235,6 +237,8 @@ const Router = () => {
 
             {/* Unified Login Route - No Header/Footer */}
             <Route path="/login" element={<UnifiedLogin />} />
+            <Route path="/signin" element={<SignIn />} />
+            <Route path="/signup/prorecruiter" element={<ProRecruiterSignup />} />
 
             {/* Public Assessment Route */}
             <Route path="/assessment/:assessmentId" element={<CandidateAssessmentPage />} />

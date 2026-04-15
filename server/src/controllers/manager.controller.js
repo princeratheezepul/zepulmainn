@@ -27,33 +27,33 @@ const generateAccessAndRefreshToken = async (userId) => {
 }
 
 const transporter = nodemailer.createTransport({
-  service: 'gmail', // or use SMTP config
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
+    service: 'gmail', // or use SMTP config
+    auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+    },
 });
 
 const sendWelcomeManagerEmail = async (toEmail, adminName) => {
-  const mailOptions = {
-    from: process.env.EMAIL_USER,
-    to: toEmail,
-    subject: 'You have been added as a Manager',
-    html: `
+    const mailOptions = {
+        from: process.env.EMAIL_USER,
+        to: toEmail,
+        subject: 'You have been added as a Manager',
+        html: `
       <p>Hello,</p>
       <p>You have been added as a manager by admin <strong>${adminName}</strong>.</p>
       <p>Please login to your account using your credentials.</p>
     `,
-  };
-  console.log(mailOptions)
-  await transporter.sendMail(mailOptions);
+    };
+    console.log(mailOptions)
+    await transporter.sendMail(mailOptions);
 };
 
 const registerUser = async (req, res) => {
     try {
         console.log("request received");
         console.log(req.body);
-        const { fullname, email, password,adminId } = req.body;
+        const { fullname, email, password, adminId, isProRecruiter } = req.body;
         console.log(req.body);
         const username = fullname.replace(/\s+/g, '').toLowerCase();
         console.log(username, password);
@@ -63,7 +63,7 @@ const registerUser = async (req, res) => {
             return res.status(400).json({ message: "Username already exists" });
         }
 
-        const user = await User.create({ username, fullname, email, password,adminId });
+        const user = await User.create({ username, fullname, email, password, adminId, isProRecruiter: isProRecruiter || false });
         const admin = await Admin.findById(adminId);
         console.log(admin);
         const createdUser = await User.findById(user._id).select("-password -refreshToken");
@@ -71,7 +71,7 @@ const registerUser = async (req, res) => {
         if (!createdUser) {
             return res.status(500).json({ message: "Something went wrong" });
         }
-    if(admin) await sendWelcomeManagerEmail(email, admin.fullname);
+        if (admin) await sendWelcomeManagerEmail(email, admin.fullname);
 
         return res.status(201).json({
             status: 201,
@@ -212,58 +212,58 @@ const refreshAccessToken = async (req, res) => {
 }
 
 const getManagerInfo = async (req, res) => {
-  try {
-    const managerId = req.params.managerId;
-    console.log('Manager ID:', managerId);
+    try {
+        const managerId = req.params.managerId;
+        console.log('Manager ID:', managerId);
 
-    const manager = await User.findById(managerId);
-    if (!manager) return res.status(404).json({ error: 'Manager not found' });
+        const manager = await User.findById(managerId);
+        if (!manager) return res.status(404).json({ error: 'Manager not found' });
 
-    const company = await Company.findOne({ userId: managerId });
-    const jobs = await Job.find({managerId })
-      .populate('adminId', 'fullname username')
-      .populate('managerId', 'fullname username')
-      .populate('assignedRecruiters', 'fullname email status');
-    const recruiters = await Recruiter.find({ userId: managerId });
+        const company = await Company.findOne({ userId: managerId });
+        const jobs = await Job.find({ managerId })
+            .populate('adminId', 'fullname username')
+            .populate('managerId', 'fullname username')
+            .populate('assignedRecruiters', 'fullname email status');
+        const recruiters = await Recruiter.find({ userId: managerId });
 
-    res.json({
-      manager,
-      company,
-      jobs,
-      recruiters,
-    });
-  } catch (err) {
-    console.error('Error in getManagerInfo:', err);
-    res.status(500).json({ error: 'Server error' });
-  }
+        res.json({
+            manager,
+            company,
+            jobs,
+            recruiters,
+        });
+    } catch (err) {
+        console.error('Error in getManagerInfo:', err);
+        res.status(500).json({ error: 'Server error' });
+    }
 };
 
 
 
 
 const updatePassword = async (req, res) => {
-  const { oldPassword, newPassword } = req.body;
+    const { oldPassword, newPassword } = req.body;
     const managerId = req.user.id;
-  
+
     try {
-      const manager = await User.findById(managerId);
-      if (!manager) return res.status(404).json({ error: 'Admin not found' });
-  
-      const isMatch = await bcrypt.compare(oldPassword, manager.password);
-      if (!isMatch) return res.status(400).json({ error: 'Incorrect old password' });
-  
-      manager.password = newPassword; // Let the pre-save hook handle hashing
-      await manager.save();
-  
-      res.json({ message: 'Password updated successfully' });
+        const manager = await User.findById(managerId);
+        if (!manager) return res.status(404).json({ error: 'Admin not found' });
+
+        const isMatch = await bcrypt.compare(oldPassword, manager.password);
+        if (!isMatch) return res.status(400).json({ error: 'Incorrect old password' });
+
+        manager.password = newPassword; // Let the pre-save hook handle hashing
+        await manager.save();
+
+        res.json({ message: 'Password updated successfully' });
     } catch (error) {
-      res.status(500).json({ error: 'Server error' });
+        res.status(500).json({ error: 'Server error' });
     }
 };
 
 const forgotpassword = async (req, res) => {
     const { email } = req.body;
-    
+
     try {
         const user = await User.findOne({ email: email });
         if (!user) {
@@ -272,7 +272,7 @@ const forgotpassword = async (req, res) => {
 
         // Generate reset token
         const resetToken = jwt.sign({ id: user._id }, "jwt_secret_key", { expiresIn: "1d" });
-        
+
         // Save reset token and expiry to user document
         user.resetPasswordToken = resetToken;
         user.resetPasswordExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 1 day from now
@@ -280,7 +280,7 @@ const forgotpassword = async (req, res) => {
 
         // Create reset URL
         const resetUrl = `http://localhost:5173/manager/reset_password/${user._id}/${resetToken}`;
-        
+
         // Console log the URL for testing
         console.log('Password reset URL:', resetUrl);
         console.log('Sending reset email to:', user.email);
@@ -446,20 +446,20 @@ export { loginUser, logoutUser, registerUser, forgotpassword, resetpassword, cha
 
 export const createJobm = async (req, res) => {
     console.log(req.body);
-    const { 
-        jobtitle, 
-        description, 
-        location, 
-        type, 
-        employmentType, 
-        openpositions, 
-        salary, 
-        skills, 
-        experience, 
-        keyResponsibilities, 
-        preferredQualifications, 
-        priority, 
-        managerId, 
+    const {
+        jobtitle,
+        description,
+        location,
+        type,
+        employmentType,
+        openpositions,
+        salary,
+        skills,
+        experience,
+        keyResponsibilities,
+        preferredQualifications,
+        priority,
+        managerId,
         recruiterId,
         company,
         hiringDeadline,
@@ -617,7 +617,7 @@ export const updateJobm = async (req, res) => {
 };
 
 export const assignedJobm = async (req, res) => {
-    const { recruiterId, sendNotification } = req.body;  
+    const { recruiterId, sendNotification } = req.body;
     const { jobId } = req.params;
 
     try {
@@ -675,172 +675,172 @@ export const assignedJobm = async (req, res) => {
 
 
 const sendWelcomeEmail = async (toEmail, managerName, jobname) => {
-  try {
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
+    try {
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: process.env.EMAIL_USER,
+                pass: process.env.EMAIL_PASS,
+            },
+        });
 
-    const mailOptions = {
-      from: process.env.EMAIL_USER,
-      to: toEmail,
-      subject: 'You have been added as a Recruiter',
-      html: `
+        const mailOptions = {
+            from: process.env.EMAIL_USER,
+            to: toEmail,
+            subject: 'You have been added as a Recruiter',
+            html: `
         <p>Hello,</p>
         <p>You have been added as a recruiter by manager <strong>${managerName}</strong> to the job <strong>${jobname}</strong>.</p>
         <p>Please login to your account using your credentials.</p>
       `,
-    };
+        };
 
-    console.log("Sending welcome email with options:", mailOptions);
+        console.log("Sending welcome email with options:", mailOptions);
 
-    await transporter.sendMail(mailOptions);
-    console.log("Welcome email sent successfully");
-  } catch (error) {
-    console.error("Error sending welcome email:", error);
-    throw error;  
-  }
+        await transporter.sendMail(mailOptions);
+        console.log("Welcome email sent successfully");
+    } catch (error) {
+        console.error("Error sending welcome email:", error);
+        throw error;
+    }
 };
 
 export const getManagerProfile = async (req, res) => {
-  try {
-    console.log("getManagerProfile hit ----");
-    console.log('getManagerProfile - User from middleware:', req.user);
-    console.log('getManagerProfile - User ID:', req.user._id);
-    
-    const manager = await User.findById(req.user._id)
-      .populate('adminId', 'fullname username');
-    
-    console.log('getManagerProfile - Found manager:', !!manager);
-    
-    if (!manager) {
-      return res.status(404).json({ message: "Manager not found" });
+    try {
+        console.log("getManagerProfile hit ----");
+        console.log('getManagerProfile - User from middleware:', req.user);
+        console.log('getManagerProfile - User ID:', req.user._id);
+
+        const manager = await User.findById(req.user._id)
+            .populate('adminId', 'fullname username');
+
+        console.log('getManagerProfile - Found manager:', !!manager);
+
+        if (!manager) {
+            return res.status(404).json({ message: "Manager not found" });
+        }
+
+        // Determine who onboarded the manager
+        let onboardedBy = 'N/A';
+        if (manager.adminId) {
+            onboardedBy = `Admin ${manager.adminId.fullname || manager.adminId.username}`;
+        }
+
+        console.log('getManagerProfile - Onboarded by:', onboardedBy);
+
+        // Format the response
+        const profileData = {
+            _id: manager._id,
+            email: manager.email,
+            username: manager.username,
+            fullname: manager.fullname || '',
+            DOB: manager.DOB ? new Date(manager.DOB).toISOString().split('T')[0] : '',
+            gender: manager.gender || '',
+            phone: manager.phone || '',
+            type: manager.type,
+            address: manager.address || '',
+            department: manager.department || '',
+            onboardedBy: onboardedBy,
+            createdAt: manager.createdAt,
+            updatedAt: manager.updatedAt
+        };
+
+        console.log('getManagerProfile - Sending response:', profileData);
+
+        res.json({ manager: profileData });
+    } catch (error) {
+        console.error('Error fetching manager profile:', error);
+        res.status(500).json({ message: "Server error", error: error.message });
     }
-
-    // Determine who onboarded the manager
-    let onboardedBy = 'N/A';
-    if (manager.adminId) {
-      onboardedBy = `Admin ${manager.adminId.fullname || manager.adminId.username}`;
-    }
-
-    console.log('getManagerProfile - Onboarded by:', onboardedBy);
-
-    // Format the response
-    const profileData = {
-      _id: manager._id,
-      email: manager.email,
-      username: manager.username,
-      fullname: manager.fullname || '',
-      DOB: manager.DOB ? new Date(manager.DOB).toISOString().split('T')[0] : '',
-      gender: manager.gender || '',
-      phone: manager.phone || '',
-      type: manager.type,
-      address: manager.address || '',
-      department: manager.department || '',
-      onboardedBy: onboardedBy,
-      createdAt: manager.createdAt,
-      updatedAt: manager.updatedAt
-    };
-
-    console.log('getManagerProfile - Sending response:', profileData);
-
-    res.json({ manager: profileData });
-  } catch (error) {
-    console.error('Error fetching manager profile:', error);
-    res.status(500).json({ message: "Server error", error: error.message });
-  }
 };
 
 export const updateManagerProfile = async (req, res) => {
-  try {
-    const { fullname, DOB, gender, phone, address, department } = req.body;
-    
-    const updateData = {};
-    if (fullname !== undefined) updateData.fullname = fullname;
-    if (DOB !== undefined) updateData.DOB = DOB;
-    if (gender !== undefined) updateData.gender = gender;
-    if (phone !== undefined) updateData.phone = phone;
-    if (address !== undefined) updateData.address = address;
-    if (department !== undefined) updateData.department = department;
+    try {
+        const { fullname, DOB, gender, phone, address, department } = req.body;
 
-    const manager = await User.findByIdAndUpdate(
-      req.user._id,
-      updateData,
-      { new: true }
-    );
+        const updateData = {};
+        if (fullname !== undefined) updateData.fullname = fullname;
+        if (DOB !== undefined) updateData.DOB = DOB;
+        if (gender !== undefined) updateData.gender = gender;
+        if (phone !== undefined) updateData.phone = phone;
+        if (address !== undefined) updateData.address = address;
+        if (department !== undefined) updateData.department = department;
 
-    if (!manager) {
-      return res.status(404).json({ message: "Manager not found" });
+        const manager = await User.findByIdAndUpdate(
+            req.user._id,
+            updateData,
+            { new: true }
+        );
+
+        if (!manager) {
+            return res.status(404).json({ message: "Manager not found" });
+        }
+
+        res.json({
+            message: "Profile updated successfully",
+            manager
+        });
+    } catch (err) {
+        console.error('Error updating manager profile:', err);
+        res.status(500).json({ message: "Failed to update profile", error: err.message });
     }
-
-    res.json({ 
-      message: "Profile updated successfully", 
-      manager 
-    });
-  } catch (err) {
-    console.error('Error updating manager profile:', err);
-    res.status(500).json({ message: "Failed to update profile", error: err.message });
-  }
 };
 
 const createManagerByAdmin = async (req, res) => {
-  try {
-    const { fullname, email, password, dateOfBirth, gender, phone, onboardedBy, adminId } = req.body;
-    
-    // Check if user with this email already exists
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({ message: "User with this email is already registered" });
-    }
+    try {
+        const { fullname, email, password, dateOfBirth, gender, phone, onboardedBy, adminId } = req.body;
 
-    const username = fullname.replace(/\s+/g, '').toLowerCase();
-    
-    // Create user
-    const user = await User.create({
-      username,
-      fullname,
-      email,
-      password,
-      type: 'manager',
-      adminId,
-      DOB: dateOfBirth,
-      gender,
-      phone,
-      firstPassSet: false
-    });
+        // Check if user with this email already exists
+        const existingUser = await User.findOne({ email });
+        if (existingUser) {
+            return res.status(400).json({ message: "User with this email is already registered" });
+        }
 
-    // Generate reset token for password setting
-    const resetToken = jwt.sign({ id: user._id }, "jwt_secret_key", { expiresIn: "7d" });
-    
-    // Save reset token to user document
-    user.resetPasswordToken = resetToken;
-    user.resetPasswordExpires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
-    await user.save({ validateBeforeSave: false });
+        const username = fullname.replace(/\s+/g, '').toLowerCase();
 
-    // Create password set URL
-    const setPasswordUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/manager/set_password/${user._id}/${resetToken}`;
-    
-    // Console log the URL for testing
-    console.log('Password set URL:', setPasswordUrl);
-    console.log('Sending password set email to:', email);
+        // Create user
+        const user = await User.create({
+            username,
+            fullname,
+            email,
+            password,
+            type: 'manager',
+            adminId,
+            DOB: dateOfBirth,
+            gender,
+            phone,
+            firstPassSet: false
+        });
 
-    // Send email with password set link
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-      }
-    });
+        // Generate reset token for password setting
+        const resetToken = jwt.sign({ id: user._id }, "jwt_secret_key", { expiresIn: "7d" });
 
-    const mailOptions = {
-      from: process.env.EMAIL_USER,
-      to: email,
-      subject: 'Set Your Password - Manager Account Created',
-      html: `
+        // Save reset token to user document
+        user.resetPasswordToken = resetToken;
+        user.resetPasswordExpires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+        await user.save({ validateBeforeSave: false });
+
+        // Create password set URL
+        const setPasswordUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/manager/set_password/${user._id}/${resetToken}`;
+
+        // Console log the URL for testing
+        console.log('Password set URL:', setPasswordUrl);
+        console.log('Sending password set email to:', email);
+
+        // Send email with password set link
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: process.env.EMAIL_USER,
+                pass: process.env.EMAIL_PASS
+            }
+        });
+
+        const mailOptions = {
+            from: process.env.EMAIL_USER,
+            to: email,
+            subject: 'Set Your Password - Manager Account Created',
+            html: `
         <h2>Welcome ${fullname}!</h2>
         <p>Your manager account has been created successfully.</p>
         <p>Please click the link below to set your password:</p>
@@ -848,128 +848,128 @@ const createManagerByAdmin = async (req, res) => {
         <p>This link will expire in 7 days.</p>
         <p>If you didn't request this account, please ignore this email.</p>
       `
-    };
+        };
 
-    transporter.sendMail(mailOptions, function (error, info) {
-      if (error) {
-        console.log('Email error:', error);
-        // Don't fail the request if email fails, just log it
-      } else {
-        console.log('Password set email sent successfully');
-      }
-    });
+        transporter.sendMail(mailOptions, function (error, info) {
+            if (error) {
+                console.log('Email error:', error);
+                // Don't fail the request if email fails, just log it
+            } else {
+                console.log('Password set email sent successfully');
+            }
+        });
 
-    // Remove sensitive data from response
-    const createdUser = await User.findById(user._id).select("-password -refreshToken");
+        // Remove sensitive data from response
+        const createdUser = await User.findById(user._id).select("-password -refreshToken");
 
-    return res.status(201).json({
-      status: 201,
-      message: "Manager created successfully. Password set link has been sent to the email.",
-      data: createdUser
-    });
+        return res.status(201).json({
+            status: 201,
+            message: "Manager created successfully. Password set link has been sent to the email.",
+            data: createdUser
+        });
 
-  } catch (error) {
-    console.error('Error creating manager:', error);
-    return res.status(500).json({ message: "Internal Server Error" });
-  }
+    } catch (error) {
+        console.error('Error creating manager:', error);
+        return res.status(500).json({ message: "Internal Server Error" });
+    }
 };
 
 const validateSetPassword = async (req, res) => {
-  const { id, token } = req.params;
+    const { id, token } = req.params;
 
-  try {
-    // Find user
-    const user = await User.findById(id);
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    // Check if reset token matches and is not expired
-    if (user.resetPasswordToken !== token) {
-      return res.status(400).json({ message: "Invalid reset token" });
-    }
-
-    if (user.resetPasswordExpires < new Date()) {
-      return res.status(400).json({ message: "Reset token has expired" });
-    }
-
-    // Verify JWT token
-    jwt.verify(token, "jwt_secret_key", (err, decoded) => {
-      if (err) {
-        return res.status(400).json({ message: "Invalid or expired token" });
-      }
-
-      return res.json({
-        firstPassSet: user.firstPassSet,
-        user: {
-          _id: user._id,
-          fullname: user.fullname,
-          email: user.email,
-          type: user.type
+    try {
+        // Find user
+        const user = await User.findById(id);
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
         }
-      });
-    });
 
-  } catch (error) {
-    console.error('Error validating set password:', error);
-    return res.status(500).json({ message: "Internal Server Error" });
-  }
+        // Check if reset token matches and is not expired
+        if (user.resetPasswordToken !== token) {
+            return res.status(400).json({ message: "Invalid reset token" });
+        }
+
+        if (user.resetPasswordExpires < new Date()) {
+            return res.status(400).json({ message: "Reset token has expired" });
+        }
+
+        // Verify JWT token
+        jwt.verify(token, "jwt_secret_key", (err, decoded) => {
+            if (err) {
+                return res.status(400).json({ message: "Invalid or expired token" });
+            }
+
+            return res.json({
+                firstPassSet: user.firstPassSet,
+                user: {
+                    _id: user._id,
+                    fullname: user.fullname,
+                    email: user.email,
+                    type: user.type
+                }
+            });
+        });
+
+    } catch (error) {
+        console.error('Error validating set password:', error);
+        return res.status(500).json({ message: "Internal Server Error" });
+    }
 };
 
 const setPassword = async (req, res) => {
-  const { id, token } = req.params;
-  const { password } = req.body;
+    const { id, token } = req.params;
+    const { password } = req.body;
 
-  try {
-    // Find user
-    const user = await User.findById(id);
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
+    try {
+        // Find user
+        const user = await User.findById(id);
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        // Check firstPassSet
+        if (user.firstPassSet) {
+            return res.status(400).json({ message: "You have already set the password" });
+        }
+
+        // Check if reset token matches and is not expired
+        if (user.resetPasswordToken !== token) {
+            return res.status(400).json({ message: "Invalid reset token" });
+        }
+
+        if (user.resetPasswordExpires < new Date()) {
+            return res.status(400).json({ message: "Reset token has expired" });
+        }
+
+        // Verify JWT token
+        jwt.verify(token, "jwt_secret_key", async (err, decoded) => {
+            if (err) {
+                return res.status(400).json({ message: "Invalid or expired token" });
+            }
+
+            try {
+                // Update password and set firstPassSet to true
+                user.password = password;
+                user.firstPassSet = true;
+                user.status = 'active'; // Activate user when they set password
+
+                // Clear reset token fields
+                user.resetPasswordToken = undefined;
+                user.resetPasswordExpires = undefined;
+
+                await user.save();
+
+                return res.json({ message: "Password set successfully" });
+            } catch (updateError) {
+                console.error('Password update error:', updateError);
+                return res.status(500).json({ message: "Failed to update password" });
+            }
+        });
+
+    } catch (error) {
+        console.error('Error setting password:', error);
+        return res.status(500).json({ message: "Internal Server Error" });
     }
-
-    // Check firstPassSet
-    if (user.firstPassSet) {
-      return res.status(400).json({ message: "You have already set the password" });
-    }
-
-    // Check if reset token matches and is not expired
-    if (user.resetPasswordToken !== token) {
-      return res.status(400).json({ message: "Invalid reset token" });
-    }
-
-    if (user.resetPasswordExpires < new Date()) {
-      return res.status(400).json({ message: "Reset token has expired" });
-    }
-
-    // Verify JWT token
-    jwt.verify(token, "jwt_secret_key", async (err, decoded) => {
-      if (err) {
-        return res.status(400).json({ message: "Invalid or expired token" });
-      }
-
-      try {
-        // Update password and set firstPassSet to true
-        user.password = password;
-        user.firstPassSet = true;
-        user.status = 'active'; // Activate user when they set password
-        
-        // Clear reset token fields
-        user.resetPasswordToken = undefined;
-        user.resetPasswordExpires = undefined;
-        
-        await user.save();
-
-        return res.json({ message: "Password set successfully" });
-      } catch (updateError) {
-        console.error('Password update error:', updateError);
-        return res.status(500).json({ message: "Failed to update password" });
-      }
-    });
-
-  } catch (error) {
-    console.error('Error setting password:', error);
-    return res.status(500).json({ message: "Internal Server Error" });
-  }
 };
 
 export const searchRecruitersByManager = async (req, res) => {
@@ -980,13 +980,13 @@ export const searchRecruitersByManager = async (req, res) => {
         const regex = new RegExp(query, 'i');
         const recruiters = await Recruiter.find({
             $and: [
-                { $or: [ { fullname: regex }, { email: regex } ] },
+                { $or: [{ fullname: regex }, { email: regex }] },
                 { status: 'active' },
-                { $or: [ { userId: managerId }, { managerId: managerId } ] }
+                { $or: [{ userId: managerId }, { managerId: managerId }] }
             ]
         })
-        .limit(10)
-        .select('fullname email status');
+            .limit(10)
+            .select('fullname email status');
         res.json({ recruiters });
     } catch (err) {
         res.status(500).json({ message: 'Error searching recruiters', error: err.message });
@@ -997,10 +997,10 @@ export const searchRecruitersByManager = async (req, res) => {
 export const getMarketplaceMetrics = async (req, res) => {
     try {
         const managerId = req.user._id; // From JWT middleware
-        
+
         // Find the manager user to get mpJobs array
         const manager = await User.findById(managerId).populate('mpJobs');
-        
+
         if (!manager) {
             return res.status(404).json({
                 message: "Manager not found.",
@@ -1009,23 +1009,23 @@ export const getMarketplaceMetrics = async (req, res) => {
         }
 
         const mpJobs = manager.mpJobs || [];
-        
+
         // Calculate metrics
         const totalJobs = mpJobs.length;
-        
+
         // Count active jobs (isClosed = false)
         const activeJobs = mpJobs.filter(job => !job.isClosed).length;
-        
+
         // Sum of mpSelectedCandidates from all jobs
         const selectedCandidates = mpJobs.reduce((sum, job) => {
             return sum + (job.mpSelectedCandidates || 0);
         }, 0);
-        
+
         // Sum of mpRejectedCandidates from all jobs
         const rejectedCandidates = mpJobs.reduce((sum, job) => {
             return sum + (job.mpRejectedCandidates || 0);
         }, 0);
-        
+
         return res.status(200).json({
             message: "Marketplace metrics fetched successfully.",
             metrics: {
@@ -1065,7 +1065,7 @@ export const createMarketplaceCompany = async (req, res) => {
         } = req.body;
 
         // Validate required fields
-        if (!companyName || !companyEmail || !industryType || !companySize || 
+        if (!companyName || !companyEmail || !industryType || !companySize ||
             !location || !headquartersLocation || !websiteUrl || !companyDescription ||
             !hiringDomains || !jobType || !hiringLocations || !packageRange) {
             return res.status(400).json({
@@ -1117,10 +1117,10 @@ export const createMarketplaceCompany = async (req, res) => {
 export const getMarketplaceCompanies = async (req, res) => {
     try {
         const managerId = req.user._id; // From JWT middleware
-        
+
         // Find the manager user to get mpCompanies array
         const manager = await User.findById(managerId).populate('mpCompanies');
-        
+
         if (!manager) {
             return res.status(404).json({
                 message: "Manager not found.",
@@ -1129,7 +1129,7 @@ export const getMarketplaceCompanies = async (req, res) => {
         }
 
         const mpCompanies = manager.mpCompanies || [];
-        
+
         // Transform the data to match the expected format for the frontend
         const companies = mpCompanies.map(company => ({
             _id: company._id,
@@ -1158,7 +1158,7 @@ export const getMarketplaceCompanies = async (req, res) => {
             rejectedCandidatesCount: company.rejectedCandidatesCount || 0,
             redFlagCount: company.redFlagCount || 0
         }));
-        
+
         return res.status(200).json({
             message: "Marketplace companies fetched successfully.",
             companies,
@@ -1178,10 +1178,10 @@ export const getMarketplaceCompanyById = async (req, res) => {
     try {
         const managerId = req.user._id; // From JWT middleware
         const { companyId } = req.params;
-        
+
         // Find the manager user to get mpCompanies array
         const manager = await User.findById(managerId).populate('mpCompanies');
-        
+
         if (!manager) {
             return res.status(404).json({
                 message: "Manager not found.",
@@ -1191,14 +1191,14 @@ export const getMarketplaceCompanyById = async (req, res) => {
 
         // Find the specific company in manager's mpCompanies
         const company = manager.mpCompanies.find(comp => comp._id.toString() === companyId);
-        
+
         if (!company) {
             return res.status(404).json({
                 message: "Company not found or you don't have permission to view this company.",
                 success: false
             });
         }
-        
+
         // Transform the data to match the expected format for the frontend
         const companyData = {
             _id: company._id,
@@ -1227,7 +1227,7 @@ export const getMarketplaceCompanyById = async (req, res) => {
             rejectedCandidatesCount: company.rejectedCandidatesCount || 0,
             redFlagCount: company.redFlagCount || 0
         };
-        
+
         return res.status(200).json({
             message: "Marketplace company fetched successfully.",
             company: companyData,
@@ -1247,10 +1247,10 @@ export const getMarketplaceJobsByCompany = async (req, res) => {
     try {
         const managerId = req.user._id; // From JWT middleware
         const { companyId } = req.params;
-        
+
         // Find the manager user to get mpCompanies array
         const manager = await User.findById(managerId).populate('mpCompanies');
-        
+
         if (!manager) {
             return res.status(404).json({
                 message: "Manager not found.",
@@ -1260,7 +1260,7 @@ export const getMarketplaceJobsByCompany = async (req, res) => {
 
         // Find the specific company in manager's mpCompanies
         const company = manager.mpCompanies.find(comp => comp._id.toString() === companyId);
-        
+
         if (!company) {
             return res.status(404).json({
                 message: "Company not found or you don't have permission to view this company.",
@@ -1271,7 +1271,7 @@ export const getMarketplaceJobsByCompany = async (req, res) => {
         // Fetch all jobs for this company
         const jobs = await MpJob.find({ mpCompanies: companyId })
             .sort({ createdAt: -1 }); // Sort by newest first
-        
+
         // Transform the data to match the expected format for the frontend
         const transformedJobs = jobs.map(job => ({
             id: job._id,
@@ -1279,20 +1279,20 @@ export const getMarketplaceJobsByCompany = async (req, res) => {
             commission: '8% Commission', // Default commission
             status: job.isClosed ? 'Closed' : 'Active',
             companiesPicked: `${job.mpCompanies?.length || 0}+ Companies Picked`,
-            timeLeft: job.hiringDeadline ? 
-                `${Math.ceil((new Date(job.hiringDeadline) - new Date()) / (1000 * 60 * 60 * 24))}d left` : 
+            timeLeft: job.hiringDeadline ?
+                `${Math.ceil((new Date(job.hiringDeadline) - new Date()) / (1000 * 60 * 60 * 24))}d left` :
                 'No deadline',
             company: company.companyName,
             location: job.location,
             type: job.jobType,
             experience: `${job.experience?.min || 0}-${job.experience?.max || 10} years`,
-            salary: job.salary?.min && job.salary?.max ? 
-                `₹${(job.salary.min / 1000).toFixed(0)}k-₹${(job.salary.max / 1000).toFixed(0)}k` : 
+            salary: job.salary?.min && job.salary?.max ?
+                `₹${(job.salary.min / 1000).toFixed(0)}k-₹${(job.salary.max / 1000).toFixed(0)}k` :
                 'Not specified',
-            postedDate: `Posted ${new Date(job.createdAt).toLocaleDateString('en-US', { 
-                month: 'short', 
-                day: 'numeric', 
-                year: 'numeric' 
+            postedDate: `Posted ${new Date(job.createdAt).toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric'
             })}`,
             description: job.jobDescription,
             skills: job.skills || [],
@@ -1303,7 +1303,7 @@ export const getMarketplaceJobsByCompany = async (req, res) => {
             mpSelectedCandidates: job.mpSelectedCandidates || 0,
             mpRejectedCandidates: job.mpRejectedCandidates || 0
         }));
-        
+
         return res.status(200).json({
             message: "Marketplace jobs fetched successfully.",
             jobs: transformedJobs,
@@ -1323,10 +1323,10 @@ export const getMarketplaceJobRoles = async (req, res) => {
     try {
         const managerId = req.user._id; // From JWT middleware
         const { companyName } = req.query; // Get company name from query params
-        
+
         // Find the manager user to get mpCompanies array
         const manager = await User.findById(managerId).populate('mpCompanies');
-        
+
         if (!manager) {
             return res.status(404).json({
                 message: "Manager not found.",
@@ -1335,7 +1335,7 @@ export const getMarketplaceJobRoles = async (req, res) => {
         }
 
         const mpCompanies = manager.mpCompanies || [];
-        
+
         // Get all jobs from all companies or specific company
         const allJobs = [];
         if (companyName && companyName !== 'All Companies') {
@@ -1352,7 +1352,7 @@ export const getMarketplaceJobRoles = async (req, res) => {
                 allJobs.push(...companyJobs);
             }
         }
-        
+
         // Count job titles
         const jobTitleCounts = {};
         allJobs.forEach(job => {
@@ -1361,13 +1361,13 @@ export const getMarketplaceJobRoles = async (req, res) => {
                 jobTitleCounts[title] = (jobTitleCounts[title] || 0) + 1;
             }
         });
-        
+
         // Convert to array and sort by count
         const jobRoles = Object.entries(jobTitleCounts)
             .map(([name, count]) => ({ name, count }))
             .sort((a, b) => b.count - a.count)
             .slice(0, 5); // Get top 5
-        
+
         // Calculate percentages
         const totalJobs = allJobs.length;
         const jobRolesWithPercentage = jobRoles.map((role, index) => {
@@ -1380,10 +1380,10 @@ export const getMarketplaceJobRoles = async (req, res) => {
                 color: colors[index] || "#6b7280"
             };
         });
-        
+
         // Get company names for dropdown
         const companies = mpCompanies.map(company => company.companyName);
-        
+
         return res.status(200).json({
             message: "Job roles data fetched successfully.",
             data: {
@@ -1429,8 +1429,8 @@ export const createMarketplaceJob = async (req, res) => {
         } = req.body;
 
         // Validate required fields
-        if (!jobTitle || !company || !location || !employmentType || !workMode || 
-            !jobDescription || !skills || !experience || !openings || !packageRange || 
+        if (!jobTitle || !company || !location || !employmentType || !workMode ||
+            !jobDescription || !skills || !experience || !openings || !packageRange ||
             !hiringDeadline || !companyId || !commissionRate) {
             return res.status(400).json({
                 message: "All required fields must be provided.",
@@ -1563,19 +1563,19 @@ export { refreshAccessToken };
 
 // Attractive job assignment email for recruiters
 const sendAttractiveJobAssignmentEmail = async (toEmail, managerName, jobTitle, jobLocation, jobDescription) => {
-  try {
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
-    const mailOptions = {
-      from: process.env.EMAIL_USER,
-      to: toEmail,
-      subject: 'You have been assigned a new job!',
-      html: `
+    try {
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: process.env.EMAIL_USER,
+                pass: process.env.EMAIL_PASS,
+            },
+        });
+        const mailOptions = {
+            from: process.env.EMAIL_USER,
+            to: toEmail,
+            subject: 'You have been assigned a new job!',
+            html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f8fafc; border-radius: 12px; overflow: hidden; border: 1px solid #e0e7ef;">
           <div style="background: linear-gradient(90deg, #2563eb 0%, #1e40af 100%); color: #fff; padding: 24px 32px;">
             <h2 style="margin: 0; font-size: 2rem;">🚀 New Job Assignment</h2>
@@ -1595,12 +1595,12 @@ const sendAttractiveJobAssignmentEmail = async (toEmail, managerName, jobTitle, 
           </div>
         </div>
       `,
-    };
-    await transporter.sendMail(mailOptions);
-  } catch (error) {
-    console.error("Error sending attractive job assignment email:", error);
-    throw error;
-  }
+        };
+        await transporter.sendMail(mailOptions);
+    } catch (error) {
+        console.error("Error sending attractive job assignment email:", error);
+        throw error;
+    }
 };
 
 // Get marketplace job by ID
@@ -1624,7 +1624,7 @@ export const getMarketplaceJobById = async (req, res) => {
 
         // Check if the manager has access to this job (through mpCompanies)
         const manager = await User.findById(managerId).populate('mpCompanies');
-        const hasAccess = manager.mpCompanies.some(company => 
+        const hasAccess = manager.mpCompanies.some(company =>
             job.mpCompanies.some(jobCompany => jobCompany._id.toString() === company._id.toString())
         );
 
@@ -1671,7 +1671,7 @@ export const getMarketplaceUserById = async (req, res) => {
         const managerCompanyIds = manager.mpCompanies.map(company => company._id);
 
         // Check if this user has picked any jobs from manager's companies
-        const userJobs = await MpJob.find({ 
+        const userJobs = await MpJob.find({
             licensePartners: userId,
             mpCompanies: { $in: managerCompanyIds }
         });
@@ -1731,7 +1731,7 @@ export const getManagerMarketplaceCandidates = async (req, res) => {
 
         // Check if the manager has access to this job (through mpCompanies)
         const manager = await User.findById(managerId).populate('mpCompanies');
-        const hasAccess = manager.mpCompanies.some(company => 
+        const hasAccess = manager.mpCompanies.some(company =>
             job.mpCompanies.some(jobCompany => jobCompany._id.toString() === company._id.toString())
         );
 
@@ -1823,7 +1823,7 @@ export const getManagerMarketplaceResume = async (req, res) => {
             const job = await MpJob.findById(resume.jobId).populate('mpCompanies');
             if (job) {
                 const manager = await User.findById(managerId).populate('mpCompanies');
-                const hasAccess = manager.mpCompanies.some(company => 
+                const hasAccess = manager.mpCompanies.some(company =>
                     job.mpCompanies.some(jobCompany => jobCompany._id.toString() === company._id.toString())
                 );
 
@@ -1860,7 +1860,7 @@ export const getAllMarketplaceJobs = async (req, res) => {
 
         // Find the manager user to get mpCompanies array
         const manager = await User.findById(managerId).populate('mpCompanies');
-        
+
         if (!manager) {
             return res.status(404).json({
                 message: "Manager not found.",
@@ -1872,12 +1872,12 @@ export const getAllMarketplaceJobs = async (req, res) => {
         const companyIds = mpCompanies.map(company => company._id);
 
         // Find all jobs from manager's companies
-        const jobs = await MpJob.find({ 
+        const jobs = await MpJob.find({
             mpCompanies: { $in: companyIds }
         })
-        .populate('mpCompanies', 'companyName logo')
-        .select('-internalNotes')
-        .sort({ createdAt: -1 });
+            .populate('mpCompanies', 'companyName logo')
+            .select('-internalNotes')
+            .sort({ createdAt: -1 });
 
         console.log(`Found ${jobs.length} marketplace jobs for manager`);
 

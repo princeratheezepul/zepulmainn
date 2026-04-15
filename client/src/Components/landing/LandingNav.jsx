@@ -1,10 +1,12 @@
 import React, { useEffect, useRef } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 const LandingNav = () => {
     const navRef = useRef(null);
     const location = useLocation();
+    const navigate = useNavigate();
     const isAbout = location.pathname === '/about';
+    const isProRecruiter = location.pathname === '/prorecruitor';
 
     useEffect(() => {
         const nav = navRef.current;
@@ -55,8 +57,12 @@ const LandingNav = () => {
 
             <div className="lp-nav-right">
                 <button className="lp-nav-btn" onClick={() => {
-                    const cta = document.getElementById('beyond-cta');
-                    if (cta) cta.scrollIntoView({ behavior: 'smooth' });
+                    if (isProRecruiter) {
+                        navigate('/signin');
+                    } else {
+                        const cta = document.getElementById('beyond-cta');
+                        if (cta) cta.scrollIntoView({ behavior: 'smooth' });
+                    }
                 }}>
                     Start Hiring
                     <svg viewBox="0 0 11 11" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">

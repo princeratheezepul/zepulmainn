@@ -1,4 +1,4 @@
-import mongoose,{Schema} from "mongoose";
+import mongoose, { Schema } from "mongoose";
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 const userSchema = new Schema({
@@ -22,41 +22,41 @@ const userSchema = new Schema({
     refreshToken: {
         type: String,
     },
-    adminId:{
+    adminId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Admin',
         // required: true
     },
-    managerId:{
+    managerId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
         // required: true
     },
-    type:{
+    type: {
         type: String,
         enum: ['recruiter', 'manager', 'accountmanager', 'admin'],
         default: 'manager'
     },
-    address:{
-        type:String,
+    address: {
+        type: String,
     },
-    department:{
-        type:String,
+    department: {
+        type: String,
         default: 'HR'
     },
-    gender:{
-        type:String 
+    gender: {
+        type: String
     },
-    DOB:{
-        type:Date
+    DOB: {
+        type: Date
     },
-    phone:{
-        type:Number
+    phone: {
+        type: Number
     },
-    profile:{
-        type:String
+    profile: {
+        type: String
     },
-    firstPassSet:{
+    firstPassSet: {
         type: Boolean,
         default: false
     },
@@ -105,16 +105,20 @@ const userSchema = new Schema({
         type: Boolean,
         default: false
     },
+    isProRecruiter: {
+        type: Boolean,
+        default: false
+    },
 }, { timestamps: true });
 
-userSchema.pre("save", 
-    async function(next) {
+userSchema.pre("save",
+    async function (next) {
         if (this.isModified("password")) {
             this.password = await bcrypt.hash(this.password, 8);
         }
         next();
-    
-})
+
+    })
 
 userSchema.methods.isPasswordCorrect = async function (password) {
     return await bcrypt.compare(password, this.password);
