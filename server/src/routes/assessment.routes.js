@@ -4,13 +4,15 @@ import { verifyRecruiterJWT } from '../middleware/recruiter.auth.middleware.js';
 
 const router = express.Router();
 
+// Health check (must be before wildcard routes)
+router.get('/test/health', (req, res) => res.json({ status: "ok", message: "Assessment API is reachable" }));
+
 // Recruiter routes
 router.post('/generate', verifyRecruiterJWT, generateAssessment);
 router.post('/generate-avaloq', verifyRecruiterJWT, generateAvaloqAssessment);
 
 // Public candidate routes (No auth required, protected by assessmentId)
 router.get('/:assessmentId', getAssessment);
-router.get('/test/health', (req, res) => res.json({ status: "ok", message: "Assessment API is reachable" }));
 router.post('/:assessmentId/submit', submitAssessment);
 router.post('/:assessmentId/run', runCode);
 
