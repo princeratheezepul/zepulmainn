@@ -55,149 +55,189 @@ const CandidateAssessmentPage = () => {
     };
 
     const fetchAssessment = async () => {
-        try {
-            const url = `${config.backendUrl}/api/assessment/${assessmentId}`;
+        const url = `${config.backendUrl}/api/assessment/${assessmentId}`;
+        console.log(`Fetching assessment from: ${url}`);
 
-            console.log(`Fetching assessment from: ${url}`);
+        const MAX_RETRIES = 3;
+        const RETRY_DELAY_MS = 3000;
 
-            const response = await fetch(url, {
-                headers: {
-                    'Accept': 'application/json'
+        for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+            try {
+                const response = await fetch(url, {
+                    headers: { 'Accept': 'application/json' }
+                });
+
+                // Check if response is JSON
+                const contentType = response.headers.get("content-type");
+                if (!contentType || !contentType.includes("application/json")) {
+                    const text = await response.text();
+                    console.error(`Attempt ${attempt}: Non-JSON response (${response.status}):`, text.substring(0, 100));
+
+                    if (attempt < MAX_RETRIES) {
+                        console.log(`Retrying in ${RETRY_DELAY_MS / 1000}s...`);
+                        await new Promise(resolve => setTimeout(resolve, RETRY_DELAY_MS));
+                        continue;
+                    }
+
+                    // All retries exhausted
+                    if (response.status === 503 || response.status === 502) {
+                        throw new Error("The server is waking up after inactivity. Please wait a moment and refresh the page.");
+                    }
+                    throw new Error("The server is temporarily unreachable. Please refresh the page in a few seconds.");
                 }
-            });
 
-            // Check if response is JSON
-            const contentType = response.headers.get("content-type");
-            if (!contentType || !contentType.includes("application/json")) {
-                const text = await response.text();
-                console.error("Non-JSON response received:", text.substring(0, 100));
-                throw new Error(`Server returned non-JSON response (${response.status}). The backend might be misconfigured or down.`);
-            }
+                const data = await response.json();
 
-            const data = await response.json();
-
-            if (!response.ok) {
-                throw new Error(data.message || `Error ${response.status}: Failed to load assessment`);
-            }
-
-            setAssessment(data);
-
-            const isAvaloq = data.assessmentType === 'avaloq';
-            setAssessmentType(isAvaloq ? 'avaloq' : 'standard');
-
-            // Set timer based on assessment type
-            if (isAvaloq) {
-                setTimeRemaining(90 * 60); // 90 minutes for Avaloq
-            }
-
-            // Initialize sql.js for Avaloq assessments
-            if (isAvaloq) {
-                try {
-                    const SQL = await initSqlJs({
-                        locateFile: () => '/sql-wasm.wasm'
-                    });
-                    const db = new SQL.Database();
-
-                    // Create tables separately for reliability
-                    db.run(`CREATE TABLE customers (
-                        customer_id INTEGER PRIMARY KEY,
-                        name TEXT,
-                        email TEXT,
-                        account_type TEXT,
-                        created_at TEXT
-                    )`);
-                    db.run(`CREATE TABLE accounts (
-                        account_id INTEGER PRIMARY KEY,
-                        customer_id INTEGER,
-                        account_type TEXT,
-                        balance REAL,
-                        currency TEXT,
-                        status TEXT,
-                        opened_at TEXT,
-                        FOREIGN KEY (customer_id) REFERENCES customers(customer_id)
-                    )`);
-                    db.run(`CREATE TABLE transactions (
-                        txn_id INTEGER PRIMARY KEY,
-                        from_account_id INTEGER,
-                        to_account_id INTEGER,
-                        amount REAL,
-                        txn_type TEXT,
-                        status TEXT,
-                        created_at TEXT,
-                        FOREIGN KEY (from_account_id) REFERENCES accounts(account_id),
-                        FOREIGN KEY (to_account_id) REFERENCES accounts(account_id)
-                    )`);
-
-                    // Insert sample banking data
-                    const inserts = [
-                        "INSERT INTO customers VALUES (1, 'Alice Johnson', 'alice@bank.com', 'premium', '2023-01-15')",
-                        "INSERT INTO customers VALUES (2, 'Bob Smith', 'bob@bank.com', 'standard', '2023-03-20')",
-                        "INSERT INTO customers VALUES (3, 'Charlie Lee', 'charlie@bank.com', 'premium', '2023-06-10')",
-                        "INSERT INTO customers VALUES (4, 'Diana Ross', 'diana@bank.com', 'standard', '2024-01-05')",
-                        "INSERT INTO customers VALUES (5, 'Eve Walker', 'eve@bank.com', 'premium', '2024-02-14')",
-                        "INSERT INTO accounts VALUES (1001, 1, 'savings', 75000.00, 'USD', 'active', '2023-01-15')",
-                        "INSERT INTO accounts VALUES (1002, 1, 'checking', 25000.00, 'USD', 'active', '2023-02-01')",
-                        "INSERT INTO accounts VALUES (1003, 2, 'savings', 50000.00, 'USD', 'active', '2023-03-20')",
-                        "INSERT INTO accounts VALUES (1004, 2, 'checking', 12000.00, 'USD', 'inactive', '2023-04-10')",
-                        "INSERT INTO accounts VALUES (1005, 3, 'savings', 120000.00, 'USD', 'active', '2023-06-10')",
-                        "INSERT INTO accounts VALUES (1006, 3, 'checking', 45000.00, 'USD', 'active', '2023-07-01')",
-                        "INSERT INTO accounts VALUES (1007, 4, 'savings', 8000.00, 'USD', 'active', '2024-01-05')",
-                        "INSERT INTO accounts VALUES (1008, 5, 'savings', 95000.00, 'USD', 'active', '2024-02-14')",
-                        "INSERT INTO accounts VALUES (1009, 5, 'checking', 30000.00, 'USD', 'active', '2024-03-01')",
-                        "INSERT INTO transactions VALUES (1, 1001, 1003, 5000.00, 'debit', 'success', '2024-01-10')",
-                        "INSERT INTO transactions VALUES (2, 1003, 1001, 3000.00, 'credit', 'success', '2024-01-15')",
-                        "INSERT INTO transactions VALUES (3, 1005, 1006, 10000.00, 'debit', 'success', '2024-02-01')",
-                        "INSERT INTO transactions VALUES (4, 1001, 1005, 2000.00, 'debit', 'success', '2024-02-10')",
-                        "INSERT INTO transactions VALUES (5, 1006, 1001, 7500.00, 'credit', 'success', '2024-02-15')",
-                        "INSERT INTO transactions VALUES (6, 1008, 1009, 15000.00, 'debit', 'success', '2024-03-01')",
-                        "INSERT INTO transactions VALUES (7, 1001, 1002, 1000.00, 'debit', 'success', '2024-03-05')",
-                        "INSERT INTO transactions VALUES (8, 1005, 1003, 8000.00, 'debit', 'success', '2024-03-10')",
-                        "INSERT INTO transactions VALUES (9, 1002, 1007, 500.00, 'debit', 'failed', '2024-03-12')",
-                        "INSERT INTO transactions VALUES (10, 1009, 1001, 2500.00, 'credit', 'success', '2024-03-15')",
-                        "INSERT INTO transactions VALUES (11, 1001, 1008, 6000.00, 'debit', 'success', '2024-03-18')",
-                        "INSERT INTO transactions VALUES (12, 1003, 1006, 4000.00, 'debit', 'success', '2024-03-20')"
-                    ];
-                    inserts.forEach(sql => db.run(sql));
-
-                    sqlDbRef.current = db;
-                    console.log('✓ SQLite database initialized with banking data');
-                } catch (sqlErr) {
-                    console.error('Failed to initialize SQL.js:', sqlErr);
+                if (response.status === 404) {
+                    throw new Error("Assessment not found. This link may be invalid or expired. Please contact your recruiter.");
                 }
-            }
 
-            // Initialize code for all questions
-            const initialCodes = {};
-            const initialLanguages = {};
-            const questions = data.questions || [data.question];
+                if (response.status === 400) {
+                    throw new Error(data.message || "This assessment has already been completed.");
+                }
 
-            questions.forEach((q, idx) => {
-                const functionName = q.functionName || 'solution';
-                const section = (q.section || '').toLowerCase();
+                if (!response.ok) {
+                    throw new Error(data.message || `Error ${response.status}: Failed to load assessment`);
+                }
 
-                // For Avaloq assessments, set language based on question section
-                if (isAvaloq && (section.includes('sql') || section.includes('banking') || section.includes('debugging'))) {
-                    initialLanguages[idx] = 'sql';
-                    initialCodes[idx] = `-- ${q.title}\n-- Write your SQL query below\n-- Available tables: customers, accounts, transactions\n\n-- customers(customer_id, name, email, account_type, created_at)\n-- accounts(account_id, customer_id, account_type, balance, currency, status, opened_at)\n-- transactions(txn_id, from_account_id, to_account_id, amount, txn_type, status, created_at)\n\nSELECT * FROM customers;\n`;
-                } else if (isAvaloq && section.includes('coding')) {
-                    initialLanguages[idx] = 'java';
-                    initialCodes[idx] = `// ${q.title}\n// Write your solution below\n\nimport java.util.*;\n\nclass Solution {\n    public Object ${functionName}(Object... args) {\n        // Your code here\n        return null;\n    }\n}`;
+                setAssessment(data);
+
+                const isAvaloq = data.assessmentType === 'avaloq';
+                setAssessmentType(isAvaloq ? 'avaloq' : 'standard');
+
+                // Set timer based on assessment type
+                if (isAvaloq) {
+                    setTimeRemaining(90 * 60); // 90 minutes for Avaloq
+                }
+
+                // Initialize sql.js for Avaloq assessments
+                if (isAvaloq) {
+                    try {
+                        const SQL = await initSqlJs({
+                            locateFile: () => '/sql-wasm.wasm'
+                        });
+                        const db = new SQL.Database();
+
+                        // Create tables separately for reliability
+                        db.run(`CREATE TABLE customers (
+                            customer_id INTEGER PRIMARY KEY,
+                            name TEXT,
+                            email TEXT,
+                            account_type TEXT,
+                            created_at TEXT
+                        )`);
+                        db.run(`CREATE TABLE accounts (
+                            account_id INTEGER PRIMARY KEY,
+                            customer_id INTEGER,
+                            account_type TEXT,
+                            balance REAL,
+                            currency TEXT,
+                            status TEXT,
+                            opened_at TEXT,
+                            FOREIGN KEY (customer_id) REFERENCES customers(customer_id)
+                        )`);
+                        db.run(`CREATE TABLE transactions (
+                            txn_id INTEGER PRIMARY KEY,
+                            from_account_id INTEGER,
+                            to_account_id INTEGER,
+                            amount REAL,
+                            txn_type TEXT,
+                            status TEXT,
+                            created_at TEXT,
+                            FOREIGN KEY (from_account_id) REFERENCES accounts(account_id),
+                            FOREIGN KEY (to_account_id) REFERENCES accounts(account_id)
+                        )`);
+
+                        // Insert sample banking data
+                        const inserts = [
+                            "INSERT INTO customers VALUES (1, 'Alice Johnson', 'alice@bank.com', 'premium', '2023-01-15')",
+                            "INSERT INTO customers VALUES (2, 'Bob Smith', 'bob@bank.com', 'standard', '2023-03-20')",
+                            "INSERT INTO customers VALUES (3, 'Charlie Lee', 'charlie@bank.com', 'premium', '2023-06-10')",
+                            "INSERT INTO customers VALUES (4, 'Diana Ross', 'diana@bank.com', 'standard', '2024-01-05')",
+                            "INSERT INTO customers VALUES (5, 'Eve Walker', 'eve@bank.com', 'premium', '2024-02-14')",
+                            "INSERT INTO accounts VALUES (1001, 1, 'savings', 75000.00, 'USD', 'active', '2023-01-15')",
+                            "INSERT INTO accounts VALUES (1002, 1, 'checking', 25000.00, 'USD', 'active', '2023-02-01')",
+                            "INSERT INTO accounts VALUES (1003, 2, 'savings', 50000.00, 'USD', 'active', '2023-03-20')",
+                            "INSERT INTO accounts VALUES (1004, 2, 'checking', 12000.00, 'USD', 'inactive', '2023-04-10')",
+                            "INSERT INTO accounts VALUES (1005, 3, 'savings', 120000.00, 'USD', 'active', '2023-06-10')",
+                            "INSERT INTO accounts VALUES (1006, 3, 'checking', 45000.00, 'USD', 'active', '2023-07-01')",
+                            "INSERT INTO accounts VALUES (1007, 4, 'savings', 8000.00, 'USD', 'active', '2024-01-05')",
+                            "INSERT INTO accounts VALUES (1008, 5, 'savings', 95000.00, 'USD', 'active', '2024-02-14')",
+                            "INSERT INTO accounts VALUES (1009, 5, 'checking', 30000.00, 'USD', 'active', '2024-03-01')",
+                            "INSERT INTO transactions VALUES (1, 1001, 1003, 5000.00, 'debit', 'success', '2024-01-10')",
+                            "INSERT INTO transactions VALUES (2, 1003, 1001, 3000.00, 'credit', 'success', '2024-01-15')",
+                            "INSERT INTO transactions VALUES (3, 1005, 1006, 10000.00, 'debit', 'success', '2024-02-01')",
+                            "INSERT INTO transactions VALUES (4, 1001, 1005, 2000.00, 'debit', 'success', '2024-02-10')",
+                            "INSERT INTO transactions VALUES (5, 1006, 1001, 7500.00, 'credit', 'success', '2024-02-15')",
+                            "INSERT INTO transactions VALUES (6, 1008, 1009, 15000.00, 'debit', 'success', '2024-03-01')",
+                            "INSERT INTO transactions VALUES (7, 1001, 1002, 1000.00, 'debit', 'success', '2024-03-05')",
+                            "INSERT INTO transactions VALUES (8, 1005, 1003, 8000.00, 'debit', 'success', '2024-03-10')",
+                            "INSERT INTO transactions VALUES (9, 1002, 1007, 500.00, 'debit', 'failed', '2024-03-12')",
+                            "INSERT INTO transactions VALUES (10, 1009, 1001, 2500.00, 'credit', 'success', '2024-03-15')",
+                            "INSERT INTO transactions VALUES (11, 1001, 1008, 6000.00, 'debit', 'success', '2024-03-18')",
+                            "INSERT INTO transactions VALUES (12, 1003, 1006, 4000.00, 'debit', 'success', '2024-03-20')"
+                        ];
+                        inserts.forEach(sql => db.run(sql));
+
+                        sqlDbRef.current = db;
+                        console.log('✓ SQLite database initialized with banking data');
+                    } catch (sqlErr) {
+                        console.error('Failed to initialize SQL.js:', sqlErr);
+                    }
+                }
+
+                // Initialize code for all questions
+                const initialCodes = {};
+                const initialLanguages = {};
+                const questions = data.questions || [data.question];
+
+                questions.forEach((q, idx) => {
+                    const functionName = q.functionName || 'solution';
+                    const section = (q.section || '').toLowerCase();
+
+                    // For Avaloq assessments, set language based on question section
+                    if (isAvaloq && (section.includes('sql') || section.includes('banking') || section.includes('debugging'))) {
+                        initialLanguages[idx] = 'sql';
+                        initialCodes[idx] = `-- ${q.title}\n-- Write your SQL query below\n-- Available tables: customers, accounts, transactions\n\n-- customers(customer_id, name, email, account_type, created_at)\n-- accounts(account_id, customer_id, account_type, balance, currency, status, opened_at)\n-- transactions(txn_id, from_account_id, to_account_id, amount, txn_type, status, created_at)\n\nSELECT * FROM customers;\n`;
+                    } else if (isAvaloq && section.includes('coding')) {
+                        initialLanguages[idx] = 'java';
+                        initialCodes[idx] = `// ${q.title}\n// Write your solution below\n\nimport java.util.*;\n\nclass Solution {\n    public Object ${functionName}(Object... args) {\n        // Your code here\n        return null;\n    }\n}`;
+                    } else {
+                        // Standard assessment - default to Java
+                        initialLanguages[idx] = 'java';
+                        initialCodes[idx] = `// ${q.title}\n// Write your solution below\n\nimport java.util.*;\n\nclass Solution {\n    public Object ${functionName}(Object... args) {\n        // Your code here\n        return null;\n    }\n}`;
+                    }
+                });
+                setCodes(initialCodes);
+                setLanguages(initialLanguages);
+
+                // Success — exit loop
+                return;
+
+            } catch (err) {
+                if (err.message.includes("Assessment not found") ||
+                    err.message.includes("already been completed") ||
+                    err.message.includes("waking up") ||
+                    err.message.includes("unreachable")) {
+                    // These are final errors — don't retry
+                    setError(err.message);
+                    setLoading(false);
+                    return;
+                }
+
+                if (attempt < MAX_RETRIES) {
+                    console.log(`Attempt ${attempt} failed: ${err.message}. Retrying...`);
+                    await new Promise(resolve => setTimeout(resolve, RETRY_DELAY_MS));
                 } else {
-                    // Standard assessment - default to Java
-                    initialLanguages[idx] = 'java';
-                    initialCodes[idx] = `// ${q.title}\n// Write your solution below\n\nimport java.util.*;\n\nclass Solution {\n    public Object ${functionName}(Object... args) {\n        // Your code here\n        return null;\n    }\n}`;
+                    console.error("All retries exhausted:", err);
+                    setError("Unable to connect to the server. Please check your internet connection and refresh the page.");
                 }
-            });
-            setCodes(initialCodes);
-            setLanguages(initialLanguages);
-
-        } catch (err) {
-            console.error("Error fetching assessment:", err);
-            setError(err.message);
-        } finally {
-            setLoading(false);
+            }
         }
+
+        setLoading(false);
     };
+
 
     const getCurrentQuestion = () => {
         if (!assessment) return null;
