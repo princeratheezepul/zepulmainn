@@ -40,8 +40,9 @@ const allowedOrigins = [
   "https://zepul.com",
   "https://www.zepul.com"
 ].filter(Boolean); // Remove any undefined values
+const uniqueOrigins = [...new Set(allowedOrigins)];
 
-console.log('CORS allowed origins:', allowedOrigins);
+console.log('CORS allowed origins:', uniqueOrigins);
 console.log('ServerConfig.Frontend_URL:', ServerConfig.Frontend_URL);
 
 app.use(
@@ -50,7 +51,7 @@ app.use(
       // Allow requests with no origin (like mobile apps or curl requests)
       if (!origin) return callback(null, true);
 
-      if (allowedOrigins.indexOf(origin) !== -1) {
+      if (uniqueOrigins.indexOf(origin) !== -1) {
         callback(null, true);
       } else {
         console.log('CORS blocked origin:', origin);
@@ -105,7 +106,7 @@ app.use("/api/meetings", meetingRoutes);
 app.use("/api/resume-data", resumeDataRoutes);
 
 // JSON 404 Handler for API routes
-app.use("/api/*", (req, res) => {
+app.use("/api", (req, res) => {
   res.status(404).json({
     message: "API Route not found",
     path: req.originalUrl,
