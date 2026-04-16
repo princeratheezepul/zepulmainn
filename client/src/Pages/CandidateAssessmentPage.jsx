@@ -4,6 +4,7 @@ import Editor from '@monaco-editor/react';
 import { Loader2, Play, Send, CheckCircle, AlertCircle, Clock, Check, X, ChevronLeft, ChevronRight, Award } from 'lucide-react';
 import toast from 'react-hot-toast';
 import initSqlJs from 'sql.js';
+import { config } from '../config/config';
 
 const CandidateAssessmentPage = () => {
     const { assessmentId } = useParams();
@@ -55,11 +56,28 @@ const CandidateAssessmentPage = () => {
 
     const fetchAssessment = async () => {
         try {
-            const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/assessment/${assessmentId}`);
+            const url = `${config.backendUrl}/api/assessment/${assessmentId}`;
+
+            console.log(`Fetching assessment from: ${url}`);
+
+            const response = await fetch(url, {
+                headers: {
+                    'Accept': 'application/json'
+                }
+            });
+
+            // Check if response is JSON
+            const contentType = response.headers.get("content-type");
+            if (!contentType || !contentType.includes("application/json")) {
+                const text = await response.text();
+                console.error("Non-JSON response received:", text.substring(0, 100));
+                throw new Error(`Server returned non-JSON response (${response.status}). The backend might be misconfigured or down.`);
+            }
+
             const data = await response.json();
 
             if (!response.ok) {
-                throw new Error(data.message || 'Failed to load assessment');
+                throw new Error(data.message || `Error ${response.status}: Failed to load assessment`);
             }
 
             setAssessment(data);

@@ -526,19 +526,23 @@ Return ONLY a valid JSON array of objects in this EXACT format (no markdown, no 
 export const getAssessment = async (req, res) => {
   try {
     const { assessmentId } = req.params;
+    console.log(`[Assessment] Fetching details for ID: ${assessmentId}`);
 
     let resume = await Resume.findOne({ "oa.assessmentId": assessmentId });
     let assessmentField = 'oa';
 
     if (!resume) {
+      console.log(`[Assessment] Not found in 'oa' field, checking 'avaloqOa' for ID: ${assessmentId}`);
       resume = await Resume.findOne({ "avaloqOa.assessmentId": assessmentId });
       assessmentField = 'avaloqOa';
     }
 
     if (!resume) {
-      return res.status(404).json({ message: "Assessment not found" });
+      console.warn(`[Assessment] NO MATCH FOUND in database for ID: ${assessmentId}`);
+      return res.status(404).json({ message: "Assessment not found", assessmentId });
     }
 
+    console.log(`[Assessment] Found assessment for ${resume.name}. Type: ${assessmentField}`);
     const oaData = resume[assessmentField];
 
     if (oaData.status === 'completed' || oaData.status === 'evaluated') {
