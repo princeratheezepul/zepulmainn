@@ -88,6 +88,18 @@ app.use((req, res, next) => {
 
 app.use(cookieParser());
 
+// Debug version endpoint - check which code is deployed
+app.get('/api/version', (req, res) => {
+  res.json({
+    version: '2ee3276',
+    timestamp: new Date().toISOString(),
+    routes: [
+      '/api/resumes', '/api/recruiter', '/api/assessment', '/api/jobs', '/api/meetings'
+    ],
+    assessmentRoutesLoaded: typeof assessmentRoutes !== 'undefined'
+  });
+});
+
 app.use("/api/resumes", resumeRoutes);
 app.use("/api/manager/resumes", managerResumeRoutes);
 app.use("/api/admin/resumes", adminResumeRoutes);
