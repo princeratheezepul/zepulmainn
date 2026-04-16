@@ -66,7 +66,7 @@ export default function FirstJobRegistration() {
 
                 <div className="mt-8 text-sm">
                     <button
-                        onClick={() => navigate("/manager")}
+                        onClick={() => navigate("/prorecruiter/dashboard")}
                         className="text-gray-400 hover:text-gray-600 underline underline-offset-2"
                     >
                         Skip for now, take me to dashboard

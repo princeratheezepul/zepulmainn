@@ -55,7 +55,7 @@ export default function CompanyOnboarding() {
             }
 
             // Determine next route (Dashboard or First Job Registration)
-            let nextRoute = "/manager";
+            let nextRoute = "/prorecruiter/dashboard";
             if (storedUserInfoStr) {
                 const storedUserInfo = JSON.parse(storedUserInfoStr);
                 const hasJobs = storedUserInfo.data?.user?.jobs && storedUserInfo.data.user.jobs.length > 0;

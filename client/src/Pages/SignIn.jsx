@@ -21,7 +21,10 @@ export default function SignIn() {
 
     useEffect(() => {
         if (isAuthenticated && user) {
-            const dashboardRoute = dashboardRoutes[user.type] || "/";
+            let dashboardRoute = dashboardRoutes[user.type] || "/";
+            if (user.type === "manager" && user.isProRecruiter) {
+                dashboardRoute = "/prorecruiter/dashboard";
+            }
             navigate(dashboardRoute, { replace: true });
         }
     }, [isAuthenticated, user, navigate]);
@@ -47,6 +50,13 @@ export default function SignIn() {
             login(normalizedUserData);
             toast.success("Login successful!");
             let dashboardRoute = dashboardRoutes[normalizedUserData.data?.user?.type] || "/";
+
+            if (
+                normalizedUserData.data?.user?.type === "manager" &&
+                normalizedUserData.data?.user?.isProRecruiter
+            ) {
+                dashboardRoute = "/prorecruiter/dashboard";
+            }
 
             // Check if it's a ProRecruiter manager
             if (

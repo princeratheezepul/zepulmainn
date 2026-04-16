@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import ProPricingSelector from "../Components/ProPricingSelector";
 
 const SYSTEM_PROMPT = `You are the "Zepul Job Registration Assistant", a professional, friendly, and highly efficient AI recruiter.
 Your job is to collect details for a new job posting from a hiring manager step-by-step. 
@@ -45,6 +46,7 @@ export default function JobChatAgent() {
     const [input, setInput] = useState("");
     const [isTyping, setIsTyping] = useState(true);
     const [isFinished, setIsFinished] = useState(false);
+    const [showPricing, setShowPricing] = useState(false);
 
     const { user } = useAuth();
     const navigate = useNavigate();
@@ -153,8 +155,8 @@ Output ONLY raw JSON. No markdown, no code fences, no extra text.`;
                 throw new Error(errData.message || `Server error ${res.status}`);
             }
 
-            setMessages((prev) => [...prev, { sender: "bot", text: "✅ Your job has been created and published successfully! Redirecting to your dashboard..." }]);
-            setTimeout(() => navigate("/manager"), 3000);
+            setMessages((prev) => [...prev, { sender: "bot", text: "✅ Your job has been created and published successfully! Loading your plan options..." }]);
+            setTimeout(() => setShowPricing(true), 2000);
 
         } catch (error) {
             console.error("Job creation error:", error);
@@ -199,6 +201,11 @@ Output ONLY raw JSON. No markdown, no code fences, no extra text.`;
         }
     };
 
+    // Show pricing selector after job creation is complete
+    if (showPricing) {
+        return <ProPricingSelector />;
+    }
+
     return (
         <div className="flex flex-col h-[600px] w-full max-w-2xl mx-auto bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden font-sans">
             <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-4 flex items-center gap-3 shadow-sm">
@@ -223,12 +230,12 @@ Output ONLY raw JSON. No markdown, no code fences, no extra text.`;
                             </div>
                         )}
                         <div className={`max-w-[80%] rounded-2xl px-5 py-3.5 shadow-sm text-sm leading-relaxed ${msg.sender === "user"
-                                ? "bg-blue-600 text-white rounded-tr-[4px]"
-                                : msg.text.includes("✅")
-                                    ? "bg-green-50 border border-green-200 text-green-700 rounded-tl-[4px]"
-                                    : msg.text.includes("❌")
-                                        ? "bg-red-50 border border-red-200 text-red-700 rounded-tl-[4px]"
-                                        : "bg-white border border-gray-200 text-gray-700 rounded-tl-[4px]"
+                            ? "bg-blue-600 text-white rounded-tr-[4px]"
+                            : msg.text.includes("✅")
+                                ? "bg-green-50 border border-green-200 text-green-700 rounded-tl-[4px]"
+                                : msg.text.includes("❌")
+                                    ? "bg-red-50 border border-red-200 text-red-700 rounded-tl-[4px]"
+                                    : "bg-white border border-gray-200 text-gray-700 rounded-tl-[4px]"
                             }`}>
                             {msg.text}
                         </div>

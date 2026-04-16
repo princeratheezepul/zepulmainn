@@ -68,6 +68,7 @@ import AccountManagerSetPassword from "../Pages/AccountManager/SetPassword.jsx";
 import RecruiterJobDetailPage from '../Pages/RecruiterJobDetailPage';
 import ManagerJobDetailPage from '../Pages/Manager/jobs/[jobid]';
 import ManagerDashboard from '../Pages/Manager/ManagerDashboard.jsx';
+import ProRecruiterDashboard from '../Pages/ProRecruiter/ProRecruiterDashboard.jsx';
 import AdminJobDetailPage from '../Pages/Admin/jobs/[jobid]';
 import AccountManagerJobDetailPage from '../Pages/AccountManager/jobs/[jobid]';
 import UnifiedLogin from "../Pages/UnifiedLogin";
@@ -361,6 +362,11 @@ const Router = () => {
             <Route path="/manager/dashboard" element={
               <ProtectedRoute allowedRoles={['manager']}>
                 <ManagerDashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="/prorecruiter/dashboard" element={
+              <ProtectedRoute allowedRoles={['manager']}>
+                <ProRecruiterDashboard />
               </ProtectedRoute>
             } />
 
