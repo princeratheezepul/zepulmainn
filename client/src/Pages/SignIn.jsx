@@ -46,7 +46,25 @@ export default function SignIn() {
             let normalizedUserData = userData;
             login(normalizedUserData);
             toast.success("Login successful!");
-            const dashboardRoute = dashboardRoutes[normalizedUserData.data?.user?.type] || "/";
+            let dashboardRoute = dashboardRoutes[normalizedUserData.data?.user?.type] || "/";
+
+            // Check if it's a ProRecruiter manager
+            if (
+                normalizedUserData.data?.user?.type === "manager" &&
+                normalizedUserData.data?.user?.isProRecruiter
+            ) {
+                const hasCompany = normalizedUserData.data?.user?.companys && normalizedUserData.data?.user?.companys.length > 0;
+                const hasJobs = normalizedUserData.data?.user?.jobs && normalizedUserData.data?.user?.jobs.length > 0;
+
+                if (!hasCompany) {
+                    // No company -> go to company onboarding
+                    dashboardRoute = "/onboarding/company";
+                } else if (!hasJobs) {
+                    // Has company, but no jobs -> go to first job registration
+                    dashboardRoute = "/register-first-job";
+                }
+            }
+
             setTimeout(() => {
                 navigate(dashboardRoute, { replace: true });
             }, 100);

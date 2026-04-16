@@ -55,15 +55,29 @@ const registerUser = async (req, res) => {
         console.log(req.body);
         const { fullname, email, password, adminId, isProRecruiter } = req.body;
         console.log(req.body);
-        const username = fullname.replace(/\s+/g, '').toLowerCase();
-        console.log(username, password);
 
-        const existingUser = await User.findOne({ $or: [{ username }] });
-        if (existingUser) {
-            return res.status(400).json({ message: "Username already exists" });
+        // Check if email already exists
+        const existingEmail = await User.findOne({ email });
+        if (existingEmail) {
+            return res.status(400).json({ message: "An account with this email already exists" });
         }
 
-        const user = await User.create({ username, fullname, email, password, adminId, isProRecruiter: isProRecruiter || false });
+        // Generate a unique username from fullname, appending a random suffix if needed
+        let username = fullname.replace(/\s+/g, '').toLowerCase();
+        const existingUsername = await User.findOne({ username });
+        if (existingUsername) {
+            username = username + Math.floor(1000 + Math.random() * 9000);
+        }
+        console.log(username, password);
+
+        const userData = { username, fullname, email, password, adminId };
+        if (isProRecruiter) {
+            userData.isProRecruiter = true;
+            userData.firstPassSet = true;
+            userData.status = 'active';
+        }
+
+        const user = await User.create(userData);
         const admin = await Admin.findById(adminId);
         console.log(admin);
         const createdUser = await User.findById(user._id).select("-password -refreshToken");
@@ -437,8 +451,49 @@ const changeEmail = async (req, res) => {
     }
 };
 
+const createProRecruiterCompany = async (req, res) => {
+    try {
+        const { name, description, website, location, domain, companyType, employeeNumber, contact } = req.body;
+        const userId = req.user._id;
 
-export { loginUser, logoutUser, registerUser, forgotpassword, resetpassword, changeEmail, changeEmailRequest, getManagerInfo, updatePassword, createManagerByAdmin, validateSetPassword, setPassword };
+        // Check if company name already exists
+        const existingCompany = await Company.findOne({ name });
+        if (existingCompany) {
+            return res.status(400).json({ message: "A company with this name already exists" });
+        }
+
+        // Create the company with the manager's userId
+        const company = await Company.create({
+            name,
+            description,
+            website,
+            location,
+            domain,
+            companyType,
+            employeeNumber,
+            contact,
+            userId,
+        });
+
+        // Push the company ID into the user's companys array
+        await User.findByIdAndUpdate(userId, {
+            $push: { companys: company._id }
+        });
+
+        const updatedUser = await User.findById(userId).select("-password -refreshToken");
+
+        return res.status(201).json({
+            status: 201,
+            message: "Company created successfully",
+            data: { company, user: updatedUser }
+        });
+    } catch (error) {
+        console.error("createProRecruiterCompany error:", error);
+        return res.status(500).json({ message: "Internal Server Error" });
+    }
+};
+
+export { loginUser, logoutUser, registerUser, forgotpassword, resetpassword, changeEmail, changeEmailRequest, getManagerInfo, updatePassword, createManagerByAdmin, validateSetPassword, setPassword, createProRecruiterCompany };
 
 
 // using manager job crud opwerations
@@ -469,15 +524,7 @@ export const createJobm = async (req, res) => {
     console.log("managerId:", managerId);
 
     try {
-        let job = await Job.findOne({ jobtitle });
-        if (job) {
-            return res.status(400).json({
-                message: "You can't register the same job.",
-                success: false
-            });
-        }
-
-        job = await Job.create({
+        const job = await Job.create({
             jobtitle,
             description,
             location,
@@ -497,6 +544,14 @@ export const createJobm = async (req, res) => {
             resumeAnalysisPoints: Array.isArray(resumeAnalysisPoints) ? resumeAnalysisPoints : [],
             assignedTo: recruiterId ? [recruiterId] : []
         });
+
+        // Add the job to the manager's jobs array
+        if (managerId) {
+            await User.findByIdAndUpdate(managerId, {
+                $push: { jobs: job._id }
+            });
+        }
+
         if (recruiterId) {
             const recruiter = await Recruiter.findById(recruiterId);
             const manager = await User.findById(managerId);
@@ -512,9 +567,9 @@ export const createJobm = async (req, res) => {
             success: true
         });
     } catch (error) {
-        console.log(error);
+        console.log("createJobm error:", error);
         return res.status(500).json({
-            message: "Error registering the job.",
+            message: error.message || "Error registering the job.",
             success: false
         });
     }

@@ -96,8 +96,13 @@ const userSchema = new Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'MpCompany',
     }],
+   
     // New field for assigned companies
     assignedCompany: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Company',
+    }],
+    companys: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Company',
     }],
