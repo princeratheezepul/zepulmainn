@@ -212,6 +212,7 @@ const CandidateAssessmentPage = () => {
                 setLanguages(initialLanguages);
 
                 // Success — exit loop
+                setLoading(false);
                 return;
 
             } catch (err) {
