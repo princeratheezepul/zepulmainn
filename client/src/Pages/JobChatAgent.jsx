@@ -118,6 +118,10 @@ Output ONLY raw JSON. No markdown, no code fences, no extra text.`;
                 ? String(jobData.type).toLowerCase()
                 : 'onsite';
 
+            // AuthContext stores user with `id` (not `_id`). Fall back to localStorage for safety.
+            const storedUserInfo = JSON.parse(localStorage.getItem("userInfo") || "{}");
+            const resolvedManagerId = user?.id || user?._id || storedUserInfo?.data?.user?._id;
+
             const finalPayload = {
                 jobtitle: String(jobData.jobtitle || "Untitled Role"),
                 description: String(jobData.description || ""),
@@ -133,12 +137,13 @@ Output ONLY raw JSON. No markdown, no code fences, no extra text.`;
                 keyResponsibilities: Array.isArray(jobData.keyResponsibilities) ? jobData.keyResponsibilities.map(String) : [],
                 preferredQualifications: Array.isArray(jobData.preferredQualifications) ? jobData.preferredQualifications.map(String) : [],
                 openpositions: Number(jobData.openpositions) || 1,
-                managerId: user?._id,
-                company: user?.companys?.[0]?.name || "Zepul Pro Company",
+                managerId: resolvedManagerId,
+                company: storedUserInfo?.data?.user?.companys?.[0] || user?.companys?.[0]?.name || "Zepul Pro Company",
                 priority: [],
                 internalNotes: "Generated via AI Job Assistant",
                 resumeAnalysisPoints: [],
             };
+            console.log("Resolved managerId:", resolvedManagerId);
 
             console.log("Final payload to backend:", finalPayload);
 
