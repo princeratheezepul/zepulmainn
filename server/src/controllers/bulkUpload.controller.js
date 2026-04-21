@@ -804,7 +804,7 @@ export const analyzeResume = async (resumeText, job) => {
       },
       "resumeContent": {
           "name": "Full candidate name",
-          "role": "Requested job role",
+          "role": "Candidate's actual current professional title or role based on their most recent experience in the resume (not the job they are applying for)",
           "experienceYears": "integer representing years of experience",
           "projects": [
               {

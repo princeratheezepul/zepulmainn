@@ -16,8 +16,10 @@ export const parseResumeWithAI = async (req, res) => {
       return res.status(400).json({ message: "Text and job details are required" });
     }
 
-    const analysis = await analyzeResume(text, job);
-    const atsResult = await calculateATSScore(text, job);
+    const [analysis, atsResult] = await Promise.all([
+      analyzeResume(text, job),
+      calculateATSScore(text, job)
+    ]);
 
     res.status(200).json({
       analysis,
