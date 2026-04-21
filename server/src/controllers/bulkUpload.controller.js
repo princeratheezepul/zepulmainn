@@ -752,7 +752,10 @@ export const analyzeResume = async (resumeText, job) => {
     throw new Error('Gemini API is not configured. Please set up GEMINI_API_KEY environment variable. Get your API key from: https://aistudio.google.com/app/apikey');
   }
 
-  const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+  const model = genAI.getGenerativeModel({
+    model: "gemini-2.5-flash",
+    generationConfig: { responseMimeType: "application/json" }
+  });
   const prompt = `
     You are an expert AI recruiter analyzing a resume for a specific job.
     Job Details:
@@ -845,8 +848,11 @@ export const analyzeResume = async (resumeText, job) => {
   const response = await result.response;
   const text = response.text();
 
-  // More robust JSON cleaning
-  let cleanedText = text.replace(/```json|```/g, "").trim();
+  // Strip <thinking> blocks (gemini-2.5-flash thinking mode), then clean markdown fences
+  let cleanedText = text
+    .replace(/<thinking>[\s\S]*?<\/thinking>/gi, '')
+    .replace(/```json|```/g, '')
+    .trim();
 
   // Remove any leading/trailing non-JSON content
   const jsonStart = cleanedText.indexOf('{');
@@ -907,7 +913,10 @@ export const calculateATSScore = async (resumeText, job) => {
     throw new Error('Gemini API is not configured. Please set up GEMINI_API_KEY environment variable.');
   }
 
-  const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+  const model = genAI.getGenerativeModel({
+    model: "gemini-2.5-flash",
+    generationConfig: { responseMimeType: "application/json" }
+  });
 
   const prompt = `
     You are a strict, realistic ATS evaluator. Calculate ATS score out of 100 using weighted criteria below. BE CONSERVATIVE with scoring - most resumes should score 60-80, with only exceptional candidates scoring 85+.
@@ -1010,8 +1019,11 @@ export const calculateATSScore = async (resumeText, job) => {
   const response = await result.response;
   const aiText = await response.text();
 
-  // More robust JSON cleaning for ATS score
-  let cleanedText = aiText.replace(/```json|```/g, "").trim();
+  // Strip <thinking> blocks (gemini-2.5-flash thinking mode), then clean markdown fences
+  let cleanedText = aiText
+    .replace(/<thinking>[\s\S]*?<\/thinking>/gi, '')
+    .replace(/```json|```/g, '')
+    .trim();
 
   // Remove any leading/trailing non-JSON content
   const jsonStart = cleanedText.indexOf('{');
