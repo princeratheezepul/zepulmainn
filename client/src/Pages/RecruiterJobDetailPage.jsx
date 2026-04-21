@@ -6,6 +6,7 @@ import Settings from '../Components/recruiter/dashboard/Settings';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import ResumeUpload from '../Components/recruiter/dashboard/ResumeUpload';
 import SavedResumes from '../Components/recruiter/dashboard/SavedResumes';
+import ZepDBJobMatch from '../Components/recruiter/dashboard/ZepDBJobMatch';
 import toast from 'react-hot-toast';
 
 const RecruiterJobDetailPage = () => {
@@ -21,6 +22,9 @@ const RecruiterJobDetailPage = () => {
   const [resumeCount, setResumeCount] = useState(0);
   const [preloadedResumes, setPreloadedResumes] = useState([]);
   const [resumesLoading, setResumesLoading] = useState(false);
+
+  const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+  const isCreatedByProRecruiter = userInfo?.data?.user?.isCreatedByProRecruiter || false;
 
   // Handle sidebar navigation
   const handleSidebarNavigation = (component) => {
@@ -155,17 +159,34 @@ const RecruiterJobDetailPage = () => {
       {activeComponent === 'Profile' ? (
         <Settings />
       ) : showResumeUpload ? (
-        <div className="flex-1 flex flex-col items-center py-0 px-0 bg-gray-50">
-          <ResumeUpload 
-            onBack={() => {
-              setShowResumeUpload(false);
-              if (resumeUploadFromCandidateList) {
-                setResumeUploadFromCandidateList(false);
-                setShowSavedResumes(true);
-              }
-            }} 
-            jobDetails={job} 
-          />
+        <div className={`flex-1 flex ${isCreatedByProRecruiter ? 'flex-row' : 'flex-col items-center'} py-0 px-0 bg-gray-50 gap-0`}>
+          <div className={isCreatedByProRecruiter ? 'flex-1 min-w-0 overflow-y-auto' : 'w-full'}>
+            <ResumeUpload
+              onBack={() => {
+                setShowResumeUpload(false);
+                if (resumeUploadFromCandidateList) {
+                  setResumeUploadFromCandidateList(false);
+                  setShowSavedResumes(true);
+                }
+              }}
+              jobDetails={job}
+            />
+          </div>
+          {isCreatedByProRecruiter && (
+            <div className="w-[420px] flex-shrink-0 h-screen overflow-y-auto border-l border-gray-200 p-4">
+              <ZepDBJobMatch
+                jobId={jobId}
+                jobTitle={job.jobtitle}
+                onBack={() => {
+                  setShowResumeUpload(false);
+                  if (resumeUploadFromCandidateList) {
+                    setResumeUploadFromCandidateList(false);
+                    setShowSavedResumes(true);
+                  }
+                }}
+              />
+            </div>
+          )}
         </div>
       ) : showSavedResumes ? (
         <div className="flex-1 flex-col items-center py-0 px-0 bg-gray-50">
