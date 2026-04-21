@@ -4,6 +4,7 @@ import Resume from "../models/resume.model.js";
 import Recruiter from "../models/recruiter.model.js";
 import { Job } from "../models/job.model.js";
 import { determineResumeTag } from "../utils/tagHelper.js";
+import { sendWhatsAppMessage } from "../utils/whatsapp.js";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 // Initialize Gemini AI
@@ -450,6 +451,12 @@ export const scoreCandidateForJob = async (req, res) => {
       note: analysis.summary,
       submittedAt: new Date()
     });
+
+    // Send WhatsApp notification if candidate has a phone number
+    if (candidate.phone) {
+      const message = `Hi ${candidate.name}, congratulations! You have been shortlisted for the role of *${job.jobtitle}*${job.company ? ` at *${job.company}*` : ''}. Our recruitment team will be in touch with you shortly.`;
+      sendWhatsAppMessage(candidate.phone, message, candidate.countryCode || '91');
+    }
 
     res.status(200).json({
       success: true,
