@@ -18,13 +18,13 @@ const ZepProPipeline = () => {
             alignItems: 'center',
             justifyContent: 'center',
             gap: '12px',
-            marginTop: '84px',
+            marginTop: '14px',
             width: '100%',
             textAlign: 'center'
           }}>
-            <span style={{ color: '#024BFF', fontSize: '24px', fontWeight: 800 }}>&raquo;</span>
+            {/* <span style={{ color: '#024BFF', fontSize: '24px', fontWeight: 800 }}>&raquo;</span>
             <span>Global talent and recruiter network, without boundaries.</span>
-            <span style={{ color: '#024BFF', fontSize: '24px', fontWeight: 800 }}>&raquo;</span>
+            <span style={{ color: '#024BFF', fontSize: '24px', fontWeight: 800 }}>&raquo;</span> */}
           </div>
         </div>
 

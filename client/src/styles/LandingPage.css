@@ -183,6 +183,141 @@
   height: 11px;
 }
 
+/* ── MOBILE TOGGLE & SIDEBAR ── */
+.lp-mobile-toggle {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--lp-ink);
+  font-size: 20px;
+  cursor: pointer;
+  z-index: 101;
+  padding: 8px;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.3s ease;
+}
+
+.lp-nav.about-theme .lp-mobile-toggle {
+  color: #fff;
+}
+
+.lp-sidebar-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+  z-index: 998;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.lp-sidebar-overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.lp-sidebar {
+  position: fixed;
+  top: 0;
+  right: -300px;
+  width: 300px;
+  height: 100%;
+  background: #ffffff;
+  z-index: 999;
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  box-shadow: -10px 0 30px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+}
+
+.lp-sidebar.open {
+  transform: translateX(-300px);
+}
+
+.lp-sidebar-content {
+  padding: 100px 32px 40px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.lp-sidebar-links {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.lp-sidebar-link {
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--lp-ink);
+  text-decoration: none;
+  font-family: 'DM Sans', sans-serif;
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.lp-sidebar-link:hover {
+  color: var(--lp-blue);
+  transform: translateX(4px);
+}
+
+.lp-sidebar-bottom {
+  display: flex;
+  justify-content: center;
+  margin-top: auto;
+  padding-top: 40px;
+}
+
+.lp-sidebar-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 28px;
+  background: var(--lp-blue);
+  color: #fff;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  width: 100%;
+  justify-content: center;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(2, 75, 255, 0.2);
+}
+
+.lp-sidebar-btn:hover {
+  background: var(--lp-ink);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+.lp-sidebar-btn svg {
+  width: 12px;
+  height: 12px;
+}
+
+@media (max-width: 1024px) {
+  .desktop-only {
+    display: none !important;
+  }
+
+  .lp-mobile-toggle {
+    display: flex;
+  }
+
+  .lp-nav {
+    padding: 0 24px;
+  }
+}
+
 /* ── HERO LAYOUT ── */
 .lp-hero {
   display: grid;

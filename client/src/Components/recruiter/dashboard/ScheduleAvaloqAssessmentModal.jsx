@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, Database, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { config } from '../../../config/config';
 
 const ScheduleAvaloqAssessmentModal = ({ isOpen, onClose, candidateEmail, candidateName, resumeId, onScheduled }) => {
     const [loading, setLoading] = useState(false);
@@ -16,7 +17,8 @@ const ScheduleAvaloqAssessmentModal = ({ isOpen, onClose, candidateEmail, candid
             const userInfo = JSON.parse(localStorage.getItem("userInfo"));
             const token = userInfo?.data?.accessToken;
 
-            const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/assessment/generate-avaloq`, {
+            const backendUrl = config.backendUrl || 'https://zepul-fullstack.onrender.com';
+            const response = await fetch(`${backendUrl}/api/assessment/generate-avaloq`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -27,6 +29,10 @@ const ScheduleAvaloqAssessmentModal = ({ isOpen, onClose, candidateEmail, candid
                 }),
             });
 
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                throw new Error(`Server error (${response.status}): Unexpected response from server. Check Render deployment logs.`);
+            }
             const data = await response.json();
 
             if (!response.ok) {

@@ -37,11 +37,13 @@ const allowedOrigins = [
   "http://localhost:5173",
   "https://zepulfullstack3.vercel.app",
   "https://zepul-fullstack-9hgn.vercel.app",
+  "https://zepul-fullstack.vercel.app",
   "https://zepul.com",
   "https://www.zepul.com"
 ].filter(Boolean); // Remove any undefined values
+const uniqueOrigins = [...new Set(allowedOrigins)];
 
-console.log('CORS allowed origins:', allowedOrigins);
+console.log('CORS allowed origins:', uniqueOrigins);
 console.log('ServerConfig.Frontend_URL:', ServerConfig.Frontend_URL);
 
 app.use(
@@ -50,7 +52,7 @@ app.use(
       // Allow requests with no origin (like mobile apps or curl requests)
       if (!origin) return callback(null, true);
 
-      if (allowedOrigins.indexOf(origin) !== -1) {
+      if (uniqueOrigins.indexOf(origin) !== -1) {
         callback(null, true);
       } else {
         console.log('CORS blocked origin:', origin);
@@ -87,6 +89,18 @@ app.use((req, res, next) => {
 
 app.use(cookieParser());
 
+// Debug version endpoint - check which code is deployed
+app.get('/api/version', (req, res) => {
+  res.json({
+    version: '2ee3276',
+    timestamp: new Date().toISOString(),
+    routes: [
+      '/api/resumes', '/api/recruiter', '/api/assessment', '/api/jobs', '/api/meetings'
+    ],
+    assessmentRoutesLoaded: typeof assessmentRoutes !== 'undefined'
+  });
+});
+
 app.use("/api/resumes", resumeRoutes);
 app.use("/api/manager/resumes", managerResumeRoutes);
 app.use("/api/admin/resumes", adminResumeRoutes);
@@ -103,7 +117,27 @@ app.use("/api/marketplace", marketplaceRoutes);
 app.use("/api/assessment", assessmentRoutes);
 app.use("/api/meetings", meetingRoutes);
 app.use("/api/resume-data", resumeDataRoutes);
-app.use("/api/job-description-sessions", jobDescriptionSessionRoutes);
+
+// JSON 404 Handler for API routes
+app.use("/api", (req, res) => {
+  res.status(404).json({
+    message: "API Route not found",
+    path: req.originalUrl,
+    method: req.method
+  });
+});
+
+// Global Error Handler for JSON responses
+app.use((err, req, res, next) => {
+  console.error(`[${new Date().toISOString()}] Error:`, err);
+
+  const status = err.status || 500;
+  res.status(status).json({
+    message: err.message || "Internal Server Error",
+    error: process.env.NODE_ENV === "development" ? err : {}
+  });
+});
+
 app.listen(ServerConfig.PORT, async () => {
   console.log(`Server started on port ${ServerConfig.PORT}...`);
 });

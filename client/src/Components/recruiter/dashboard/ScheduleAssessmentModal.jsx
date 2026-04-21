@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, Code, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { config } from '../../../config/config';
 
 const ScheduleAssessmentModal = ({ isOpen, onClose, candidateEmail, candidateName, resumeId, onScheduled }) => {
     const [loading, setLoading] = useState(false);
@@ -16,7 +17,8 @@ const ScheduleAssessmentModal = ({ isOpen, onClose, candidateEmail, candidateNam
             const userInfo = JSON.parse(localStorage.getItem("userInfo"));
             const token = userInfo?.data?.accessToken;
 
-            const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/assessment/generate`, {
+            const backendUrl = config.backendUrl || 'https://zepul-fullstack.onrender.com';
+            const response = await fetch(`${backendUrl}/api/assessment/generate`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -27,6 +29,10 @@ const ScheduleAssessmentModal = ({ isOpen, onClose, candidateEmail, candidateNam
                 }),
             });
 
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                throw new Error(`Server error (${response.status}): Unexpected response from server. Check Render deployment logs.`);
+            }
             const data = await response.json();
 
             if (!response.ok) {
