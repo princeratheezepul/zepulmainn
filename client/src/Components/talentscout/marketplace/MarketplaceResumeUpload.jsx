@@ -5,7 +5,6 @@ import BulkUploadModal from '../../recruiter/dashboard/BulkUploadModal';
 import * as pdfjsLib from "pdfjs-dist";
 import { GlobalWorkerOptions } from "pdfjs-dist/build/pdf";
 import workerUrl from "pdfjs-dist/build/pdf.worker.mjs?url";
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import Tesseract from "tesseract.js";
 import mammoth from "mammoth";
 import ResumeDetailsView from '../../recruiter/dashboard/ResumeDetailsView';
@@ -14,14 +13,12 @@ import toast from 'react-hot-toast';
 
 GlobalWorkerOptions.workerSrc = workerUrl;
 
-const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API);
-
 const MarketplaceResumeUpload = ({ onBack, jobDetails }) => {
   const [loading, setLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState("");
   const [parsedData, setParsedData] = useState(null);
   const [showBulkUpload, setShowBulkUpload] = useState(false);
-  
+
   const { user, isAuthenticated, apiCall } = useMarketplaceAuth();
 
   // Set body background to match page background when component mounts
@@ -67,8 +64,8 @@ const MarketplaceResumeUpload = ({ onBack, jobDetails }) => {
       setLoadingMessage("Getting ATS score...");
       const atsResult = await fetchATSScore(text);
 
-      const finalData = { 
-        ...analysis, 
+      const finalData = {
+        ...analysis,
         overallScore: Math.round(atsResult.ats_score),
         ats_score: atsResult.ats_score,
         ats_reason: atsResult.ats_reason,
@@ -129,7 +126,7 @@ const MarketplaceResumeUpload = ({ onBack, jobDetails }) => {
       console.log('Saving marketplace resume data:', resumeData);
       console.log('JobId:', jobId);
       console.log('API URL:', `${import.meta.env.VITE_BACKEND_URL}/api/marketplace/resumes/save/${jobId}`);
-      
+
       // Use marketplace API call method
       const response = await apiCall(`${import.meta.env.VITE_BACKEND_URL}/api/marketplace/resumes/save/${jobId}`, {
         method: 'POST',
@@ -138,10 +135,10 @@ const MarketplaceResumeUpload = ({ onBack, jobDetails }) => {
 
       console.log('Response status:', response.status);
       console.log('Response headers:', response.headers);
-      
+
       if (!response.ok) {
         let errorMessage = 'Failed to save resume data';
-        
+
         try {
           const errorData = await response.json();
           console.error('Server error response:', errorData);
@@ -152,7 +149,7 @@ const MarketplaceResumeUpload = ({ onBack, jobDetails }) => {
           console.error('Non-JSON error response:', errorText);
           errorMessage = `Server error: ${response.status} ${response.statusText}`;
         }
-        
+
         throw new Error(errorMessage);
       }
 
@@ -167,8 +164,6 @@ const MarketplaceResumeUpload = ({ onBack, jobDetails }) => {
 
   const fetchATSScore = async (resumeText) => {
     try {
-      const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-
       const prompt = `
       You are a strict, realistic ATS evaluator. Calculate ATS score out of 100 using weighted criteria below. BE CONSERVATIVE with scoring - most resumes should score 60-80, with only exceptional candidates scoring 85+.
 
@@ -265,10 +260,14 @@ const MarketplaceResumeUpload = ({ onBack, jobDetails }) => {
       Resume Text:
       ${resumeText}
       `;
-
-      const result = await model.generateContent(prompt);
-      const response = await result.response;
-      const aiText = await response.text();
+      const result = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/resumes/evaluate-prompt`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt, modelType: "gemini-2.5-flash" })
+      });
+      if (!result.ok) throw new Error("Failed to evaluate prompt using backend API");
+      const data = await result.json();
+      const aiText = data.text || "";
       const cleanedText = aiText.replace(/```json|```/g, "").trim();
       const parsed = JSON.parse(cleanedText);
 
@@ -293,7 +292,6 @@ const MarketplaceResumeUpload = ({ onBack, jobDetails }) => {
   };
 
   const analyzeResume = async (resumeText, job) => {
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
     const prompt = `
       You are an expert AI recruiter analyzing a resume for a specific job.
       Job Details:
@@ -350,9 +348,14 @@ const MarketplaceResumeUpload = ({ onBack, jobDetails }) => {
       Make sure all fields in aiSummary contain meaningful, detailed content that provides valuable insights for the recruiter.
     `;
 
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const text = response.text();
+    const result = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/resumes/evaluate-prompt`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prompt, modelType: "gemini-2.5-flash" })
+    });
+    if (!result.ok) throw new Error("Failed to evaluate prompt using backend API");
+    const data = await result.json();
+    const text = data.text || "";
     const cleanedText = text.replace(/```json|```/g, "").trim();
     return JSON.parse(cleanedText);
   };
@@ -368,11 +371,11 @@ const MarketplaceResumeUpload = ({ onBack, jobDetails }) => {
   });
 
   if (parsedData) {
-    return <ResumeDetailsView resumeData={parsedData} onBack={onBack} isMarketplace={true} marketplaceJobDetails={jobDetails} onResumeUpdate={() => {}} />;
+    return <ResumeDetailsView resumeData={parsedData} onBack={onBack} isMarketplace={true} marketplaceJobDetails={jobDetails} onResumeUpdate={() => { }} />;
   }
 
   return (
-    <div className="min-h-screen w-full flex flex-col items-center justify-center bg-gray-50 p-4" style={{backgroundColor: '#f9fafb', minHeight: '100vh'}}>
+    <div className="min-h-screen w-full flex flex-col items-center justify-center bg-gray-50 p-4" style={{ backgroundColor: '#f9fafb', minHeight: '100vh' }}>
       <div className="flex items-center justify-between gap-4 mb-8 w-full max-w-6xl">
         <button onClick={onBack} className="text-gray-500 hover:text-gray-800" disabled={loading}>
           <ArrowLeft size={24} />
@@ -389,9 +392,8 @@ const MarketplaceResumeUpload = ({ onBack, jobDetails }) => {
       <div className="flex-grow w-full flex items-center justify-center">
         <div
           {...getRootProps()}
-          className={`w-full max-w-4xl min-h-[320px] border-2 border-dashed rounded-xl p-8 sm:p-10 md:p-12 text-center cursor-pointer transition-all duration-300 ease-in-out flex flex-col items-center justify-center bg-white ${
-            isDragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-gray-400'
-          } ${loading ? 'cursor-wait' : ''}`}
+          className={`w-full max-w-4xl min-h-[320px] border-2 border-dashed rounded-xl p-8 sm:p-10 md:p-12 text-center cursor-pointer transition-all duration-300 ease-in-out flex flex-col items-center justify-center bg-white ${isDragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-gray-400'
+            } ${loading ? 'cursor-wait' : ''}`}
         >
           <input {...getInputProps()} />
           {
@@ -416,9 +418,9 @@ const MarketplaceResumeUpload = ({ onBack, jobDetails }) => {
           }
         </div>
       </div>
-      
+
       {showBulkUpload && (
-        <BulkUploadModal 
+        <BulkUploadModal
           onClose={() => setShowBulkUpload(false)}
           jobDetails={jobDetails}
         />

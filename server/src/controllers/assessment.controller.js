@@ -7,6 +7,30 @@ import { executeJava, executeCpp, executePython } from "../services/codeExecutio
 
 const genAI = new GoogleGenerativeAI(process.env.VITE_GEMINI_API);
 
+// Retry helper: retries on 429 rate-limit errors with exponential backoff
+const generateWithRetry = async (model, prompt, maxRetries = 3) => {
+  let lastError;
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await model.generateContent(prompt);
+    } catch (err) {
+      const is429 =
+        err?.status === 429 ||
+        (err?.message && err.message.includes('429')) ||
+        (err?.message && err.message.toLowerCase().includes('resource exhausted'));
+      if (is429 && attempt < maxRetries) {
+        const delayMs = Math.pow(2, attempt) * 10000; // 10s, 20s, 40s
+        console.warn(`Gemini 429 rate limit. Retrying in ${delayMs / 1000}s (attempt ${attempt + 1}/${maxRetries})...`);
+        await new Promise((res) => setTimeout(res, delayMs));
+        lastError = err;
+      } else {
+        throw err;
+      }
+    }
+  }
+  throw lastError;
+};
+
 const sendAssessmentEmail = async (toEmail, candidateName, assessmentLink, jobTitle) => {
   const transporter = nodemailer.createTransport({
     service: 'gmail',
@@ -103,7 +127,7 @@ export const generateAssessment = async (req, res) => {
 
     // Try AI generation first with timeout
     try {
-      const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
       const prompt = `
 Generate 3 DISTINCT coding problems suitable for a ${job.jobtitle} role.
 
@@ -137,8 +161,8 @@ Return ONLY a valid JSON array of objects in this EXACT format (no markdown, no 
       `.trim();
 
       const result = await Promise.race([
-        model.generateContent(prompt),
-        new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 25000))
+        generateWithRetry(model, prompt),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 90000))
       ]);
 
       const response = await result.response;
@@ -306,7 +330,7 @@ export const generateAvaloqAssessment = async (req, res) => {
     let questionData;
 
     try {
-      const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
       const prompt = `
 You are an expert assessment designer for Avaloq banking software developer roles.
 
@@ -382,8 +406,8 @@ Return ONLY a valid JSON array of objects in this EXACT format (no markdown, no 
       `.trim();
 
       const result = await Promise.race([
-        model.generateContent(prompt),
-        new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 30000))
+        generateWithRetry(model, prompt),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 90000))
       ]);
 
       const response = await result.response;

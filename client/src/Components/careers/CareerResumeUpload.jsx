@@ -4,14 +4,11 @@ import { UploadCloud, ArrowLeft, Loader2 } from 'lucide-react';
 import * as pdfjsLib from "pdfjs-dist";
 import { GlobalWorkerOptions } from "pdfjs-dist/build/pdf";
 import workerUrl from "pdfjs-dist/build/pdf.worker.mjs?url";
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import mammoth from "mammoth";
 import ResumeDetailsView from '../recruiter/dashboard/ResumeDetailsView';
 import toast from 'react-hot-toast';
 
 GlobalWorkerOptions.workerSrc = workerUrl;
-
-const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API);
 
 const CareerResumeUpload = ({ onBack, jobDetails }) => {
     const [loading, setLoading] = useState(false);
@@ -36,17 +33,27 @@ const CareerResumeUpload = ({ onBack, jobDetails }) => {
                 throw new Error("Unsupported file format. Please upload a PDF or DOCX file.");
             }
 
-            setLoadingMessage("Analyzing resume with AI...");
-            const analysis = await analyzeResume(text, jobDetails);
+            setLoadingMessage("Analyzing resume with AI on server...");
 
-            setLoadingMessage("Calculating ATS Score...");
-            let atsResult;
-            try {
-                atsResult = await fetchATSScore(text);
-            } catch (atsError) {
-                toast.error(atsError.message || "Failed to calculate ATS score.");
-                throw atsError;
+            const parseResponse = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/resumes/parse-ai`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    text,
+                    job: jobDetails
+                })
+            });
+
+            if (!parseResponse.ok) {
+                let errMessage = "AI parsing failed";
+                try {
+                    const errData = await parseResponse.json();
+                    errMessage = errData.message || errMessage;
+                } catch { }
+                throw new Error(`Failed to analyze resume: ${errMessage}`);
             }
+
+            const { analysis, atsResult } = await parseResponse.json();
 
             const finalData = {
                 ...analysis,
@@ -56,7 +63,7 @@ const CareerResumeUpload = ({ onBack, jobDetails }) => {
                 ats_breakdown: atsResult.ats_breakdown
             };
 
-            setLoadingMessage("Submitting application...");
+            setLoadingMessage("Saving details...");
             const saved = await saveResumeToDB(finalData, jobDetails._id);
             setParsedData(saved.resume);
             toast.success("Application submitted successfully!");
@@ -101,10 +108,7 @@ const CareerResumeUpload = ({ onBack, jobDetails }) => {
 
     const saveResumeToDB = async (resumeData, jobId) => {
         try {
-            console.log('Saving career resume data:', resumeData);
-            console.log('JobId:', jobId);
             const apiUrl = `${import.meta.env.VITE_BACKEND_URL}/api/marketplace/public/jobs/${jobId}/apply`;
-            console.log('API URL:', apiUrl);
 
             const response = await fetch(apiUrl, {
                 method: 'POST',
@@ -114,162 +118,23 @@ const CareerResumeUpload = ({ onBack, jobDetails }) => {
                 body: JSON.stringify(resumeData),
             });
 
-            console.log('Response status:', response.status);
-
             if (!response.ok) {
                 let errorMessage = 'Failed to submit application';
-
                 try {
                     const errorData = await response.json();
-                    console.error('Server error response:', errorData);
                     errorMessage = errorData.message || errorMessage;
                 } catch (parseError) {
-                    const errorText = await response.text();
-                    console.error('Non-JSON error response:', errorText);
                     errorMessage = `Server error (${response.status}): ${response.statusText}`;
                 }
-
                 throw new Error(errorMessage);
             }
 
             const result = await response.json();
-            console.log('Career resume saved successfully:', result);
             return result.data;
         } catch (error) {
             console.error('Error saving career resume:', error);
             throw new Error(`Failed to submit application: ${error.message}`);
         }
-    };
-
-    const fetchATSScore = async (resumeText) => {
-        try {
-            const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-
-            const prompt = `
-      You are a strict, realistic ATS evaluator. Calculate ATS score out of 100 using weighted criteria below. BE CONSERVATIVE with scoring - most resumes should score 60-80, with only exceptional candidates scoring 85+.
-
-      Criteria, weights, and STRICT scoring guidelines:
-      {
-        "Skill Match (Contextual)": 30 // 0-30 points
-        "Experience Relevance & Depth": 25 // 0-25 points
-        "Project & Achievement Validation": 15 // 0-15 points
-        "Consistency Check": 15 // 0-15 points
-        "AI-Generated Resume Detection": 5 // 0-5 points (PENALTY category)
-        "Resume Quality Score": 5 // 0-5 points
-        "Interview & Behavioral Prediction": 5 // 0-5 points
-        "Competitive Fit & Market Standing": 5 // 0-5 points
-      }
-
-      Return ONLY a JSON object like this (no markdown, no code formatting):
-      {
-        "Skill Match (Contextual)": {"score": number, "reason": string},
-        "Experience Relevance & Depth": {"score": number, "reason": string},
-        "Project & Achievement Validation": {"score": number, "reason": string},
-        "AI-Generated Resume Detection": {"score": number, "reason": string},
-        "Consistency Check": {"score": number, "reason": string},
-        "Resume Quality Score": {"score": number, "reason": string},
-        "Interview & Behavioral Prediction": {"score": number, "reason": string},
-        "Competitive Fit & Market Standing": {"score": number, "reason": string},
-        "ats_score": number,
-        "reason": string
-      }
-
-      Job Details:
-      Title: ${jobDetails.title}
-      Company: ${jobDetails.company}
-      Location: ${jobDetails.location}
-      Type: ${jobDetails.type}
-      Experience: ${jobDetails.experience}
-      Salary: ${jobDetails.salary}
-      Description: ${jobDetails.description}
-      Required Skills: ${(jobDetails.skills || []).join(", ")}
-
-      Resume Text:
-      ${resumeText}
-      `;
-
-            const result = await model.generateContent(prompt);
-            const response = await result.response;
-            const aiText = await response.text();
-            const cleanedText = aiText.replace(/```json|```/g, "").trim();
-            const parsed = JSON.parse(cleanedText);
-
-            return {
-                ats_score: parsed.ats_score,
-                ats_reason: parsed.reason,
-                ats_breakdown: {
-                    skill_match: parsed["Skill Match (Contextual)"],
-                    experience_relevance: parsed["Experience Relevance & Depth"],
-                    project_achievement: parsed["Project & Achievement Validation"],
-                    ai_generated_detection: parsed["AI-Generated Resume Detection"],
-                    consistency_check: parsed["Consistency Check"],
-                    resume_quality: parsed["Resume Quality Score"],
-                    interview_prediction: parsed["Interview & Behavioral Prediction"],
-                    competitive_fit: parsed["Competitive Fit & Market Standing"],
-                }
-            };
-        } catch (err) {
-            console.error("Error retrieving ATS score:", err);
-            throw new Error("Error retrieving ATS score.");
-        }
-    };
-
-    const analyzeResume = async (resumeText, job) => {
-        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-        const prompt = `
-      You are an expert AI recruiter analyzing a resume for a specific job.
-      Job Details:
-      - Title: ${job.title}
-      - Description: ${job.description}
-      - Required Skills: ${(job.skills || []).join(", ")}
-
-      Resume Text:
-      ---
-      ${resumeText}
-      ---
-
-      Based on the job details and resume text, provide a detailed analysis in a pure JSON format. Do not include any markdown, code blocks, or explanations. The JSON object should have the following structure:
-      {
-        "name": "Full Name",
-        "title": "Professional Title",
-        "skills": ["Top 10 most relevant technical skills"],
-        "email": "contact@email.com",
-        "phone": "+1234567890",
-        "experience": "Total years of experience as a string",
-        "location": "City, Country",
-        "aiSummary": {
-          "technicalExperience": "A 1-2 sentence summary of their technical background.",
-          "projectExperience": "A 1-2 sentence summary of their project work.",
-          "education": "A 1-2 sentence summary of their educational qualifications.",
-          "keyAchievements": "A 1-2 sentence summary of their achievements.",
-          "skillMatch": "A 1-2 sentence analysis of skill alignment.",
-          "competitiveFit": "A 1-2 sentence assessment of competitive position.",
-          "consistencyCheck": "A 1-2 sentence evaluation of career consistency."
-        },
-        "aiScorecard": {
-          "technicalSkillMatch": number,
-          "competitiveFit": number,
-          "consistencyCheck": number,
-          "teamLeadership": number
-        },
-        "recommendation": "A short, decisive recommendation",
-        "keyStrength": ["2-3 key strengths"],
-        "potentialConcern": ["2-3 potential concerns"],
-        "about": "A brief 'About' section",
-        "applicationDetails": {
-            "position": "${job.title}",
-            "date": "${new Date().toLocaleDateString()}",
-            "noticePeriod": "Extract from resume if available, otherwise 'N/A'",
-            "source": "Career Website"
-        }
-      }
-    `;
-
-        const result = await model.generateContent(prompt);
-        const response = await result.response;
-        const text = response.text();
-        const cleanedText = text.replace(/```json|```/g, "").trim();
-        return JSON.parse(cleanedText);
     };
 
     const { getRootProps, getInputProps, isDragActive } = useDropzone({

@@ -1,10 +1,34 @@
 import Resume from "../models/resume.model.js";
 import { Admin } from "../models/admin.model.js";
 import mongoose from "mongoose";
+import { generateTextWithRetry } from "./bulkUpload.controller.js";
 import { Job } from "../models/job.model.js";
 import Recruiter from "../models/recruiter.model.js";
 import nodemailer from "nodemailer";
 import { determineResumeTag } from "../utils/tagHelper.js";
+import { analyzeResume, calculateATSScore } from "./bulkUpload.controller.js";
+
+// @desc Process resume text through AI and return structured data
+export const parseResumeWithAI = async (req, res) => {
+  try {
+    const { text, job } = req.body;
+    if (!text || !job) {
+      return res.status(400).json({ message: "Text and job details are required" });
+    }
+
+    const analysis = await analyzeResume(text, job);
+    const atsResult = await calculateATSScore(text, job);
+
+    res.status(200).json({
+      analysis,
+      atsResult
+    });
+  } catch (err) {
+    console.error("Error processing resume with AI:", err);
+    res.status(500).json({ message: "Failed to parse resume with AI", error: err.message });
+  }
+};
+
 // @desc Save parsed resume to DB with jobId
 export const saveResumeWithJob = async (req, res) => {
   try {
@@ -374,8 +398,23 @@ export const requestAnotherRound = async (req, res) => {
 
     res.status(200).json({ success: true, message: 'Request updated and email sent.' });
   } catch (error) {
-    console.error("Error requesting another round:", error);
-    res.status(500).json({ success: false, message: 'Server error', error: error.message });
+    console.error("Error connecting unassigned job:", error);
+    res.status(500).json({ success: false, message: "Internal Server Error" });
+  }
+};
+
+export const evaluatePrompt = async (req, res) => {
+  const { prompt, modelType } = req.body;
+  if (!prompt) {
+    return res.status(400).json({ success: false, message: "Prompt is required" });
+  }
+
+  try {
+    const text = await generateTextWithRetry(prompt, modelType || "gemini-1.5-flash");
+    res.status(200).json({ text });
+  } catch (error) {
+    console.error("Error evaluating generic prompt:", error);
+    res.status(500).json({ success: false, message: "Failed to evaluate prompt" });
   }
 };
 

@@ -1,14 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ArrowLeft, RefreshCw, HelpCircle, Copy, Plus, Code, Edit2, Upload, Database } from 'lucide-react';
 import { toast } from 'react-hot-toast';
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import { format, addDays } from 'date-fns';
 import ScheduleAssessmentModal from './ScheduleAssessmentModal';
 import AssessmentResultView from './AssessmentResultView';
 import ScheduleAvaloqAssessmentModal from './ScheduleAvaloqAssessmentModal';
 import AddAnswersPage from './AddAnswersPage';
-
-const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API);
 
 const AIInterviewQuestions = ({ jobDetails, resumeData, onBack, onResumeUpdate }) => {
   const [loading, setLoading] = useState(false);
@@ -53,8 +50,7 @@ const AIInterviewQuestions = ({ jobDetails, resumeData, onBack, onResumeUpdate }
   const fetchAIQuestions = async () => {
     setLoading(true);
     try {
-      const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-      const prompt = `
+      const promptPayload = `
               Based on the following job description and candidate profile, generate 4 distinct interview questions.
               
               Job Details:
@@ -82,13 +78,18 @@ const AIInterviewQuestions = ({ jobDetails, resumeData, onBack, onResumeUpdate }
               Do not repeat questions you have generated before. Ensure the questions are insightful and relevant to the job requirements and the candidate's potential fit for the role.
           `;
 
-      const result = await model.generateContent(prompt);
-      const response = await result.response;
-      const text = response.text();
-      const cleanedText = text.replace(/```json|```/g, "").trim();
-      const parsedQuestions = JSON.parse(cleanedText);
-      setQuestions(parsedQuestions);
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/scorecard/ai-questions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ promptPayload })
+      });
 
+      const data = await response.json();
+      if (data.questions) {
+        setQuestions(data.questions);
+      } else {
+        throw new Error("Failed to fetch custom questions");
+      }
     } catch (error) {
       console.error("Failed to fetch AI questions:", error);
       // Fallback to mock questions on error
