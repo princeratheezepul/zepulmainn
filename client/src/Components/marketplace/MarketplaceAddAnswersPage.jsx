@@ -1,10 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import { ArrowLeft, FileText, HelpCircle, Upload } from 'lucide-react';
-import { format } from 'date-fns';
 import toast from 'react-hot-toast';
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import { useNavigate } from 'react-router-dom';
-import { geminiQueue } from '../../utils/apiQueue';
 import { useMarketplaceAuth } from '../../context/MarketplaceAuthContext';
 
 const MarketplaceAddAnswersPage = ({ onBack, questions, jobDetails, resumeData, onEvaluationComplete }) => {
@@ -13,19 +10,11 @@ const MarketplaceAddAnswersPage = ({ onBack, questions, jobDetails, resumeData, 
   const [submitting, setSubmitting] = useState(false);
   const textareaRef = useRef(null);
   const navigate = useNavigate();
-  const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API);
   const { apiCall } = useMarketplaceAuth();
-  
-  // Check if Gemini API key is available
-  useEffect(() => {
-    if (!import.meta.env.VITE_GEMINI_API) {
-      console.warn('Gemini API key not found in environment variables');
-    }
-  }, []);
 
   const handleTextChange = (value) => {
     setCompleteText(value);
-    
+
     // Update word count
     const wordCount = value.trim() ? value.trim().split(/\s+/).length : 0;
     setWordCount(wordCount);
@@ -47,9 +36,9 @@ const MarketplaceAddAnswersPage = ({ onBack, questions, jobDetails, resumeData, 
     }
 
     // Filter out placeholder questions
-    const validQuestions = questions.filter(question => 
-      question.text !== 'Enter your question here...' && 
-      question.text !== '' && 
+    const validQuestions = questions.filter(question =>
+      question.text !== 'Enter your question here...' &&
+      question.text !== '' &&
       question.text.trim() !== ''
     );
 
@@ -62,8 +51,6 @@ const MarketplaceAddAnswersPage = ({ onBack, questions, jobDetails, resumeData, 
     try {
       console.log('Starting AI-powered answer extraction and evaluation...');
 
-      // Call Gemini API to extract answers and evaluate them
-      const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
       const prompt = `
         You are an expert AI interviewer tasked with extracting candidate answers from a complete interview transcript and evaluating them.
 
@@ -124,57 +111,61 @@ const MarketplaceAddAnswersPage = ({ onBack, questions, jobDetails, resumeData, 
         **REMEMBER:** Be thorough in searching the transcript for answers. If the candidate discussed the topic but didn't directly answer the question, still extract and evaluate what they said.
       `;
 
-      console.log('Calling Gemini API...');
+      console.log('Calling backend evaluate-prompt API...');
       let evaluationResults;
-      
+
       try {
-        const result = await geminiQueue.add(() => model.generateContent(prompt));
-        const response = await result.response;
-        const text = response.text();
-        console.log('Gemini response:', text);
-        
+        const result = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/resumes/evaluate-prompt`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ prompt, modelType: "gemini-2.5-flash" })
+        });
+        if (!result.ok) throw new Error("Failed to evaluate prompt using backend API");
+        const data = await result.json();
+        const text = data.text || "";
+        console.log('Backend response:', text);
+
         const cleanedText = text.replace(/```json|```/g, "").trim();
         console.log('Cleaned text:', cleanedText);
-        
+
         try {
           evaluationResults = JSON.parse(cleanedText);
           console.log('Parsed evaluation results:', evaluationResults);
         } catch (parseError) {
           console.error('JSON parse error:', parseError);
-          console.error('Failed to parse text:', cleanedText);
           throw new Error('Failed to parse AI response');
         }
       } catch (geminiError) {
-        console.error('Gemini API error:', geminiError);
+        console.error('Backend API error:', geminiError);
         console.log('Using intelligent fallback evaluation...');
-        
+
         // Intelligent fallback: Simple text analysis for answer extraction
         evaluationResults = validQuestions.map((question, index) => {
           // Simple keyword-based answer extraction
           const questionKeywords = question.text.toLowerCase().split(/\s+/).filter(word => word.length > 3);
           const transcriptLower = completeText.toLowerCase();
-          
+
           // Look for potential answers near question keywords
           let foundAnswer = false;
           let extractedAnswer = "Answer not found in transcript";
-          
+
           // Simple approach: look for text that might be related to the question
           const sentences = completeText.split(/[.!?]+/);
           for (const sentence of sentences) {
             const sentenceLower = sentence.toLowerCase();
-            const keywordMatches = questionKeywords.filter(keyword => 
+            const keywordMatches = questionKeywords.filter(keyword =>
               sentenceLower.includes(keyword)
             ).length;
-            
+
             if (keywordMatches > 0 && sentence.trim().length > 20) {
               extractedAnswer = sentence.trim();
               foundAnswer = true;
               break;
             }
           }
-          
+
           let score, reason, confidence;
-          
+
           if (!foundAnswer) {
             score = 0;
             reason = "No relevant answer found in the provided transcript for this question.";
@@ -192,7 +183,7 @@ const MarketplaceAddAnswersPage = ({ onBack, questions, jobDetails, resumeData, 
             reason = "Answer demonstrates understanding with adequate detail found in transcript.";
             confidence = "Medium";
           }
-          
+
           return {
             question: question.text,
             answer: extractedAnswer,
@@ -202,19 +193,19 @@ const MarketplaceAddAnswersPage = ({ onBack, questions, jobDetails, resumeData, 
             confidence: confidence
           };
         });
-        
+
         console.log('Intelligent fallback evaluation results:', evaluationResults);
       }
 
       // Save results to database using marketplace API
       console.log('Saving to database...');
-      
+
       // Prepare filtered questions and answers for database save
       const filteredQuestions = validQuestions.map(question => ({
         category: question.category,
         text: question.text
       }));
-      
+
       const filteredAnswers = {};
       evaluationResults.forEach((result, index) => {
         filteredAnswers[index] = result.answer;
@@ -232,7 +223,7 @@ const MarketplaceAddAnswersPage = ({ onBack, questions, jobDetails, resumeData, 
       });
 
       console.log('Save response status:', saveResponse.status);
-      
+
       if (!saveResponse.ok) {
         const errorText = await saveResponse.text();
         console.error('Save response error:', errorText);
@@ -243,7 +234,7 @@ const MarketplaceAddAnswersPage = ({ onBack, questions, jobDetails, resumeData, 
       console.log('Save result:', saveResult);
 
       toast.success('Interview evaluation completed successfully!');
-      
+
       // Call the completion callback to navigate back to scorecard view
       if (onEvaluationComplete) {
         onEvaluationComplete();
@@ -286,7 +277,7 @@ const MarketplaceAddAnswersPage = ({ onBack, questions, jobDetails, resumeData, 
               <p className="text-gray-600 mt-1">The AI will extract answers to these questions from your transcript:</p>
             </div>
           </div>
-          
+
           <div className="space-y-3">
             {questions.filter(q => q.text !== 'Enter your question here...' && q.text.trim() !== '').map((question, index) => (
               <div key={index} className="bg-gray-50 p-3 rounded-lg">
@@ -319,7 +310,7 @@ const MarketplaceAddAnswersPage = ({ onBack, questions, jobDetails, resumeData, 
                 onChange={(e) => handleTextChange(e.target.value)}
                 placeholder="Paste the complete interview transcript here. This could be from a video call recording transcript, written interview responses, or any text containing the candidate's answers to the questions above..."
                 className="w-full min-h-[400px] p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-vertical outline-none text-sm leading-relaxed"
-                style={{ 
+                style={{
                   whiteSpace: 'pre-wrap',
                   wordWrap: 'break-word',
                   overflowWrap: 'break-word'

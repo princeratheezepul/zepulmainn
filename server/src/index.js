@@ -20,6 +20,7 @@ import marketplaceRoutes from "./routes/marketplace.route.js";
 import assessmentRoutes from "./routes/assessment.routes.js";
 import meetingRoutes from "./routes/meeting.route.js";
 import resumeDataRoutes from "./routes/resumeData.route.js";
+import jobDescriptionSessionRoutes from "./routes/jobDescriptionSession.routes.js";
 import { expireStaleMeetings } from "./services/meeting.service.js";
 import { cleanupExpiredSessions } from "./utils/sessionManager.js";
 const app = express();

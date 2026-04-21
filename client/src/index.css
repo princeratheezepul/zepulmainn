@@ -1,5 +1,6 @@
 @import url("https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap");
 @import "tailwindcss";
+
 :root {
   --background-color: #f0f0f0;
   --sub-title: #4d4d4d;
@@ -9,5 +10,23 @@
   --heading: 58px;
   --sub-heading: 44px;
 
-  --white:#fff
+  --white: #fff
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes pulse {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.4;
+  }
 }

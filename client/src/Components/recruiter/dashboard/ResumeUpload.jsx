@@ -5,7 +5,6 @@ import BulkUploadModal from './BulkUploadModal';
 import * as pdfjsLib from "pdfjs-dist";
 import { GlobalWorkerOptions } from "pdfjs-dist/build/pdf";
 import workerUrl from "pdfjs-dist/build/pdf.worker.mjs?url";
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import Tesseract from "tesseract.js";
 import mammoth from "mammoth";
 import ResumeDetailsView from './ResumeDetailsView';
@@ -14,8 +13,6 @@ import { useApi } from '../../../hooks/useApi';
 import toast from 'react-hot-toast';
 
 GlobalWorkerOptions.workerSrc = workerUrl;
-
-const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API);
 
 const ResumeUpload = ({ onBack, jobDetails }) => {
   const [loading, setLoading] = useState(false);
@@ -62,17 +59,23 @@ const ResumeUpload = ({ onBack, jobDetails }) => {
         throw new Error("Unsupported file format. Please upload a PDF or DOCX file.");
       }
 
-      setLoadingMessage("Analyzing resume with AI...");
-      const analysis = await analyzeResume(text, jobDetails);
+      setLoadingMessage("Analyzing resume with AI on server...");
 
-      setLoadingMessage("Calculating ATS Score...");
-      let atsResult;
-      try {
-        atsResult = await fetchATSScore(text);
-      } catch (atsError) {
-        toast.error(atsError.message || "Failed to calculate ATS score.");
-        throw atsError;
+      const parseResponse = await post(`${import.meta.env.VITE_BACKEND_URL}/api/resumes/parse-ai`, {
+        text,
+        job: jobDetails
+      });
+
+      if (!parseResponse.ok) {
+        let errMessage = "AI parsing failed";
+        try {
+          const errData = await parseResponse.json();
+          errMessage = errData.message || errMessage;
+        } catch { } // ignore
+        throw new Error(`Failed to analyze resume: ${errMessage}`);
       }
+
+      const { analysis, atsResult } = await parseResponse.json();
 
       const finalData = {
         ...analysis,
@@ -180,154 +183,6 @@ const ResumeUpload = ({ onBack, jobDetails }) => {
       throw new Error(`Failed to save resume data to database: ${error.message}`);
     }
   };
-
-  const fetchATSScore = async (resumeText) => {
-    try {
-      const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-
-      const prompt = `
-      You are a strict, realistic ATS evaluator. Calculate ATS score out of 100 using weighted criteria below. BE CONSERVATIVE with scoring - most resumes should score 60-80, with only exceptional candidates scoring 85+.
-
-      Criteria, weights, and STRICT scoring guidelines:
-      {
-        "Skill Match (Contextual)": 30 // 0-30 points
-        // 25-30: Perfect skill alignment (90%+ match)
-        // 20-24: Strong match (70-89% skills present)
-        // 15-19: Moderate match (50-69% skills present)
-        // 10-14: Basic match (30-49% skills present)
-        // 0-9: Poor/no match (<30% skills present)
-
-        "Experience Relevance & Depth": 25 // 0-25 points
-        // 22-25: Highly relevant exp, exceeds requirements
-        // 18-21: Relevant exp, meets requirements well
-        // 14-17: Somewhat relevant, meets basic requirements
-        // 10-13: Limited relevance, below requirements
-        // 0-9: Irrelevant or insufficient experience
-
-        "Project & Achievement Validation": 15 // 0-15 points
-        // 13-15: Quantified achievements, impressive projects
-        // 10-12: Some quantified results, good projects
-        // 7-9: Basic project mentions, few metrics
-        // 4-6: Vague projects, no quantification
-        // 0-3: No meaningful projects/achievements
-
-        "Consistency Check": 15 // 0-15 points
-        // 13-15: Stable career, logical progression
-        // 10-12: Mostly stable, 1-2 short tenures
-        // 7-9: Some job hopping, gaps explained
-        // 4-6: Frequent job changes, some gaps
-        // 0-3: Major inconsistencies, many gaps
-
-        "AI-Generated Resume Detection": 5 // 0-5 points (PENALTY category)
-        // 5: Clearly human-written, authentic
-        // 3-4: Mostly authentic, some templated sections
-        // 1-2: Heavily templated, possibly AI-generated
-        // 0: Obviously AI-generated or completely generic
-
-        "Resume Quality Score": 5 // 0-5 points
-        // 5: Excellent formatting, clear, professional
-        // 3-4: Good formatting, mostly clear
-        // 1-2: Poor formatting, unclear sections
-        // 0: Very poor quality, hard to read
-
-        "Interview & Behavioral Prediction": 5 // 0-5 points
-        // 5: Strong communication indicators, leadership
-        // 3-4: Good indicators of soft skills
-        // 1-2: Basic indicators present
-        // 0: Poor communication indicators
-
-        "Competitive Fit & Market Standing": 5 // 0-5 points
-        // 5: Top 10% candidate for this role
-        // 3-4: Top 25% candidate
-        // 1-2: Average candidate
-        // 0: Below average candidate
-      }
-
-      CRITICAL SCORING RULES:
-      - NO component should exceed its maximum weight
-      - Most candidates should score 60-75 total (industry average)
-      - Only truly exceptional candidates score 85+
-      - Scores of 90+ should be EXTREMELY rare (top 2% of candidates)
-      - Be harsh on missing information, generic content, and poor formatting
-      - Heavily penalize mismatched experience levels and skill gaps
-
-      Return ONLY a JSON object like this (no markdown, no code formatting):
-      {
-        "Skill Match (Contextual)": {"score": number, "reason": string},
-        "Experience Relevance & Depth": {"score": number, "reason": string},
-        "Project & Achievement Validation": {"score": number, "reason": string},
-        "AI-Generated Resume Detection": {"score": number, "reason": string},
-        "Consistency Check": {"score": number, "reason": string},
-        "Resume Quality Score": {"score": number, "reason": string},
-        "Interview & Behavioral Prediction": {"score": number, "reason": string},
-        "Competitive Fit & Market Standing": {"score": number, "reason": string},
-        "ats_score": number, // sum of above, max 100
-        "reason": string // 1-2 lines summary of the main factors for the total score
-      }
-
-      Job Details:
-      Title: ${jobDetails.jobtitle}
-      Company: ${jobDetails.company}
-      Location: ${jobDetails.location}
-      Employment Type: ${jobDetails.employmentType}
-      Experience: ${jobDetails.experience}
-      Salary: ${jobDetails.salary}
-      Posted: ${jobDetails.posted}
-      Description: ${jobDetails.description}
-      Responsibilities: ${(jobDetails.responsibilities || []).join(", ")}
-      Required Skills: ${(jobDetails.requiredSkills || []).join(", ")}
-      Preferred Qualifications: ${(jobDetails.preferredQualifications || []).join(", ")}
-
-      Resume Text:
-      ${resumeText}
-      `;
-
-      // Add timeout to prevent infinite hanging
-      const result = await Promise.race([
-        model.generateContent(prompt),
-        new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('ATS score calculation timed out after 30 seconds')), 30000)
-        )
-      ]);
-
-      const response = await result.response;
-      const aiText = await response.text();
-      const cleanedText = aiText
-        .replace(/```json|```/g, "")
-        .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "") // remove bad control chars
-        .trim();
-      const parsed = JSON.parse(cleanedText);
-
-      return {
-        ats_score: parsed.ats_score,
-        ats_reason: parsed.reason,
-        ats_breakdown: {
-          skill_match: parsed["Skill Match (Contextual)"],
-          experience_relevance: parsed["Experience Relevance & Depth"],
-          project_achievement: parsed["Project & Achievement Validation"],
-          ai_generated_detection: parsed["AI-Generated Resume Detection"],
-          consistency_check: parsed["Consistency Check"],
-          resume_quality: parsed["Resume Quality Score"],
-          interview_prediction: parsed["Interview & Behavioral Prediction"],
-          competitive_fit: parsed["Competitive Fit & Market Standing"],
-        }
-      };
-    } catch (err) {
-      console.error("Error retrieving ATS score:", err);
-      console.error("Error details:", err.message, err.stack);
-
-      // Provide more specific error message
-      const errorMessage = err.message || "Unknown error occurred";
-      if (errorMessage.includes('timeout')) {
-        throw new Error("ATS score calculation timed out. Please try again.");
-      } else if (errorMessage.includes('API key')) {
-        throw new Error("API key issue. Please check your configuration.");
-      } else {
-        throw new Error(`Error retrieving ATS score: ${errorMessage}`);
-      }
-    }
-  };
-
   const saveResumeDataToDB = async (resumeContent) => {
     try {
       console.log('Saving structured resume data:', resumeContent);
@@ -349,119 +204,6 @@ const ResumeUpload = ({ onBack, jobDetails }) => {
     }
   };
 
-  const analyzeResume = async (resumeText, job) => {
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-    const prompt = `
-      You are an expert AI recruiter analyzing a resume for a specific job.
-      Job Details:
-      - Title: ${job.jobtitle}
-      - Description: ${job.description}
-      - Required Skills: ${(job.requiredSkills || []).join(", ")}
-
-      Resume Text:
-      ---
-      ${resumeText}
-      ---
-
-      Based on the job details and resume text, provide a detailed analysis in a pure JSON format. Do not include any markdown, code blocks, or explanations. The JSON object should have the following structure:
-      {
-        "name": "Full Name",
-        "title": "Professional Title (e.g., Senior Frontend Developer)",
-        "skills": ["Top 10 most relevant technical skills from the resume"],
-        "email": "contact@email.com",
-        "phone": "+1234567890",
-        "experience": "Total years of experience as a string (e.g., '5 years')",
-        "location": "City, Country",
-        "aiSummary": {
-          "technicalExperience": "A 1-2 sentence summary of their technical background.",
-          "projectExperience": "A 1-2 sentence summary of their project work and accomplishments.",
-          "education": "A 1-2 sentence summary of their educational qualifications.",
-          "keyAchievements": "A 1-2 sentence summary of their most impressive achievements.",
-          "skillMatch": "A 1-2 sentence analysis of how well the candidate's technical skills, tools, and technologies align with the specific job requirements and responsibilities.",
-          "competitiveFit": "A 1-2 sentence assessment of the candidate's competitive position in the market for this role, considering their experience level, achievements, and market demand.",
-          "consistencyCheck": "A 1-2 sentence evaluation of the candidate's career consistency, job stability, progression patterns, and professional growth trajectory."
-        },
-        "aiScorecard": {
-          "technicalSkillMatch": "Number (0-100) representing how well their skills match the job requirements.",
-          "competitiveFit": "Number (0-100) representing the candidate's competitive position in the market for this role.",
-          "consistencyCheck": "Number (0-100) representing the candidate's career consistency, job stability, and progression patterns.",
-          "teamLeadership": "Number (0-100) based on any management or leadership roles, and mentorship experience mentioned."
-        },
-        "recommendation": "A short, decisive recommendation (e.g., 'Recommended for next round', 'Strong contender', 'Consider with caution').",
-        "keyStrength": ["A bullet point list of 2-3 key strengths for this specific role."],
-        "potentialConcern": ["A bullet point list of 2-3 potential concerns or areas to probe in an interview. IMPORTANT: Do NOT include any concerns related to experience level, years of experience, or experience gaps. Focus only on technical skills, communication, cultural fit, or other non-experience related concerns."],
-        "about": "A brief 'About' section copied or summarized from the resume.",
-        "applicationDetails": {
-            "position": "${job.jobtitle}",
-            "date": "${new Date().toLocaleDateString()}",
-            "noticePeriod": "Extract from resume if available, otherwise 'N/A'",
-            "source": "Website"
-        },
-        "resumeContent": {
-          "name": "Full Name (same as above)",
-          "role": "Primary professional role/title (e.g., 'Full Stack Developer', 'Data Scientist', 'Product Manager')",
-          "experienceYears": "Total years of professional experience as a NUMBER (e.g., 2, 5, 0.5). Extract from resume dates or stated experience. Use 0 if unclear.",
-          "projects": [
-            {
-              "title": "Project Title",
-              "points": ["Bullet point 1 exactly as in resume", "Bullet point 2 exactly as in resume"]
-            }
-          ],
-          "experience": [
-            {
-              "title": "Job Title",
-              "company": "Company Name",
-              "duration": "Duration string (e.g., 'Jan 2022 - Present', '2 years')",
-              "points": ["Bullet point 1 exactly as in resume", "Bullet point 2 exactly as in resume"]
-            }
-          ],
-          "achievements": {
-            "points": ["Achievement 1 exactly as in resume", "Achievement 2 exactly as in resume"]
-          },
-          "skills": {
-            "points": ["Skill 1", "Skill 2", "Skill 3"]
-          },
-          "education": [
-            {
-              "institution": "University/School Name",
-              "degree": "Degree Name",
-              "points": ["Detail 1 as in resume", "Detail 2 as in resume"]
-            }
-          ]
-        }
-      }
-
-      IMPORTANT:
-      - For the aiSummary fields:
-        - skillMatch: Analyze the candidate's technical skills against the job requirements and provide a clear assessment
-        - competitiveFit: Evaluate their market position and competitiveness for this specific role
-        - consistencyCheck: Assess their career stability, progression, and professional development patterns
-      - For the resumeContent field:
-        - Extract ALL projects, experience entries, achievements, skills, and education EXACTLY as they appear in the resume
-        - Preserve the original wording and bullet points from the resume
-        - Do NOT summarize or rephrase - copy the content as-is from the resume text
-        - If a section is missing from the resume, use an empty array
-      
-      Make sure all fields in aiSummary contain meaningful, detailed content that provides valuable insights for the recruiter.
-    `;
-
-    // Add timeout to prevent hanging
-    const result = await Promise.race([
-      model.generateContent(prompt),
-      new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Resume analysis timed out after 30 seconds')), 30000)
-      )
-    ]);
-
-    const response = await result.response;
-    const text = response.text();
-    // Remove markdown fences, then strip control characters that are illegal in JSON
-    const cleanedText = text
-      .replace(/```json|```/g, "")
-      .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "") // remove bad control chars
-      .trim();
-    return JSON.parse(cleanedText);
-  };
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,

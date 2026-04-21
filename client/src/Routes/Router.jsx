@@ -68,15 +68,21 @@ import AccountManagerSetPassword from "../Pages/AccountManager/SetPassword.jsx";
 import RecruiterJobDetailPage from '../Pages/RecruiterJobDetailPage';
 import ManagerJobDetailPage from '../Pages/Manager/jobs/[jobid]';
 import ManagerDashboard from '../Pages/Manager/ManagerDashboard.jsx';
+import ProRecruiterDashboard from '../Pages/ProRecruiter/ProRecruiterDashboard.jsx';
 import AdminJobDetailPage from '../Pages/Admin/jobs/[jobid]';
 import AccountManagerJobDetailPage from '../Pages/AccountManager/jobs/[jobid]';
 import UnifiedLogin from "../Pages/UnifiedLogin";
+import SignIn from '../Pages/SignIn';
+import ProRecruiterSignup from '../Pages/ProRecruiterSignup';
+import CompanyOnboarding from '../Pages/CompanyOnboarding';
+import FirstJobRegistration from '../Pages/FirstJobRegistration';
 import AdminLogin from "../Pages/Admin/Login.jsx";
 import MarketplaceJobs from "../Pages/MarketplaceJobs";
 import MarketplaceSignup from "../Pages/MarketplaceSignup";
 import MarketplaceUnifiedLogin from "../Pages/MarketplaceUnifiedLogin";
 import Meeting from "../Pages/Meeting";
 import InterviewResults from "../Pages/InterviewResults";
+import DescribeJob from "../Pages/DescribeJob";
 
 
 
@@ -234,12 +240,18 @@ const Router = () => {
 
             {/* Unified Login Route - No Header/Footer */}
             <Route path="/login" element={<UnifiedLogin />} />
+            <Route path="/signin" element={<SignIn />} />
+            <Route path="/signup/prorecruiter" element={<ProRecruiterSignup />} />
+            <Route path="/onboarding/company" element={<CompanyOnboarding />} />
+            <Route path="/register-first-job" element={<FirstJobRegistration />} />
 
             {/* Public Assessment Route */}
             <Route path="/assessment/:assessmentId" element={<CandidateAssessmentPage />} />
 
             {/* AI Interview Meeting - Public Route */}
             <Route path="/meeting/:token" element={<Meeting />} />
+            {/* Oral Job Description Creator - Public Route */}
+            <Route path="/describeJob" element={<DescribeJob />} />
             {/* Interview Results Dashboard - Recruiter Route */}
             <Route path="/recruiter/interview-results/:meetingId" element={
               <ProtectedRoute>
@@ -350,6 +362,11 @@ const Router = () => {
             <Route path="/manager/dashboard" element={
               <ProtectedRoute allowedRoles={['manager']}>
                 <ManagerDashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="/prorecruiter/dashboard" element={
+              <ProtectedRoute allowedRoles={['manager']}>
+                <ProRecruiterDashboard />
               </ProtectedRoute>
             } />
 

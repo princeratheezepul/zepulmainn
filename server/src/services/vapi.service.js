@@ -61,9 +61,9 @@ const buildAssistantBody = async (context = {}) => {
     resume.experience && `Candidate Experience: ${resume.experience}`,
     resume.skills?.length && `Candidate Skills: ${resume.skills.join(", ")}`,
     resume.aiSummary?.technicalExperience &&
-      `Technical Experience Summary: ${resume.aiSummary.technicalExperience}`,
+    `Technical Experience Summary: ${resume.aiSummary.technicalExperience}`,
     resume.aiSummary?.projectExperience &&
-      `Project Experience Summary: ${resume.aiSummary.projectExperience}`,
+    `Project Experience Summary: ${resume.aiSummary.projectExperience}`,
   ]
     .filter(Boolean)
     .join("\n");
@@ -105,7 +105,7 @@ ${timeContext}`;
 
   // Construct webhook URL - prioritize explicit setting, then backend URL, then construct from frontend
   let webhookUrl = process.env.VAPI_WEBHOOK_URL;
-  
+
   if (!webhookUrl) {
     const backendUrl = process.env.BACKEND_URL || process.env.FRONTEND_URL?.replace(/\/$/, "");
     if (backendUrl) {
@@ -116,7 +116,7 @@ ${timeContext}`;
       console.warn("⚠️  Using localhost webhook URL. Set VAPI_WEBHOOK_URL or BACKEND_URL for production.");
     }
   }
-  
+
   console.log("🔗 Vapi webhook URL:", webhookUrl);
 
   // Build the exact starting message as specified
@@ -195,11 +195,11 @@ export const createAssistant = async (context = {}) => {
 
   try {
     const body = await buildAssistantBody(context);
-    
+
     // Vapi API uses /assistant (singular) - see https://docs.vapi.ai/api-reference/assistants
     const endpoint = `${VAPI_BASE_URL}/assistant`;
     console.log("Creating Vapi assistant at:", endpoint);
-    
+
     const response = await fetch(endpoint, {
       method: "POST",
       headers: {
@@ -262,6 +262,182 @@ export const deleteAssistant = async (assistantId) => {
     console.error(`Error deleting assistant ${assistantId}:`, error.message || error);
     return false;
   }
+};
+
+/**
+ * Build the assistant body for the Job Description Interview
+ * This AI interviews a recruiter to gather a full job description.
+ */
+export const buildJobDescriptionAssistantBody = async () => {
+  const instructions = `You are a professional job description assistant. Your job is to conduct a structured, friendly voice conversation with a recruiter or hiring manager to help them fully describe a job opening.
+
+You will ask them about every important aspect of the job in a natural, conversational way. Do not rush — ask one topic at a time and ask follow-up questions if an answer is vague or incomplete.
+
+Topics to cover (in roughly this order):
+1. Job title and department
+2. High-level role summary (what does this person do day to day?)
+3. Specific responsibilities and key duties
+4. Required skills and technical proficiencies (must-haves)
+5. Nice-to-have skills or experience
+6. Years of experience required
+7. Educational qualifications (if any)
+8. Employment type (full-time, part-time, contract, remote, hybrid, on-site)
+9. Location or time zone requirements
+10. Tech stack, tools, or platforms used
+11. Team structure (who would they work with? team size?)
+12. Company culture and values
+13. Compensation range (salary, equity, etc. — only if they are comfortable sharing)
+14. Interview process (stages, timeline)
+15. Any additional perks, benefits, or growth opportunities
+
+Rules:
+- Be conversational and professional. Use natural language.
+- Acknowledge what the recruiter says before moving to the next topic.
+- If the recruiter skips a topic, gently prompt them later.
+- If the recruiter says they are done or happy with the description, call the 'end_description' function to end the session.
+- Do NOT ask all questions at once. Guide the conversation naturally.
+- Keep your messages concise and clear. The recruiter is speaking, not typing.
+
+Start by welcoming the recruiter and asking them to begin describing the role.`;
+
+  const firstMessage = `Hi there! I'm your AI job description assistant from Zepul.
+
+I'll guide you through describing your job opening step by step. We'll cover everything — from the role's day-to-day responsibilities to the team culture and compensation.
+
+Just speak naturally, and I'll ask follow-up questions along the way.
+
+Whenever you're ready, go ahead and tell me — what role are you hiring for?`;
+
+  const endDescriptionFunction = {
+    type: "function",
+    function: {
+      name: "end_description",
+      description:
+        "Call this function when the recruiter has finished describing the job and is satisfied with all the information provided. This gracefully ends the session.",
+      parameters: {
+        type: "object",
+        properties: {
+          reason: {
+            type: "string",
+            description: "Brief reason for ending (e.g., 'Job description completed')",
+          },
+        },
+        required: ["reason"],
+      },
+    },
+  };
+
+  let webhookUrl = process.env.VAPI_WEBHOOK_URL;
+  if (!webhookUrl) {
+    const backendUrl = process.env.BACKEND_URL || process.env.FRONTEND_URL?.replace(/\/$/, "");
+    if (backendUrl) {
+      webhookUrl = `${backendUrl}/api/job-description-sessions/webhook/vapi`;
+    } else {
+      webhookUrl = "http://localhost:5880/api/job-description-sessions/webhook/vapi";
+      console.warn("⚠️  Using localhost webhook URL for job description sessions.");
+    }
+  } else {
+    // If VAPI_WEBHOOK_URL is the meeting one, replace the path
+    webhookUrl = webhookUrl.replace(
+      "/api/meetings/webhook/vapi",
+      "/api/job-description-sessions/webhook/vapi"
+    );
+  }
+
+  console.log("🔗 Job Description Vapi webhook URL:", webhookUrl);
+
+  return {
+    name: "Job Description Assistant",
+    firstMessage,
+    model: {
+      provider: VAPI_MODEL_PROVIDER,
+      model: VAPI_MODEL_NAME,
+      messages: [
+        {
+          role: "system",
+          content: instructions,
+        },
+      ],
+      tools: [endDescriptionFunction],
+    },
+    voice: {
+      provider: VAPI_VOICE_PROVIDER,
+      voiceId: VAPI_VOICE_ID,
+    },
+    serverUrl: webhookUrl,
+    serverMessages: [
+      "status-update",
+      "transcript",
+      "function-call",
+      "end-of-call-report",
+    ],
+  };
+};
+
+/**
+ * Create a Job Description Assistant and return joinConfig for the browser SDK
+ */
+export const startWebCallForJobDescription = async () => {
+  const body = await buildJobDescriptionAssistantBody();
+
+  if (!VAPI_API_KEY) {
+    console.warn("VAPI_API_KEY is not set. Returning mock config for job description session.");
+    return {
+      callId: `mock-call-${crypto.randomBytes(6).toString("hex")}`,
+      joinConfig: {
+        mock: true,
+        assistantId: "mock-assistant",
+        publicApiKey: VAPI_PUBLIC_API_KEY || "missing VAPI_PUBLIC_API_KEY",
+      },
+    };
+  }
+
+  const endpoint = `${VAPI_BASE_URL}/assistant`;
+  console.log("Creating Job Description Vapi assistant at:", endpoint);
+
+  const response = await fetch(endpoint, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${VAPI_API_KEY}`,
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error(`Vapi API error (${response.status}):`, errorText);
+    throw new Error(`Failed to create job description assistant: ${response.status} ${errorText}`);
+  }
+
+  const data = await response.json();
+  const assistantId = data.id || data.assistantId || data._id;
+
+  if (!assistantId) {
+    throw new Error("Assistant created but no ID returned from Vapi");
+  }
+
+  console.log("✅ Job Description Vapi assistant created:", assistantId);
+
+  if (!VAPI_PUBLIC_API_KEY) {
+    console.warn("VAPI_PUBLIC_API_KEY is not set. Returning mock joinConfig.");
+    return {
+      callId: null,
+      joinConfig: {
+        mock: true,
+        assistantId,
+        publicApiKey: "missing VAPI_PUBLIC_API_KEY",
+      },
+    };
+  }
+
+  return {
+    callId: null,
+    joinConfig: {
+      assistantId,
+      publicApiKey: VAPI_PUBLIC_API_KEY,
+    },
+  };
 };
 
 export const startWebCallForMeeting = async ({ assistantId, context }) => {

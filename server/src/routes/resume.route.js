@@ -1,10 +1,12 @@
 import express from "express";
-import { saveResume, saveResumeWithJob, getUserResumes, getResumesByJob, searchResumesByJobRole, getResumeById, getResume, requestAnotherRound, submitToManager, updateResumeStatus, scheduleInterview, getResumesByRecruiter, getResumesByTag, updateResumeTag, getResumeStatsByRecruiter, getMonthlySubmissionData, getMonthlyShortlistData, saveInterviewEvaluation, getAverageScoreData } from "../controllers/resume.controller.js";
+import { saveResume, saveResumeWithJob, getUserResumes, getResumesByJob, searchResumesByJobRole, getResumeById, getResume, requestAnotherRound, submitToManager, updateResumeStatus, scheduleInterview, getResumesByRecruiter, getResumesByTag, updateResumeTag, getResumeStatsByRecruiter, getMonthlySubmissionData, getMonthlyShortlistData, saveInterviewEvaluation, getAverageScoreData, parseResumeWithAI, evaluatePrompt } from "../controllers/resume.controller.js";
 import { verifyRecruiterJWT } from "../middleware/recruiter.auth.middleware.js";
 
 const router = express.Router();
 
 // More specific routes first
+router.post("/parse-ai", verifyRecruiterJWT, parseResumeWithAI);
+router.post("/evaluate-prompt", evaluatePrompt);
 router.post("/save/:jobId", verifyRecruiterJWT, saveResumeWithJob);
 router.post("/save", verifyRecruiterJWT, saveResume);
 router.get("/recruiter", verifyRecruiterJWT, getResumesByRecruiter);

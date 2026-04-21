@@ -1,10 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Briefcase, GraduationCap, Award, Code, FolderOpen, Send, X, Loader2 } from 'lucide-react';
 import { useApi } from '../../../hooks/useApi';
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import toast from 'react-hot-toast';
-
-const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API);
 
 const SubmitToJobModal = ({ isOpen, onClose, candidate, onSubmitSuccess }) => {
   const { get, post } = useApi();
@@ -78,8 +75,6 @@ const SubmitToJobModal = ({ isOpen, onClose, candidate, onSubmitSuccess }) => {
   };
 
   const generateAIEvaluation = async (resumeText, jobDetails) => {
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-
     const prompt = `
       You are an expert AI recruiter analyzing a resume for a specific job.
       Job Details:
@@ -123,8 +118,18 @@ const SubmitToJobModal = ({ isOpen, onClose, candidate, onSubmitSuccess }) => {
       }
     `;
 
-    const result = await model.generateContent(prompt);
-    const aiText = await result.response.text();
+    const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/resumes/evaluate-prompt`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prompt, modelType: "gemini-2.0-flash" })
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to generate AI evaluation: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const aiText = data.text || "";
     const cleanedText = aiText.replace(/```json|```/g, "").replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "").trim();
     return JSON.parse(cleanedText);
   };

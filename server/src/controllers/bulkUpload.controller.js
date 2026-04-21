@@ -721,8 +721,33 @@ const extractTextFromDocx = async (buffer) => {
   }
 };
 
+// Retry helper for Gemini API calls (handles 429 rate limit errors)
+const generateWithRetry = async (model, prompt, maxRetries = 3) => {
+  let lastError;
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await model.generateContent(prompt);
+    } catch (err) {
+      const is429 =
+        err?.status === 429 ||
+        (err?.message && err.message.includes('429')) ||
+        (err?.message && err.message.toLowerCase().includes('resource exhausted'));
+
+      if (is429 && attempt < maxRetries) {
+        const delayMs = Math.pow(2, attempt) * 10000; // 10s, 20s, 40s
+        console.warn(`Gemini 429 rate limit hit. Retrying in ${delayMs / 1000}s (attempt ${attempt + 1}/${maxRetries})...`);
+        await new Promise((res) => setTimeout(res, delayMs));
+        lastError = err;
+      } else {
+        throw err;
+      }
+    }
+  }
+  throw lastError;
+};
+
 // Analyze resume with AI
-const analyzeResume = async (resumeText, job) => {
+export const analyzeResume = async (resumeText, job) => {
   if (!genAI) {
     throw new Error('Gemini API is not configured. Please set up GEMINI_API_KEY environment variable. Get your API key from: https://aistudio.google.com/app/apikey');
   }
@@ -816,7 +841,7 @@ const analyzeResume = async (resumeText, job) => {
     Make sure all fields in aiSummary contain meaningful, detailed content that provides valuable insights for the recruiter.
   `;
 
-  const result = await model.generateContent(prompt);
+  const result = await generateWithRetry(model, prompt);
   const response = await result.response;
   const text = response.text();
 
@@ -877,7 +902,7 @@ const analyzeResume = async (resumeText, job) => {
 };
 
 // Calculate ATS Score
-const calculateATSScore = async (resumeText, job) => {
+export const calculateATSScore = async (resumeText, job) => {
   if (!genAI) {
     throw new Error('Gemini API is not configured. Please set up GEMINI_API_KEY environment variable.');
   }
@@ -981,7 +1006,7 @@ const calculateATSScore = async (resumeText, job) => {
     ${resumeText}
     `;
 
-  const result = await model.generateContent(prompt);
+  const result = await generateWithRetry(model, prompt);
   const response = await result.response;
   const aiText = await response.text();
 
@@ -1360,4 +1385,35 @@ const getFilesFromPublicDrive = async (folderId) => {
     console.error('Error accessing public Google Drive folder:', error);
     throw new Error('Unable to access Google Drive folder. Please use the folder upload option.');
   }
+};
+
+// Exported wrapper: generateTextWithRetry(prompt, modelName) → returns response text string
+// Used by scorecard.controller.js and resume.controller.js
+export const generateTextWithRetry = async (prompt, modelName = "gemini-1.5-flash", maxRetries = 3) => {
+  if (!genAI) {
+    throw new Error("Gemini API is not configured. Please set GEMINI_API_KEY.");
+  }
+  const model = genAI.getGenerativeModel({ model: modelName });
+  let lastError;
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      const result = await model.generateContent(prompt);
+      return result.response.text();
+    } catch (err) {
+      const is429 =
+        err?.status === 429 ||
+        (err?.message && err.message.includes("429")) ||
+        (err?.message && err.message.toLowerCase().includes("resource exhausted"));
+
+      if (is429 && attempt < maxRetries) {
+        const delayMs = Math.pow(2, attempt) * 10000;
+        console.warn(`Gemini 429 rate limit. Retrying in ${delayMs / 1000}s (attempt ${attempt + 1}/${maxRetries})...`);
+        await new Promise((res) => setTimeout(res, delayMs));
+        lastError = err;
+      } else {
+        throw err;
+      }
+    }
+  }
+  throw lastError;
 };

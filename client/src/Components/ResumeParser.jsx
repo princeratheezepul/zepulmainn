@@ -1,29 +1,25 @@
-import React, { useState ,useEffect} from "react";
+import React, { useState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import * as pdfjsLib from "pdfjs-dist";
 import { GlobalWorkerOptions } from "pdfjs-dist/build/pdf";
 import workerUrl from "pdfjs-dist/build/pdf.worker.mjs?url";
 import { Card, CardContent } from "./ui/Card";
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import Tesseract from "tesseract.js";
 import { useNavigate, useParams } from 'react-router-dom';
 import { useApi } from '../hooks/useApi';
-import { geminiQueue } from '../utils/apiQueue';
 GlobalWorkerOptions.workerSrc = workerUrl;
 
-const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API);
-
 function ResumeParser() {
-  const {jobid}=useParams();
-  console.log("jobid",jobid);
+  const { jobid } = useParams();
+  console.log("jobid", jobid);
   const [file, setFile] = useState(null);
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(false);
   const [aiResponse, setAIResponse] = useState(null);
   const [aiLoading, setAILoading] = useState(false);
-const [resumeId, setResumeId] = useState(null);
-const navigate=useNavigate();
-const { post } = useApi();
+  const [resumeId, setResumeId] = useState(null);
+  const navigate = useNavigate();
+  const { post } = useApi();
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
     if (
@@ -36,7 +32,7 @@ const { post } = useApi();
       alert("Please select a PDF or DOCX file");
     }
   };
-useEffect(() => {
+  useEffect(() => {
     if (resumeId) {
       console.log("✅ Updated resumeId:", resumeId);
     }
@@ -51,7 +47,7 @@ useEffect(() => {
       const data = await response.json();
       console.log("✅ Resume saved:", data.resume._id);
       setResumeId(data.resume._id);
-      
+
     } catch (error) {
       console.error("❌ Failed to save resume to database:", error.message);
     }
@@ -153,12 +149,9 @@ useEffect(() => {
 
   const fetchATSScore = async (resumeText) => {
     setAILoading(true);
-    
-    const makeAPICall = async (attempt = 1, maxAttempts = 3) => {
-      try {
-        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
-        const prompt = `
+    try {
+      const prompt = `
         You are a strict, realistic ATS evaluator. Calculate ATS score out of 100 using weighted criteria below. BE CONSERVATIVE with scoring - most resumes should score 60-80, with only exceptional candidates scoring 85+.
 
         Weighted criteria and STRICT scoring guidelines:
@@ -223,45 +216,26 @@ useEffect(() => {
         ${resumeText}
         `;
 
-        const result = await model.generateContent(prompt);
-        const response = await result.response;
-        const aiText = await response.text();
-        const cleanedText = aiText.replace(/```json|```/g, "").trim();
-        const parsed = JSON.parse(cleanedText);
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/resumes/evaluate-prompt`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt, modelType: "gemini-2.5-flash" })
+      });
+      if (!response.ok) throw new Error("Backend ATS evaluation failed");
+      const data = await response.json();
+      const aiText = data.text || "";
+      const cleanedText = aiText.replace(/```json|```/g, "").trim();
+      const parsed = JSON.parse(cleanedText);
 
-        return {
-          ats_score: parsed.ats_score,
-          ats_reason: parsed.reason,
-        };
-      } catch (err) {
-        console.error(`ATS API attempt ${attempt} failed:`, err);
-        
-        // Check if it's a 503 (overloaded) error and retry
-        if (err.message.includes('503') || err.message.includes('overloaded')) {
-          if (attempt < maxAttempts) {
-            const delay = Math.pow(2, attempt) * 1000 + Math.random() * 1000; // Exponential backoff with jitter
-            console.log(`Retrying ATS call in ${delay}ms... (attempt ${attempt + 1}/${maxAttempts})`);
-            await new Promise(resolve => setTimeout(resolve, delay));
-            return makeAPICall(attempt + 1, maxAttempts);
-          }
-        }
-        throw err;
-      }
-    };
-
-    try {
-      // Use queue for better rate limiting
-      const result = await geminiQueue.add(() => makeAPICall());
-      
+      const result = { ats_score: parsed.ats_score, ats_reason: parsed.reason };
       setAIResponse((prev) => ({
         ...prev,
         ats_score: result.ats_score,
         ats_reason: result.ats_reason,
       }));
-
       return result;
     } catch (err) {
-      console.error('Final ATS API error:', err);
+      console.error('ATS evaluation error:', err);
       setAIResponse({ error: "Error retrieving ATS score. Please try again." });
       return null;
     } finally {
@@ -271,12 +245,9 @@ useEffect(() => {
 
   const fetchFullResumeData = async (resumeText, atsData = {}) => {
     setAILoading(true);
-    
-    const makeAPICall = async (attempt = 1, maxAttempts = 3) => {
-      try {
-        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
-        const prompt = `
+    try {
+      const prompt = `
 You are an intelligent resume parser and analyzer.
 
 Parse the resume text below and return a JSON object in the following format (no markdown, no explanation, no code block):
@@ -308,43 +279,27 @@ Resume text:
 ${resumeText}
 `;
 
-        const result = await model.generateContent(prompt);
-        const response = await result.response;
-        const aiText = await response.text();
-        const cleanedText = aiText.replace(/```json|```/g, "").trim();
-        const parsed = JSON.parse(cleanedText);
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/resumes/evaluate-prompt`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt, modelType: "gemini-2.5-flash" })
+      });
+      if (!response.ok) throw new Error("Backend resume parsing failed");
+      const data = await response.json();
+      const aiText = data.text || "";
+      const cleanedText = aiText.replace(/```json|```/g, "").trim();
+      const parsed = JSON.parse(cleanedText);
 
-        return parsed;
-      } catch (err) {
-        console.error(`Resume parsing attempt ${attempt} failed:`, err);
-        
-        // Check if it's a 503 (overloaded) error and retry
-        if (err.message.includes('503') || err.message.includes('overloaded')) {
-          if (attempt < maxAttempts) {
-            const delay = Math.pow(2, attempt) * 1000 + Math.random() * 1000; // Exponential backoff with jitter
-            console.log(`Retrying resume parsing in ${delay}ms... (attempt ${attempt + 1}/${maxAttempts})`);
-            await new Promise(resolve => setTimeout(resolve, delay));
-            return makeAPICall(attempt + 1, maxAttempts);
-          }
-        }
-        throw err;
-      }
-    };
-
-    try {
-      // Use queue for better rate limiting
-      const parsed = await geminiQueue.add(() => makeAPICall());
-      
       const fullResumeData = {
         ...parsed,
-        ...atsData, // ⬅️ inject ats_score and ats_reason
+        ...atsData,
         raw_text: resumeText,
       };
 
       setAIResponse((prev) => ({ ...prev, ...parsed, ...atsData }));
       await saveResumeToDB(fullResumeData);
     } catch (err) {
-      console.error('Final resume parsing error:', err);
+      console.error('Resume parsing error:', err);
       setAIResponse({ error: "Error retrieving full resume analysis. Please try again." });
     } finally {
       setAILoading(false);
@@ -465,16 +420,16 @@ ${resumeText}
           </CardContent>
         </Card>
       )}
-    {aiResponse && !aiResponse.error && !loading && !aiLoading && (
-  <div className="w-full max-w-xl mt-6 flex justify-end">
-    <button
-      onClick={() => navigate(`/job/${jobid}/${resumeId}`)}
-      className="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700"
-    >
-      Next
-    </button>
-  </div>
-)}
+      {aiResponse && !aiResponse.error && !loading && !aiLoading && (
+        <div className="w-full max-w-xl mt-6 flex justify-end">
+          <button
+            onClick={() => navigate(`/job/${jobid}/${resumeId}`)}
+            className="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700"
+          >
+            Next
+          </button>
+        </div>
+      )}
 
     </div>
   );
