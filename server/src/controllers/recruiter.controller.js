@@ -908,7 +908,7 @@ export const createRecruiterByAdmin = async (req, res) => {
 
 export const createRecruiterByManager = async (req, res) => {
   try {
-    const { fullname, email, password, dateOfBirth, gender, phone, onboardedBy, managerId } = req.body;
+    const { fullname, email, password, dateOfBirth, gender, phone, onboardedBy, managerId, isProRecruiter } = req.body;
     
     // Check if user with this email already exists
     const existingUser = await User.findOne({ email });
@@ -961,8 +961,9 @@ export const createRecruiterByManager = async (req, res) => {
       gender,
       phone,
       type: 'recruiter',
-      managerId, // Use managerId instead of adminId
-      userId: user._id
+      managerId,
+      userId: user._id,
+      isCreatedByProRecruiter: isProRecruiter === true,
     });
 
     // Generate reset token for password setting
