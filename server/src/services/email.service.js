@@ -83,6 +83,35 @@ export const sendMeetingInviteEmail = async ({
   });
 };
 
+export const sendShortlistEmail = async ({ to, candidateName, jobTitle, company, confirmLink }) => {
+  const transporter = buildMailer();
+
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; line-height: 1.7; color: #1f2937;">
+      <h2 style="color: #2563eb;">You have been selected, ${candidateName || 'Candidate'}!</h2>
+      <p>We are pleased to inform you that you have been <strong>selected</strong> for the role of <strong>${jobTitle}</strong>${company ? ` at <strong>${company}</strong>` : ''}.</p>
+      <p>Please click the button below to confirm whether you would like to proceed with this opportunity.</p>
+      ${confirmLink ? `
+      <div style="text-align: center; margin: 32px 0;">
+        <a href="${confirmLink}" style="background-color: #2563eb; color: #ffffff; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-size: 16px; font-weight: bold; display: inline-block;">
+          View Details &amp; Confirm
+        </a>
+      </div>
+      <p style="font-size: 13px; color: #6b7280; text-align: center;">This link expires in 24 hours.</p>
+      ` : ''}
+      <p>If you have any questions, feel free to reply to this email.</p>
+      <p style="margin-top: 24px;">Best regards,<br/>The Recruitment Team</p>
+    </div>
+  `;
+
+  await transporter.sendMail({
+    from: process.env.EMAIL_USER,
+    to,
+    subject: `You have been selected – ${jobTitle}${company ? ` at ${company}` : ''}`,
+    html,
+  });
+};
+
 export const sendMeetingCancelEmail = async ({
   to,
   jobTitle,

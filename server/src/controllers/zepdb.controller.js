@@ -1,10 +1,13 @@
+import crypto from "crypto";
 import ResumeData from "../models/resumeData.model.js";
 import Scorecard from "../models/scorecard.model.js";
 import Resume from "../models/resume.model.js";
 import Recruiter from "../models/recruiter.model.js";
 import { Job } from "../models/job.model.js";
+import CandidateConfirmation from "../models/candidateConfirmation.model.js";
 import { determineResumeTag } from "../utils/tagHelper.js";
 import { sendWhatsAppMessage } from "../utils/whatsapp.js";
+import { sendShortlistEmail } from "../services/email.service.js";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 // Initialize Gemini AI
@@ -288,21 +291,21 @@ export const matchJobWithZepDB = async (req, res) => {
       return res.status(404).json({ success: false, message: "Job not found" });
     }
 
-    const queryString = [
-      job.jobtitle,
-      ...(job.skills || []),
-      job.description ? job.description.slice(0, 300) : ''
-    ].filter(Boolean).join(' ');
+    // Build search filters from job fields directly (faster than Gemini round-trip for Phase 1)
+    const jobFilters = {
+      role: job.jobtitle || '',
+      keywords: [
+        ...(job.jobtitle ? job.jobtitle.split(/\s+/) : []),
+        ...(job.keyResponsibilities || []).flatMap(r => r.split(/\s+/)).slice(0, 10),
+      ].filter(w => w.length > 2 && !['the', 'and', 'for', 'with', 'that', 'this', 'from', 'are', 'will'].includes(w.toLowerCase())),
+      skills: (job.skills || []).map(s => s.toLowerCase().trim()),
+      minExperience: job.experience || 0,
+      maxExperience: 99,
+      location: '',
+    };
 
-    const extractedInfo = await extractQueryInfoWithGemini(queryString);
-    if (job.jobtitle) extractedInfo.role = job.jobtitle;
-    if (job.skills?.length) {
-      extractedInfo.skills = [...new Set([...extractedInfo.skills, ...job.skills])];
-    }
-    if (job.experience) extractedInfo.minExperience = parseInt(job.experience) || 0;
-
-    const candidates = await fetchCandidatesFromDB(extractedInfo);
-    const topCandidates = candidates.slice(0, 8);
+    const allCandidates = await fetchCandidatesFromDB(jobFilters);
+    const topCandidates = allCandidates.filter(c => c.name && c.name.trim().length > 0);
 
     // Single query to find all existing resumes for these candidates + this job
     const existingResumes = await Resume.find({
@@ -452,10 +455,34 @@ export const scoreCandidateForJob = async (req, res) => {
       submittedAt: new Date()
     });
 
+    // Create a 24-hour confirmation token
+    const confirmToken = crypto.randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    await CandidateConfirmation.create({
+      token: confirmToken,
+      candidateId: candidate._id,
+      jobId: job._id,
+      resumeId: savedResume._id,
+      scorecardId: savedScorecard._id,
+      expiresAt,
+    });
+    const confirmLink = `${process.env.FRONTEND_URL}/confirm/${confirmToken}`;
+
     // Send WhatsApp notification if candidate has a phone number
     if (candidate.phone) {
-      const message = `Hi ${candidate.name}, congratulations! You have been shortlisted for the role of *${job.jobtitle}*${job.company ? ` at *${job.company}*` : ''}. Our recruitment team will be in touch with you shortly.`;
+      const message = `Hi ${candidate.name}, you have been selected for the role of *${job.jobtitle}*${job.company ? ` at *${job.company}*` : ''}. Please click the link below to confirm if you want to proceed:\n${confirmLink}\n\n(This link expires in 24 hours)`;
       sendWhatsAppMessage(candidate.phone, message, candidate.countryCode || '91');
+    }
+
+    // Send email notification if candidate has an email
+    if (candidate.emailId) {
+      sendShortlistEmail({
+        to: candidate.emailId,
+        candidateName: candidate.name,
+        jobTitle: job.jobtitle,
+        company: job.company,
+        confirmLink,
+      }).catch(err => console.error('Shortlist email failed:', err.message));
     }
 
     res.status(200).json({

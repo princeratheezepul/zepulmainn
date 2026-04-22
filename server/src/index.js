@@ -20,6 +20,7 @@ import marketplaceRoutes from "./routes/marketplace.route.js";
 import assessmentRoutes from "./routes/assessment.routes.js";
 import meetingRoutes from "./routes/meeting.route.js";
 import resumeDataRoutes from "./routes/resumeData.route.js";
+import confirmRoutes from "./routes/confirm.route.js";
 import jobDescriptionSessionRoutes from "./routes/jobDescriptionSession.routes.js";
 import { expireStaleMeetings } from "./services/meeting.service.js";
 import { cleanupExpiredSessions } from "./utils/sessionManager.js";
@@ -52,7 +53,13 @@ app.use(
       // Allow requests with no origin (like mobile apps or curl requests)
       if (!origin) return callback(null, true);
 
-      if (uniqueOrigins.indexOf(origin) !== -1) {
+      const isAllowed =
+        uniqueOrigins.indexOf(origin) !== -1 ||
+        /\.ngrok(-free)?\.app$/.test(origin) ||
+        /\.ngrok\.io$/.test(origin) ||
+        /\.ngrok-free\.dev$/.test(origin);
+
+      if (isAllowed) {
         callback(null, true);
       } else {
         console.log('CORS blocked origin:', origin);
@@ -117,6 +124,7 @@ app.use("/api/marketplace", marketplaceRoutes);
 app.use("/api/assessment", assessmentRoutes);
 app.use("/api/meetings", meetingRoutes);
 app.use("/api/resume-data", resumeDataRoutes);
+app.use("/api/confirm", confirmRoutes);
 
 // JSON 404 Handler for API routes
 app.use("/api", (req, res) => {
