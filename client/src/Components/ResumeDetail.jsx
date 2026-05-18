@@ -152,7 +152,7 @@ function ResumeDetail() {
 
       setPage(4);
     } catch (err) {
-      console.error("Error processing with Gemini AI:", err);
+      console.error("Error processing with OpenAI:", err);
       setScore(0);
       setSkillScores(updatedSkillScores);
     } finally {

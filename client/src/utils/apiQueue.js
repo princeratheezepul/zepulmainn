@@ -43,4 +43,4 @@ class APIQueue {
 }
 
 // Create singleton instance - Updated for paid tier
-export const geminiQueue = new APIQueue(3, 1000); // 3 concurrent requests, 1 second delay
+export const openaiQueue = new APIQueue(3, 1000); // 3 concurrent requests, 1 second delay

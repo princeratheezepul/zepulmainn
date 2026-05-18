@@ -123,7 +123,7 @@ export const parseAIQuestions = async (req, res) => {
 
   try {
     const prompt = promptPayload || `Generate five unique and realistic interview questions for the job role: Full Stack Developer, considering the following skills: ${skills.join(",")}.\nMake the questions relevant to real-world tasks and challenges.`;
-    const text = await generateTextWithRetry(prompt, "gemini-1.5-flash");
+    const text = await generateTextWithRetry(prompt, "gpt-4o-mini");
 
     // Attempt to parse JSON if the custom AI payload requests it
     if (promptPayload && text.includes('[') && text.includes(']')) {
@@ -157,7 +157,7 @@ Respond with a comma - separated list only:
 Resume Data:
 ${JSON.stringify(resume)}
   `;
-    const text = await generateTextWithRetry(prompt, "gemini-1.5-flash");
+    const text = await generateTextWithRetry(prompt, "gpt-4o-mini");
 
     const skillsArray = text.split(",").map(skill => skill.trim()).filter(skill => skill);
     res.status(200).json({ skills: skillsArray.slice(0, 5) });
@@ -184,7 +184,7 @@ export const evaluateAnswers = async (req, res) => {
   Response:
   "${answer}"`;
 
-      const evalText = await generateTextWithRetry(evalPrompt, "gemini-1.5-flash");
+      const evalText = await generateTextWithRetry(evalPrompt, "gpt-4o-mini");
 
       try {
         const cleanedEvalText = evalText.replace(/```json|```/g, '').trim();
@@ -211,7 +211,7 @@ export const evaluateAnswers = async (req, res) => {
       ...
     ]`;
 
-    const skillScoreText = await generateTextWithRetry(skillScorePrompt, "gemini-1.5-flash");
+    const skillScoreText = await generateTextWithRetry(skillScorePrompt, "gpt-4o-mini");
 
     let finalSkillScores = [];
     try {

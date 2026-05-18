@@ -1,26 +1,37 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import OpenAI from "openai";
 import Resume from "../models/resume.model.js";
 import { Job } from "../models/job.model.js";
 import crypto from 'crypto';
 import nodemailer from "nodemailer";
 import { executeJava, executeCpp, executePython } from "../services/codeExecution.service.js";
 
-const genAI = new GoogleGenerativeAI(process.env.VITE_GEMINI_API);
+const openai = process.env.OPENAI_API ? new OpenAI({ apiKey: process.env.OPENAI_API }) : null;
 
-// Retry helper: retries on 429 rate-limit errors with exponential backoff
-const generateWithRetry = async (model, prompt, maxRetries = 3) => {
+// gpt-4o handles code generation and SQL/banking domain logic with higher fidelity than the mini model.
+const ASSESSMENT_MODEL = "gpt-4o";
+
+// Retry helper: retries on 429 rate-limit errors with exponential backoff. Returns the assistant text.
+const generateWithRetry = async ({ model, prompt, jsonMode = true, maxRetries = 3 }) => {
+  if (!openai) {
+    throw new Error("OpenAI API is not configured. Please set OPENAI_API.");
+  }
   let lastError;
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
-      return await model.generateContent(prompt);
+      const completion = await openai.chat.completions.create({
+        model,
+        messages: [{ role: "user", content: prompt }],
+        ...(jsonMode ? { response_format: { type: "json_object" } } : {}),
+      });
+      return completion.choices?.[0]?.message?.content ?? "";
     } catch (err) {
       const is429 =
         err?.status === 429 ||
         (err?.message && err.message.includes('429')) ||
-        (err?.message && err.message.toLowerCase().includes('resource exhausted'));
+        (err?.message && err.message.toLowerCase().includes('rate limit'));
       if (is429 && attempt < maxRetries) {
         const delayMs = Math.pow(2, attempt) * 10000; // 10s, 20s, 40s
-        console.warn(`Gemini 429 rate limit. Retrying in ${delayMs / 1000}s (attempt ${attempt + 1}/${maxRetries})...`);
+        console.warn(`OpenAI 429 rate limit. Retrying in ${delayMs / 1000}s (attempt ${attempt + 1}/${maxRetries})...`);
         await new Promise((res) => setTimeout(res, delayMs));
         lastError = err;
       } else {
@@ -127,7 +138,6 @@ export const generateAssessment = async (req, res) => {
 
     // Try AI generation first with timeout
     try {
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
       const prompt = `
 Generate 3 DISTINCT coding problems suitable for a ${job.jobtitle} role.
 
@@ -160,13 +170,11 @@ Return ONLY a valid JSON array of objects in this EXACT format (no markdown, no 
 ]
       `.trim();
 
-      const result = await Promise.race([
-        generateWithRetry(model, prompt),
+      const text = await Promise.race([
+        generateWithRetry({ model: ASSESSMENT_MODEL, prompt, jsonMode: false }),
         new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 90000))
       ]);
 
-      const response = await result.response;
-      const text = response.text();
       const cleanedText = text.replace(/```json|```/g, "").trim();
       questionData = JSON.parse(cleanedText);
 
@@ -330,7 +338,6 @@ export const generateAvaloqAssessment = async (req, res) => {
     let questionData;
 
     try {
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
       const prompt = `
 You are an expert assessment designer for Avaloq banking software developer roles.
 
@@ -405,13 +412,11 @@ Return ONLY a valid JSON array of objects in this EXACT format (no markdown, no 
 ]
       `.trim();
 
-      const result = await Promise.race([
-        generateWithRetry(model, prompt),
+      const text = await Promise.race([
+        generateWithRetry({ model: ASSESSMENT_MODEL, prompt, jsonMode: false }),
         new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 90000))
       ]);
 
-      const response = await result.response;
-      const text = response.text();
       const cleanedText = text.replace(/```json|```/g, "").trim();
       questionData = JSON.parse(cleanedText);
 

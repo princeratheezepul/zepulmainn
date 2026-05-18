@@ -62,7 +62,7 @@ const MarketplaceAIInterviewQuestions = ({ onBack, jobDetails, resumeData, onEva
       const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/resumes/evaluate-prompt`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt, modelType: "gemini-2.5-flash" })
+        body: JSON.stringify({ prompt, modelType: "gpt-4o-mini" })
       });
       if (!response.ok) throw new Error("Failed to generate AI questions");
       const data = await response.json();

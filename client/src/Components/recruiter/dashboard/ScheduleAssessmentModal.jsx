@@ -82,7 +82,7 @@ const ScheduleAssessmentModal = ({ isOpen, onClose, candidateEmail, candidateNam
                     </div>
 
                     <p className="text-gray-600 text-sm">
-                        This will use <strong>Gemini AI</strong> to generate a unique coding problem based on the job description. The candidate will receive a link to take the test in our secure environment.
+                        This will use <strong>OpenAI</strong> to generate a unique coding problem based on the job description. The candidate will receive a link to take the test in our secure environment.
                     </p>
 
                     {error && (

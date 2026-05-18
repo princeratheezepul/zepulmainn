@@ -118,7 +118,7 @@ const MarketplaceAddAnswersPage = ({ onBack, questions, jobDetails, resumeData, 
         const result = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/resumes/evaluate-prompt`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ prompt, modelType: "gemini-2.5-flash" })
+          body: JSON.stringify({ prompt, modelType: "gpt-4o-mini" })
         });
         if (!result.ok) throw new Error("Failed to evaluate prompt using backend API");
         const data = await result.json();
@@ -135,8 +135,8 @@ const MarketplaceAddAnswersPage = ({ onBack, questions, jobDetails, resumeData, 
           console.error('JSON parse error:', parseError);
           throw new Error('Failed to parse AI response');
         }
-      } catch (geminiError) {
-        console.error('Backend API error:', geminiError);
+      } catch (aiError) {
+        console.error('Backend API error:', aiError);
         console.log('Using intelligent fallback evaluation...');
 
         // Intelligent fallback: Simple text analysis for answer extraction
