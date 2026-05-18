@@ -473,81 +473,96 @@ const AIInterviewQuestions = ({ jobDetails, resumeData, onBack, onResumeUpdate }
           </div>
         )}
 
-        {/* Schedule AI Interview (Voice Agent) */}
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200/80 mb-8">
-          <div className="flex flex-col md:flex-row md:items-end gap-4 mb-4">
-            <div className="flex-1">
-              <div className="text-xl font-bold text-gray-800">
-                Schedule AI Interview
-              </div>
-              <p className="text-gray-600 text-sm mt-1">
-                Send the candidate an AI-led live interview link powered by the voice agent.
-              </p>
+        {/* Schedule AI Interview (Voice Agent) — hidden once the interview is completed. */}
+        {resumeData?.interviewEvaluation?.evaluatedAt ? (
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200/80 mb-8">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <div className="text-xl font-bold text-gray-800">AI Interview</div>
+              <span className="px-3 py-1 rounded-full text-sm font-semibold bg-green-100 text-green-800">
+                Completed
+              </span>
             </div>
+            <p className="text-gray-600 text-sm mt-2">
+              Interview completed on {new Date(resumeData.interviewEvaluation.evaluatedAt).toLocaleString()}.
+              {typeof resumeData.score === 'number' ? ` Overall score: ${resumeData.score}/100.` : ''}
+            </p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Interview Date &amp; Time
-              </label>
-              <input
-                type="datetime-local"
-                className="border border-gray-300 px-3 py-2 rounded w-full"
-                value={aiMeetingDateTime}
-                onChange={(e) => setAiMeetingDateTime(e.target.value)}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Duration (minutes)
-              </label>
-              <input
-                type="number"
-                min={10}
-                max={120}
-                className="border border-gray-300 px-3 py-2 rounded w-full"
-                value={aiMeetingDuration}
-                onChange={(e) => setAiMeetingDuration(e.target.value)}
-              />
-            </div>
-          </div>
-          <div className="mt-4">
-            <button
-              onClick={handleScheduleAiInterview}
-              disabled={creatingAiMeeting || !!aiMeetingLink}
-              className="px-4 py-2 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 disabled:opacity-60"
-            >
-              {creatingAiMeeting ? "Scheduling..." : aiMeetingLink ? "Interview Scheduled" : "Schedule AI Interview"}
-            </button>
-          </div>
-          {aiMeetingLink && (
-            <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-gray-700 mb-1">Meeting Link:</p>
-                  <a
-                    href={aiMeetingLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sm text-blue-600 hover:text-blue-800 break-all"
-                  >
-                    {aiMeetingLink}
-                  </a>
+        ) : (
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200/80 mb-8">
+            <div className="flex flex-col md:flex-row md:items-end gap-4 mb-4">
+              <div className="flex-1">
+                <div className="text-xl font-bold text-gray-800">
+                  Schedule AI Interview
                 </div>
-                <button
-                  onClick={() => {
-                    navigator.clipboard.writeText(aiMeetingLink);
-                    toast.success("Meeting link copied to clipboard!");
-                  }}
-                  className="ml-3 p-2 text-gray-600 hover:text-gray-800 hover:bg-blue-100 rounded transition-colors"
-                  title="Copy link"
-                >
-                  <Copy size={18} />
-                </button>
+                <p className="text-gray-600 text-sm mt-1">
+                  Send the candidate an AI-led live interview link powered by the voice agent.
+                </p>
               </div>
             </div>
-          )}
-        </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Interview Date &amp; Time
+                </label>
+                <input
+                  type="datetime-local"
+                  className="border border-gray-300 px-3 py-2 rounded w-full"
+                  value={aiMeetingDateTime}
+                  onChange={(e) => setAiMeetingDateTime(e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Duration (minutes)
+                </label>
+                <input
+                  type="number"
+                  min={10}
+                  max={120}
+                  className="border border-gray-300 px-3 py-2 rounded w-full"
+                  value={aiMeetingDuration}
+                  onChange={(e) => setAiMeetingDuration(e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="mt-4">
+              <button
+                onClick={handleScheduleAiInterview}
+                disabled={creatingAiMeeting || !!aiMeetingLink}
+                className="px-4 py-2 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 disabled:opacity-60"
+              >
+                {creatingAiMeeting ? "Scheduling..." : aiMeetingLink ? "Interview Scheduled" : "Schedule AI Interview"}
+              </button>
+            </div>
+            {aiMeetingLink && (
+              <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-gray-700 mb-1">Meeting Link:</p>
+                    <a
+                      href={aiMeetingLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm text-blue-600 hover:text-blue-800 break-all"
+                    >
+                      {aiMeetingLink}
+                    </a>
+                  </div>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(aiMeetingLink);
+                      toast.success("Meeting link copied to clipboard!");
+                    }}
+                    className="ml-3 p-2 text-gray-600 hover:text-gray-800 hover:bg-blue-100 rounded transition-colors"
+                    title="Copy link"
+                  >
+                    <Copy size={18} />
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Assessment Result Section - Moved up for better visibility if scheduled */}
         {resumeData?.oa?.scheduled && (

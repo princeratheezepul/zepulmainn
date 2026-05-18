@@ -1,9 +1,17 @@
 import OpenAI from "openai";
 import Resume from "../models/resume.model.js";
 import { Job } from "../models/job.model.js";
+import { Meeting } from "../models/meeting.model.js";
 import crypto from 'crypto';
 import nodemailer from "nodemailer";
 import { executeJava, executeCpp, executePython } from "../services/codeExecution.service.js";
+import { sendMeetingInviteEmail } from "../services/email.service.js";
+import { sendWhatsAppMessage } from "../utils/whatsapp.js";
+
+const FRONTEND_URL = process.env.FRONTEND_URL || process.env.FRONT_END_URL || "http://localhost:5173";
+const INTERVIEW_LEAD_TIME_MS = 5 * 60 * 1000; // 5 minutes — gives the candidate a moment to read the invite
+const INTERVIEW_WINDOW_MS = 24 * 60 * 60 * 1000; // 24 hours — candidate must take the interview within this window
+const INTERVIEW_DURATION_MINUTES = 10;
 
 const openai = process.env.OPENAI_API ? new OpenAI({ apiKey: process.env.OPENAI_API }) : null;
 
@@ -42,7 +50,7 @@ const generateWithRetry = async ({ model, prompt, jsonMode = true, maxRetries = 
   throw lastError;
 };
 
-const sendAssessmentEmail = async (toEmail, candidateName, assessmentLink, jobTitle) => {
+export const sendAssessmentEmail = async (toEmail, candidateName, assessmentLink, jobTitle) => {
   const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
@@ -122,19 +130,16 @@ const sendAvaloqAssessmentEmail = async (toEmail, candidateName, assessmentLink,
   await transporter.sendMail(mailOptions);
 };
 
-// @desc Generate a coding assessment based on job description
-export const generateAssessment = async (req, res) => {
-  try {
-    const { resumeId } = req.body;
+// Core: generates AI questions, persists them on the Resume, and returns the link.
+// Does NOT send any email — callers do that so they can also fire side-channels (WhatsApp, etc.)
+// Returns: { resume, job, assessmentId, assessmentLink, questions }
+export const generateAssessmentForResume = async (resumeId) => {
+  const resume = await Resume.findById(resumeId).populate('jobId');
+  if (!resume) throw new Error("Resume not found");
+  const job = resume.jobId;
+  if (!job) throw new Error("Job not found on resume");
 
-    const resume = await Resume.findById(resumeId).populate('jobId');
-    if (!resume) {
-      return res.status(404).json({ message: "Resume not found" });
-    }
-
-    const job = resume.jobId;
-
-    let questionData;
+  let questionData;
 
     // Try AI generation first with timeout
     try {
@@ -295,17 +300,20 @@ Return ONLY a valid JSON array of objects in this EXACT format (no markdown, no 
       { new: true }
     );
 
-    const assessmentLink = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/assessment/${assessmentId}`;
+  const assessmentLink = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/assessment/${assessmentId}`;
 
-    // Send email to candidate
+  return { resume, job, assessmentId, assessmentLink, questions: questionData };
+};
+
+// @desc Generate a coding assessment based on job description (express handler)
+export const generateAssessment = async (req, res) => {
+  try {
+    const { resumeId } = req.body;
+    const { resume, job, assessmentId, assessmentLink, questions } = await generateAssessmentForResume(resumeId);
+
     if (resume.email) {
       try {
-        await sendAssessmentEmail(
-          resume.email,
-          resume.name,
-          assessmentLink,
-          job.jobtitle
-        );
+        await sendAssessmentEmail(resume.email, resume.name, assessmentLink, job.jobtitle);
       } catch (emailError) {
         console.error("Failed to send assessment email:", emailError);
       }
@@ -313,14 +321,14 @@ Return ONLY a valid JSON array of objects in this EXACT format (no markdown, no 
 
     res.status(200).json({
       message: "Assessment generated successfully",
-      assessmentId: assessmentId,
+      assessmentId,
       link: `/assessment/${assessmentId}`,
-      questions: questionData
+      questions
     });
-
   } catch (error) {
     console.error("Error generating assessment:", error);
-    res.status(500).json({ message: "Failed to generate assessment", error: error.message });
+    const status = error.message === "Resume not found" ? 404 : 500;
+    res.status(status).json({ message: error.message || "Failed to generate assessment", error: error.message });
   }
 };
 
@@ -591,6 +599,80 @@ export const getAssessment = async (req, res) => {
 };
 
 // @desc Submit assessment solution
+// Fire-and-forget: create a Meeting for an AI interview, send invite email + WhatsApp.
+// Mirrors notifyCandidateOfCodingTest in resume.controller.js but for the post-OA interview step.
+// WhatsApp is sent only if the email succeeds — the WhatsApp text refers to the email.
+const notifyCandidateOfInterview = async (resumeId) => {
+  try {
+    const resume = await Resume.findById(resumeId).populate('jobId');
+    if (!resume) {
+      console.log(`[interviewNotify] Resume ${resumeId} not found`);
+      return;
+    }
+
+    const job = resume.jobId;
+    if (!job) {
+      console.log(`[interviewNotify] No job on resume ${resumeId}`);
+      return;
+    }
+
+    if (!resume.email) {
+      console.log(`[interviewNotify] Skipping — no email on resume ${resumeId}`);
+      return;
+    }
+
+    if (!resume.recruiterId) {
+      console.log(`[interviewNotify] Skipping — no recruiterId on resume ${resumeId} (Meeting model requires it)`);
+      return;
+    }
+
+    const now = Date.now();
+    const scheduledAt = new Date(now + INTERVIEW_LEAD_TIME_MS);
+    const expiresAt = new Date(now + INTERVIEW_WINDOW_MS);
+    const token = crypto.randomBytes(24).toString('hex');
+
+    const meeting = await Meeting.create({
+      jobId: job._id,
+      resumeId: resume._id,
+      recruiterId: resume.recruiterId,
+      candidateEmail: resume.email.toLowerCase(),
+      scheduledAt,
+      expiresAt,
+      durationMinutes: INTERVIEW_DURATION_MINUTES,
+      token,
+      status: 'scheduled',
+      vapiAssistantId: process.env.VAPI_ASSISTANT_ID || undefined,
+    });
+
+    const inviteLink = `${FRONTEND_URL.replace(/\/$/, "")}/meeting/${token}`;
+
+    try {
+      await sendMeetingInviteEmail({
+        to: resume.email,
+        jobTitle: job.jobtitle,
+        companyName: job.company || "Zepul",
+        candidateName: resume.name || "",
+        durationMinutes: meeting.durationMinutes,
+        inviteLink,
+        mode: "Video Call (AI-led interview)",
+        locationLabel: "Meeting Link",
+        interviewerNames: "AI Interviewer",
+        windowText: "Take within 24 hours of receiving this invite",
+      });
+    } catch (emailErr) {
+      console.error(`[interviewNotify] Email failed for resume ${resumeId}:`, emailErr.message);
+      return; // WhatsApp text claims the email was sent — don't lie if it wasn't
+    }
+
+    if (resume.phone) {
+      const message = `You have completed your coding assessment for the job role: ${job.jobtitle}, your next round is interview. The interview invitation has been sent to your email id: ${resume.email} please check it and join the interview`;
+      await sendWhatsAppMessage(resume.phone, message);
+    }
+  } catch (err) {
+    console.error(`[interviewNotify] Failed for resume ${resumeId}:`, err.message);
+  }
+};
+
 export const submitAssessment = async (req, res) => {
   try {
     const { assessmentId } = req.params;
@@ -625,6 +707,10 @@ export const submitAssessment = async (req, res) => {
     evaluateSubmission(resume._id, submissions, resume[assessmentField].questions, assessmentField);
 
     res.status(200).json({ message: "Assessment submitted successfully" });
+
+    // Fire-and-forget: create AI interview meeting + send invite email + WhatsApp.
+    // Runs after the response so the candidate's submit UI doesn't wait on it.
+    notifyCandidateOfInterview(resume._id);
 
   } catch (error) {
     console.error("Error submitting assessment:", error);

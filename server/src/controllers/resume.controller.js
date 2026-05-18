@@ -7,6 +7,35 @@ import Recruiter from "../models/recruiter.model.js";
 import nodemailer from "nodemailer";
 import { determineResumeTag } from "../utils/tagHelper.js";
 import { analyzeResume, calculateATSScore } from "./bulkUpload.controller.js";
+import { generateAssessmentForResume, sendAssessmentEmail } from "./assessment.controller.js";
+import { sendWhatsAppMessage } from "../utils/whatsapp.js";
+
+// Fire-and-forget: generate the coding assessment for a newly-saved resume, then notify the candidate.
+// WhatsApp is only sent if the email was successfully sent — the WhatsApp text references the email.
+const notifyCandidateOfCodingTest = async (resumeId) => {
+  try {
+    const { resume, job, assessmentLink } = await generateAssessmentForResume(resumeId);
+
+    if (!resume.email) {
+      console.log(`[codingTestNotify] Skipping — no email on resume ${resumeId}`);
+      return;
+    }
+
+    try {
+      await sendAssessmentEmail(resume.email, resume.name, assessmentLink, job.jobtitle);
+    } catch (emailErr) {
+      console.error(`[codingTestNotify] Email failed for resume ${resumeId}:`, emailErr.message);
+      return; // WhatsApp text claims the email was sent — don't lie if it wasn't
+    }
+
+    if (resume.phone) {
+      const message = `You have been selected for the coding round on the job: ${job.jobtitle}, the coding test mail has been sent to your email id: ${resume.email} please check it and submit the test asap`;
+      await sendWhatsAppMessage(resume.phone, message);
+    }
+  } catch (err) {
+    console.error(`[codingTestNotify] Failed for resume ${resumeId}:`, err.message);
+  }
+};
 
 // @desc Process resume text through AI and return structured data
 export const parseResumeWithAI = async (req, res) => {
@@ -111,6 +140,10 @@ export const saveResumeWithJob = async (req, res) => {
     await Job.findByIdAndUpdate(jobId, { $inc: { totalApplication_number: 1 } });
 
     res.status(201).json({ message: "Resume saved successfully", resume: saved });
+
+    // Fire-and-forget: AI assessment generation + email + WhatsApp. Runs after response so the
+    // recruiter UI doesn't wait on the ~30-90s AI question generation.
+    notifyCandidateOfCodingTest(saved._id);
   } catch (err) {
     console.error("Error saving resume:", err);
     res.status(500).json({ message: "Failed to save resume", error: err.message });

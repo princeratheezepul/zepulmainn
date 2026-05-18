@@ -27,6 +27,9 @@ const meetingSchema = new mongoose.Schema(
       type: Date,
       required: true,
     },
+    expiresAt: {
+      type: Date,
+    },
     durationMinutes: {
       type: Number,
       default: 40,
