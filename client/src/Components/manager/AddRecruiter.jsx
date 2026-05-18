@@ -90,6 +90,7 @@ export default function AddRecruiter({ onClose }) {
       const managerId = userInfo?.data?.user?._id || user?.id;
       const managerFullname = managerProfile?.fullname || userInfo?.data?.user?.fullname || user?.fullname || 'Manager';
       const token = userInfo?.data?.accessToken;
+      const isProRecruiter = userInfo?.data?.user?.isProRecruiter || false;
 
       const randomPassword = generateRandomPassword();
 
@@ -101,7 +102,8 @@ export default function AddRecruiter({ onClose }) {
         gender: form.gender,
         phone: form.phone,
         onboardedBy: form.onboardedBy || managerFullname,
-        managerId: managerId
+        managerId: managerId,
+        isProRecruiter,
       };
 
       // Use direct fetch with both cookies and Authorization header for better compatibility

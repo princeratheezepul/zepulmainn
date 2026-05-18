@@ -1,10 +1,21 @@
+import crypto from "crypto";
 import ResumeData from "../models/resumeData.model.js";
+import Scorecard from "../models/scorecard.model.js";
+import Resume from "../models/resume.model.js";
+import Recruiter from "../models/recruiter.model.js";
+import { Job } from "../models/job.model.js";
+import CandidateConfirmation from "../models/candidateConfirmation.model.js";
+import { determineResumeTag } from "../utils/tagHelper.js";
+import { sendWhatsAppMessage } from "../utils/whatsapp.js";
+import { sendShortlistEmail } from "../services/email.service.js";
 import OpenAI from "openai";
 
 const openai = process.env.OPENAI_API ? new OpenAI({ apiKey: process.env.OPENAI_API }) : null;
 
 // Lightweight extraction task — gpt-4o-mini is fast, cheap, and reliable with JSON mode.
 const QUERY_EXTRACTION_MODEL = "gpt-4o-mini";
+// Per-candidate scorecard generation — same model as analyzeResume; JSON mode keeps output reliable.
+const SCORECARD_MODEL = "gpt-4o-mini";
 
 export const processZepDBQuery = async (req, res) => {
   try {
@@ -272,6 +283,306 @@ const formatCandidatesForResponse = (candidates) => {
     createdAt: candidate.createdAt,
     scorecardId: candidate.scorecardId || null
   }));
+};
+
+// Phase 1 — fast: query ZepDB and flag which candidates already have scores
+export const matchJobWithZepDB = async (req, res) => {
+  try {
+    const { jobId } = req.params;
+
+    const job = await Job.findById(jobId).lean();
+    if (!job) {
+      return res.status(404).json({ success: false, message: "Job not found" });
+    }
+
+    // Build search filters from job fields directly (faster than Gemini round-trip for Phase 1)
+    const jobFilters = {
+      role: job.jobtitle || '',
+      keywords: [
+        ...(job.jobtitle ? job.jobtitle.split(/\s+/) : []),
+        ...(job.keyResponsibilities || []).flatMap(r => r.split(/\s+/)).slice(0, 10),
+      ].filter(w => w.length > 2 && !['the', 'and', 'for', 'with', 'that', 'this', 'from', 'are', 'will'].includes(w.toLowerCase())),
+      skills: (job.skills || []).map(s => s.toLowerCase().trim()),
+      minExperience: job.experience || 0,
+      maxExperience: 99,
+      location: '',
+    };
+
+    const allCandidates = await fetchCandidatesFromDB(jobFilters);
+    const topCandidates = allCandidates.filter(c => c.name && c.name.trim().length > 0);
+
+    // Single query to find all existing resumes for these candidates + this job
+    const existingResumes = await Resume.find({
+      jobId: job._id,
+      resumeDataId: { $in: topCandidates.map(c => c._id) }
+    }).select('resumeDataId ats_score aiSummary aiScorecard recommendation keyStrength potentialConcern').lean();
+
+    const existingResumeMap = {};
+    existingResumes.forEach(r => {
+      existingResumeMap[r.resumeDataId.toString()] = r;
+    });
+
+    // Fetch scorecards for existing resumes in one query
+    const existingScorecards = await Scorecard.find({
+      jobId: job._id,
+      resumeId: { $in: Object.keys(existingResumeMap) }
+    }).lean();
+
+    const scorecardMap = {};
+    existingScorecards.forEach(s => {
+      scorecardMap[s.resumeId.toString()] = s;
+    });
+
+    const formatted = topCandidates.map(c => {
+      const cid = c._id.toString();
+      const existingResume = existingResumeMap[cid];
+      const existingScorecard = scorecardMap[cid];
+
+      const base = formatCandidatesForResponse([c])[0];
+
+      if (existingResume && existingScorecard) {
+        return {
+          ...base,
+          existing: {
+            resumeId: existingResume._id,
+            scorecard: {
+              _id: existingScorecard._id,
+              overallScore: existingResume.ats_score,
+              skillScores: existingScorecard.skillScores,
+              summary: existingScorecard.note,
+              recommendation: existingScorecard.fitLabel || existingResume.recommendation,
+              keyStrengths: existingResume.keyStrength,
+              potentialConcerns: existingResume.potentialConcern,
+              aiSummary: existingResume.aiSummary,
+              aiScorecard: existingResume.aiScorecard
+            }
+          }
+        };
+      }
+      return { ...base, existing: null };
+    });
+
+    res.status(200).json({
+      success: true,
+      data: { job: { title: job.jobtitle, id: job._id }, candidates: formatted }
+    });
+  } catch (error) {
+    console.error('ZepDB Match Job Error:', error);
+    res.status(500).json({ success: false, message: "Failed to search ZepDB", error: error.message });
+  }
+};
+
+// Phase 2 — one candidate at a time (called in parallel from frontend)
+export const scoreCandidateForJob = async (req, res) => {
+  try {
+    const { jobId } = req.params;
+    const { candidateId } = req.body;
+    const recruiterId = req.id;
+
+    // Duplicate check
+    const existingResume = await Resume.findOne({
+      jobId,
+      resumeDataId: candidateId
+    }).select('_id resumeDataId ats_score aiSummary aiScorecard recommendation keyStrength potentialConcern').lean();
+
+    if (existingResume) {
+      const existingScorecard = await Scorecard.findOne({ jobId, resumeId: candidateId }).lean();
+      return res.status(200).json({
+        success: true,
+        existing: true,
+        resumeId: existingResume._id,
+        scorecard: existingScorecard ? {
+          _id: existingScorecard._id,
+          overallScore: existingResume.ats_score,
+          skillScores: existingScorecard.skillScores,
+          summary: existingScorecard.note,
+          recommendation: existingResume.recommendation,
+          keyStrengths: existingResume.keyStrength,
+          potentialConcerns: existingResume.potentialConcern,
+          aiSummary: existingResume.aiSummary,
+          aiScorecard: existingResume.aiScorecard
+        } : null
+      });
+    }
+
+    const [candidate, job, recruiter] = await Promise.all([
+      ResumeData.findById(candidateId).lean(),
+      Job.findById(jobId).lean(),
+      Recruiter.findById(recruiterId).lean()
+    ]);
+
+    if (!candidate || !job) {
+      return res.status(404).json({ success: false, message: "Candidate or job not found" });
+    }
+
+    const managerId = recruiter?.managerId || null;
+    const tag = determineResumeTag(job.jobtitle, job.description);
+
+    const analysis = await generateZepDBAnalysis(candidate, job);
+
+    const savedResume = await Resume.create({
+      jobId: job._id,
+      recruiterId,
+      managerId,
+      tag,
+      resumeDataId: candidate._id,
+      name: candidate.name,
+      title: candidate.role,
+      skills: candidate.skills?.points || [],
+      experience: `${candidate.experienceYears} years`,
+      ats_score: analysis.ats_score,
+      overallScore: analysis.ats_score,
+      aiSummary: analysis.aiSummary,
+      aiScorecard: analysis.aiScorecard,
+      recommendation: analysis.recommendation,
+      keyStrength: analysis.keyStrength,
+      potentialConcern: analysis.potentialConcern,
+      status: 'submitted',
+      applicationDetails: {
+        position: job.jobtitle,
+        date: new Date().toLocaleDateString(),
+        noticePeriod: 'N/A',
+        source: 'ZepDB'
+      }
+    });
+
+    await Job.findByIdAndUpdate(job._id, { $inc: { totalApplication_number: 1 } });
+
+    const savedScorecard = await Scorecard.create({
+      candidateId: candidate._id.toString(),
+      resume: savedResume,
+      jobId: job._id,
+      resumeId: candidate._id,
+      skillScores: analysis.skillScores,
+      averageScore: analysis.ats_score,
+      note: analysis.summary,
+      submittedAt: new Date()
+    });
+
+    // Create a 24-hour confirmation token
+    const confirmToken = crypto.randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    await CandidateConfirmation.create({
+      token: confirmToken,
+      candidateId: candidate._id,
+      jobId: job._id,
+      resumeId: savedResume._id,
+      scorecardId: savedScorecard._id,
+      expiresAt,
+    });
+    const confirmLink = `${process.env.FRONTEND_URL}/confirm/${confirmToken}`;
+
+    // Send WhatsApp notification if candidate has a phone number
+    if (candidate.phone) {
+      const message = `Hi ${candidate.name}, you have been selected for the role of *${job.jobtitle}*${job.company ? ` at *${job.company}*` : ''}. Please click the link below to confirm if you want to proceed:\n${confirmLink}\n\n(This link expires in 24 hours)`;
+      sendWhatsAppMessage(candidate.phone, message, candidate.countryCode || '91');
+    }
+
+    // Send email notification if candidate has an email
+    if (candidate.emailId) {
+      sendShortlistEmail({
+        to: candidate.emailId,
+        candidateName: candidate.name,
+        jobTitle: job.jobtitle,
+        company: job.company,
+        confirmLink,
+      }).catch(err => console.error('Shortlist email failed:', err.message));
+    }
+
+    res.status(200).json({
+      success: true,
+      existing: false,
+      resumeId: savedResume._id,
+      scorecard: {
+        _id: savedScorecard._id,
+        overallScore: analysis.ats_score,
+        skillScores: analysis.skillScores,
+        summary: analysis.summary,
+        recommendation: analysis.fitLabel,
+        keyStrengths: analysis.keyStrength,
+        potentialConcerns: analysis.potentialConcern,
+        aiSummary: analysis.aiSummary,
+        aiScorecard: analysis.aiScorecard
+      }
+    });
+  } catch (error) {
+    console.error('ZepDB Score Candidate Error:', error);
+    res.status(500).json({ success: false, message: "Failed to generate scorecard", error: error.message });
+  }
+};
+
+// Generates a comprehensive AI analysis from structured ResumeData against a job
+const generateZepDBAnalysis = async (candidate, job) => {
+  if (!openai) throw new Error("OpenAI API is not configured. Please set OPENAI_API.");
+
+  const candidateJson = JSON.stringify({
+    name: candidate.name,
+    role: candidate.role,
+    experienceYears: candidate.experienceYears,
+    skills: candidate.skills?.points || [],
+    experience: (candidate.experience || []).map(e => ({
+      title: e.title, company: e.company, duration: e.duration,
+      points: (e.points || []).slice(0, 3)
+    })),
+    projects: (candidate.projects || []).map(p => ({
+      title: p.title, points: (p.points || []).slice(0, 2)
+    })),
+    education: candidate.education || [],
+    achievements: candidate.achievements?.points || []
+  });
+
+  const prompt = `You are an expert AI recruiter. Evaluate this candidate against the job and return ONLY raw JSON (no markdown, no code fences).
+
+JOB:
+Title: ${job.jobtitle}
+Description: ${(job.description || '').slice(0, 500)}
+Required Skills: ${(job.skills || []).join(', ')}
+Experience Required: ${job.experience || 'Not specified'} years
+
+CANDIDATE:
+${candidateJson}
+
+Return this exact JSON shape:
+{
+  "ats_score": <integer 0-100, overall fit score>,
+  "fitLabel": "<one of: Strong Fit, Good Fit, Moderate Fit, Weak Fit>",
+  "summary": "<2-3 sentence assessment of candidate fit for this job>",
+  "recommendation": "<short decisive phrase e.g. Recommended for next round>",
+  "keyStrength": ["<strength 1>", "<strength 2>", "<strength 3>"],
+  "potentialConcern": ["<concern 1>", "<concern 2>"],
+  "skillScores": [
+    { "skill": "<required skill name>", "score": <integer 0-100> }
+  ],
+  "aiSummary": {
+    "technicalExperience": "<1-2 sentences on technical background>",
+    "projectExperience": "<1-2 sentences on project work>",
+    "education": "<1-2 sentences on education>",
+    "keyAchievements": "<1-2 sentences on achievements>",
+    "skillMatch": "<1-2 sentences on skill alignment with this job>",
+    "competitiveFit": "<1-2 sentences on market competitiveness for this role>",
+    "consistencyCheck": "<1-2 sentences on career consistency>"
+  },
+  "aiScorecard": {
+    "technicalSkillMatch": <integer 0-100>,
+    "competitiveFit": <integer 0-100>,
+    "consistencyCheck": <integer 0-100>,
+    "teamLeadership": <integer 0-100>
+  }
+}
+
+Rules:
+- skillScores: Score each of the job's required skills (max 6). Base score on evidence found in candidate data.
+- ats_score: Holistic score — skill match, experience depth, project relevance. Conservative: 80+ only for strong matches.
+- All text fields must contain meaningful content, not placeholders.`;
+
+  const completion = await openai.chat.completions.create({
+    model: SCORECARD_MODEL,
+    messages: [{ role: "user", content: prompt }],
+    response_format: { type: "json_object" },
+  });
+  const raw = completion.choices?.[0]?.message?.content ?? "";
+  const cleaned = raw.replace(/```json\n?|\n?```/g, '').trim();
+  return JSON.parse(cleaned);
 };
 
 // Get ZepDB statistics

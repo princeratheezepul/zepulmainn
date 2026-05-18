@@ -1,4 +1,5 @@
 import ResumeData from "../models/resumeData.model.js";
+import ResumeDataRaw from "../models/resumeDataRaw.model.js";
 import Scorecard from "../models/scorecard.model.js";
 
 /**
@@ -67,18 +68,21 @@ const buildSearchableSkills = (data) => {
 // POST /api/resume-data/save
 export const saveResumeData = async (req, res) => {
     try {
-        console.log("Received request to save resume data:", req.body);
-        const { name, role, experienceYears, projects, experience, achievements, skills, education, scorecardId } = req.body;
+        const { name, role, experienceYears, projects, experience, achievements, skills, education, scorecardId, rawText, phone, emailId, countryCode } = req.body;
 
         if (!name) {
             return res.status(400).json({ success: false, message: "Name is required" });
         }
 
-        // Auto-compute search-optimized fields
+        // 1. Save raw extracted text to ResumeDataRaw (flexible schema, no filtering)
+        const rawDoc = await ResumeDataRaw.create({ rawText: rawText || '' });
+
+        // 2. Auto-compute search-optimized fields
         const searchableText = buildSearchableText(req.body);
         const searchableSkills = buildSearchableSkills(req.body);
 
-        const resumeData = new ResumeData({
+        // 3. Save structured ResumeData with contact info + link to raw doc
+        const saved = await ResumeData.create({
             name,
             role: role || '',
             experienceYears: experienceYears || 0,
@@ -89,16 +93,19 @@ export const saveResumeData = async (req, res) => {
             education,
             searchableText,
             searchableSkills,
-            scorecardId: scorecardId || undefined
+            scorecardId: scorecardId || undefined,
+            phone: phone || '',
+            emailId: emailId || '',
+            countryCode: countryCode || '91',
+            rawResume: rawDoc._id
         });
 
-        const saved = await resumeData.save();
-        console.log("ResumeData saved successfully:", saved._id);
+        // 4. Write ResumeData's _id back into ResumeDataRaw.filterResumeId
+        await ResumeDataRaw.findByIdAndUpdate(rawDoc._id, { filterResumeId: saved._id });
 
-        // If scorecardId is provided, update the scorecard with the resumeId
+        // 5. If scorecardId provided, back-link scorecard → ResumeData
         if (scorecardId) {
             await Scorecard.findByIdAndUpdate(scorecardId, { resumeId: saved._id });
-            console.log("Updated scorecard with resumeId:", saved._id);
         }
 
         res.status(201).json({ success: true, message: "Resume data saved successfully.", resumeData: saved });

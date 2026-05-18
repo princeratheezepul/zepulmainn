@@ -24,6 +24,7 @@ const JobDetails = ({ job, onBack, onJobUpdated, recruiters = [] }) => {
   const userInfo = JSON.parse(localStorage.getItem("userInfo"));
   const token = userInfo?.data?.accessToken;
   const managerId = userInfo?.data?.user?._id;
+  const isProRecruiter = userInfo?.data?.user?.isProRecruiter || false;
 
   // Created by user - determine creator based on adminId or managerId
   const getCreatorInfo = () => {
@@ -296,6 +297,7 @@ const JobDetails = ({ job, onBack, onJobUpdated, recruiters = [] }) => {
         initialAssigned={job.assignedRecruiters || []}
         managerId={managerId}
         token={token}
+        isProRecruiter={isProRecruiter}
         recruiters={recruiters}
         onSaveSuccess={refreshJob}
       />

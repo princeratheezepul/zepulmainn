@@ -187,7 +187,36 @@ const generatePDFContent = (resumeData, note = '') => {
         </div>
       </div>
     </div>
-  `;  // Avaloq Banking Assessment Summary
+  `;
+
+  // 3b. AI Interview Summary — rendered immediately below the Coding Assessment Summary.
+  const interviewBullets = resumeData.interviewEvaluation?.aiInterviewSummary;
+  const interviewScoreForSummary =
+    typeof resumeData.score === 'number' && resumeData.score > 0
+      ? resumeData.score
+      : null;
+  const aiInterviewSummaryHTML = (interviewBullets && interviewBullets.length > 0)
+    ? `
+    <div class="bg-white rounded-xl border border-gray-200 p-6 mb-6">
+      <div class="flex justify-between items-center mb-4">
+        <div class="text-lg font-bold text-gray-900">AI Interview Summary</div>
+        ${interviewScoreForSummary !== null
+          ? `<span class="font-bold text-gray-900">Score: ${interviewScoreForSummary}/100</span>`
+          : ''}
+      </div>
+      <ul class="space-y-2 pl-1">
+        ${interviewBullets.map((b) => `
+          <li class="text-sm text-gray-700 leading-relaxed flex gap-2">
+            <span class="text-blue-600 mt-0.5">•</span>
+            <span>${b}</span>
+          </li>
+        `).join('')}
+      </ul>
+    </div>
+  `
+    : '';
+
+  // Avaloq Banking Assessment Summary
   const avaloqOaStatus = resumeData.avaloqOa?.evaluation?.pass ? 'Passed' : 'Failed';
   const avaloqOaStatusColor = resumeData.avaloqOa?.evaluation?.pass ? 'text-green-700 bg-green-100' : 'text-red-700 bg-red-100';
   const avaloqOaScore = resumeData.avaloqOa?.evaluation?.score || 0;
@@ -486,6 +515,7 @@ const generatePDFContent = (resumeData, note = '') => {
         ${keyStrengthHTML}
         ${potentialConcernHTML}
         ${codingAssessmentHTML}
+        ${aiInterviewSummaryHTML}
         ${avaloqAssessmentHTML}
         ${aiResumeSummaryHTML}
         ${addedNotesHTML}

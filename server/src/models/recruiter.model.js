@@ -120,6 +120,10 @@ const recruiterSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Job',
   }],
+  isCreatedByProRecruiter: {
+    type: Boolean,
+    default: false,
+  },
 }, { timestamps: true });
 
 export default mongoose.model('Recruiter', recruiterSchema);

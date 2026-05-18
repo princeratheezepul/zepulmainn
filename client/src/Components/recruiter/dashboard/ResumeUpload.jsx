@@ -86,14 +86,19 @@ const ResumeUpload = ({ onBack, jobDetails }) => {
       };
 
       setLoadingMessage("Saving details...");
-      const saved = await saveResumeToDB(finalData, jobDetails.jobId);
-      setParsedData(saved.resume); // Use the DB object with _id
-
-      // Save structured resume data (projects, experience, achievements, skills, education)
-      if (analysis.resumeContent) {
-        setLoadingMessage("Saving structured resume data...");
-        await saveResumeDataToDB(analysis.resumeContent);
-      }
+      const [saved] = await Promise.all([
+        saveResumeToDB(finalData, jobDetails.jobId),
+        analysis.resumeContent
+          ? saveResumeDataToDB({
+              ...analysis.resumeContent,
+              rawText: text,
+              phone: analysis.phone || '',
+              emailId: analysis.email || '',
+              countryCode: '91'
+            })
+          : Promise.resolve(null)
+      ]);
+      setParsedData(saved.resume);
 
     } catch (error) {
       console.error("Error processing resume:", error);

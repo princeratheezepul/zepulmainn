@@ -43,11 +43,32 @@ export const sendMeetingInviteEmail = async ({
   recruiterPhone = "",
   recruiterEmail = "",
   companyWebsite = "",
+  // When provided, replaces the Date+Time lines with a single "Window" line.
+  // Used for deadline-based invites (e.g. "Take within 24 hours").
+  windowText = "",
 }) => {
   const transporter = buildMailer();
-  const { datePart, timePart } = formatDate(scheduledAt, timeZone);
 
   const subject = `Interview Invitation – ${jobTitle} at ${companyName}`;
+
+  const scheduleLines = windowText
+    ? `<li><strong>Window:</strong> ${windowText}</li>`
+    : (() => {
+        const { datePart, timePart } = formatDate(scheduledAt, timeZone);
+        return `
+        <li><strong>Date:</strong> ${datePart}</li>
+        <li><strong>Time:</strong> ${timePart} (${timeZone})</li>`;
+      })();
+
+  const signOff = recruiterFullName
+    ? `
+      <p>Best regards,<br/>
+         ${recruiterFullName}${recruiterTitle ? `, ${recruiterTitle}` : ""}<br/>
+         ${companyName}<br/>
+         ${recruiterPhone || ""}<br/>
+         ${recruiterEmail || ""}<br/>
+         ${companyWebsite ? `<a href="${companyWebsite}" style="color:#2563eb;">${companyWebsite}</a>` : ""}</p>`
+    : "";
 
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 720px; line-height: 1.6;">
@@ -56,22 +77,15 @@ export const sendMeetingInviteEmail = async ({
       <p>Thank you for your interest in the <strong>${jobTitle}</strong> position at <strong>${companyName}</strong>. We were impressed with your profile and would like to move forward by scheduling an interview with you.</p>
       <h3 style="margin-top: 20px;">Interview details</h3>
       <ul style="padding-left: 18px; margin-top: 8px; margin-bottom: 16px;">
-        <li><strong>Date:</strong> ${datePart}</li>
-        <li><strong>Time:</strong> ${timePart} (${timeZone})</li>
+        ${scheduleLines}
         <li><strong>Mode:</strong> ${mode}</li>
         <li><strong>${locationLabel}:</strong> <a href="${inviteLink}" style="color:#2563eb;">${inviteLink}</a></li>
         <li><strong>Interviewer(s):</strong> ${interviewerNames || "Our AI Interviewer"}</li>
         <li><strong>Interview Duration:</strong> Approximately ${durationMinutes} minutes</li>
       </ul>
-      <p>Please confirm your availability for the above schedule by replying to this email. If the proposed time does not work for you, feel free to suggest an alternative and we will do our best to accommodate.</p>
+      <p>Please confirm your availability by replying to this email.</p>
       <p>If you have any questions or require additional information prior to the interview, don’t hesitate to reach out.</p>
-      <p>We look forward to speaking with you.</p>
-      <p>Best regards,<br/>
-         ${recruiterFullName || "[Your Full Name]"}${recruiterTitle ? `, ${recruiterTitle}` : ""}<br/>
-         ${companyName}<br/>
-         ${recruiterPhone || ""}<br/>
-         ${recruiterEmail || ""}<br/>
-         ${companyWebsite ? `<a href="${companyWebsite}" style="color:#2563eb;">${companyWebsite}</a>` : ""}</p>
+      <p>We look forward to speaking with you.</p>${signOff}
     </div>
   `;
 
@@ -79,6 +93,35 @@ export const sendMeetingInviteEmail = async ({
     from: process.env.EMAIL_USER,
     to,
     subject,
+    html,
+  });
+};
+
+export const sendShortlistEmail = async ({ to, candidateName, jobTitle, company, confirmLink }) => {
+  const transporter = buildMailer();
+
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; line-height: 1.7; color: #1f2937;">
+      <h2 style="color: #2563eb;">You have been selected, ${candidateName || 'Candidate'}!</h2>
+      <p>We are pleased to inform you that you have been <strong>selected</strong> for the role of <strong>${jobTitle}</strong>${company ? ` at <strong>${company}</strong>` : ''}.</p>
+      <p>Please click the button below to confirm whether you would like to proceed with this opportunity.</p>
+      ${confirmLink ? `
+      <div style="text-align: center; margin: 32px 0;">
+        <a href="${confirmLink}" style="background-color: #2563eb; color: #ffffff; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-size: 16px; font-weight: bold; display: inline-block;">
+          View Details &amp; Confirm
+        </a>
+      </div>
+      <p style="font-size: 13px; color: #6b7280; text-align: center;">This link expires in 24 hours.</p>
+      ` : ''}
+      <p>If you have any questions, feel free to reply to this email.</p>
+      <p style="margin-top: 24px;">Best regards,<br/>The Recruitment Team</p>
+    </div>
+  `;
+
+  await transporter.sendMail({
+    from: process.env.EMAIL_USER,
+    to,
+    subject: `You have been selected – ${jobTitle}${company ? ` at ${company}` : ''}`,
     html,
   });
 };
