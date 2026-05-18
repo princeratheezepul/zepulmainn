@@ -40,7 +40,7 @@ const buildSearchableSkills = (data) => {
 import { Job } from "../models/job.model.js";
 import Recruiter from "../models/recruiter.model.js";
 import mongoose from "mongoose";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import OpenAI from "openai";
 import mammoth from "mammoth";
 import { determineResumeTag } from "../utils/tagHelper.js";
 import { google } from 'googleapis';
@@ -58,16 +58,20 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const require = createRequire(import.meta.url);
 
-// Initialize Google Generative AI
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+// Initialize OpenAI
+const OPENAI_API_KEY = process.env.OPENAI_API;
 
-if (!GEMINI_API_KEY) {
-  console.error('❌ GEMINI_API_KEY environment variable is not set');
-  console.error('📋 Please set up your environment variables following SETUP_ENVIRONMENT.md');
-  console.error('🔑 Get your API key from: https://aistudio.google.com/app/apikey');
+if (!OPENAI_API_KEY) {
+  console.error('❌ OPENAI_API environment variable is not set');
+  console.error('📋 Please set up your environment variables');
+  console.error('🔑 Get your API key from: https://platform.openai.com/api-keys');
 }
 
-const genAI = GEMINI_API_KEY ? new GoogleGenerativeAI(GEMINI_API_KEY) : null;
+const openai = OPENAI_API_KEY ? new OpenAI({ apiKey: OPENAI_API_KEY }) : null;
+
+const RESUME_ANALYSIS_MODEL = "gpt-4o-mini";
+const ATS_SCORING_MODEL = "gpt-4o-mini";
+const DEFAULT_TEXT_MODEL = "gpt-4o-mini";
 
 // Initialize Google Drive API (optional - only if credentials are available)
 let drive = null;
@@ -721,21 +725,26 @@ const extractTextFromDocx = async (buffer) => {
   }
 };
 
-// Retry helper for Gemini API calls (handles 429 rate limit errors)
-const generateWithRetry = async (model, prompt, maxRetries = 3) => {
+// Retry helper for OpenAI API calls (handles 429 rate limit errors)
+const generateWithRetry = async ({ model, prompt, jsonMode = true, maxRetries = 3 }) => {
   let lastError;
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
-      return await model.generateContent(prompt);
+      const completion = await openai.chat.completions.create({
+        model,
+        messages: [{ role: "user", content: prompt }],
+        ...(jsonMode ? { response_format: { type: "json_object" } } : {}),
+      });
+      return completion.choices?.[0]?.message?.content ?? "";
     } catch (err) {
       const is429 =
         err?.status === 429 ||
         (err?.message && err.message.includes('429')) ||
-        (err?.message && err.message.toLowerCase().includes('resource exhausted'));
+        (err?.message && err.message.toLowerCase().includes('rate limit'));
 
       if (is429 && attempt < maxRetries) {
         const delayMs = Math.pow(2, attempt) * 10000; // 10s, 20s, 40s
-        console.warn(`Gemini 429 rate limit hit. Retrying in ${delayMs / 1000}s (attempt ${attempt + 1}/${maxRetries})...`);
+        console.warn(`OpenAI 429 rate limit hit. Retrying in ${delayMs / 1000}s (attempt ${attempt + 1}/${maxRetries})...`);
         await new Promise((res) => setTimeout(res, delayMs));
         lastError = err;
       } else {
@@ -748,11 +757,10 @@ const generateWithRetry = async (model, prompt, maxRetries = 3) => {
 
 // Analyze resume with AI
 export const analyzeResume = async (resumeText, job) => {
-  if (!genAI) {
-    throw new Error('Gemini API is not configured. Please set up GEMINI_API_KEY environment variable. Get your API key from: https://aistudio.google.com/app/apikey');
+  if (!openai) {
+    throw new Error('OpenAI API is not configured. Please set up OPENAI_API environment variable. Get your API key from: https://platform.openai.com/api-keys');
   }
 
-  const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
   const prompt = `
     You are an expert AI recruiter analyzing a resume for a specific job.
     Job Details:
@@ -841,17 +849,11 @@ export const analyzeResume = async (resumeText, job) => {
     Make sure all fields in aiSummary contain meaningful, detailed content that provides valuable insights for the recruiter.
   `;
 
-  const result = await generateWithRetry(model, prompt);
-  const response = await result.response;
-  const text = response.text();
+  const text = await generateWithRetry({ model: RESUME_ANALYSIS_MODEL, prompt });
 
-  // More robust JSON cleaning
   let cleanedText = text.replace(/```json|```/g, "").trim();
-
-  // Remove any leading/trailing non-JSON content
   const jsonStart = cleanedText.indexOf('{');
   const jsonEnd = cleanedText.lastIndexOf('}');
-
   if (jsonStart !== -1 && jsonEnd !== -1) {
     cleanedText = cleanedText.substring(jsonStart, jsonEnd + 1);
   }
@@ -903,11 +905,9 @@ export const analyzeResume = async (resumeText, job) => {
 
 // Calculate ATS Score
 export const calculateATSScore = async (resumeText, job) => {
-  if (!genAI) {
-    throw new Error('Gemini API is not configured. Please set up GEMINI_API_KEY environment variable.');
+  if (!openai) {
+    throw new Error('OpenAI API is not configured. Please set up OPENAI_API environment variable.');
   }
-
-  const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
   const prompt = `
     You are a strict, realistic ATS evaluator. Calculate ATS score out of 100 using weighted criteria below. BE CONSERVATIVE with scoring - most resumes should score 60-80, with only exceptional candidates scoring 85+.
@@ -1006,17 +1006,11 @@ export const calculateATSScore = async (resumeText, job) => {
     ${resumeText}
     `;
 
-  const result = await generateWithRetry(model, prompt);
-  const response = await result.response;
-  const aiText = await response.text();
+  const aiText = await generateWithRetry({ model: ATS_SCORING_MODEL, prompt });
 
-  // More robust JSON cleaning for ATS score
   let cleanedText = aiText.replace(/```json|```/g, "").trim();
-
-  // Remove any leading/trailing non-JSON content
   const jsonStart = cleanedText.indexOf('{');
   const jsonEnd = cleanedText.lastIndexOf('}');
-
   if (jsonStart !== -1 && jsonEnd !== -1) {
     cleanedText = cleanedText.substring(jsonStart, jsonEnd + 1);
   }
@@ -1389,25 +1383,39 @@ const getFilesFromPublicDrive = async (folderId) => {
 
 // Exported wrapper: generateTextWithRetry(prompt, modelName) → returns response text string
 // Used by scorecard.controller.js and resume.controller.js
-export const generateTextWithRetry = async (prompt, modelName = "gemini-1.5-flash", maxRetries = 3) => {
-  if (!genAI) {
-    throw new Error("Gemini API is not configured. Please set GEMINI_API_KEY.");
+// Legacy Gemini model names are auto-mapped to their OpenAI equivalents so existing callers keep working.
+const LEGACY_MODEL_MAP = {
+  "gemini-1.5-flash": "gpt-4o-mini",
+  "gemini-2.0-flash": "gpt-4o-mini",
+  "gemini-2.5-flash": "gpt-4o-mini",
+  "gemini-1.5-pro": "gpt-4o",
+  "gemini-2.5-pro": "gpt-4o",
+};
+
+const resolveModel = (name) => LEGACY_MODEL_MAP[name] || name || DEFAULT_TEXT_MODEL;
+
+export const generateTextWithRetry = async (prompt, modelName = DEFAULT_TEXT_MODEL, maxRetries = 3) => {
+  if (!openai) {
+    throw new Error("OpenAI API is not configured. Please set OPENAI_API.");
   }
-  const model = genAI.getGenerativeModel({ model: modelName });
+  const model = resolveModel(modelName);
   let lastError;
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
-      const result = await model.generateContent(prompt);
-      return result.response.text();
+      const completion = await openai.chat.completions.create({
+        model,
+        messages: [{ role: "user", content: prompt }],
+      });
+      return completion.choices?.[0]?.message?.content ?? "";
     } catch (err) {
       const is429 =
         err?.status === 429 ||
         (err?.message && err.message.includes("429")) ||
-        (err?.message && err.message.toLowerCase().includes("resource exhausted"));
+        (err?.message && err.message.toLowerCase().includes("rate limit"));
 
       if (is429 && attempt < maxRetries) {
         const delayMs = Math.pow(2, attempt) * 10000;
-        console.warn(`Gemini 429 rate limit. Retrying in ${delayMs / 1000}s (attempt ${attempt + 1}/${maxRetries})...`);
+        console.warn(`OpenAI 429 rate limit. Retrying in ${delayMs / 1000}s (attempt ${attempt + 1}/${maxRetries})...`);
         await new Promise((res) => setTimeout(res, delayMs));
         lastError = err;
       } else {
