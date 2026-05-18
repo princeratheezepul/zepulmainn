@@ -8,10 +8,14 @@ import CandidateConfirmation from "../models/candidateConfirmation.model.js";
 import { determineResumeTag } from "../utils/tagHelper.js";
 import { sendWhatsAppMessage } from "../utils/whatsapp.js";
 import { sendShortlistEmail } from "../services/email.service.js";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import OpenAI from "openai";
 
-// Initialize Gemini AI
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const openai = process.env.OPENAI_API ? new OpenAI({ apiKey: process.env.OPENAI_API }) : null;
+
+// Lightweight extraction task — gpt-4o-mini is fast, cheap, and reliable with JSON mode.
+const QUERY_EXTRACTION_MODEL = "gpt-4o-mini";
+// Per-candidate scorecard generation — same model as analyzeResume; JSON mode keeps output reliable.
+const SCORECARD_MODEL = "gpt-4o-mini";
 
 export const processZepDBQuery = async (req, res) => {
   try {
@@ -24,8 +28,8 @@ export const processZepDBQuery = async (req, res) => {
       });
     }
 
-    // Step 1: Use Gemini to extract structured filters
-    const extractedInfo = await extractQueryInfoWithGemini(query);
+    // Step 1: Use OpenAI to extract structured filters
+    const extractedInfo = await extractQueryInfoWithAI(query);
 
     // Step 2: Query ResumeData
     const candidates = await fetchCandidatesFromDB(extractedInfo);
@@ -53,28 +57,25 @@ export const processZepDBQuery = async (req, res) => {
   }
 };
 
-const extractQueryInfoWithGemini = async (userQuery) => {
+const extractQueryInfoWithAI = async (userQuery) => {
   try {
-    const model = genAI.getGenerativeModel({
-      model: "gemini-2.5-flash",
-      generationConfig: { responseMimeType: "application/json" }
-    });
+    if (!openai) throw new Error("OpenAI API is not configured. Please set OPENAI_API.");
 
     const prompt = `
     You are an AI that extracts search filters from recruitment queries.
-    
+
     Extract from this query: "${userQuery}"
-    
+
     Return ONLY a valid JSON object (no markdown, no code fences):
     {
       "role": "extracted job role or empty string (e.g. full stack developer, data scientist)",
       "keywords": ["individual", "search", "keywords", "from", "query"],
       "minExperience": number (0 if not specified),
-      "maxExperience": number (99 if not specified),  
+      "maxExperience": number (99 if not specified),
       "skills": ["specific", "technical", "skills"],
       "location": "location or empty string"
     }
-    
+
     Rules:
     - role: Extract the EXACT job role (e.g. "full stack developer", "frontend developer", "data scientist")
     - keywords: Break the query into individual meaningful search words (exclude common words like "with", "and", "the", "for", "me", "show", "give", "find", "get", "candidates", "resumes")
@@ -82,11 +83,14 @@ const extractQueryInfoWithGemini = async (userQuery) => {
     - experience: "3+ years" → min:3, max:99. "2-5 years" → min:2, max:5. "greater than 1 year" → min:1, max:99
     `;
 
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const text = response.text();
+    const completion = await openai.chat.completions.create({
+      model: QUERY_EXTRACTION_MODEL,
+      messages: [{ role: "user", content: prompt }],
+      response_format: { type: "json_object" },
+    });
+    const text = completion.choices?.[0]?.message?.content ?? "";
 
-    console.log('Gemini Raw Response:', text);
+    console.log('OpenAI Raw Response:', text);
 
     const cleanedText = text.replace(/```json\n?|\n?```/g, '').trim();
     const extracted = JSON.parse(cleanedText);
@@ -94,7 +98,7 @@ const extractQueryInfoWithGemini = async (userQuery) => {
     console.log('Extracted Info:', extracted);
     return extracted;
   } catch (error) {
-    console.error('Gemini API Error:', error);
+    console.error('OpenAI API Error:', error);
     return fallbackQueryParsing(userQuery);
   }
 };
@@ -509,10 +513,7 @@ export const scoreCandidateForJob = async (req, res) => {
 
 // Generates a comprehensive AI analysis from structured ResumeData against a job
 const generateZepDBAnalysis = async (candidate, job) => {
-  const model = genAI.getGenerativeModel({
-    model: "gemini-2.5-flash",
-    generationConfig: { responseMimeType: "application/json" }
-  });
+  if (!openai) throw new Error("OpenAI API is not configured. Please set OPENAI_API.");
 
   const candidateJson = JSON.stringify({
     name: candidate.name,
@@ -574,8 +575,12 @@ Rules:
 - ats_score: Holistic score — skill match, experience depth, project relevance. Conservative: 80+ only for strong matches.
 - All text fields must contain meaningful content, not placeholders.`;
 
-  const result = await model.generateContent(prompt);
-  const raw = result.response.text();
+  const completion = await openai.chat.completions.create({
+    model: SCORECARD_MODEL,
+    messages: [{ role: "user", content: prompt }],
+    response_format: { type: "json_object" },
+  });
+  const raw = completion.choices?.[0]?.message?.content ?? "";
   const cleaned = raw.replace(/```json\n?|\n?```/g, '').trim();
   return JSON.parse(cleaned);
 };

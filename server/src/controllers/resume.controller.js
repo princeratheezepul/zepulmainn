@@ -412,7 +412,7 @@ export const evaluatePrompt = async (req, res) => {
   }
 
   try {
-    const text = await generateTextWithRetry(prompt, modelType || "gemini-1.5-flash");
+    const text = await generateTextWithRetry(prompt, modelType || "gpt-4o-mini");
     res.status(200).json({ text });
   } catch (error) {
     console.error("Error evaluating generic prompt:", error);

@@ -263,7 +263,7 @@ const MarketplaceResumeUpload = ({ onBack, jobDetails }) => {
       const result = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/resumes/evaluate-prompt`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt, modelType: "gemini-2.5-flash" })
+        body: JSON.stringify({ prompt, modelType: "gpt-4o-mini" })
       });
       if (!result.ok) throw new Error("Failed to evaluate prompt using backend API");
       const data = await result.json();
@@ -351,7 +351,7 @@ const MarketplaceResumeUpload = ({ onBack, jobDetails }) => {
     const result = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/resumes/evaluate-prompt`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ prompt, modelType: "gemini-2.5-flash" })
+      body: JSON.stringify({ prompt, modelType: "gpt-4o-mini" })
     });
     if (!result.ok) throw new Error("Failed to evaluate prompt using backend API");
     const data = await result.json();

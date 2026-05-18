@@ -15,7 +15,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import { createRequire } from 'module';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import OpenAI from 'openai';
 import mammoth from 'mammoth';
 import axios from 'axios';
 import { google } from 'googleapis';
@@ -35,14 +35,25 @@ const require = createRequire(import.meta.url);
 // ─────────────────────────────────────────────
 const JOB_ID = '695e3fe9ce602ec0fc2e36ab';
 const CSV_PATH = path.join(__dirname_local, '../Copy of Resume Links - Sheet1.csv');
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+const OPENAI_API_KEY = process.env.OPENAI_API;
 
-if (!GEMINI_API_KEY) {
-    console.error('❌ GEMINI_API_KEY not set in .env');
+if (!OPENAI_API_KEY) {
+    console.error('❌ OPENAI_API not set in .env');
     process.exit(1);
 }
 
-const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+const openai = new OpenAI({ apiKey: OPENAI_API_KEY });
+
+const RESUME_MODEL = "gpt-4o-mini";
+
+const generateJson = async (prompt) => {
+    const completion = await openai.chat.completions.create({
+        model: RESUME_MODEL,
+        messages: [{ role: "user", content: prompt }],
+        response_format: { type: "json_object" },
+    });
+    return completion.choices?.[0]?.message?.content ?? "";
+};
 
 // ─────────────────────────────────────────────
 // Google Drive API (optional)
@@ -242,9 +253,8 @@ const extractTextFromDocx = async (buffer) => {
     return result.value;
 };
 
-/** Analyze resume with Gemini AI — same prompt as bulkUpload.controller.js + resumeContent */
+/** Analyze resume with OpenAI — same prompt as bulkUpload.controller.js + resumeContent */
 const analyzeResume = async (resumeText, job) => {
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
     const prompt = `
     You are an expert AI recruiter analyzing a resume for a specific job.
     Job Details:
@@ -314,9 +324,7 @@ const analyzeResume = async (resumeText, job) => {
     - Make sure all fields in aiSummary contain meaningful, detailed content.
   `;
 
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const text = response.text();
+    const text = await generateJson(prompt);
 
     let cleanedText = text.replace(/```json|```/g, '').trim();
     const jsonStart = cleanedText.indexOf('{');
@@ -342,7 +350,6 @@ const analyzeResume = async (resumeText, job) => {
 
 /** Calculate ATS Score — same prompt as bulkUpload.controller.js */
 const calculateATSScore = async (resumeText, job) => {
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
     const prompt = `
     You are a strict, realistic ATS evaluator. Calculate ATS score out of 100 using weighted criteria below. BE CONSERVATIVE with scoring.
 
@@ -384,9 +391,7 @@ const calculateATSScore = async (resumeText, job) => {
     ${resumeText}
   `;
 
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const aiText = response.text();
+    const aiText = await generateJson(prompt);
 
     let cleanedText = aiText.replace(/```json|```/g, '').trim();
     const jsonStart = cleanedText.indexOf('{');
