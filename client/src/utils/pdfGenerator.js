@@ -1,528 +1,245 @@
 import { toast } from 'react-hot-toast';
 
-// Circular progress bar component as string template
-const getCircularProgressSVG = (percentage, size = 160, strokeWidth = 14) => {
-  const isNA = percentage === 'NA';
-  const numericPercentage = isNA ? 0 : percentage;
+// Score gauge — colored arc on a light grey ring, centered numeric label (no %).
+const scoreGaugeSVG = (value, color, size = 92, strokeWidth = 8) => {
+  const v = Math.max(0, Math.min(100, Number(value) || 0));
   const radius = (size - strokeWidth) / 2;
   const circumference = radius * 2 * Math.PI;
-  const strokeDasharray = circumference;
-  const strokeDashoffset = circumference - (numericPercentage / 100) * circumference;
-
+  const dashoffset = circumference - (v / 100) * circumference;
   return `
-    <div class="relative flex items-center justify-center" style="width: ${size}px; height: ${size}px; margin: 0 auto;">
-      <svg 
-        width="${size}" 
-        height="${size}" 
-        viewBox="0 0 ${size} ${size}"
-        class="absolute top-0 left-0"
-        style="transform: rotate(-90deg); transform-origin: center; display: block;"
-      >
-        <!-- Background circle -->
-        <circle
-          cx="${size / 2}"
-          cy="${size / 2}"
-          r="${radius}"
-          stroke="#e8e8e8"
-          stroke-width="${strokeWidth}"
-          fill="none"
-          stroke-linecap="round"
-          opacity="1"
-        />
-        <!-- Progress circle -->
-        <circle
-          cx="${size / 2}"
-          cy="${size / 2}"
-          r="${radius}"
-          stroke="#3b82f6"
-          stroke-width="${strokeWidth}"
-          fill="none"
-          stroke-dasharray="${circumference}"
-          stroke-dashoffset="${strokeDashoffset}"
-          stroke-linecap="round"
-          opacity="1"
-        />
+    <div style="position: relative; width: ${size}px; height: ${size}px; margin: 0 auto;">
+      <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" style="transform: rotate(-90deg); display: block;">
+        <circle cx="${size / 2}" cy="${size / 2}" r="${radius}" stroke="#e5e7eb" stroke-width="${strokeWidth}" fill="none" />
+        <circle cx="${size / 2}" cy="${size / 2}" r="${radius}" stroke="${color}" stroke-width="${strokeWidth}" fill="none"
+          stroke-dasharray="${circumference}" stroke-dashoffset="${dashoffset}" stroke-linecap="round" />
       </svg>
-      <div class="absolute inset-0 flex items-center justify-center z-10" style="pointer-events: none;">
-        <span 
-          class="font-bold text-gray-900" 
-          style="font-size: 32px; line-height: 1; text-align: center; display: block; margin: 0; padding: 0;"
-        >
-          ${isNA ? 'NA' : percentage + '%'}
-        </span>
+      <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;">
+        <span style="color: ${color}; font-size: 22px; font-weight: 700; line-height: 1;">${v}</span>
       </div>
     </div>
   `;
 };
-
-// Helper functions
-const getMatchLabel = (score) => {
-  if (score >= 80) return { label: 'Strong Match', color: 'text-green-600', bg: 'bg-green-50' };
-  if (score >= 60) return { label: 'Good Match', color: 'text-green-500', bg: 'bg-green-50' };
-  return { label: 'Less Match', color: 'text-red-600', bg: 'bg-red-50' };
-};
-
-
 
 // Generate the complete PDF content
 const generatePDFContent = (resumeData, note = '') => {
-  const score = resumeData.overallScore || resumeData.ats_score || 0;
-  const match = getMatchLabel(score);
-
-  // Helper for circular progress with label
-  const getMetricCard = (title, percentage, label = null, labelColor = 'text-gray-600') => `
-    <div class="flex flex-col items-center p-4 border rounded-xl bg-white h-full">
-      <div class="text-lg font-bold text-gray-900 mb-4 text-center">${title}</div>
-      <div class="flex justify-center mb-4">${getCircularProgressSVG(percentage, 120, 10)}</div>
-    </div>
-  `;
-
-  // 1. Top Metrics Row
-  const codingScore = resumeData.oa?.evaluation?.score || resumeData.avaloqOa?.evaluation?.score || 0;
-  const interviewScore = resumeData.score || (resumeData.interviewEvaluation?.evaluationResults?.reduce((acc, curr) => acc + (curr.score || 0), 0) / (resumeData.interviewEvaluation?.evaluationResults?.length || 1) * 10) || 0; // Normalize to 100 if needed, assuming score is out of 10? No, wait.
-  // Actually, let's check the data. interviewEvaluation.evaluationResults has score out of 10. So average * 10 gives %.
-  // But wait, resumeData.score is likely the interview score. Let's use that if available.
-  // For now, let's assume resumeData.score is the interview score percentage.
-  // If not, we might need to calculate it.
-  // Let's stick to the plan: resumeData.score or average.
-
-  // Let's refine the interview score calculation just in case
-  let finalInterviewScore = resumeData.score || 0;
-  if (!finalInterviewScore && resumeData.interviewEvaluation?.evaluationResults?.length > 0) {
-    const total = resumeData.interviewEvaluation.evaluationResults.reduce((sum, r) => sum + (r.score || 0), 0);
-    finalInterviewScore = Math.round((total / resumeData.interviewEvaluation.evaluationResults.length) * 10); // Convert 0-10 scale to 0-100
+  // === Score extraction ===
+  const cvScore = Math.round(resumeData.overallScore || resumeData.ats_score || 0);
+  const codingScore = Math.round(
+    resumeData.oa?.evaluation?.score || resumeData.avaloqOa?.evaluation?.score || 0
+  );
+  let interviewScore = Math.round(resumeData.score || 0);
+  if (!interviewScore && resumeData.interviewEvaluation?.evaluationResults?.length > 0) {
+    const total = resumeData.interviewEvaluation.evaluationResults.reduce(
+      (sum, r) => sum + (r.score || 0), 0
+    );
+    interviewScore = Math.round(
+      (total / resumeData.interviewEvaluation.evaluationResults.length) * 10
+    );
   }
 
+  // === Coding assessment metrics ===
+  const submissions = resumeData.oa?.submissions || [];
+  const totalQuestions = submissions.length || 3;
+  const passedQuestions =
+    submissions.filter(
+      (s) => s?.evaluation?.pass === true || s?.pass === true || s?.passed === true
+    ).length || (resumeData.oa?.evaluation?.pass ? totalQuestions : 0);
+  const codingFeedback =
+    resumeData.oa?.evaluation?.feedback ||
+    resumeData.oa?.evaluation?.complexityAnalysis ||
+    'Clean, efficient solutions across all problems.';
 
-  const metricsRowHTML = `
-    <div class="grid grid-cols-3 gap-4 mb-6">
-      ${getMetricCard('Coding Performance', codingScore || 'NA', 'Strong Match', 'text-green-600')}
-      ${getMetricCard('CV Strength', score || 'NA', 'Less Match', 'text-red-600')}
-      ${getMetricCard('Interview Performance', finalInterviewScore || 'NA', 'Less Match', 'text-red-600')}
+  // === Other data ===
+  const initials = (resumeData.name || 'NA')
+    .split(' ')
+    .map((p) => p[0])
+    .filter(Boolean)
+    .slice(0, 2)
+    .join('')
+    .toUpperCase();
+
+  const skills = resumeData.skills && resumeData.skills.length > 0 ? resumeData.skills : [];
+  const interviewBullets = resumeData.interviewEvaluation?.aiInterviewSummary || [];
+  const keyStrengths = resumeData.keyStrength || [];
+  const concerns = resumeData.potentialConcern || [];
+  const aiSummary = resumeData.aiSummary || {};
+
+  // === Section: Dark header ===
+  const headerHTML = `
+    <div style="background: #0a0a0a; color: #ffffff; padding: 18px 32px 16px; position: relative;">
+      <div style="position: absolute; top: 18px; right: 32px; display: flex; align-items: center; gap: 6px;">
+        <img src="/zepul_sidebar_logo.png" alt="" style="height: 20px; width: auto; display: block;" />
+        <span style="color: #ffffff; font-weight: 700; font-size: 18px; letter-spacing: 0.04em; line-height: 1;">ZEPUL<sup style="font-size: 9px; font-weight: 600; margin-left: 1px;">™</sup></span>
+      </div>
+      <div style="width: 44px; height: 44px; border-radius: 10px; background: #2563eb; display: flex; align-items: center; justify-content: center; color: #ffffff; font-weight: 700; font-size: 16px; margin-bottom: 10px;">
+        ${initials}
+      </div>
+      <h1 style="font-size: 24px; font-weight: 700; margin: 0 0 2px 0; color: #ffffff; line-height: 1.15;">
+        ${resumeData.name || 'Candidate'}
+      </h1>
+      <p style="font-size: 13px; color: #9ca3af; margin: 0 0 10px 0;">
+        ${resumeData.title || ''}
+      </p>
+      <div style="display: flex; flex-wrap: wrap; gap: 14px; font-size: 12px; color: #d1d5db; margin-bottom: 10px;">
+        ${resumeData.email ? `
+          <span style="display: inline-flex; align-items: center; gap: 6px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 5L2 7"/></svg>
+            ${resumeData.email}
+          </span>` : ''}
+        ${resumeData.phone ? `
+          <span style="display: inline-flex; align-items: center; gap: 6px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+            ${resumeData.phone}
+          </span>` : ''}
+        ${resumeData.experience ? `
+          <span style="display: inline-flex; align-items: center; gap: 6px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            ${resumeData.experience}
+          </span>` : ''}
+        ${resumeData.location ? `
+          <span style="display: inline-flex; align-items: center; gap: 6px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            ${resumeData.location}
+          </span>` : ''}
+      </div>
+      ${skills.length > 0 ? `
+        <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+          ${skills.slice(0, 8).map(s => `
+            <span style="background: #1f2937; color: #e5e7eb; padding: 3px 10px; border-radius: 9999px; font-size: 11px; font-weight: 500; border: 1px solid #374151;">${s}</span>
+          `).join('')}
+        </div>
+      ` : ''}
     </div>
   `;
 
-  // 2. Key Strength & Potential Concern
-  const keyStrengthHTML = `
-    <div class="bg-green-50 rounded-xl p-6 mb-6 border border-green-100">
-      <div class="font-bold text-gray-900 mb-4">Key Strength</div>
-      <ul class="space-y-2">
-        ${resumeData.keyStrength && resumeData.keyStrength.length > 0
-      ? resumeData.keyStrength.map(strength => `
-              <li class="text-sm text-gray-700 flex items-start gap-2">
-                <span class="text-green-600 mt-1">•</span>
-                <span>${strength}</span>
-              </li>
-            `).join('')
-      : `<li class="text-sm text-gray-700 flex items-start gap-2"><span class="text-green-600 mt-1">•</span><span>Strong proficiency in modern web technologies including JavaScript, TypeScript, React, and Node.js.</span></li>
-             <li class="text-sm text-gray-700 flex items-start gap-2"><span class="text-green-600 mt-1">•</span><span>Proven track record of innovation and problem-solving through successful participation and wins in multiple hackathons.</span></li>`
-    }
-      </ul>
+  // === Section: 3 score circles ===
+  const scoreRowHTML = `
+    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; border-bottom: 1px solid #e5e7eb;">
+      <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 16px 0; border-right: 1px solid #e5e7eb;">
+        <div style="font-size: 10px; font-weight: 600; letter-spacing: 0.18em; color: #6b7280; text-transform: uppercase; margin-bottom: 8px;">CODING</div>
+        ${scoreGaugeSVG(codingScore, '#22c55e')}
+      </div>
+      <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 16px 0; border-right: 1px solid #e5e7eb;">
+        <div style="font-size: 10px; font-weight: 600; letter-spacing: 0.18em; color: #6b7280; text-transform: uppercase; margin-bottom: 8px;">CV STRENGTH</div>
+        ${scoreGaugeSVG(cvScore, '#f59e0b')}
+      </div>
+      <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 16px 0;">
+        <div style="font-size: 10px; font-weight: 600; letter-spacing: 0.18em; color: #6b7280; text-transform: uppercase; margin-bottom: 8px;">INTERVIEW</div>
+        ${scoreGaugeSVG(interviewScore, '#3b82f6')}
+      </div>
     </div>
   `;
 
-  const potentialConcernHTML = `
-    <div class="bg-red-50 rounded-xl p-6 mb-6 border border-red-100">
-      <div class="font-bold text-gray-900 mb-4">Potential Concern</div>
-      <ul class="space-y-2">
-        ${resumeData.potentialConcern && resumeData.potentialConcern.length > 0
-      ? resumeData.potentialConcern.map(concern => `
-              <li class="text-sm text-gray-700 flex items-start gap-2">
-                <span class="text-red-600 mt-1">•</span>
-                <span>${concern}</span>
-              </li>
-            `).join('')
-      : `<li class="text-sm text-gray-700 flex items-start gap-2"><span class="text-red-600 mt-1">•</span><span>The primary concern is the complete absence of Python experience, which is the core technology for a 'Python Developer' role.</span></li>
-             <li class="text-sm text-gray-700 flex items-start gap-2"><span class="text-red-600 mt-1">•</span><span>Lack of explicit experience with Angular and Bootstrap, though they have strong React and other CSS frameworks.</span></li>`
-    }
-      </ul>
+  // === Section: Assessment (Strengths + Concerns) ===
+  const sectionLabel = (text) => `
+    <div style="font-size: 10px; font-weight: 600; letter-spacing: 0.18em; color: #6b7280; text-transform: uppercase; margin-bottom: 8px;">${text}</div>
+  `;
+
+  const strengthsText = keyStrengths.length > 0
+    ? keyStrengths.join(' ')
+    : 'Strong technical foundation with relevant project experience.';
+  const concernsText = concerns.length > 0
+    ? concerns.join(' ')
+    : 'Some skill gaps identified — may need ramp-up.';
+
+  const assessmentHTML = `
+    <div style="margin-bottom: 16px;">
+      ${sectionLabel('Assessment')}
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+        <div style="background: #f0fdf4; border-left: 3px solid #22c55e; border-radius: 6px; padding: 10px 12px;">
+          <div style="font-size: 10px; font-weight: 600; letter-spacing: 0.18em; color: #15803d; text-transform: uppercase; margin-bottom: 4px;">Strengths</div>
+          <p style="font-size: 12px; color: #1f2937; line-height: 1.45; margin: 0;">${strengthsText}</p>
+        </div>
+        <div style="background: #fefce8; border-left: 3px solid #eab308; border-radius: 6px; padding: 10px 12px;">
+          <div style="font-size: 10px; font-weight: 600; letter-spacing: 0.18em; color: #a16207; text-transform: uppercase; margin-bottom: 4px;">Concerns</div>
+          <p style="font-size: 12px; color: #1f2937; line-height: 1.45; margin: 0;">${concernsText}</p>
+        </div>
+      </div>
     </div>
   `;
 
-  // 3. Coding Assessment Summary
-  const oaStatus = resumeData.oa?.evaluation?.pass ? 'Passed' : 'Failed';
-  const oaStatusColor = resumeData.oa?.evaluation?.pass ? 'text-green-700 bg-green-100' : 'text-red-700 bg-red-100';
-  const oaScore = resumeData.oa?.evaluation?.score || 0;
-  const questionsCompleted = resumeData.oa?.submissions?.length || 0;
+  // === Section: AI Resume Summary — only these three, in this order ===
+  const summaryEntriesToRender = [
+    ['Project Experience', aiSummary.projectExperience || 'Project experience summary not available.'],
+    ['Key Achievements', aiSummary.keyAchievements || 'Key achievements summary not available.'],
+    ['Skill Match', aiSummary.skillMatch || 'Skill match summary not available.'],
+  ];
+
+  const aiResumeSummaryHTML = `
+    <div style="margin-bottom: 16px;">
+      ${sectionLabel('AI Resume Summary')}
+      <div style="display: flex; flex-direction: column; gap: 6px;">
+        ${summaryEntriesToRender.map(([title, value]) => `
+          <div style="background: #f3f4f6; border-radius: 6px; padding: 10px 12px;">
+            <div style="font-size: 13px; font-weight: 700; color: #111827; margin-bottom: 2px;">${title}</div>
+            <p style="font-size: 12px; color: #374151; line-height: 1.45; margin: 0;">${value}</p>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+
+  // === Section: Coding Assessment ===
+  const codingHeadline = passedQuestions === totalQuestions
+    ? 'All test cases passed'
+    : `${passedQuestions} of ${totalQuestions} test cases passed`;
 
   const codingAssessmentHTML = `
-    <div class="bg-white rounded-xl border border-gray-200 p-6 mb-6">
-      <div class="flex justify-between items-center mb-4">
-        <div class="text-lg font-bold text-gray-900">Coding Assessment Summary</div>
-        <div class="flex items-center gap-4">
-            <span class="px-3 py-1 rounded-full text-sm font-bold ${oaStatusColor} flex items-center gap-1">
-                ${resumeData.oa?.evaluation?.pass ? '✓' : '✕'} ${oaStatus}
-            </span>
-            <span class="font-bold text-gray-900">Score: ${oaScore}/100</span>
+    <div style="margin-bottom: 16px;">
+      ${sectionLabel('Coding Assessment')}
+      <div style="background: #f0fdf4; border-radius: 6px; padding: 12px 14px; display: flex; align-items: center; gap: 16px;">
+        <div style="font-size: 34px; font-weight: 700; color: #16a34a; line-height: 1; flex-shrink: 0;">
+          ${passedQuestions}/${totalQuestions}
         </div>
-      </div>
-      
-      <div class="mb-4">
-        <div class="flex items-center gap-2 text-blue-600 font-semibold mb-2">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-            Questions Completed: ${questionsCompleted}
-        </div>
-      </div>
-
-      <div class="space-y-4">
-        <div class="bg-gray-50 rounded-lg p-3 border border-gray-100">
-            <div class="font-semibold text-gray-700 mb-1">General Feedback</div>
-            <div class="text-sm text-gray-600">${resumeData.oa?.evaluation?.feedback || 'No feedback available.'}</div>
-        </div>
-        
-        <div class="bg-blue-50 rounded-lg p-3 border border-blue-100">
-            <div class="flex items-center gap-2 font-semibold text-blue-800 mb-1">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                Complexity Analysis
-            </div>
-            <div class="text-sm text-blue-700">${resumeData.oa?.evaluation?.complexityAnalysis || 'Multi-question assessment'}</div>
-        </div>
-
-        <div class="bg-gray-50 rounded-lg p-3 border border-gray-100">
-            <div class="flex items-center gap-2 font-semibold text-gray-700 mb-1">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-                Suggestions for Improvement
-            </div>
-            <div class="text-sm text-gray-600">${resumeData.oa?.evaluation?.improvementSuggestions || 'Excellent performance! Keep practicing to maintain your skills.'}</div>
+        <div style="font-size: 12px; color: #1f2937; line-height: 1.45;">
+          <span style="font-weight: 700;">${codingHeadline}</span> — scored ${codingScore}/100.
+          <div style="margin-top: 1px;">${codingFeedback}</div>
         </div>
       </div>
     </div>
   `;
 
-  // 3b. AI Interview Summary — rendered immediately below the Coding Assessment Summary.
-  const interviewBullets = resumeData.interviewEvaluation?.aiInterviewSummary;
-  const interviewScoreForSummary =
-    typeof resumeData.score === 'number' && resumeData.score > 0
-      ? resumeData.score
-      : null;
-  const aiInterviewSummaryHTML = (interviewBullets && interviewBullets.length > 0)
-    ? `
-    <div class="bg-white rounded-xl border border-gray-200 p-6 mb-6">
-      <div class="flex justify-between items-center mb-4">
-        <div class="text-lg font-bold text-gray-900">AI Interview Summary</div>
-        ${interviewScoreForSummary !== null
-          ? `<span class="font-bold text-gray-900">Score: ${interviewScoreForSummary}/100</span>`
-          : ''}
-      </div>
-      <ul class="space-y-2 pl-1">
-        ${interviewBullets.map((b) => `
-          <li class="text-sm text-gray-700 leading-relaxed flex gap-2">
-            <span class="text-blue-600 mt-0.5">•</span>
-            <span>${b}</span>
-          </li>
+  // === Section: Interview Summary (AI Interview Summary) ===
+  const interviewSummaryHTML = interviewBullets.length > 0 ? `
+    <div>
+      ${sectionLabel('Interview Summary')}
+      <ul style="margin: 0; padding-left: 18px; list-style: disc;">
+        ${interviewBullets.map(b => `
+          <li style="font-size: 12px; color: #1f2937; line-height: 1.45; margin-bottom: 3px;">${b}</li>
         `).join('')}
       </ul>
     </div>
-  `
-    : '';
-
-  // Avaloq Banking Assessment Summary
-  const avaloqOaStatus = resumeData.avaloqOa?.evaluation?.pass ? 'Passed' : 'Failed';
-  const avaloqOaStatusColor = resumeData.avaloqOa?.evaluation?.pass ? 'text-green-700 bg-green-100' : 'text-red-700 bg-red-100';
-  const avaloqOaScore = resumeData.avaloqOa?.evaluation?.score || 0;
-  const avaloqQuestionsCompleted = resumeData.avaloqOa?.submissions?.length || 0;
-
-  const avaloqAssessmentHTML = resumeData.avaloqOa?.evaluation ? `
-    <div class="bg-white rounded-xl border border-gray-200 p-6 mb-6">
-      <div class="flex justify-between items-center mb-4">
-        <div class="text-lg font-bold text-gray-900">Avaloq Banking Assessment Summary</div>
-        <div class="flex items-center gap-4">
-            <span class="px-3 py-1 rounded-full text-sm font-bold ${avaloqOaStatusColor} flex items-center gap-1">
-                ${resumeData.avaloqOa?.evaluation?.pass ? '✓' : '✕'} ${avaloqOaStatus}
-            </span>
-            <span class="font-bold text-gray-900">Score: ${avaloqOaScore}/100</span>
-        </div>
-      </div>
-      
-      <div class="mb-4">
-        <div class="flex items-center gap-2 text-blue-600 font-semibold mb-2">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-            Questions Completed: ${avaloqQuestionsCompleted}
-        </div>
-      </div>
-
-      <div class="space-y-4">
-        <div class="bg-gray-50 rounded-lg p-3 border border-gray-100">
-            <div class="font-semibold text-gray-700 mb-1">General Feedback</div>
-            <div class="text-sm text-gray-600">${resumeData.avaloqOa?.evaluation?.feedback || 'No feedback available.'}</div>
-        </div>
-        
-        <div class="bg-blue-50 rounded-lg p-3 border border-blue-100">
-            <div class="flex items-center gap-2 font-semibold text-blue-800 mb-1">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                Complexity Analysis
-            </div>
-            <div class="text-sm text-blue-700">${resumeData.avaloqOa?.evaluation?.complexityAnalysis || 'Avaloq Banking Assessment'}</div>
-        </div>
-
-        <div class="bg-gray-50 rounded-lg p-3 border border-gray-100">
-            <div class="flex items-center gap-2 font-semibold text-gray-700 mb-1">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-                Suggestions for Improvement
-            </div>
-            <div class="text-sm text-gray-600">${resumeData.avaloqOa?.evaluation?.improvementSuggestions || 'Keep improving your SQL and banking domain skills.'}</div>
-        </div>
-      </div>
-    </div>
   ` : '';
 
-  // 4. AI Resume Summary (Updated Layout)
-  const aiResumeSummaryHTML = `
-    <div class="bg-white rounded-xl border border-gray-200 p-6 mb-6">
-        <div class="text-lg font-bold text-gray-900 mb-4">AI Resume Summary</div>
-        <div class="space-y-6">
-            <div class="flex gap-4 items-start">
-                <div class="mt-1"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-500"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></div>
-                <div>
-                    <div class="font-bold text-gray-900 text-base mb-1">Project Experience</div>
-                    <p class="text-gray-700 text-sm leading-relaxed">${resumeData.aiSummary?.projectExperience || 'Their project work includes developing a zero-cost international transaction platform, a contract-based farming web app using smart contracts and machine learning, and an animated e-commerce site, demonstrating strong full-stack capabilities and a focus on innovative solutions.'}</p>
-                </div>
-            </div>
-            <div class="flex gap-4 items-start">
-                <div class="mt-1"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-500"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></div>
-                <div>
-                    <div class="font-bold text-gray-900 text-base mb-1">Key Achievements</div>
-                    <p class="text-gray-700 text-sm leading-relaxed">${resumeData.aiSummary?.keyAchievements || 'Prince has secured first, second, and third positions in multiple hackathons, showcasing strong problem-solving skills and the ability to rapidly develop impactful solutions.'}</p>
-                </div>
-            </div>
-            <div class="flex gap-4 items-start">
-                <div class="mt-1"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-500"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></div>
-                <div>
-                    <div class="font-bold text-gray-900 text-base mb-1">Skill Match</div>
-                    <p class="text-gray-700 text-sm leading-relaxed">${resumeData.aiSummary?.skillMatch || 'While the candidate possesses strong JavaScript, TypeScript, React, and Node.js skills relevant to general web application development and RESTful APIs, there is a significant lack of Python experience, which is the primary language required for this role.'}</p>
-                </div>
-            </div>
-        </div>
+  // === Footer ===
+  const footerHTML = `
+    <div style="border-top: 1px solid #e5e7eb; padding: 8px 32px; display: flex; align-items: center; justify-content: space-between;">
+      <span style="font-size: 10px; color: #6b7280;">Generated by Zepul AI Screening</span>
+      <img src="/zepul_trademark.jpg" alt="Zepul" style="height: 14px; width: auto;" />
     </div>
   `;
 
-  // Added Notes section
+  // === Optional: Added Notes — only renders when provided, on its own page ===
   const addedNotesHTML = note && note.trim()
-    ? `<div class="bg-white rounded-xl border border-gray-200 p-6 mb-6 pdf-only-notes">
-        <div class="text-lg font-bold text-gray-900 mb-4">Added Notes</div>
-        <div class="text-gray-700 text-sm leading-relaxed">${note}</div>
+    ? `<div style="page-break-before: always; margin-top: 20px; background: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 24px;">
+        <div style="font-size: 18px; font-weight: 700; color: #111827; margin-bottom: 12px;">Added Notes</div>
+        <div style="font-size: 13px; color: #374151; line-height: 1.6;">${note}</div>
       </div>`
     : '';
 
-  // Build appended resume section from structured ResumeData fields or raw_text
-  const buildResumeHTML = () => {
-    // Source 1: Populated resumeDataId object (structured data from ResumeData model)
-    const rd = resumeData.resumeDataId;
-    if (rd && typeof rd === 'object' && (rd.projects || rd.experience || rd.education || rd.skills || rd.achievements)) {
-      let html = '';
-
-      // Experience section
-      if (rd.experience && rd.experience.length > 0) {
-        html += `<div class="mb-6">
-          <div class="text-lg font-bold text-gray-900 mb-3" style="border-bottom: 2px solid #2563eb; padding-bottom: 6px;">Experience</div>
-          ${rd.experience.map(exp => `
-            <div class="mb-4">
-              <div class="font-semibold text-gray-900">${exp.title || ''}</div>
-              <div class="text-sm text-gray-600">${exp.company || ''}${exp.duration ? ' | ' + exp.duration : ''}</div>
-              ${exp.points && exp.points.length > 0 ? `<ul style="margin: 4px 0 0 16px; padding: 0; list-style: disc;">
-                ${exp.points.map(p => `<li class="text-sm text-gray-700" style="margin-bottom: 2px;">${p}</li>`).join('')}
-              </ul>` : ''}
-            </div>
-          `).join('')}
-        </div>`;
-      }
-
-      // Projects section
-      if (rd.projects && rd.projects.length > 0) {
-        html += `<div class="mb-6">
-          <div class="text-lg font-bold text-gray-900 mb-3" style="border-bottom: 2px solid #2563eb; padding-bottom: 6px;">Projects</div>
-          ${rd.projects.map(proj => `
-            <div class="mb-4">
-              <div class="font-semibold text-gray-900">${proj.title || ''}</div>
-              ${proj.points && proj.points.length > 0 ? `<ul style="margin: 4px 0 0 16px; padding: 0; list-style: disc;">
-                ${proj.points.map(p => `<li class="text-sm text-gray-700" style="margin-bottom: 2px;">${p}</li>`).join('')}
-              </ul>` : ''}
-            </div>
-          `).join('')}
-        </div>`;
-      }
-
-      // Education section
-      if (rd.education && rd.education.length > 0) {
-        html += `<div class="mb-6">
-          <div class="text-lg font-bold text-gray-900 mb-3" style="border-bottom: 2px solid #2563eb; padding-bottom: 6px;">Education</div>
-          ${rd.education.map(edu => `
-            <div class="mb-3">
-              <div class="font-semibold text-gray-900">${edu.degree || ''}</div>
-              <div class="text-sm text-gray-600">${edu.institution || ''}</div>
-              ${edu.points && edu.points.length > 0 ? `<ul style="margin: 4px 0 0 16px; padding: 0; list-style: disc;">
-                ${edu.points.map(p => `<li class="text-sm text-gray-700" style="margin-bottom: 2px;">${p}</li>`).join('')}
-              </ul>` : ''}
-            </div>
-          `).join('')}
-        </div>`;
-      }
-
-      // Skills section
-      if (rd.skills && rd.skills.points && rd.skills.points.length > 0) {
-        html += `<div class="mb-6">
-          <div class="text-lg font-bold text-gray-900 mb-3" style="border-bottom: 2px solid #2563eb; padding-bottom: 6px;">Skills</div>
-          <div class="flex flex-wrap gap-2">
-            ${rd.skills.points.map(skill => `<span style="background: #f3f4f6; color: #374151; padding: 4px 12px; border-radius: 6px; font-size: 13px; border: 1px solid #e5e7eb;">${skill}</span>`).join('')}
-          </div>
-        </div>`;
-      }
-
-      // Achievements section
-      if (rd.achievements && rd.achievements.points && rd.achievements.points.length > 0) {
-        html += `<div class="mb-6">
-          <div class="text-lg font-bold text-gray-900 mb-3" style="border-bottom: 2px solid #2563eb; padding-bottom: 6px;">Achievements</div>
-          <ul style="margin: 0 0 0 16px; padding: 0; list-style: disc;">
-            ${rd.achievements.points.map(a => `<li class="text-sm text-gray-700" style="margin-bottom: 4px;">${a}</li>`).join('')}
-          </ul>
-        </div>`;
-      }
-
-      if (html) {
-        return `
-          <div style="page-break-before: always;">
-            <div class="bg-white rounded-xl border border-gray-200 p-8" style="margin-top: 20px;">
-              <div class="text-2xl font-bold text-gray-900 mb-6" style="border-bottom: 2px solid #111827; padding-bottom: 8px;">Candidate Resume</div>
-              ${html}
-            </div>
-          </div>
-        `;
-      }
-    }
-
-    // Source 2: searchableText from populated resumeDataId
-    if (rd && rd.searchableText) {
-      return `
-        <div style="page-break-before: always;">
-          <div class="bg-white rounded-xl border border-gray-200 p-8" style="margin-top: 20px;">
-            <div class="text-2xl font-bold text-gray-900 mb-6" style="border-bottom: 2px solid #111827; padding-bottom: 8px;">Candidate Resume</div>
-            <div class="text-gray-800 text-sm leading-relaxed" style="white-space: pre-wrap;">${rd.searchableText}</div>
-          </div>
-        </div>
-      `;
-    }
-
-    // Source 3: raw_text directly on the Resume object
-    const rawText = resumeData.raw_text || resumeData.resumeText || '';
-    if (rawText) {
-      return `
-        <div style="page-break-before: always;">
-          <div class="bg-white rounded-xl border border-gray-200 p-8" style="margin-top: 20px;">
-            <div class="text-2xl font-bold text-gray-900 mb-6" style="border-bottom: 2px solid #111827; padding-bottom: 8px;">Candidate Resume</div>
-            <div class="text-gray-800 text-sm leading-relaxed" style="white-space: pre-wrap;">${rawText}</div>
-          </div>
-        </div>
-      `;
-    }
-
-    // Source 4: Build from Resume model's own fields (work_experience, education, skills, about)
-    let fallbackHTML = '';
-
-    if (resumeData.about) {
-      fallbackHTML += `<div class="mb-6">
-        <div class="text-lg font-bold text-gray-900 mb-3" style="border-bottom: 2px solid #2563eb; padding-bottom: 6px;">About</div>
-        <p class="text-sm text-gray-700 leading-relaxed">${resumeData.about}</p>
-      </div>`;
-    }
-
-    if (resumeData.work_experience) {
-      const workExp = Array.isArray(resumeData.work_experience) ? resumeData.work_experience : [resumeData.work_experience];
-      if (workExp.length > 0) {
-        fallbackHTML += `<div class="mb-6">
-          <div class="text-lg font-bold text-gray-900 mb-3" style="border-bottom: 2px solid #2563eb; padding-bottom: 6px;">Work Experience</div>
-          ${workExp.map(exp => {
-          if (typeof exp === 'string') return `<p class="text-sm text-gray-700 mb-2">${exp}</p>`;
-          return `<div class="mb-3">
-              <div class="font-semibold text-gray-900">${exp.title || exp.role || exp.position || ''}</div>
-              <div class="text-sm text-gray-600">${exp.company || ''}${exp.duration || exp.period ? ' | ' + (exp.duration || exp.period) : ''}</div>
-              ${exp.description ? `<p class="text-sm text-gray-700 mt-1">${exp.description}</p>` : ''}
-            </div>`;
-        }).join('')}
-        </div>`;
-      }
-    }
-
-    if (resumeData.education) {
-      const edu = Array.isArray(resumeData.education) ? resumeData.education : [resumeData.education];
-      if (edu.length > 0) {
-        fallbackHTML += `<div class="mb-6">
-          <div class="text-lg font-bold text-gray-900 mb-3" style="border-bottom: 2px solid #2563eb; padding-bottom: 6px;">Education</div>
-          ${edu.map(e => {
-          if (typeof e === 'string') return `<p class="text-sm text-gray-700 mb-2">${e}</p>`;
-          return `<div class="mb-3">
-              <div class="font-semibold text-gray-900">${e.degree || e.qualification || ''}</div>
-              <div class="text-sm text-gray-600">${e.institution || e.school || e.university || ''}</div>
-            </div>`;
-        }).join('')}
-        </div>`;
-      }
-    }
-
-    if (resumeData.skills && resumeData.skills.length > 0) {
-      fallbackHTML += `<div class="mb-6">
-        <div class="text-lg font-bold text-gray-900 mb-3" style="border-bottom: 2px solid #2563eb; padding-bottom: 6px;">Skills</div>
-        <div class="flex flex-wrap gap-2">
-          ${resumeData.skills.map(skill => `<span style="background: #f3f4f6; color: #374151; padding: 4px 12px; border-radius: 6px; font-size: 13px; border: 1px solid #e5e7eb;">${skill}</span>`).join('')}
-        </div>
-      </div>`;
-    }
-
-    if (fallbackHTML) {
-      return `
-        <div style="page-break-before: always;">
-          <div class="bg-white rounded-xl border border-gray-200 p-8" style="margin-top: 20px;">
-            <div class="text-2xl font-bold text-gray-900 mb-6" style="border-bottom: 2px solid #111827; padding-bottom: 8px;">Candidate Resume</div>
-            ${fallbackHTML}
-          </div>
-        </div>
-      `;
-    }
-
-    return ''; // No resume data available
-  };
-
-  const appendedResumeHTML = buildResumeHTML();
-
   return `
-    <div class="bg-white p-2 md:p-3 lg:p-4">
-      <div class="max-w-7xl mx-auto">
-        <div class="border-b border-gray-200 py-1 mb-6">
-          <div class="flex flex-col items-center text-center gap-1 mb-0">
-            <img src="https://api.dicebear.com/8.x/initials/svg?seed=${resumeData.name}" alt="${resumeData.name}" class="w-20 h-20 rounded-full border-2 border-gray-200 bg-green-600" />
-            <div>
-              <div class="text-2xl font-bold text-gray-900">${resumeData.name || 'Prince Rathi'}</div>
-              <p class="text-gray-600 text-base">${resumeData.title || 'FullStack Developer'}</p>
-            </div>
-          </div>
-          <div class="flex flex-col items-center text-center gap-4">
-            <!-- Skills Section -->
-            <div class="flex flex-wrap items-center justify-center gap-2">
-              ${resumeData.skills && resumeData.skills.slice(0, 4).map(skill => `<span class="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm font-medium">${skill}</span>`).join('')}
-              ${resumeData.skills && resumeData.skills.length > 4 ? `<span class="bg-gray-200 text-gray-700 px-3 py-1 rounded-full text-sm font-medium">+${resumeData.skills.length - 4}</span>` : ''}
-              ${(!resumeData.skills || resumeData.skills.length === 0) ? `<span class="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm font-medium">JavaScript</span><span class="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm font-medium">TypeScript</span><span class="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm font-medium">React.js</span><span class="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm font-medium">Node.js</span><span class="bg-gray-200 text-gray-700 px-3 py-1 rounded-full text-sm font-medium">+6</span>` : ''}
-            </div>
-            <!-- Contact Information -->
-            <div class="flex flex-wrap items-center justify-center gap-4 text-sm text-gray-600">
-              <span class="flex items-center gap-2"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 5L2 7"/></svg> ${resumeData.email || 'rathi.prince2@gmail.com'}</span>
-              <span class="flex items-center gap-2"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg> ${resumeData.phone || '9690389156'}</span>
-              <span class="flex items-center gap-2"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg> ${resumeData.experience || 'Less than 1 year'}</span>
-              <span class="flex items-center gap-2"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> ${resumeData.location || 'Himachal Pradesh, India'}</span>
-            </div>
-          </div>
-        </div>
-
-        ${metricsRowHTML}
-        ${keyStrengthHTML}
-        ${potentialConcernHTML}
-        ${codingAssessmentHTML}
-        ${aiInterviewSummaryHTML}
-        ${avaloqAssessmentHTML}
+    <div style="max-width: 760px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; border: 1px solid #e5e7eb; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);">
+      ${headerHTML}
+      ${scoreRowHTML}
+      <div style="padding: 16px 32px;">
+        ${assessmentHTML}
         ${aiResumeSummaryHTML}
-        ${addedNotesHTML}
-        
-        ${appendedResumeHTML}
+        ${codingAssessmentHTML}
+        ${interviewSummaryHTML}
       </div>
+      ${footerHTML}
     </div>
+    ${addedNotesHTML}
   `;
 };
 
@@ -553,8 +270,6 @@ export const generateScorecardPDF = async (resumeData, note = '') => {
             </defs>
           </svg>
           <div class="scorecard-wrapper">
-            <!-- Zepul Logo - Top Right -->
-            <img src="/zepul_trademark.jpg" alt="Zepul Logo" class="zepul-logo" />
             ${printContent}
           </div>
           <script>
@@ -583,19 +298,6 @@ export const generateScorecardPDF = async (resumeData, note = '') => {
 
 // Comprehensive CSS styles (extracted from manager's version)
 const getComprehensiveCSS = () => `
-  /* Zepul Logo - Top Right */
-  .zepul-logo {
-    position: absolute !important;
-    top: 20px !important;
-    right: 20px !important;
-    width: 120px !important;
-    height: auto !important;
-    z-index: 1000 !important;
-    background-color: #ffffff !important;
-    padding: 8px !important;
-    border-radius: 8px !important;
-  }
-  
   /* Remove default print headers/footers and set proper margins */
   @page {
     margin: 0.3in !important;
