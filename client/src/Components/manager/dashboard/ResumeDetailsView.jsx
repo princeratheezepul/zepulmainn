@@ -679,6 +679,26 @@ const ResumeDetailsView = ({ resumeData, onBack }) => {
             </div>
           </div>
 
+          {/* AI Interview Summary — rendered below the Coding Assessment summary, before the transcript. */}
+          {resumeData.interviewEvaluation?.aiInterviewSummary?.length > 0 && (
+            <div className="w-[80vw] mx-auto p-4 md:p-6 border rounded-xl bg-white mb-4">
+              <div className="flex justify-between items-center mb-3 md:mb-4 flex-wrap gap-2">
+                <div className="text-lg md:text-xl font-bold text-gray-800">AI Interview Summary</div>
+                {typeof resumeData.score === 'number' && resumeData.score > 0 && (
+                  <span className="font-bold text-gray-900 text-sm md:text-base">Score: {resumeData.score}/100</span>
+                )}
+              </div>
+              <ul className="space-y-2">
+                {resumeData.interviewEvaluation.aiInterviewSummary.map((bullet, i) => (
+                  <li key={i} className="flex gap-2 text-sm md:text-base text-gray-700 leading-relaxed">
+                    <span className="text-blue-600 mt-1">•</span>
+                    <span>{bullet}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
           {/* Interview Transcript Section - Only show if transcript data exists - Outside Grid */}
           {resumeData.interviewEvaluation && resumeData.interviewEvaluation.evaluationResults && resumeData.interviewEvaluation.evaluationResults.length > 0 && (
             <div className="w-[80vw] mx-auto p-4 md:p-6 border rounded-xl bg-gray-50">

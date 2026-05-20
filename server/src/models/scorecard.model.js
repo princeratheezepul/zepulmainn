@@ -36,6 +36,9 @@ const ScorecardSchema = new mongoose.Schema({
     type: String,
     default: ''
   },
+  // Populated when the candidate completes the AI interview (see finalizeInterviewForMeeting).
+  interviewScore: { type: Number, default: 0 },
+  aiInterviewSummary: { type: [String], default: undefined },
   resumeId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'ResumeData'

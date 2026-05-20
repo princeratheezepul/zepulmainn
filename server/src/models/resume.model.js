@@ -247,6 +247,11 @@ const ResumeSchema = new mongoose.Schema(
         text: String
       }],
       answers: mongoose.Schema.Types.Mixed,
+      // 5-6 bullet AI-generated summary of the interview transcript.
+      aiInterviewSummary: {
+        type: [String],
+        default: undefined,
+      },
       evaluatedAt: {
         type: Date,
         default: Date.now

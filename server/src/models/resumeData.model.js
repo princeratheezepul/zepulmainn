@@ -62,6 +62,26 @@ const ResumeDataSchema = new mongoose.Schema(
             default: []
         },
 
+        phone: {
+            type: String,
+            default: ''
+        },
+
+        countryCode: {
+            type: String,
+            default: '91'
+        },
+
+        emailId: {
+            type: String,
+            default: ''
+        },
+
+        rawResume: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'ResumeDataRaw'
+        },
+
         scorecardId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Scorecard'

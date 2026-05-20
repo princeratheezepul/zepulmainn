@@ -1,5 +1,5 @@
 import express from "express";
-import { processZepDBQuery, getZepDBStats } from "../controllers/zepdb.controller.js";
+import { processZepDBQuery, getZepDBStats, matchJobWithZepDB, scoreCandidateForJob } from "../controllers/zepdb.controller.js";
 import { verifyRecruiterJWT } from "../middleware/recruiter.auth.middleware.js";
 import { openAILimiter } from "../middleware/rateLimiters.js";
 
@@ -10,6 +10,12 @@ router.use(verifyRecruiterJWT);
 
 // Process ZepDB query (hits OpenAI — rate limited per user)
 router.post("/query", openAILimiter, processZepDBQuery);
+
+// Phase 1: fast ZepDB search, returns candidates with existing-score flags
+router.post("/match-job/:jobId", matchJobWithZepDB);
+
+// Phase 2: score one candidate (called in parallel from frontend)
+router.post("/score-candidate/:jobId", scoreCandidateForJob);
 
 // Get ZepDB statistics
 router.get("/stats", getZepDBStats);

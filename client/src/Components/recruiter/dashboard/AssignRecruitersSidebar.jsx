@@ -10,6 +10,7 @@ export default function AssignRecruitersSidebar({
   initialAssigned = [],
   managerId,
   token,
+  isProRecruiter = false,
   onSaveSuccess
 }) {
   const [assigned, setAssigned] = useState(initialAssigned);
@@ -29,7 +30,15 @@ export default function AssignRecruitersSidebar({
       try {
         setSearchLoading(true);
 
-        const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/accountmanager/recruiters`);
+        const url = isProRecruiter && managerId
+          ? `${import.meta.env.VITE_BACKEND_URL}/api/recruiter/getrecruiter?creatorId=${managerId}&type=manager`
+          : `${import.meta.env.VITE_BACKEND_URL}/api/accountmanager/recruiters`;
+
+        const response = await fetch(url, {
+          headers: isProRecruiter && managerId
+            ? { 'Authorization': `Bearer ${token}` }
+            : {},
+        });
 
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
@@ -55,7 +64,7 @@ export default function AssignRecruitersSidebar({
     };
 
     fetchRecruiters();
-  }, [open, assigned]);
+  }, [open, assigned, isProRecruiter, managerId, token]);
 
   // Filter recruiters based on search
   useEffect(() => {

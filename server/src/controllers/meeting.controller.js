@@ -1,14 +1,80 @@
 import crypto from "crypto";
+import OpenAI from "openai";
 import { Meeting } from "../models/meeting.model.js";
 import { Job } from "../models/job.model.js";
 import Resume from "../models/resume.model.js";
 import Recruiter from "../models/recruiter.model.js";
+import Scorecard from "../models/scorecard.model.js";
 import { startWebCallForMeeting, deleteAssistant } from "../services/vapi.service.js";
 import {
   sendMeetingInviteEmail,
   sendMeetingCancelEmail,
   sendMeetingRescheduleEmail,
 } from "../services/email.service.js";
+
+const openai = process.env.OPENAI_API ? new OpenAI({ apiKey: process.env.OPENAI_API }) : null;
+const INTERVIEW_SUMMARY_MODEL = "gpt-4o-mini";
+
+/**
+ * Generates a 5-6 bullet summary + an overall performance score (0-100) from a transcript.
+ * Both come from a single OpenAI call so we don't pay for two round-trips.
+ * Returns { bullets: string[], score: number | null }. score is null when AI can't produce one.
+ */
+const generateInterviewSummaryAndScore = async (transcript, jobTitle) => {
+  if (!openai || !transcript || transcript.trim().length < 50) {
+    return { bullets: [], score: null };
+  }
+  try {
+    const prompt = `You are summarizing and scoring an AI-led job interview transcript for a recruiter's scorecard.
+
+Job Role: ${jobTitle || "Unspecified"}
+
+Transcript:
+"""
+${transcript.slice(0, 12000)}
+"""
+
+Return ONLY a JSON object in this exact shape:
+{
+  "bullets": ["...", "...", "...", "...", "..."],
+  "score": <integer 0-100>
+}
+
+Rules for "bullets":
+- Produce 5 to 6 bullets total.
+- Each bullet should be 1-2 sentences (max ~30 words).
+- Cover: communication, technical depth, problem-solving approach, notable strengths, notable gaps/concerns, overall fit.
+- Be specific to what was actually said — no generic filler.
+- No leading "•" or "-" — just the sentence text.
+
+Rules for "score":
+- Integer between 0 and 100 reflecting overall interview performance for the role.
+- Calibration: 80+ truly strong; 60-79 solid hire-worthy; 40-59 mixed/borderline; <40 weak.
+- Be conservative — most candidates land 50-75. Don't inflate.
+- If the transcript is too short or off-topic to judge, return 0.`;
+
+    const completion = await openai.chat.completions.create({
+      model: INTERVIEW_SUMMARY_MODEL,
+      messages: [{ role: "user", content: prompt }],
+      response_format: { type: "json_object" },
+    });
+    const raw = completion.choices?.[0]?.message?.content || "{}";
+    const parsed = JSON.parse(raw);
+    const bullets = (Array.isArray(parsed.bullets) ? parsed.bullets : [])
+      .map((b) => (typeof b === "string" ? b.trim() : ""))
+      .filter(Boolean)
+      .slice(0, 6);
+    let score = null;
+    const rawScore = parseFloat(parsed.score);
+    if (!isNaN(rawScore)) {
+      score = Math.min(Math.max(Math.round(rawScore), 0), 100);
+    }
+    return { bullets, score };
+  } catch (err) {
+    console.error("[interviewSummary] generation failed:", err.message);
+    return { bullets: [], score: null };
+  }
+};
 
 const FRONTEND_URL =
   process.env.FRONTEND_URL ||
@@ -290,6 +356,19 @@ export const getMeetingByToken = async (req, res) => {
     if (meeting.status === "completed")
       return res.status(410).json({ message: "Meeting has been completed" });
 
+    // Deadline-based expiry (set by auto-generated invites): if the candidate hasn't joined within
+    // the window, mark expired and refuse.
+    if (meeting.expiresAt && Date.now() > new Date(meeting.expiresAt).getTime()) {
+      if (meeting.status !== "expired") {
+        meeting.status = "expired";
+        await meeting.save();
+      }
+      return res.status(410).json({ message: "Meeting link has expired" });
+    }
+
+    if (meeting.status === "expired")
+      return res.status(410).json({ message: "Meeting link has expired" });
+
     const job = meeting.jobId;
     const resume = meeting.resumeId;
 
@@ -352,25 +431,35 @@ export const startMeeting = async (req, res) => {
       });
     }
 
-    // Timing guards: allow starting within a reasonable window around the scheduled time.
+    // Timing guards:
+    // - Deadline-based invites (with expiresAt) → joinable anytime until expiresAt.
+    // - Scheduled invites (no expiresAt) → joinable from 15 min before scheduledAt until duration + 30 min after.
     const now = new Date();
-    const scheduled = new Date(meeting.scheduledAt);
-    const earlyWindowMs = 15 * 60 * 1000; // 15 minutes before scheduled
-    const lateWindowMs =
-      (meeting.durationMinutes || 40) * 60 * 1000 + 30 * 60 * 1000; // duration + 30 minute buffer
+    if (meeting.expiresAt) {
+      if (now.getTime() > new Date(meeting.expiresAt).getTime()) {
+        meeting.status = "expired";
+        await meeting.save();
+        return res.status(410).json({ message: "Meeting link has expired" });
+      }
+    } else {
+      const scheduled = new Date(meeting.scheduledAt);
+      const earlyWindowMs = 15 * 60 * 1000; // 15 minutes before scheduled
+      const lateWindowMs =
+        (meeting.durationMinutes || 40) * 60 * 1000 + 30 * 60 * 1000; // duration + 30 minute buffer
 
-    if (now.getTime() < scheduled.getTime() - earlyWindowMs) {
-      return res
-        .status(400)
-        .json({ message: "Meeting is not yet available to start" });
-    }
+      if (now.getTime() < scheduled.getTime() - earlyWindowMs) {
+        return res
+          .status(400)
+          .json({ message: "Meeting is not yet available to start" });
+      }
 
-    if (now.getTime() > scheduled.getTime() + lateWindowMs) {
-      meeting.status = "expired";
-      await meeting.save();
-      return res
-        .status(410)
-        .json({ message: "Meeting window has expired" });
+      if (now.getTime() > scheduled.getTime() + lateWindowMs) {
+        meeting.status = "expired";
+        await meeting.save();
+        return res
+          .status(410)
+          .json({ message: "Meeting window has expired" });
+      }
     }
 
     // Prepare context for assistant creation (if needed)
@@ -466,6 +555,127 @@ const fetchTranscriptFromVapi = async (callId) => {
   }
 };
 
+/**
+ * Mark interview as completed on the Resume side.
+ * Always sets interviewEvaluation.evaluatedAt so the UI can hide the "Schedule AI Interview" CTA.
+ * If meeting.report.scores exists, also computes the final score + per-criterion evaluation results.
+ * Idempotent: safe to call multiple times (e.g. endMeeting + later webhook).
+ */
+const finalizeInterviewForMeeting = async (meeting) => {
+  if (!meeting?.resumeId) return;
+
+  const update = {
+    "interviewEvaluation.evaluatedAt": new Date(),
+  };
+  let finalScore = null;
+
+  const scores = meeting?.report?.scores;
+  if (scores) {
+    try {
+      let totalScore = 0;
+      let count = 0;
+      const evaluationResults = [];
+
+      if (Array.isArray(scores)) {
+        scores.forEach((s) => {
+          const val = parseFloat(s.score ?? s.value);
+          if (!isNaN(val)) {
+            totalScore += val;
+            count++;
+            evaluationResults.push({ criterion: s.name || s.criterion || "General", score: val });
+          }
+        });
+      } else if (typeof scores === "object") {
+        Object.entries(scores).forEach(([key, val]) => {
+          const numVal = parseFloat(val);
+          if (!isNaN(numVal)) {
+            totalScore += numVal;
+            count++;
+            evaluationResults.push({ criterion: key, score: numVal });
+          }
+        });
+      }
+
+      if (count > 0) {
+        const average = totalScore / count;
+        // Vapi scores are typically 0-10; if so, scale to 0-100. Otherwise assume already 0-100.
+        finalScore = Math.round(average <= 10 ? average * 10 : average);
+        finalScore = Math.min(Math.max(finalScore, 0), 100);
+
+        update.score = finalScore;
+        if (meeting?.report?.recommendation) {
+          update.recommendation = meeting.report.recommendation;
+        }
+        update["interviewEvaluation.evaluationResults"] = evaluationResults.map((r) => ({
+          question: r.criterion,
+          score: r.score,
+        }));
+
+        console.log(`Updating Resume ${meeting.resumeId} with score: ${finalScore}`);
+      }
+    } catch (err) {
+      console.error("Error computing interview scores:", err);
+    }
+  }
+
+  // AI summary bullets + fallback score — both derived from the transcript in one OpenAI call.
+  // The fallback score is what shows up under "Interview Performance" in the scorecard when
+  // Vapi's end-of-call-report didn't include usable scores.
+  let summaryBullets = [];
+  if (meeting?.transcript) {
+    try {
+      const populated = meeting.populated?.("jobId")
+        ? meeting
+        : await meeting.populate?.("jobId");
+      const jobTitle = (populated?.jobId?.jobtitle) || meeting?.jobId?.jobtitle || "";
+      const { bullets, score: aiScore } = await generateInterviewSummaryAndScore(meeting.transcript, jobTitle);
+      summaryBullets = bullets;
+      if (summaryBullets.length) {
+        update["interviewEvaluation.aiInterviewSummary"] = summaryBullets;
+      }
+      // Use the AI-derived score only when Vapi didn't deliver one we could compute.
+      if (finalScore === null && aiScore !== null) {
+        finalScore = aiScore;
+        update.score = aiScore;
+        console.log(`Using AI-derived interview score for Resume ${meeting.resumeId}: ${aiScore}`);
+      }
+    } catch (err) {
+      console.error("Error generating interview summary:", err);
+    }
+  }
+
+  try {
+    await Resume.findByIdAndUpdate(meeting.resumeId, update);
+  } catch (err) {
+    console.error("Error updating Resume on interview completion:", err);
+  }
+
+  // Mirror onto Scorecard (if one exists for this resume) so the manager scorecard view stays in sync.
+  // Scorecard.resumeId in this codebase can reference either Resume or ResumeData depending on
+  // the creation flow, so we match on either id.
+  try {
+    const resumeDoc = await Resume.findById(meeting.resumeId).select("resumeDataId");
+    const candidateOrResumeIds = [meeting.resumeId];
+    if (resumeDoc?.resumeDataId) candidateOrResumeIds.push(resumeDoc.resumeDataId);
+
+    const scorecardUpdate = {};
+    if (finalScore !== null) scorecardUpdate.interviewScore = finalScore;
+    if (summaryBullets.length) scorecardUpdate.aiInterviewSummary = summaryBullets;
+
+    if (Object.keys(scorecardUpdate).length > 0) {
+      const result = await Scorecard.updateMany(
+        { resumeId: { $in: candidateOrResumeIds } },
+        { $set: scorecardUpdate }
+      );
+      if (result.modifiedCount > 0) {
+        console.log(`Updated ${result.modifiedCount} Scorecard(s) for resume ${meeting.resumeId}`);
+      }
+    }
+  } catch (err) {
+    console.error("Error updating Scorecard on interview completion:", err);
+  }
+};
+
 export const endMeeting = async (req, res) => {
   try {
     const { token } = req.params;
@@ -499,6 +709,11 @@ export const endMeeting = async (req, res) => {
 
     meeting.status = "completed";
     await meeting.save();
+
+    // Mirror the webhook end-of-call-report processing so the Resume reflects "interview done"
+    // even when the candidate ends manually before Vapi delivers the final report.
+    // If the webhook later fires with scores, finalizeInterviewForMeeting will fill them in.
+    await finalizeInterviewForMeeting(meeting);
 
     // Note: Not deleting assistant to preserve webhook functionality
 
@@ -782,61 +997,9 @@ export const handleVapiWebhook = async (req, res) => {
         meeting.report.scores = meeting.report.scores || report.scores || report.metrics;
         meeting.report.recommendation = meeting.report.recommendation || report.recommendation;
 
-        // Update Resume with interview score
-        if (meeting.resumeId && meeting.report.scores) {
-          try {
-            console.log("Processing interview scores for resume:", meeting.resumeId);
-            const scores = meeting.report.scores;
-            let totalScore = 0;
-            let count = 0;
-            let evaluationResults = [];
-
-            // Handle different score formats (Array or Object)
-            if (Array.isArray(scores)) {
-              scores.forEach(s => {
-                const val = parseFloat(s.score || s.value);
-                if (!isNaN(val)) {
-                  totalScore += val;
-                  count++;
-                  evaluationResults.push({ criterion: s.name || s.criterion || "General", score: val });
-                }
-              });
-            } else if (typeof scores === 'object') {
-              Object.entries(scores).forEach(([key, val]) => {
-                const numVal = parseFloat(val);
-                if (!isNaN(numVal)) {
-                  totalScore += numVal;
-                  count++;
-                  evaluationResults.push({ criterion: key, score: numVal });
-                }
-              });
-            }
-
-            if (count > 0) {
-              // Calculate average
-              let average = totalScore / count;
-
-              // Convert to percentage (0-100)
-              // Assumption: Vapi scores are typically 0-10. If average is <= 10, multiply by 10.
-              let finalScore = Math.round(average <= 10 ? average * 10 : average);
-              finalScore = Math.min(Math.max(finalScore, 0), 100); // Clamp between 0-100
-
-              console.log(`Updating Resume ${meeting.resumeId} with score: ${finalScore}`);
-
-              await Resume.findByIdAndUpdate(meeting.resumeId, {
-                score: finalScore,
-                recommendation: meeting.report.recommendation,
-                "interviewEvaluation.evaluationResults": evaluationResults.map(r => ({
-                  question: r.criterion, // Map criterion to question field to preserve label
-                  score: r.score
-                })),
-                "interviewEvaluation.evaluatedAt": new Date()
-              });
-            }
-          } catch (err) {
-            console.error("Error updating resume with interview score:", err);
-          }
-        }
+        // Shared completion logic (also called by manual endMeeting): always sets
+        // interviewEvaluation.evaluatedAt; sets score/recommendation when scores are present.
+        await finalizeInterviewForMeeting(meeting);
 
         console.log("Meeting completed. Transcript length:", meeting.transcript?.length || 0);
         console.log("Recording URL:", meeting.recordingUrl);

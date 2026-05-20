@@ -16,6 +16,7 @@ const Meeting = () => {
   const [interviewStartTime, setInterviewStartTime] = useState(null);
   const [timeWarning, setTimeWarning] = useState(null); // '10min', '5min', '2min', '1min', 'grace'
   const [gracePeriodActive, setGracePeriodActive] = useState(false);
+  const [cameraStream, setCameraStream] = useState(null);
   const videoRef = useRef(null);
   const mediaStreamRef = useRef(null);
   const vapiRef = useRef(null);
@@ -50,18 +51,23 @@ const Meeting = () => {
     }
   }, [token]);
 
-  // Setup webcam
+  // Acquire webcam stream once on mount. Don't touch videoRef here — the <video> element
+  // is mounted conditionally (only after `loading` flips false), so it may not exist yet.
+  // A separate effect below attaches the stream when both the stream and the <video> are ready.
   useEffect(() => {
+    let cancelled = false;
     const enableCamera = async () => {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
           video: true,
           audio: false,
         });
-        mediaStreamRef.current = stream;
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
+        if (cancelled) {
+          stream.getTracks().forEach((t) => t.stop());
+          return;
         }
+        mediaStreamRef.current = stream;
+        setCameraStream(stream);
       } catch (err) {
         console.error("Unable to access camera:", err);
       }
@@ -70,6 +76,7 @@ const Meeting = () => {
     enableCamera();
 
     return () => {
+      cancelled = true;
       if (mediaStreamRef.current) {
         mediaStreamRef.current.getTracks().forEach((t) => t.stop());
       }
@@ -84,6 +91,23 @@ const Meeting = () => {
       }
     };
   }, []);
+
+  // Attach the camera stream to the <video> element whenever both become available.
+  // Runs after `loading` flips (when the video mounts) and after `cameraStream` is set.
+  // Without this, a fast getUserMedia resolving before the meeting fetch leaves the
+  // <video> element with srcObject === null even though the camera is live.
+  useEffect(() => {
+    const el = videoRef.current;
+    if (!el || !cameraStream) return;
+    if (el.srcObject !== cameraStream) {
+      el.srcObject = cameraStream;
+    }
+    // Safari/some browsers won't auto-play a stream attached post-mount even with autoPlay.
+    const playPromise = el.play?.();
+    if (playPromise && typeof playPromise.catch === "function") {
+      playPromise.catch(() => {});
+    }
+  }, [cameraStream, loading]);
 
   // Timer countdown effect with progressive warnings
   useEffect(() => {

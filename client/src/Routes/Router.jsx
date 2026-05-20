@@ -83,6 +83,7 @@ import MarketplaceUnifiedLogin from "../Pages/MarketplaceUnifiedLogin";
 import Meeting from "../Pages/Meeting";
 import InterviewResults from "../Pages/InterviewResults";
 import DescribeJob from "../Pages/DescribeJob";
+import ConfirmationPage from "../Pages/ConfirmationPage";
 
 
 
@@ -234,6 +235,9 @@ const Router = () => {
                 </TalentScoutProtectedRoute>
               </MarketplaceAuthProvider>
             } />
+
+            {/* Candidate job confirmation — public, no auth */}
+            <Route path="/confirm/:token" element={<ConfirmationPage />} />
 
             {/* Fallback route — redirect unknown paths to the Landing Page */}
             <Route path="*" element={<Navigate to="/" replace />} />
