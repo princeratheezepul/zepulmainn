@@ -3,49 +3,20 @@ import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import ProPricingSelector from "../Components/ProPricingSelector";
 
-const SYSTEM_PROMPT = `You are the "Zepul Job Registration Assistant", a professional, friendly, and highly efficient AI recruiter.
-Your job is to collect details for a new job posting from a hiring manager step-by-step.
-
-You MUST collect the following 9 pieces of information in this exact logical order, ONE by ONE.
-Do NOT ask multiple questions at once. Always wait for the user to answer the current question before moving to the next.
-
-1. Role / Job Title
-2. Years of Experience required
-3. Key Skills or Technologies
-4. Budget or Salary Range
-5. Location (e.g., Remote, On-site in NY, etc.)
-6. Job Description (Ask them to write a brief overview. If they write less than 15-20 words, kindly ask them to expand it a bit.)
-7. Key Responsibilities (Day-to-day work)
-8. Required Qualifications (Degrees, certifications)
-9. Additional Info (Company culture, perks, anything else to add)
-
-Rules:
-- Be conversational, empathetic, and professional. React naturally to what the user says.
-- Keep your messages concise.
-- If you have successfully collected all 9 items and the user has nothing more to add, say exactly: "[FINISHED] Thank you! I have collected everything needed. Generating your job posting now..."`;
-
-// gpt-4o-mini handles multi-turn chat + JSON extraction reliably at low cost.
-const OPENAI_MODEL = "gpt-4o-mini";
-
-async function callOpenAI(apiKey, messages, { jsonMode = false } = {}) {
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+async function callJobChat({ mode, history }) {
+    const backendUrl = import.meta.env.VITE_BACKEND_URL;
+    const response = await fetch(`${backendUrl}/api/manager/job-chat`, {
         method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-            model: OPENAI_MODEL,
-            messages,
-            ...(jsonMode ? { response_format: { type: "json_object" } } : {}),
-        }),
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ mode, history }),
     });
     if (!response.ok) {
         const err = await response.json().catch(() => ({}));
-        throw new Error(err?.error?.message || `HTTP ${response.status}`);
+        throw new Error(err?.message || `HTTP ${response.status}`);
     }
     const data = await response.json();
-    return data.choices?.[0]?.message?.content || "";
+    return data.content || "";
 }
 
 export default function JobChatAgent() {
@@ -58,9 +29,7 @@ export default function JobChatAgent() {
     const { user } = useAuth();
     const navigate = useNavigate();
 
-    const historyRef = useRef([
-        { role: "system", content: SYSTEM_PROMPT },
-    ]);
+    const historyRef = useRef([]);
     const chatContainerRef = useRef(null);
     const initializedRef = useRef(false);
 
@@ -70,12 +39,9 @@ export default function JobChatAgent() {
 
         const initChat = async () => {
             try {
-                const apiKey = import.meta.env.VITE_OPENAI_API;
-                if (!apiKey) throw new Error("OpenAI API key is missing");
-
                 const openingPrompt = "Hello, please introduce yourself and ask for the very first item.";
                 const tempHistory = [...historyRef.current, { role: "user", content: openingPrompt }];
-                const botText = await callOpenAI(apiKey, tempHistory);
+                const botText = await callJobChat({ mode: "chat", history: tempHistory });
 
                 historyRef.current = [...tempHistory, { role: "assistant", content: botText }];
                 setMessages([{ sender: "bot", text: botText }]);
@@ -99,16 +65,10 @@ export default function JobChatAgent() {
         }
     }, [messages, isTyping]);
 
-    const extractAndCreateJob = async (history, apiKey) => {
+    const extractAndCreateJob = async (history) => {
         try {
-            const extractionPrompt = `Based on the conversation above, extract the job posting details into a valid JSON object with exactly these keys:
-"jobtitle" (string), "description" (string), "location" (string), "type" (must be exactly one of: remote, onsite, hybrid), "employmentType" (string: Full-time or Part-time or Contract), "salary" (object with min and max as numbers), "skills" (array of strings), "experience" (integer), "keyResponsibilities" (array of strings), "preferredQualifications" (array of strings), "openpositions" (integer default 1).
-Output ONLY raw JSON. No markdown, no code fences, no extra text.`;
+            let rawJsonString = await callJobChat({ mode: "extract", history });
 
-            const extractionHistory = [...history, { role: "user", content: extractionPrompt }];
-            let rawJsonString = await callOpenAI(apiKey, extractionHistory, { jsonMode: true });
-
-            // JSON mode returns clean JSON, but strip defensively in case of older format
             rawJsonString = rawJsonString
                 .replace(/^```json\s*/gi, '')
                 .replace(/^```\s*/gi, '')
@@ -187,10 +147,9 @@ Output ONLY raw JSON. No markdown, no code fences, no extra text.`;
         setIsTyping(true);
 
         try {
-            const apiKey = import.meta.env.VITE_OPENAI_API;
             historyRef.current = [...historyRef.current, { role: "user", content: userText }];
 
-            const botText = await callOpenAI(apiKey, historyRef.current);
+            const botText = await callJobChat({ mode: "chat", history: historyRef.current });
             historyRef.current = [...historyRef.current, { role: "assistant", content: botText }];
 
             let displayText = botText;
@@ -198,7 +157,7 @@ Output ONLY raw JSON. No markdown, no code fences, no extra text.`;
                 setIsFinished(true);
                 displayText = botText.replace("[FINISHED]", "").trim();
                 setIsTyping(true);
-                extractAndCreateJob(historyRef.current, apiKey);
+                extractAndCreateJob(historyRef.current);
             }
 
             setMessages((prev) => [...prev, { sender: "bot", text: displayText }]);

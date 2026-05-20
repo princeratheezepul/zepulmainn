@@ -1,8 +1,10 @@
 import { loginUser, logoutUser, registerUser, forgotpassword, resetpassword, changeEmail, changeEmailRequest, createJobm, getAllJobsm, updateJobm, assignedJobm, getManagerInfo, updatePassword, getManagerProfile, updateManagerProfile, createManagerByAdmin, validateSetPassword, setPassword, searchRecruitersByManager, refreshAccessToken, getMarketplaceMetrics, createMarketplaceCompany, getMarketplaceCompanies, getMarketplaceCompanyById, createMarketplaceJob, getMarketplaceJobsByCompany, getMarketplaceJobRoles, getMarketplaceJobById, getMarketplaceUserById, getManagerMarketplaceCandidates, getManagerMarketplaceResume, getAllMarketplaceJobs, createProRecruiterCompany } from '../controllers/manager.controller.js';
+import { jobChat } from '../controllers/jobChat.controller.js';
 
 import Router from 'express';
 import { verifyJWT } from '../middleware/manager.auth.middleware.js';
 import { verifyJWT as verifyAdminJWT } from '../middleware/admin.auth.middleware.js';
+import { openAILimiter } from '../middleware/rateLimiters.js';
 const router = Router();
 
 
@@ -31,6 +33,7 @@ router.route("/validate-set-password/:id/:token").get(validateSetPassword);
 router.route("/set-password/:id/:token").post(setPassword);
 
 router.route("/create-job").post(verifyJWT, createJobm);
+router.route("/job-chat").post(verifyJWT, openAILimiter, jobChat);
 router.route("/get-jobs/:managerId").get(verifyJWT, getAllJobsm);
 router.route("/job/:jobId").put(verifyJWT, updateJobm);
 router.route("/assign-recruiter/:jobId").post(verifyJWT, assignedJobm);

@@ -25,6 +25,10 @@ import { expireStaleMeetings } from "./services/meeting.service.js";
 import { cleanupExpiredSessions } from "./utils/sessionManager.js";
 const app = express();
 
+// Behind Render/Vercel proxy — trust the first hop so req.ip reflects the real client.
+// Required for express-rate-limit to key by actual client IP, not the load balancer.
+app.set("trust proxy", 1);
+
 // Debug environment variables
 console.log('Environment variables:');
 console.log('PORT:', process.env.PORT);
