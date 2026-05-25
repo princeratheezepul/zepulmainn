@@ -8,6 +8,7 @@ import { Job } from '../models/job.model.js';
 import Scorecard from '../models/scorecard.model.js'
 import Resume from '../models/resume.model.js'
 import { Admin } from '../models/admin.model.js';
+import { generateResetToken, isResetTokenValid } from '../utils/resetTokenHelper.js';
 const generateAccessAndRefreshToken = async (userId) => {
   try {
     // Try to find user in User collection first
@@ -286,20 +287,14 @@ export const forgotpassword = async (req, res) => {
       return res.status(404).json({ Status: "User not existed", message: "No account found with this email address" });
     }
 
-    // Generate reset token
-    const resetToken = jwt.sign({ id: user._id }, "jwt_secret_key", { expiresIn: "1d" });
-
-    // Save reset token and expiry to user document
-    user.resetPasswordToken = resetToken;
-    user.resetPasswordExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 1 day from now
+    // Generate a cryptographically random reset token. Store only its hash.
+    const { plainToken, tokenHash, expiresAt } = generateResetToken(24 * 60 * 60 * 1000);
+    user.resetPasswordToken = tokenHash;
+    user.resetPasswordExpires = expiresAt;
     await user.save({ validateBeforeSave: false });
 
-    // Create reset URL
-    const resetUrl = `http://localhost:5173/accountmanager/reset_password/${user._id}/${resetToken}`;
-
-    // Console log the URL for testing
-    console.log('Password reset URL:', resetUrl);
-    console.log('Sending reset email to:', user.email);
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const resetUrl = `${frontendUrl}/accountmanager/reset_password/${user._id}/${plainToken}`;
 
     var transporter = nodemailer.createTransport({
       service: 'gmail',
@@ -348,49 +343,35 @@ export const resetpassword = async (req, res) => {
       return res.status(404).json({ Status: "Error", message: "User not found" });
     }
 
-    // Check if reset token matches and is not expired
-    if (user.resetPasswordToken !== token) {
-      return res.status(400).json({ Status: "Error", message: "Invalid reset token" });
+    if (!isResetTokenValid(user.resetPasswordToken, user.resetPasswordExpires, token)) {
+      return res.status(400).json({ Status: "Error", message: "Invalid or expired token" });
     }
 
-    if (user.resetPasswordExpires < new Date()) {
-      return res.status(400).json({ Status: "Error", message: "Reset token has expired" });
+    try {
+      if (isLegacy) {
+        await AccountManagerModel.findByIdAndUpdate(
+          user._id,
+          {
+            $unset: {
+              resetPasswordToken: 1,
+              resetPasswordExpires: 1
+            }
+          },
+          { runValidators: false }
+        );
+      } else {
+        user.resetPasswordToken = undefined;
+        user.resetPasswordExpires = undefined;
+      }
+
+      user.password = password;
+      await user.save({ validateBeforeSave: false });
+
+      return res.json({ Status: "Success", message: "Password reset successfully" });
+    } catch (updateError) {
+      console.error('Password update error:', updateError);
+      return res.status(500).json({ Status: "Error", message: "Failed to update password" });
     }
-
-    // Verify JWT token
-    jwt.verify(token, "jwt_secret_key", async (err, decoded) => {
-      if (err) {
-        return res.status(400).json({ Status: "Error", message: "Invalid or expired token" });
-      }
-
-      try {
-        // First clear the reset token fields
-        if (isLegacy) {
-          await AccountManagerModel.findByIdAndUpdate(
-            user._id,
-            {
-              $unset: {
-                resetPasswordToken: 1,
-                resetPasswordExpires: 1
-              }
-            },
-            { runValidators: false }
-          );
-        } else {
-          user.resetPasswordToken = undefined;
-          user.resetPasswordExpires = undefined;
-        }
-
-        // Then update the password using save to trigger the pre-save hook
-        user.password = password;
-        await user.save({ validateBeforeSave: false });
-
-        return res.json({ Status: "Success", message: "Password reset successfully" });
-      } catch (updateError) {
-        console.error('Password update error:', updateError);
-        return res.status(500).json({ Status: "Error", message: "Failed to update password" });
-      }
-    });
   } catch (error) {
     console.error('Reset password error:', error);
     return res.status(500).json({ Status: "Error", message: "Internal server error" });
@@ -717,20 +698,13 @@ export const createAccountManagerByAdmin = async (req, res) => {
       firstPassSet: false
     });
 
-    // Generate reset token for password setting
-    const resetToken = jwt.sign({ id: user._id }, "jwt_secret_key", { expiresIn: "7d" });
-
-    // Save reset token to user document
-    user.resetPasswordToken = resetToken;
-    user.resetPasswordExpires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+    // Generate a cryptographically random set-password token. Store only its hash.
+    const { plainToken, tokenHash, expiresAt } = generateResetToken(7 * 24 * 60 * 60 * 1000);
+    user.resetPasswordToken = tokenHash;
+    user.resetPasswordExpires = expiresAt;
     await user.save({ validateBeforeSave: false });
 
-    // Create password set URL
-    const setPasswordUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/accountmanager/set_password/${user._id}/${resetToken}`;
-
-    // Console log the URL for testing
-    console.log('Password set URL:', setPasswordUrl);
-    console.log('Sending password set email to:', email);
+    const setPasswordUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/accountmanager/set_password/${user._id}/${plainToken}`;
 
     // Send email with password set link
     const transporter = nodemailer.createTransport({
@@ -798,30 +772,18 @@ export const validateSetPassword = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // Check if reset token matches and is not expired
-    if (user.resetPasswordToken !== token) {
-      return res.status(400).json({ message: "Invalid reset token" });
+    if (!isResetTokenValid(user.resetPasswordToken, user.resetPasswordExpires, token)) {
+      return res.status(400).json({ message: "Invalid or expired token" });
     }
 
-    if (user.resetPasswordExpires < new Date()) {
-      return res.status(400).json({ message: "Reset token has expired" });
-    }
-
-    // Verify JWT token
-    jwt.verify(token, "jwt_secret_key", (err, decoded) => {
-      if (err) {
-        return res.status(400).json({ message: "Invalid or expired token" });
+    return res.json({
+      firstPassSet: user.firstPassSet,
+      user: {
+        _id: user._id,
+        fullname: user.fullname,
+        email: user.email,
+        type: user.type
       }
-
-      return res.json({
-        firstPassSet: user.firstPassSet,
-        user: {
-          _id: user._id,
-          fullname: user.fullname,
-          email: user.email,
-          type: user.type
-        }
-      });
     });
 
   } catch (error) {
@@ -851,40 +813,26 @@ export const setPassword = async (req, res) => {
       return res.status(400).json({ message: "You have already set the password" });
     }
 
-    // Check if reset token matches and is not expired
-    if (user.resetPasswordToken !== token) {
-      return res.status(400).json({ message: "Invalid reset token" });
+    if (!isResetTokenValid(user.resetPasswordToken, user.resetPasswordExpires, token)) {
+      return res.status(400).json({ message: "Invalid or expired token" });
     }
 
-    if (user.resetPasswordExpires < new Date()) {
-      return res.status(400).json({ message: "Reset token has expired" });
+    try {
+      user.password = password;
+      if (!isLegacy) {
+        user.firstPassSet = true;
+        user.status = 'active';
+      }
+      user.resetPasswordToken = undefined;
+      user.resetPasswordExpires = undefined;
+
+      await user.save();
+
+      return res.json({ message: "Password set successfully" });
+    } catch (updateError) {
+      console.error('Password update error:', updateError);
+      return res.status(500).json({ message: "Failed to update password" });
     }
-
-    // Verify JWT token
-    jwt.verify(token, "jwt_secret_key", async (err, decoded) => {
-      if (err) {
-        return res.status(400).json({ message: "Invalid or expired token" });
-      }
-
-      try {
-        // Update password and set firstPassSet to true (only for User model)
-        user.password = password;
-        if (!isLegacy) {
-          user.firstPassSet = true;
-          user.status = 'active'; // Activate user when they set password
-        }
-        // Clear reset token fields
-        user.resetPasswordToken = undefined;
-        user.resetPasswordExpires = undefined;
-
-        await user.save();
-
-        return res.json({ message: "Password set successfully" });
-      } catch (updateError) {
-        console.error('Password update error:', updateError);
-        return res.status(500).json({ message: "Failed to update password" });
-      }
-    });
 
   } catch (error) {
     console.error('Error setting password:', error);

@@ -2,15 +2,19 @@ import {loginAdmin,registerAdmin,getAdminInfo,logoutAdmin,getManagerByAdmin, ass
 
 import Router from 'express';
 import { verifyJWT } from '../middleware/admin.auth.middleware.js';
+import { adminInviteGuard } from '../middleware/adminInviteGuard.js';
+import { adminRegisterLimiter } from '../middleware/rateLimiters.js';
 const router=Router();
 
 
 router.route("/register").post(
+    adminRegisterLimiter,
+    adminInviteGuard,
     registerAdmin
 );
 
-router.route("/candidates").get(getUniqueCandidates);
-router.route("/candidates/:resumeId").get(getDetailsCandidate);
+router.route("/candidates").get(verifyJWT, getUniqueCandidates);
+router.route("/candidates/:resumeId").get(verifyJWT, getDetailsCandidate);
 
 
 router.route("/login").post(loginAdmin);

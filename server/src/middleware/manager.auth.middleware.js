@@ -3,12 +3,7 @@ import jwt from 'jsonwebtoken';
 
 export const verifyJWT = (req, res, next) => {
     try {
-        console.log('Manager auth middleware - Cookies:', req.cookies);
-        console.log('Manager auth middleware - Authorization header:', req.header("Authorization"));
-        
         const token = req.cookies?.accessToken || req.header("Authorization")?.replace("Bearer ", "");
-
-        console.log('Manager auth middleware - Extracted token:', token ? 'Token found' : 'No token');
 
         if (!token) {
             return res.status(401).json({ message: "Unauthorized request: No token provided" });
@@ -19,29 +14,24 @@ export const verifyJWT = (req, res, next) => {
             return res.status(401).json({ message: "Unauthorized request: Invalid token" });
         }
         req.id = decodedToken._id;
-        console.log('Manager auth middleware - Token:', token);
-        console.log('Manager auth middleware - Decoded ID:', decodedToken._id);
-        
+
         User.findById(decodedToken._id).select("-password -refreshToken").then(user => {
             if (!user) {
                 return res.status(401).json({ message: "Unauthorized request: User not found" });
             }
 
-            // Check if user is a manager
             if (user.type !== 'manager') {
                 return res.status(403).json({ message: "Access denied: Manager role required" });
             }
 
             req.user = user;
-            req.role = user.type; // Add role information
+            req.role = user.type;
             next();
-        }).catch(error => {
-            console.error('Manager auth middleware - Database error:', error);
+        }).catch(() => {
             return res.status(500).json({ message: "Internal Server Error" });
         });
 
     } catch (error) {
-        console.error('Manager auth middleware - JWT verification error:', error);
-        return res.status(401).json({ message: error.message || "Unauthorized request: Invalid token" });
+        return res.status(401).json({ message: "Unauthorized request: Invalid token" });
     }
 };

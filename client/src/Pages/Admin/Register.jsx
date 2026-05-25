@@ -7,12 +7,15 @@ function AdminRegister() {
   const [username, setUserName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [inviteSecret, setInviteSecret] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   const navigate = useNavigate();
 
  const handleSubmit = async (e) => {
   e.preventDefault();
+  setErrorMessage("");
 
   const data = {
     fullname,
@@ -28,19 +31,20 @@ function AdminRegister() {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        "x-admin-invite-secret": inviteSecret,
       },
       body: JSON.stringify(data),
       credentials: "include",
     });
 
     if (!response.ok) {
-      const data = await response.json();
-      throw new Error(data.message || "Register failed! ❌");
+      const body = await response.json().catch(() => ({}));
+      throw new Error(body.message || "Registration failed");
     }
 
     navigate("/admin/login");
   } catch (error) {
-    console.error("Registration error:", error);
+    setErrorMessage(error.message);
   } finally {
     setIsLoading(false);
   }
@@ -106,7 +110,23 @@ function AdminRegister() {
             />
           </div>
 
-        
+          <div>
+            <label htmlFor="inviteSecret" className="block font-semibold text-white">Invite Secret</label>
+            <input
+              type="password"
+              id="inviteSecret"
+              value={inviteSecret}
+              onChange={(e) => setInviteSecret(e.target.value)}
+              required
+              placeholder="Provided by your operator"
+              autoComplete="off"
+              className="w-full p-3 border rounded-lg mt-1 focus:outline-none bg-blue-600 text-white"
+            />
+          </div>
+
+          {errorMessage && (
+            <p className="text-red-200 text-sm text-center" role="alert">{errorMessage}</p>
+          )}
 
           <p className="mt-4 text-white text-center">
             Already have an account?{" "}

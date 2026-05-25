@@ -55,7 +55,6 @@ accountmanagerSchema.methods.isPasswordCorrect = async function (password) {
 }
 
 accountmanagerSchema.methods.generateAccessToken = function () {
-    console.log(process.env.ACCESS_TOKEN_SECRET);
     return jwt.sign(
         {
             _id: this._id,

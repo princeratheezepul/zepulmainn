@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { getAuthHeaders } from '../../../utils/authUtils';
 
 const ScorecardReviews = () => {
   const [scorecards, setScorecards] = useState([]);
@@ -9,7 +10,10 @@ const ScorecardReviews = () => {
   useEffect(() => {
     const fetchScorecards = async () => {
       try {
-        const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/scorecard/get-scorecard`);
+        const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/scorecard/get-scorecard`, {
+          headers: getAuthHeaders(),
+          credentials: 'include',
+        });
         if (!response.ok) throw new Error('Failed to fetch scorecards');
         const data = await response.json();
         setScorecards(data);
@@ -33,7 +37,8 @@ console.log(userInfo);
 
       const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/scorecard/reqanotherround`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
+        credentials: 'include',
         body: JSON.stringify({ toEmail, managerName }),
       });
 
@@ -53,7 +58,8 @@ console.log(userInfo);
     try {
       const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/scorecard/update/${id}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
+        credentials: 'include',
         body: JSON.stringify(payload),
       });
 

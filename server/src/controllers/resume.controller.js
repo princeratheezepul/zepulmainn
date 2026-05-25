@@ -9,6 +9,7 @@ import { determineResumeTag } from "../utils/tagHelper.js";
 import { analyzeResume, calculateATSScore } from "./bulkUpload.controller.js";
 import { generateAssessmentForResume, sendAssessmentEmail } from "./assessment.controller.js";
 import { sendWhatsAppMessage } from "../utils/whatsapp.js";
+import { canAccessResume } from "../utils/resourceAccess.js";
 
 // Fire-and-forget: generate the coding assessment for a newly-saved resume, then notify the candidate.
 // WhatsApp is only sent if the email was successfully sent — the WhatsApp text references the email.
@@ -291,21 +292,36 @@ export const getResumesByRecruiter = async (req, res) => {
 export const searchResumesByJobRole = async (req, res) => {
   try {
     const { role } = req.query;
-
     if (!role) return res.status(400).json({ message: "Missing role query param" });
+    if (typeof role !== "string" || role.length > 120) {
+      return res.status(400).json({ message: "Invalid role" });
+    }
 
-    const resumes = await Resume.find({
+    // Escape user input so it can't blow up the regex engine (ReDoS) or match unintended docs.
+    const safeRole = role.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const roleRegex = { $regex: safeRole, $options: "i" };
+
+    const filter = {
       $or: [
-        { recommended_job_roles: { $regex: role, $options: "i" } },
-        { suggested_resume_category: { $regex: role, $options: "i" } },
-        { skills: { $elemMatch: { $regex: role, $options: "i" } } },
+        { recommended_job_roles: roleRegex },
+        { suggested_resume_category: roleRegex },
+        { skills: { $elemMatch: roleRegex } },
       ],
-    });
+    };
+
+    // Scope listings to the principal so search doesn't leak cross-tenant resumes.
+    if (req.role === "recruiter") {
+      filter.recruiterId = req.id;
+    } else if (req.role === "manager") {
+      filter.managerId = req.id;
+    }
+
+    const resumes = await Resume.find(filter).limit(100);
 
     res.json(resumes);
   } catch (err) {
-    console.error("Search failed:", err);
-    res.status(500).json({ message: "Search error", error: err.message });
+    console.error("Search failed:", err?.message);
+    res.status(500).json({ message: "Search error" });
   }
 };
 
@@ -315,22 +331,14 @@ export const getResumeById = async (req, res) => {
     if (!resume) {
       return res.status(404).json({ message: "Resume not found" });
     }
+    if (!canAccessResume(req, resume)) {
+      return res.status(403).json({ message: "Forbidden" });
+    }
     res.json(resume);
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    res.status(500).json({ message: "Server error" });
   }
 }
-
-export const getResume = async (req, res) => {
-  try {
-    console.log("REcieved");
-    const resumes = await Resume.find(); // Fetches all resumes from the collection
-    res.status(200).json(resumes);
-  } catch (error) {
-    console.error("Error fetching resumes:", error);
-    res.status(500).json({ message: "Server error while fetching resumes" });
-  }
-};
 
 // @desc Get resumes by tag
 export const getResumesByTag = async (req, res) => {
@@ -342,10 +350,17 @@ export const getResumesByTag = async (req, res) => {
       return res.status(400).json({ message: "Invalid tag. Must be one of: Engineering, Marketing, Sales, Customer Support, Finance" });
     }
 
-    const resumes = await Resume.find({ tag }).populate('jobId');
+    const filter = { tag };
+    if (req.role === "recruiter") {
+      filter.recruiterId = req.id;
+    } else if (req.role === "manager") {
+      filter.managerId = req.id;
+    }
+
+    const resumes = await Resume.find(filter).populate('jobId').limit(200);
     res.status(200).json(resumes);
   } catch (error) {
-    console.error("Error fetching resumes by tag:", error);
+    console.error("Error fetching resumes by tag:", error?.message);
     res.status(500).json({ message: "Server error while fetching resumes by tag" });
   }
 };
@@ -362,19 +377,20 @@ export const updateResumeTag = async (req, res) => {
       return res.status(400).json({ message: "Invalid tag. Must be one of: Engineering, Marketing, Sales, Customer Support, Finance" });
     }
 
-    const updatedResume = await Resume.findByIdAndUpdate(
-      resumeId,
-      { tag },
-      { new: true }
-    );
-
-    if (!updatedResume) {
+    const existing = await Resume.findById(resumeId);
+    if (!existing) {
       return res.status(404).json({ message: "Resume not found" });
     }
+    if (!canAccessResume(req, existing)) {
+      return res.status(403).json({ message: "Forbidden" });
+    }
 
-    res.status(200).json({ message: "Tag updated successfully", resume: updatedResume });
+    existing.tag = tag;
+    await existing.save();
+
+    res.status(200).json({ message: "Tag updated successfully", resume: existing });
   } catch (error) {
-    console.error("Error updating resume tag:", error);
+    console.error("Error updating resume tag:", error?.message);
     res.status(500).json({ message: "Server error while updating resume tag" });
   }
 };
@@ -408,47 +424,54 @@ const sendAnotherRoundEmail = async (toEmail, adminName,) => {
 };
 
 export const requestAnotherRound = async (req, res) => {
-  const { resumeId, requestAnotherRound, userId } = req.body;
-  console.log("req recieved")
+  const { resumeId, requestAnotherRound } = req.body;
   try {
-    // Update the scorecard
-    const updatedScorecard = await Resume.findByIdAndUpdate(
-      resumeId,
-      { requestAnotherRound },
-      { new: true }
-    );
-
-    if (!updatedScorecard) {
-      return res.status(404).json({ success: false, message: 'Scorecard not found' });
+    const existing = await Resume.findById(resumeId);
+    if (!existing) {
+      return res.status(404).json({ success: false, message: 'Resume not found' });
+    }
+    if (!canAccessResume(req, existing)) {
+      return res.status(403).json({ success: false, message: 'Forbidden' });
     }
 
-    // Send email to candidate
-    const toEmail = updatedScorecard.resume?.email;
-    const admin = await Admin.findById(userId);
+    existing.requestAnotherRound = requestAnotherRound;
+    await existing.save();
 
-
-    if (toEmail) {
-      await sendAnotherRoundEmail(toEmail, admin.fullname);
+    const toEmail = existing.resume?.email;
+    if (toEmail && req.role === 'admin') {
+      const admin = await Admin.findById(req.id);
+      if (admin?.fullname) {
+        await sendAnotherRoundEmail(toEmail, admin.fullname);
+      }
     }
 
-    res.status(200).json({ success: true, message: 'Request updated and email sent.' });
+    res.status(200).json({ success: true, message: 'Request updated.' });
   } catch (error) {
-    console.error("Error connecting unassigned job:", error);
+    console.error("Error in requestAnotherRound:", error?.message);
     res.status(500).json({ success: false, message: "Internal Server Error" });
   }
 };
 
+const ALLOWED_MODELS = new Set(["gpt-4o-mini", "gpt-4o"]);
+const MAX_PROMPT_LEN = 20000;
+
 export const evaluatePrompt = async (req, res) => {
   const { prompt, modelType } = req.body;
-  if (!prompt) {
-    return res.status(400).json({ success: false, message: "Prompt is required" });
+
+  if (typeof prompt !== "string" || prompt.trim().length === 0) {
+    return res.status(400).json({ success: false, message: "prompt must be a non-empty string" });
+  }
+  if (prompt.length > MAX_PROMPT_LEN) {
+    return res.status(413).json({ success: false, message: "prompt too large" });
   }
 
+  const model = modelType && ALLOWED_MODELS.has(modelType) ? modelType : "gpt-4o-mini";
+
   try {
-    const text = await generateTextWithRetry(prompt, modelType || "gpt-4o-mini");
+    const text = await generateTextWithRetry(prompt, model);
     res.status(200).json({ text });
   } catch (error) {
-    console.error("Error evaluating generic prompt:", error);
+    console.error("Error evaluating generic prompt:", error?.message);
     res.status(500).json({ success: false, message: "Failed to evaluate prompt" });
   }
 };
@@ -457,11 +480,17 @@ export const evaluatePrompt = async (req, res) => {
 export const submitToManager = async (req, res) => {
   const { resumeId, isApproved, feedback } = req.body;
   try {
-    await Resume.findByIdAndUpdate(resumeId, {
-      isApproved,
-      feedback,
-      submittedAt: new Date(),
-    });
+    const existing = await Resume.findById(resumeId);
+    if (!existing) {
+      return res.status(404).json({ error: 'Resume not found' });
+    }
+    if (!canAccessResume(req, existing)) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+    existing.isApproved = isApproved;
+    existing.feedback = feedback;
+    existing.submittedAt = new Date();
+    await existing.save();
     res.status(200).json({ message: 'Submitted to manager' });
   } catch (err) {
     res.status(500).json({ error: 'Submission failed' });
@@ -473,10 +502,18 @@ export const updateResumeStatus = async (req, res) => {
     const { resumeId } = req.params;
     const recruiterId = req.id; // Get recruiter ID from JWT token
 
-    console.log('PATCH /api/resumes/:resumeId called');
-    console.log('resumeId:', resumeId);
-    console.log('recruiterId:', recruiterId);
-    console.log('req.body:', req.body);
+    const existing = await Resume.findById(resumeId);
+    if (!existing) {
+      return res.status(404).json({ message: 'Resume not found' });
+    }
+    // Recruiters may only modify resumes they own. Managers/admins/accountmanagers handled by canAccessResume.
+    // Note: route is gated to recruiter JWT only today, so we accept either matching recruiterId or higher-role principals.
+    const principalId = recruiterId?.toString();
+    const ownsResume = existing.recruiterId?.toString() === principalId;
+    const isPrivileged = req.role === 'admin' || req.role === 'accountmanager' || req.role === 'manager';
+    if (!ownsResume && !isPrivileged) {
+      return res.status(403).json({ message: 'Forbidden' });
+    }
 
     // If only addedNotes is present, only update that field
     if (
@@ -488,9 +525,6 @@ export const updateResumeStatus = async (req, res) => {
         { addedNotes: req.body.addedNotes },
         { new: true }
       );
-      if (!updatedResume) {
-        return res.status(404).json({ message: 'Resume not found' });
-      }
       return res.status(200).json({ message: 'Note updated successfully', resume: updatedResume });
     }
 

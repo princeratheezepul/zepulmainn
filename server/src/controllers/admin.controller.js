@@ -9,6 +9,7 @@ import Recruiter from '../models/recruiter.model.js'
 import { AccountManager } from '../models/accountmanager.model.js';
 import bcrypt from 'bcryptjs';
 import Scorecard from '../models/scorecard.model.js';
+import { generateResetToken, isResetTokenValid } from '../utils/resetTokenHelper.js';
 const generateAccessAndRefreshToken = async (userId) => {
     try {
         const admin = await Admin.findById(userId);
@@ -26,19 +27,35 @@ const generateAccessAndRefreshToken = async (userId) => {
 
 const registerAdmin = async (req, res) => {
     try {
-        // console.log("request received");
-        // console.log(req.body); 
         const { fullname, email, password } = req.body;
-        // console.log(req.body);
-        const username = fullname.replace(/\s+/g, '').toLowerCase();
-        // console.log(username, password);
 
-        const existingUser = await Admin.findOne({ $or: [{ username }] });
-        if (existingUser) {
-            return res.status(400).json({ message: "Username already exists" });
+        if (typeof fullname !== "string" || typeof email !== "string" || typeof password !== "string") {
+            return res.status(400).json({ message: "fullname, email, and password are required" });
+        }
+        if (fullname.trim().length < 2 || fullname.length > 100) {
+            return res.status(400).json({ message: "Invalid fullname" });
+        }
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254) {
+            return res.status(400).json({ message: "Invalid email" });
+        }
+        if (password.length < 12 || password.length > 128) {
+            return res.status(400).json({ message: "Password must be 12-128 characters" });
         }
 
-        const user = await Admin.create({ username, fullname, email, password });
+        const username = fullname.replace(/\s+/g, "").toLowerCase();
+
+        const existingUser = await Admin.findOne({ $or: [{ username }, { email }] });
+        if (existingUser) {
+            return res.status(400).json({ message: "Account already exists" });
+        }
+
+        const user = await Admin.create({
+            username,
+            fullname: fullname.trim(),
+            email,
+            password,
+            status: "active",
+        });
         const createdUser = await Admin.findById(user._id).select("-password -refreshToken");
 
         if (!createdUser) {
@@ -47,11 +64,11 @@ const registerAdmin = async (req, res) => {
 
         return res.status(201).json({
             status: 201,
-            message: "User created successfully",
+            message: "Admin created successfully",
             data: createdUser
         });
     } catch (error) {
-        console.error(error);
+        console.error("registerAdmin error:", error?.message);
         return res.status(500).json({ message: "Internal Server Error" });
     }
 }
@@ -227,58 +244,77 @@ export const updatePassword = async (req, res) => {
 
 export const forgotpassword = async (req, res) => {
     const { email } = req.body;
-    Admin.findOne({ email: email })
-        .then(admin => {
-            if (!admin) {
-                return res.send({ Status: "Admin not existed" })
+    try {
+        const admin = await Admin.findOne({ email });
+        if (!admin) {
+            return res.send({ Status: "Admin not existed" });
+        }
+
+        const { plainToken, tokenHash, expiresAt } = generateResetToken(24 * 60 * 60 * 1000);
+        admin.resetPasswordToken = tokenHash;
+        admin.resetPasswordExpires = expiresAt;
+        await admin.save({ validateBeforeSave: false });
+
+        const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+        const resetUrl = `${frontendUrl}/admin/reset_password/${admin._id}/${plainToken}`;
+
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: process.env.EMAIL_USER,
+                pass: process.env.EMAIL_PASS
             }
-            const token = jwt.sign({ id: admin._id }, "jwt_secret_key", { expiresIn: "1d" })
-            var transporter = nodemailer.createTransport({
-                service: 'gmail',
-                auth: {
-                    user: process.env.EMAIL_USER,
-                    pass: process.env.EMAIL_PASS
-                }
-            });
+        });
 
+        const mailOptions = {
+            from: process.env.EMAIL_USER,
+            to: admin.email,
+            subject: 'Reset Password Link',
+            text: resetUrl
+        };
 
-            var mailOptions = {
-                from: process.env.EMAIL_USER,
-                to: admin.email,
-                subject: 'Reset Password Link',
-                text: `http://localhost:5173/admin/reset_password/${admin._id}/${token}`
-            };
-            console.log('Sending reset email to:', admin.email);
-            console.log('Mail options:', mailOptions);
-
-            transporter.sendMail(mailOptions, function (error, info) {
-                if (error) {
-                    console.log(error);
-                } else {
-                    return res.send({ Status: "Success" })
-                }
-            });
-        })
+        transporter.sendMail(mailOptions, function (error, info) {
+            if (error) {
+                console.log(error);
+                return res.status(500).send({ Status: "Error", message: "Failed to send email" });
+            }
+            return res.send({ Status: "Success" });
+        });
+    } catch (error) {
+        console.error('Admin forgot password error:', error);
+        return res.status(500).send({ Status: "Error", message: "Internal server error" });
+    }
 }
 
 
 export const resetpassword = async (req, res) => {
-    const { id, token } = req.params
-    const { password } = req.body
+    const { id, token } = req.params;
+    const { password } = req.body;
 
-    jwt.verify(token, "jwt_secret_key", (err, decoded) => {
-        if (err) {
-            return res.json({ Status: "Error with token" })
-        } else {
-            bcrypt.hash(password, 10)
-                .then(hash => {
-                    Admin.findByIdAndUpdate({ _id: id }, { password: hash })
-                        .then(u => res.send({ Status: "Success" }))
-                        .catch(err => res.send({ Status: err }))
-                })
-                .catch(err => res.send({ Status: err }))
+    try {
+        const admin = await Admin.findById(id);
+        if (!admin) {
+            return res.status(400).json({ Status: "Error with token" });
         }
-    })
+
+        if (!isResetTokenValid(admin.resetPasswordToken, admin.resetPasswordExpires, token)) {
+            return res.status(400).json({ Status: "Error with token" });
+        }
+
+        const hash = await bcrypt.hash(password, 12);
+        await Admin.findByIdAndUpdate(
+            id,
+            {
+                password: hash,
+                $unset: { resetPasswordToken: 1, resetPasswordExpires: 1 }
+            },
+            { runValidators: false }
+        );
+        return res.send({ Status: "Success" });
+    } catch (err) {
+        console.error('Admin reset password error:', err);
+        return res.status(500).send({ Status: "Error" });
+    }
 }
 
 

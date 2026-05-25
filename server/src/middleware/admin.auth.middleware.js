@@ -8,13 +8,11 @@ export const verifyJWT = (req, res, next) => {
         if (!token) {
             return res.status(401).json({ message: "Unauthorized request: No token provided" });
         }
-        console.log(process.env.ACCESS_TOKEN_SECRET);
         const decodedToken = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
         if (!decodedToken) {
             return res.status(401).json({ message: "Unauthorized request: Invalid token" });
         }
         req.user = { id: decodedToken._id };
-        console.log(token,decodedToken._id);
         Admin.findById(decodedToken._id).select("-password -refreshToken").then(user => {
             if (!user) {
                 return res.status(401).json({ message: "Unauthorized request: User not found" });

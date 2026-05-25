@@ -3,11 +3,10 @@ import ServerConfig from "./ServerConfig.js";
 
 const connectDB = async () => {
   try {
-    console.log(ServerConfig.DB_URL);
     await mongoose.connect(ServerConfig.DB_URL);
-    console.log("Hurray! connected to mongoDB...");
+    console.log("Connected to MongoDB");
   } catch (error) {
-    console.log({ message: "Not able to connect to mongoDB", error });
+    console.error("MongoDB connection failed:", error?.message || "unknown error");
   }
 };
 

@@ -43,8 +43,19 @@ export const logoutUser = async (navigate, userType = 'manager') => {
   }
 };
 
+export const getAccessToken = () => {
+  const direct = localStorage.getItem('authToken');
+  if (direct) return direct;
+  try {
+    const userInfo = JSON.parse(localStorage.getItem('userInfo') || 'null');
+    return userInfo?.data?.accessToken || userInfo?.accessToken || null;
+  } catch {
+    return null;
+  }
+};
+
 export const getAuthHeaders = () => {
-  const token = localStorage.getItem('authToken');
+  const token = getAccessToken();
   return {
     'Content-Type': 'application/json',
     ...(token && { 'Authorization': `Bearer ${token}` }),

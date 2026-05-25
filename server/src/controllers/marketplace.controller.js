@@ -10,6 +10,11 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { determineResumeTag } from "../utils/tagHelper.js";
 import { createUserSession, invalidateUserSession } from "../utils/sessionManager.js";
 
+const MARKETPLACE_JWT_SECRET = process.env.ACCESS_TOKEN_SECRET || process.env.JWT_SECRET;
+if (!MARKETPLACE_JWT_SECRET) {
+  throw new Error('FATAL: ACCESS_TOKEN_SECRET (or JWT_SECRET) is not set. Refusing to start with an insecure default.');
+}
+
 // Generate JWT token for marketplace user with session ID
 const generateMarketplaceToken = (userId, sessionId) => {
   return jwt.sign(
@@ -18,7 +23,7 @@ const generateMarketplaceToken = (userId, sessionId) => {
       sessionId,
       type: 'marketplace'
     },
-    process.env.ACCESS_TOKEN_SECRET || "marketplace_secret_key",
+    MARKETPLACE_JWT_SECRET,
     { expiresIn: "24h" }
   );
 };
@@ -539,11 +544,8 @@ export const createTestUser = async (req, res) => {
 export const marketplaceLogin = async (req, res) => {
   try {
     const { email, password } = req.body;
-    console.log("Login attempt:", { email, password });
-    console.log("MpUser model collection name:", MpUser.collection.name);
 
     if (!email || !password) {
-      console.log("Missing email or password");
       return res.status(400).json(
         new ApiResponse(400, null, "Email and password are required")
       );
@@ -554,27 +556,8 @@ export const marketplaceLogin = async (req, res) => {
       path: 'pickedJobs',
       select: 'jobTitle location jobType salary status'
     });
-    console.log("User found:", user ? "Yes" : "No");
-    console.log("User data:", user ? {
-      _id: user._id,
-      emailid: user.emailid,
-      hasPassword: !!user.password,
-      passwordLength: user.password ? user.password.length : 0,
-      firstName: user.firstName,
-      lastName: user.lastName
-    } : "No user found");
 
-    if (!user) {
-      console.log("User not found for email:", email);
-      return res.status(401).json(
-        new ApiResponse(401, null, "Invalid credentials")
-      );
-    }
-
-    // Check if user has a password stored
-    if (!user.password) {
-      console.log("User has no password stored for email:", email);
-      console.log("User object keys:", Object.keys(user.toObject()));
+    if (!user || !user.password) {
       return res.status(401).json(
         new ApiResponse(401, null, "Invalid credentials")
       );
@@ -583,7 +566,6 @@ export const marketplaceLogin = async (req, res) => {
     // Check password using bcrypt
     const isPasswordValid = await user.isPasswordCorrect(password);
     if (!isPasswordValid) {
-      console.log("Password mismatch for email:", email);
       return res.status(401).json(
         new ApiResponse(401, null, "Invalid credentials")
       );
@@ -1466,13 +1448,6 @@ export const addTalentScoutToJob = async (req, res) => {
     const { jobId } = req.params;
     const { talentScoutId } = req.body;
     const userId = req.user?.userId;
-
-    console.log("=== ADD TALENT SCOUT TO JOB ===");
-    console.log("Adding talent scout to job:", { jobId, talentScoutId, userId });
-    console.log("Request user:", req.user);
-    console.log("Request headers:", req.headers);
-    console.log("Request body:", req.body);
-    console.log("=== END DEBUG INFO ===");
 
     // Find the job
     const job = await MpJob.findById(jobId);

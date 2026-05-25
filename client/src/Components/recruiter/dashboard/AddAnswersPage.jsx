@@ -3,6 +3,7 @@ import { ArrowLeft, FileText, HelpCircle, Upload } from 'lucide-react';
 import { format } from 'date-fns';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
+import { getAuthHeaders } from '../../../utils/authUtils';
 
 const AddAnswersPage = ({ onBack, questions, jobDetails, resumeData, onResumeUpdate }) => {
   const [completeText, setCompleteText] = useState('');
@@ -114,7 +115,8 @@ const AddAnswersPage = ({ onBack, questions, jobDetails, resumeData, onResumeUpd
       try {
         const result = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/resumes/evaluate-prompt`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: getAuthHeaders(),
+          credentials: "include",
           body: JSON.stringify({ prompt, modelType: "gpt-4o-mini" })
         });
         if (!result.ok) throw new Error("Failed to evaluate prompt using backend API");

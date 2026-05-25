@@ -10,3 +10,12 @@ export const openAILimiter = rateLimit({
     keyGenerator: (req) => req.user?._id?.toString() || req.ip,
     message: { message: "Too many requests, please slow down." },
 });
+
+// Cap admin-register attempts per IP. Defense-in-depth alongside the invite-secret guard.
+export const adminRegisterLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 5,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { message: "Too many registration attempts. Try again later." },
+});

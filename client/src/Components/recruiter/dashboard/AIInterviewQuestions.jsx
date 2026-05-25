@@ -6,6 +6,7 @@ import ScheduleAssessmentModal from './ScheduleAssessmentModal';
 import AssessmentResultView from './AssessmentResultView';
 import ScheduleAvaloqAssessmentModal from './ScheduleAvaloqAssessmentModal';
 import AddAnswersPage from './AddAnswersPage';
+import { getAuthHeaders } from '../../../utils/authUtils';
 
 const AIInterviewQuestions = ({ jobDetails, resumeData, onBack, onResumeUpdate }) => {
   const [loading, setLoading] = useState(false);
@@ -78,17 +79,21 @@ const AIInterviewQuestions = ({ jobDetails, resumeData, onBack, onResumeUpdate }
               Do not repeat questions you have generated before. Ensure the questions are insightful and relevant to the job requirements and the candidate's potential fit for the role.
           `;
 
-      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/scorecard/ai-questions`, {
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/resumes/evaluate-prompt`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ promptPayload })
+        headers: getAuthHeaders(),
+        credentials: 'include',
+        body: JSON.stringify({ prompt: promptPayload, modelType: 'gpt-4o-mini' })
       });
 
+      if (!response.ok) throw new Error('Failed to fetch custom questions');
       const data = await response.json();
-      if (data.questions) {
-        setQuestions(data.questions);
+      const cleanedText = (data.text || '').replace(/```json|```/g, '').trim();
+      const parsed = JSON.parse(cleanedText);
+      if (Array.isArray(parsed)) {
+        setQuestions(parsed);
       } else {
-        throw new Error("Failed to fetch custom questions");
+        throw new Error('Failed to fetch custom questions');
       }
     } catch (error) {
       console.error("Failed to fetch AI questions:", error);
@@ -222,9 +227,8 @@ const AIInterviewQuestions = ({ jobDetails, resumeData, onBack, onResumeUpdate }
     try {
       const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/resumes/${resumeData._id}/schedule-interview`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: getAuthHeaders(),
+        credentials: 'include',
         body: JSON.stringify({
           interviewDay: selectedSchedule.dayOfWeek,
           interviewDate: selectedSchedule.dateOfMonth,

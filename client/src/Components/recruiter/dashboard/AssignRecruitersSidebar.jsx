@@ -34,10 +34,12 @@ export default function AssignRecruitersSidebar({
           ? `${import.meta.env.VITE_BACKEND_URL}/api/recruiter/getrecruiter?creatorId=${managerId}&type=manager`
           : `${import.meta.env.VITE_BACKEND_URL}/api/accountmanager/recruiters`;
 
+        const accountManagerToken = JSON.parse(localStorage.getItem('userInfo') || 'null')?.data?.accessToken;
         const response = await fetch(url, {
+          credentials: 'include',
           headers: isProRecruiter && managerId
             ? { 'Authorization': `Bearer ${token}` }
-            : {},
+            : (accountManagerToken ? { 'Authorization': `Bearer ${accountManagerToken}` } : {}),
         });
 
         if (!response.ok) {

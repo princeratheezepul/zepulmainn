@@ -3,6 +3,7 @@ import { ArrowLeft, FileText, HelpCircle, Upload } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { useMarketplaceAuth } from '../../../context/MarketplaceAuthContext';
+import { getAuthHeaders } from '../../../utils/authUtils';
 
 const MarketplaceAddAnswersPage = ({ onBack, questions, jobDetails, resumeData, onEvaluationComplete }) => {
   const [completeText, setCompleteText] = useState('');
@@ -117,7 +118,8 @@ const MarketplaceAddAnswersPage = ({ onBack, questions, jobDetails, resumeData, 
       try {
         const result = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/resumes/evaluate-prompt`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: getAuthHeaders(),
+          credentials: "include",
           body: JSON.stringify({ prompt, modelType: "gpt-4o-mini" })
         });
         if (!result.ok) throw new Error("Failed to evaluate prompt using backend API");

@@ -10,6 +10,7 @@ import mammoth from "mammoth";
 import ResumeDetailsView from '../../recruiter/dashboard/ResumeDetailsView';
 import { useMarketplaceAuth } from '../../../context/MarketplaceAuthContext';
 import toast from 'react-hot-toast';
+import { getAuthHeaders } from '../../../utils/authUtils';
 
 GlobalWorkerOptions.workerSrc = workerUrl;
 
@@ -262,7 +263,8 @@ const MarketplaceResumeUpload = ({ onBack, jobDetails }) => {
       `;
       const result = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/resumes/evaluate-prompt`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: getAuthHeaders(),
+        credentials: "include",
         body: JSON.stringify({ prompt, modelType: "gpt-4o-mini" })
       });
       if (!result.ok) throw new Error("Failed to evaluate prompt using backend API");
@@ -350,7 +352,8 @@ const MarketplaceResumeUpload = ({ onBack, jobDetails }) => {
 
     const result = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/resumes/evaluate-prompt`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: getAuthHeaders(),
+      credentials: "include",
       body: JSON.stringify({ prompt, modelType: "gpt-4o-mini" })
     });
     if (!result.ok) throw new Error("Failed to evaluate prompt using backend API");

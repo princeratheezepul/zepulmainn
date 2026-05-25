@@ -7,7 +7,11 @@ import nodemailer from "nodemailer";
 import { User } from '../models/user.model.js';
 import { Admin } from "../models/admin.model.js";
 import ServerConfig from "../config/ServerConfig.js";
-const JWT_SECRET = process.env.ACCESS_TOKEN_SECRET || process.env.JWT_SECRET || "your_secret_key_here";
+import { generateResetToken, isResetTokenValid } from "../utils/resetTokenHelper.js";
+const JWT_SECRET = process.env.ACCESS_TOKEN_SECRET || process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  throw new Error('FATAL: ACCESS_TOKEN_SECRET (or JWT_SECRET) is not set. Refusing to start with an insecure default.');
+}
 
 // Create email transporter with explicit Gmail SMTP configuration for better compatibility
 // This works better on cloud platforms like Render, Heroku, etc.
@@ -163,9 +167,6 @@ export const recruiterSignin = async (req, res) => {
     user.refreshToken = refreshToken;
     await user.save({ validateBeforeSave: false });
 
-    console.log("Generated access token:", accessToken);
-    console.log("Generated refresh token:", refreshToken);
-
     // Set cookies
     const options = {
       httpOnly: true,
@@ -174,10 +175,6 @@ export const recruiterSignin = async (req, res) => {
       path: "/",
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
     };
-
-    console.log('Setting cookies with options:', options);
-    console.log('Access token:', accessToken);
-    console.log('Refresh token:', refreshToken);
 
     // Set both cookie names for compatibility
     res.cookie("recruiterToken", accessToken, options);
@@ -290,24 +287,17 @@ export const refreshRecruiterToken = async (req, res) => {
 // Test authentication endpoint
 export const testRecruiterAuth = async (req, res) => {
   try {
-    console.log('Test auth - req.id:', req.id);
-    console.log('Test auth - req.user:', req.user);
-    console.log('Test auth - cookies:', req.cookies);
-    
     if (!req.id || !req.user) {
-      return res.status(401).json({ 
+      return res.status(401).json({
         message: "Not authenticated",
         hasId: !!req.id,
-        hasUser: !!req.user,
-        cookies: req.cookies
+        hasUser: !!req.user
       });
     }
-    
-    res.status(200).json({ 
+
+    res.status(200).json({
       message: "Authenticated successfully",
-      recruiterId: req.id,
-      recruiter: req.user,
-      cookies: req.cookies
+      recruiterId: req.id
     });
   } catch (error) {
     console.error('Test auth error:', error);
@@ -486,18 +476,13 @@ export const toggleRecruiterStatus = async (req, res) => {
 
 export const getAllRecruiters = async (req, res) => {
   try {
-    // console.log("req recived")
-    let recruiters;
-
-    recruiters = await Recruiter.find();
-
-    // console.log(recruiters);
+    const recruiters = await Recruiter.find()
+      .select("-password -refreshToken -resetPasswordToken -resetPasswordExpires")
+      .limit(500);
 
     res.status(200).json({ recruiters });
   } catch (err) {
-    res
-      .status(500)
-      .json({ message: "Error fetching recruiters", error: err.message });
+    res.status(500).json({ message: "Error fetching recruiters" });
   }
 };
 
@@ -512,23 +497,14 @@ export const forgotpassword = async (req, res) => {
             return res.status(404).json({ Status: "Recruiter not existed", message: "No account found with this email address" });
         }
 
-        // Generate reset token
-        const resetToken = jwt.sign({ id: recruiter._id }, "jwt_secret_key", { expiresIn: "1d" });
-        
-        // Save reset token and expiry to recruiter document
-        recruiter.resetPasswordToken = resetToken;
-        recruiter.resetPasswordExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 1 day from now
+        // Generate a cryptographically random reset token. Store only its hash.
+        const { plainToken, tokenHash, expiresAt } = generateResetToken(24 * 60 * 60 * 1000);
+        recruiter.resetPasswordToken = tokenHash;
+        recruiter.resetPasswordExpires = expiresAt;
         await recruiter.save({ validateBeforeSave: false });
 
-        // Create reset URL - ensure FRONTEND_URL is used
         const frontendUrl = ServerConfig.Frontend_URL || 'http://localhost:5173';
-        const resetUrl = `${frontendUrl}/recruiter/reset_password/${recruiter._id}/${resetToken}`;
-        
-        // Console log the URL for testing
-        console.log('ServerConfig.Frontend_URL:', ServerConfig.Frontend_URL);
-        console.log('Password reset URL:', resetUrl);
-        console.log('Sending reset email to:', recruiter.email);
-        console.log('EMAIL_USER configured:', !!process.env.EMAIL_USER);
+        const resetUrl = `${frontendUrl}/recruiter/reset_password/${recruiter._id}/${plainToken}`;
 
         // Send email with password reset link using async/await for proper error handling
         try {
@@ -590,50 +566,35 @@ export const resetpassword = async (req, res) => {
     const { password } = req.body;
 
     try {
-        // Find recruiter and verify token
         const recruiter = await Recruiter.findById(id);
         if (!recruiter) {
-            return res.status(404).json({ Status: "Error", message: "Recruiter not found" });
+            return res.status(400).json({ Status: "Error", message: "Invalid or expired token" });
         }
 
-        // Check if reset token matches and is not expired
-        if (recruiter.resetPasswordToken !== token) {
-            return res.status(400).json({ Status: "Error", message: "Invalid reset token" });
+        if (!isResetTokenValid(recruiter.resetPasswordToken, recruiter.resetPasswordExpires, token)) {
+            return res.status(400).json({ Status: "Error", message: "Invalid or expired token" });
         }
 
-        if (recruiter.resetPasswordExpires < new Date()) {
-            return res.status(400).json({ Status: "Error", message: "Reset token has expired" });
+        try {
+            const hashedPassword = await bcrypt.hash(password, 12);
+
+            await Recruiter.findByIdAndUpdate(
+                recruiter._id,
+                {
+                    password: hashedPassword,
+                    $unset: {
+                        resetPasswordToken: 1,
+                        resetPasswordExpires: 1
+                    }
+                },
+                { runValidators: false }
+            );
+
+            return res.json({ Status: "Success", message: "Password reset successfully" });
+        } catch (updateError) {
+            console.error('Password update error:', updateError);
+            return res.status(500).json({ Status: "Error", message: "Failed to update password" });
         }
-
-        // Verify JWT token
-        jwt.verify(token, "jwt_secret_key", async (err, decoded) => {
-            if (err) {
-                return res.status(400).json({ Status: "Error", message: "Invalid or expired token" });
-            }
-
-            try {
-                // Hash the password
-                const hashedPassword = await bcrypt.hash(password, 12);
-                
-                // Update the password and clear reset token fields
-                await Recruiter.findByIdAndUpdate(
-                    recruiter._id,
-                    {
-                        password: hashedPassword,
-                        $unset: {
-                            resetPasswordToken: 1,
-                            resetPasswordExpires: 1
-                        }
-                    },
-                    { runValidators: false }
-                );
-
-                return res.json({ Status: "Success", message: "Password reset successfully" });
-            } catch (updateError) {
-                console.error('Password update error:', updateError);
-                return res.status(500).json({ Status: "Error", message: "Failed to update password" });
-            }
-        });
     } catch (error) {
         console.error('Reset password error:', error);
         return res.status(500).json({ Status: "Error", message: "Internal server error" });
@@ -662,25 +623,17 @@ export const validateSetPassword = async (req, res) => {
     const { id, token } = req.params;
 
     try {
-        // Find user by ID
         const user = await User.findById(id);
         if (!user) {
-            return res.status(404).json({ Status: "Error", message: "User not found" });
+            return res.status(400).json({ Status: "Error", message: "Invalid or expired token" });
         }
 
-        // Check if password is already set
         if (user.firstPassSet) {
             return res.status(400).json({ Status: "Error", message: "Password is already set" });
         }
 
-        // Verify token
-        if (user.resetPasswordToken !== token) {
+        if (!isResetTokenValid(user.resetPasswordToken, user.resetPasswordExpires, token)) {
             return res.status(400).json({ Status: "Error", message: "Invalid or expired token" });
-        }
-
-        // Check if token is expired
-        if (user.resetPasswordExpires && new Date() > user.resetPasswordExpires) {
-            return res.status(400).json({ Status: "Error", message: "Token has expired" });
         }
 
         return res.json({ Status: "Success", message: "Token is valid" });
@@ -698,22 +651,15 @@ export const setPassword = async (req, res) => {
         // Find user by ID
         const user = await User.findById(id);
         if (!user) {
-            return res.status(404).json({ Status: "Error", message: "User not found" });
+            return res.status(400).json({ Status: "Error", message: "Invalid or expired token" });
         }
 
-        // Check if password is already set
         if (user.firstPassSet) {
             return res.status(400).json({ Status: "Error", message: "Password is already set" });
         }
 
-        // Verify token
-        if (user.resetPasswordToken !== token) {
+        if (!isResetTokenValid(user.resetPasswordToken, user.resetPasswordExpires, token)) {
             return res.status(400).json({ Status: "Error", message: "Invalid or expired token" });
-        }
-
-        // Check if token is expired
-        if (user.resetPasswordExpires && new Date() > user.resetPasswordExpires) {
-            return res.status(400).json({ Status: "Error", message: "Token has expired" });
         }
 
         // Hash the password
@@ -815,24 +761,15 @@ export const createRecruiterByAdmin = async (req, res) => {
       userId: user._id
     });
 
-    // Generate reset token for password setting
-    const resetToken = jwt.sign({ id: user._id }, "jwt_secret_key", { expiresIn: "7d" });
-    
-    // Save reset token to user document
-    user.resetPasswordToken = resetToken;
-    user.resetPasswordExpires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+    // Generate a cryptographically random set-password token. Store only its hash.
+    const { plainToken: resetToken, tokenHash, expiresAt } = generateResetToken(7 * 24 * 60 * 60 * 1000);
+    user.resetPasswordToken = tokenHash;
+    user.resetPasswordExpires = expiresAt;
     await user.save({ validateBeforeSave: false });
 
     // Create password set URL - ensure FRONTEND_URL is used
     const frontendUrl = ServerConfig.Frontend_URL || 'http://localhost:5173';
     const setPasswordUrl = `${frontendUrl}/recruiter/set_password/${user._id}/${resetToken}`;
-    
-    // Console log the URL for testing
-    console.log('ServerConfig.Frontend_URL:', ServerConfig.Frontend_URL);
-    console.log('Password set URL:', setPasswordUrl);
-    console.log('Sending password set email to:', email);
-    console.log('EMAIL_USER configured:', !!process.env.EMAIL_USER);
-    console.log('EMAIL_PASS configured:', !!process.env.EMAIL_PASS);
 
     // Send email with password set link using async/await for proper error handling
     try {
@@ -966,24 +903,15 @@ export const createRecruiterByManager = async (req, res) => {
       isCreatedByProRecruiter: isProRecruiter === true,
     });
 
-    // Generate reset token for password setting
-    const resetToken = jwt.sign({ id: user._id }, "jwt_secret_key", { expiresIn: "7d" });
-    
-    // Save reset token to user document
-    user.resetPasswordToken = resetToken;
-    user.resetPasswordExpires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+    // Generate a cryptographically random set-password token. Store only its hash.
+    const { plainToken: resetToken, tokenHash, expiresAt } = generateResetToken(7 * 24 * 60 * 60 * 1000);
+    user.resetPasswordToken = tokenHash;
+    user.resetPasswordExpires = expiresAt;
     await user.save({ validateBeforeSave: false });
 
     // Create password set URL - ensure FRONTEND_URL is used
     const frontendUrl = ServerConfig.Frontend_URL || 'http://localhost:5173';
     const setPasswordUrl = `${frontendUrl}/recruiter/set_password/${user._id}/${resetToken}`;
-    
-    // Console log the URL for testing
-    console.log('ServerConfig.Frontend_URL:', ServerConfig.Frontend_URL);
-    console.log('Password set URL:', setPasswordUrl);
-    console.log('Sending password set email to:', email);
-    console.log('EMAIL_USER configured:', !!process.env.EMAIL_USER);
-    console.log('EMAIL_PASS configured:', !!process.env.EMAIL_PASS);
 
     // Send email with password set link using async/await for proper error handling
     try {

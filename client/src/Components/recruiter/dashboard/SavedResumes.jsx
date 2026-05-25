@@ -5,6 +5,7 @@
 import React, { useState, useEffect } from 'react';
 import { Users, MessageSquare, X } from 'lucide-react';
 import ResumeDetailsView from './ResumeDetailsView';
+import { getAuthHeaders } from '../../../utils/authUtils';
 
 const STATUS_LABELS = {
   all: 'All',
@@ -46,7 +47,7 @@ const SavedResumes = ({ jobId, onBack, jobtitle, preloadedResumes = [], resumesL
 
   const fetchResumes = async () => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/resumes/job/${jobId}`);
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/resumes/job/${jobId}`, { headers: getAuthHeaders(), credentials: 'include' });
       if (!response.ok) {
         throw new Error('Failed to fetch resumes');
       }
@@ -137,7 +138,7 @@ const SavedResumes = ({ jobId, onBack, jobtitle, preloadedResumes = [], resumesL
         onResumeUpdate={async (resumeId) => {
           // Refresh the specific resume data
           try {
-            const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/resumes/${resumeId}`);
+            const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/resumes/${resumeId}`, { headers: getAuthHeaders(), credentials: 'include' });
             if (response.ok) {
               const updatedResume = await response.json();
               // Update the selected resume with fresh data

@@ -26,6 +26,12 @@ const adminSchema = new Schema({
     refreshToken: {
         type: String,
     },
+    resetPasswordToken: {
+        type: String,
+    },
+    resetPasswordExpires: {
+        type: Date,
+    },
     // Additional profile fields
     dateOfBirth: {
         type: Date,
@@ -66,7 +72,6 @@ adminSchema.methods.isPasswordCorrect = async function (password) {
 }
 
 adminSchema.methods.generateAccessToken = function () {
-    console.log(process.env.ACCESS_TOKEN_SECRET);
     return jwt.sign(
         {
             _id: this._id,

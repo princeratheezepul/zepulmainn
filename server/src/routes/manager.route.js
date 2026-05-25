@@ -5,6 +5,7 @@ import Router from 'express';
 import { verifyJWT } from '../middleware/manager.auth.middleware.js';
 import { verifyJWT as verifyAdminJWT } from '../middleware/admin.auth.middleware.js';
 import { openAILimiter } from '../middleware/rateLimiters.js';
+import { anyAuth } from '../middleware/anyAuth.middleware.js';
 const router = Router();
 
 
@@ -54,6 +55,6 @@ router.route("/marketplace-jobs").get(verifyJWT, getAllMarketplaceJobs);
 router.route("/create-prorecruiter-company").post(verifyJWT, createProRecruiterCompany);
 
 // This route must come after all specific routes to avoid conflicts
-router.route("/:managerId").get(getManagerInfo);
+router.route("/:managerId").get(anyAuth, getManagerInfo);
 
 export default router;

@@ -20,15 +20,15 @@ router.route("/reset-password/:id/:token").post(resetpassword);
 router.route("/update-password").put(verifyJWT,updatePassword);
 router.route("/getjob").get(verifyJWT,getAllJobs);
 router.route("/job/:jobId").get(verifyJWT,getJobById);
-router.route("/candidates").get(getUniqueCandidates);
-router.route("/candidates/:resumeId").get(getDetailsCandidate);
+router.route("/candidates").get(verifyJWT, getUniqueCandidates);
+router.route("/candidates/:resumeId").get(verifyJWT, getDetailsCandidate);
 router.route("/job/:jobId/candidates").get(verifyJWT,getCandidatesByJob);
 router.route("/resumes/job/:jobId").get(verifyJWT,getResumesByJob);
 router.route("/resumes/:resumeId").patch(verifyJWT,updateResumeStatus);
 router.route("/resumes/stats").get(verifyJWT,getResumeStatsForAccountManager);
 router.route("/resumes/shortlisted").get(verifyJWT,getShortlistedResumesForAccountManager);
 router.route("/resumes/scorecard/:resumeId").get(verifyJWT,getResumeForScorecard);
-router.get('/recruiters', getAllRecruiters);
+router.get('/recruiters', verifyJWT, getAllRecruiters);
 
 // Admin routes (admin authentication required)
 router.route("/create-by-admin").post(verifyAdminJWT, createAccountManagerByAdmin);

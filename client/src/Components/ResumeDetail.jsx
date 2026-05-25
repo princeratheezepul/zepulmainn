@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import { getAuthHeaders } from "../utils/authUtils";
 function ResumeDetail() {
   const { resumeid: resumeId } = useParams();
   const { jobid: jobId } = useParams();
@@ -20,7 +21,8 @@ function ResumeDetail() {
     const fetchResume = async () => {
       try {
         const response = await fetch(
-          `${import.meta.env.VITE_BACKEND_URL}/api/resumes/${resumeId}`
+          `${import.meta.env.VITE_BACKEND_URL}/api/resumes/${resumeId}`,
+          { headers: getAuthHeaders(), credentials: 'include' }
         );
         const data = await response.json();
         setResume(data);
@@ -42,7 +44,8 @@ function ResumeDetail() {
     try {
       const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/scorecard/ai-questions`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
+        credentials: 'include',
         body: JSON.stringify({ skills })
       });
       const data = await response.json();
@@ -65,7 +68,8 @@ function ResumeDetail() {
     try {
       const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/scorecard/ai-skills`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
+        credentials: 'include',
         body: JSON.stringify({ resume })
       });
       const data = await response.json();
@@ -116,9 +120,8 @@ function ResumeDetail() {
 
       const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/scorecard/evaluate-answers`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: getAuthHeaders(),
+        credentials: 'include',
         body: JSON.stringify({
           answers,
           skillsArray: topSkills
@@ -136,9 +139,8 @@ function ResumeDetail() {
 
       await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/scorecard/save-scorecard`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: getAuthHeaders(),
+        credentials: 'include',
         body: JSON.stringify({
           candidateId: resume.userId || "anonymous", // or however you identify user
           jobId,
@@ -164,7 +166,7 @@ function ResumeDetail() {
 
   useEffect(() => {
     const fetchStatus = async () => {
-      const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/resumes/${resumeId}`);
+      const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/resumes/${resumeId}`, { headers: getAuthHeaders(), credentials: 'include' });
       const data = await res.json();
       setIsApproved(data.isApproved);
       setRequestAnotherRound(data.requestAnotherRound);
@@ -338,9 +340,10 @@ function ResumeDetail() {
                 <button
                   onClick={async () => {
                     try {
-                      await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/resumes/submit-to-manager`, {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
+                      await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/resumes/${resumeId}/submit-to-manager`, {
+                        method: "PATCH",
+                        headers: getAuthHeaders(),
+                        credentials: 'include',
                         body: JSON.stringify({
                           resumeId,
                           isApproved: true,
@@ -362,9 +365,10 @@ function ResumeDetail() {
                 <button
                   onClick={async () => {
                     try {
-                      await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/resumes/reqanotherround`, {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
+                      await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/resumes/${resumeId}/request-another-round`, {
+                        method: "PATCH",
+                        headers: getAuthHeaders(),
+                        credentials: 'include',
                         body: JSON.stringify({
                           resumeId,
                           requestAnotherRound: true,

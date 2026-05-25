@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Briefcase, GraduationCap, Award, Code, FolderOpen, Send, X, Loader2 } from 'lucide-react';
 import { useApi } from '../../../hooks/useApi';
 import toast from 'react-hot-toast';
+import { getAuthHeaders } from '../../../utils/authUtils';
 
 const SubmitToJobModal = ({ isOpen, onClose, candidate, onSubmitSuccess }) => {
   const { get, post } = useApi();
@@ -120,7 +121,8 @@ const SubmitToJobModal = ({ isOpen, onClose, candidate, onSubmitSuccess }) => {
 
     const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/resumes/evaluate-prompt`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: getAuthHeaders(),
+      credentials: "include",
       body: JSON.stringify({ prompt, modelType: "gpt-4o-mini" })
     });
 

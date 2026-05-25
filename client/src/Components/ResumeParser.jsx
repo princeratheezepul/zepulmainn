@@ -7,6 +7,7 @@ import { Card, CardContent } from "./ui/Card";
 import Tesseract from "tesseract.js";
 import { useNavigate, useParams } from 'react-router-dom';
 import { useApi } from '../hooks/useApi';
+import { getAuthHeaders } from '../utils/authUtils';
 GlobalWorkerOptions.workerSrc = workerUrl;
 
 function ResumeParser() {
@@ -218,7 +219,8 @@ function ResumeParser() {
 
       const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/resumes/evaluate-prompt`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: getAuthHeaders(),
+        credentials: "include",
         body: JSON.stringify({ prompt, modelType: "gpt-4o-mini" })
       });
       if (!response.ok) throw new Error("Backend ATS evaluation failed");
@@ -281,7 +283,8 @@ ${resumeText}
 
       const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/resumes/evaluate-prompt`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: getAuthHeaders(),
+        credentials: "include",
         body: JSON.stringify({ prompt, modelType: "gpt-4o-mini" })
       });
       if (!response.ok) throw new Error("Backend resume parsing failed");

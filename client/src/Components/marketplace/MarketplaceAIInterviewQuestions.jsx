@@ -3,6 +3,7 @@ import { Plus, RefreshCw, HelpCircle, Edit2, ArrowLeft, Upload, XCircle, CheckCi
 import { format, addDays } from 'date-fns';
 import toast from 'react-hot-toast';
 import MarketplaceAddAnswersPage from './MarketplaceAddAnswersPage';
+import { getAuthHeaders } from '../../utils/authUtils';
 
 const MarketplaceAIInterviewQuestions = ({ onBack, jobDetails, resumeData, onEvaluationComplete }) => {
   const [questions, setQuestions] = useState([]);
@@ -61,7 +62,8 @@ const MarketplaceAIInterviewQuestions = ({ onBack, jobDetails, resumeData, onEva
 
       const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/resumes/evaluate-prompt`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: getAuthHeaders(),
+        credentials: "include",
         body: JSON.stringify({ prompt, modelType: "gpt-4o-mini" })
       });
       if (!response.ok) throw new Error("Failed to generate AI questions");
