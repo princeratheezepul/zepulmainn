@@ -340,6 +340,16 @@ export const getResumeById = async (req, res) => {
   }
 }
 
+export const getResume = async (req, res) => {
+  try {
+    const resumes = await Resume.find();
+    res.status(200).json(resumes);
+  } catch (error) {
+    console.error("Error fetching resumes:", error);
+    res.status(500).json({ message: "Server error while fetching resumes" });
+  }
+};
+
 // @desc Get resumes by tag
 export const getResumesByTag = async (req, res) => {
   try {
