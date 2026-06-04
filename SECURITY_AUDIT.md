@@ -21,12 +21,12 @@ The unauthenticated `POST /api/assessment/:assessmentId/submit` route runs candi
 ### 2. Live production secrets exist with a trivial MongoDB password
 **File:** `server/.env`
 
-Live keys observed:
-- `OPENAI_API=sk-proj-…`
-- `DB_URL=mongodb+srv://zepulresumeparser:qwerty12334@cluster0…` ← **password is `qwerty12334`**
-- `EMAIL_PASS="hczw fggs lyya hqgz"` (Gmail App Password)
-- `TWILIO_ACCOUNT_SID=AC5db472a6364aeef4636dd933f01c4ab3`, `TWILIO_AUTH_TOKEN=2bb7b453145490bc1db51adfbcb064c1`
-- `VAPI_API_KEY`, `VAPI_PUBLIC_API_KEY`, `VAPI_WEBHOOK_SECRET=roshan3101_()` (weak)
+Live keys observed (values redacted — see `server/.env`):
+- `OPENAI_API` — present
+- `DB_URL` — MongoDB Atlas connection string with a **weak, brute-forceable password** (≤ 12 lowercase+digit chars)
+- `EMAIL_PASS` — Gmail App Password
+- `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`
+- `VAPI_API_KEY`, `VAPI_PUBLIC_API_KEY`, `VAPI_WEBHOOK_SECRET` (weak)
 
 `.env` is gitignored, but the Mongo password is brute-forceable in seconds.
 
@@ -283,7 +283,7 @@ Untrusted strings (`candidateName`, `managerName`, `note`, `jobDescription`, `in
 ### 25. Vapi webhook signature optional / unverified
 - `server/src/controllers/meeting.controller.js:570-626` verifies only if env var set.
 - `server/src/controllers/jobDescriptionSession.controller.js:183` (`handleWebhook`) doesn't verify at all.
-- `VAPI_WEBHOOK_SECRET=roshan3101_()` is weak anyway.
+- `VAPI_WEBHOOK_SECRET` is weak anyway.
 
 **Fix:** Fail closed — require the env var on startup. Always verify HMAC signature.
 
@@ -596,7 +596,7 @@ Only the assessment runner needs it, but stored on every resume → exfiltration
 ## Recommended order of fixes (highest leverage first)
 
 ### Right now (emergency)
-1. Rotate every secret in `server/.env` — MongoDB `qwerty12334` first.
+1. Rotate every secret in `server/.env` — MongoDB password first.
 2. Delete `console.log(process.env.ACCESS_TOKEN_SECRET)` (`server/src/middleware/admin.auth.middleware.js:11`).
 3. Delete `console.log("Login attempt:", { email, password })` (`server/src/controllers/marketplace.controller.js:542`).
 4. Delete `console.log(ServerConfig.DB_URL)` (`server/src/config/dbConfig.js:6`).
