@@ -493,12 +493,13 @@ const AccountManager = () => {
         </div>
         {/* Avatar */}
         <div className="mb-2">
-          <img
-            src="https://randomuser.me/api/portraits/men/32.jpg"
-            alt="User Avatar"
-            className="w-12 h-12 rounded-full border-2 border-blue-600 object-cover cursor-pointer"
+          <div
+            className="w-12 h-12 rounded-full bg-blue-600 text-white flex items-center justify-center font-semibold text-lg cursor-pointer select-none"
             onClick={() => setActiveView('profile')}
-          />
+            title={user?.fullname || ''}
+          >
+            {(user?.fullname || user?.username || 'U').trim().charAt(0).toUpperCase()}
+          </div>
         </div>
       </aside>
 

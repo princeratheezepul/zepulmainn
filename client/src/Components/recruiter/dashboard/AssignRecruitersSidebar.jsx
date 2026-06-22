@@ -30,16 +30,21 @@ export default function AssignRecruitersSidebar({
       try {
         setSearchLoading(true);
 
-        const url = isProRecruiter && managerId
-          ? `${import.meta.env.VITE_BACKEND_URL}/api/recruiter/getrecruiter?creatorId=${managerId}&type=manager`
-          : `${import.meta.env.VITE_BACKEND_URL}/api/accountmanager/recruiters`;
+        // Pick the recruiter source by the logged-in user's role. Account managers read
+        // from their own recruiter pool; managers and pro-recruiters read the recruiters
+        // they created. Hitting the wrong endpoint fails auth for that role
+        // ("Unauthorized request: User not found") — which previously broke assignment for
+        // plain managers, who fell into the account-manager branch.
+        const userType = JSON.parse(localStorage.getItem('userInfo') || 'null')?.data?.user?.type;
+        const isAccountManager = userType === 'accountmanager';
 
-        const accountManagerToken = JSON.parse(localStorage.getItem('userInfo') || 'null')?.data?.accessToken;
+        const url = isAccountManager
+          ? `${import.meta.env.VITE_BACKEND_URL}/api/accountmanager/recruiters`
+          : `${import.meta.env.VITE_BACKEND_URL}/api/recruiter/getrecruiter?creatorId=${managerId}&type=manager`;
+
         const response = await fetch(url, {
           credentials: 'include',
-          headers: isProRecruiter && managerId
-            ? { 'Authorization': `Bearer ${token}` }
-            : (accountManagerToken ? { 'Authorization': `Bearer ${accountManagerToken}` } : {}),
+          headers: token ? { 'Authorization': `Bearer ${token}` } : {},
         });
 
         if (!response.ok) {

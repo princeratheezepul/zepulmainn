@@ -87,7 +87,7 @@
 
 // export default Sidebar;
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   LayoutGrid,
   Briefcase,
@@ -99,6 +99,22 @@ const Sidebar = ({ activeComponent, setActiveComponent, isCollapsed, setIsCollap
   // const [isCollapsed, setIsCollapsed] = useState(true);
   const [hoveredItem, setHoveredItem] = useState(null);
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
+
+  // Publish the fixed sidebar's current width so layout siblings (e.g. the global
+  // footer) can offset themselves and not get covered. Matches the w-20/w-52 widths
+  // (5rem collapsed / 13rem expanded). Cleared on unmount so other pages are unaffected.
+  useEffect(() => {
+    const root = document.documentElement;
+    root.style.setProperty("--zep-sidebar-width", isCollapsed ? "5rem" : "13rem");
+    return () => {
+      root.style.removeProperty("--zep-sidebar-width");
+    };
+  }, [isCollapsed]);
+
+  // Logged-in user's display name + initial for the profile avatar.
+  const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+  const userName = userInfo?.data?.user?.fullname || userInfo?.data?.user?.username || "User";
+  const userInitial = userName.charAt(0).toUpperCase();
 
   const navItems = [
     { name: "Dashboard", icon: <LayoutGrid size={20} /> },
@@ -182,14 +198,14 @@ const Sidebar = ({ activeComponent, setActiveComponent, isCollapsed, setIsCollap
             isCollapsed ? "justify-center" : ""
           }`}
         >
-          <img
-            src="https://randomuser.me/api/portraits/men/32.jpg"
-            alt="User avatar"
-            className="w-10 h-10 rounded-full border object-cover cursor-pointer"
+          <div
+            className="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-semibold cursor-pointer select-none flex-shrink-0"
             onClick={() => setActiveComponent("Profile")}
             onMouseEnter={(e) => handleMouseEnter("Profile", e)}
             onMouseLeave={handleMouseLeave}
-          />
+          >
+            {userInitial}
+          </div>
           {!isCollapsed && (
             <div className="ml-3">
               <div className="text-sm hover:font-blue-600 font-semibold cursor-pointer"              
@@ -197,7 +213,7 @@ const Sidebar = ({ activeComponent, setActiveComponent, isCollapsed, setIsCollap
               onMouseEnter={(e) => handleMouseEnter("Profile", e)}
               onMouseLeave={handleMouseLeave}                
               >
-                Profile
+                <span className="block truncate max-w-[120px]" title={userName}>{userName}</span>
               </div>
             </div>
           )}

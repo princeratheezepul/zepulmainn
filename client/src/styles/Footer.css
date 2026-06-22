@@ -5,6 +5,17 @@
   padding: 2rem 2rem 2rem 2rem;
 }
 
+/* Dashboard layouts (manager / pro-recruiter) render a fixed left sidebar that would
+   otherwise overlap this global footer. The sidebar publishes its width via
+   --zep-sidebar-width while mounted (unset → 0 elsewhere), and only renders at the lg
+   breakpoint (>=1024px), so start the footer after the sidebar at that width only. */
+@media (min-width: 1024px) {
+  .footer-container {
+    margin-left: var(--zep-sidebar-width, 0);
+    transition: margin-left 0.3s ease-in-out;
+  }
+}
+
 /* Main Footer Layout */
 .footer-main {
   display: flex;
