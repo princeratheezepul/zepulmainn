@@ -125,8 +125,19 @@ const ResumeSchema = new mongoose.Schema(
     // Status Management
     status: {
       type: String,
-      enum: ['scheduled', 'screening', 'submitted', 'shortlisted', 'rejected', 'offered', 'hired'],
+      enum: ['applied', 'scheduled', 'screening', 'submitted', 'shortlisted', 'rejected', 'offered', 'hired'],
       default: 'submitted'
+    },
+
+    // Candidate (self-service) application fields
+    candidateId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Candidate',
+      default: null
+    },
+    isCandidateApplication: {
+      type: Boolean,
+      default: false
     },
 
     // Internal AI Assessment

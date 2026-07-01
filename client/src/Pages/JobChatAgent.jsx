@@ -88,6 +88,13 @@ export default function JobChatAgent() {
             const storedUserInfo = JSON.parse(localStorage.getItem("userInfo") || "{}");
             const resolvedManagerId = user?.id || user?._id || storedUserInfo?.data?.user?._id;
 
+            // The manager's company is stored in `companys` as an ObjectId reference
+            // (or, when populated, an object). Pass the id as companyId so the backend
+            // can resolve and store the real company name on the job.
+            const companyRef = storedUserInfo?.data?.user?.companys?.[0] || user?.companys?.[0];
+            const resolvedCompanyId = typeof companyRef === "object" ? companyRef?._id : companyRef;
+            const resolvedCompanyName = typeof companyRef === "object" ? companyRef?.name : undefined;
+
             const finalPayload = {
                 jobtitle: String(jobData.jobtitle || "Untitled Role"),
                 description: String(jobData.description || ""),
@@ -104,7 +111,8 @@ export default function JobChatAgent() {
                 preferredQualifications: Array.isArray(jobData.preferredQualifications) ? jobData.preferredQualifications.map(String) : [],
                 openpositions: Number(jobData.openpositions) || 1,
                 managerId: resolvedManagerId,
-                company: storedUserInfo?.data?.user?.companys?.[0] || user?.companys?.[0]?.name || "Zepul Pro Company",
+                companyId: resolvedCompanyId || undefined,
+                company: resolvedCompanyName || "Zepul Pro Company",
                 priority: [],
                 internalNotes: "Generated via AI Job Assistant",
                 resumeAnalysisPoints: [],

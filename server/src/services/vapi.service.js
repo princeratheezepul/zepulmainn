@@ -440,6 +440,178 @@ export const startWebCallForJobDescription = async () => {
   };
 };
 
+/**
+ * Build the assistant body for the Candidate Career Interview.
+ * This AI conducts an in-depth (up to 30 min) interview with a job seeker to
+ * understand the role they want, their skills, experience and preferences, so
+ * the platform can match them with suitable jobs afterwards.
+ */
+export const buildCandidateInterviewAssistantBody = async (context = {}) => {
+  const candidate = context?.candidate || {};
+  const durationMinutes = context?.durationMinutes || 30;
+
+  const candidateSummary = [
+    candidate.fullName && `Candidate Name: ${candidate.fullName}`,
+    candidate.email && `Candidate Email: ${candidate.email}`,
+    candidate.phoneNumber && `Candidate Phone: ${candidate.phoneNumber}`,
+    candidate.address && `Candidate Location: ${candidate.address}`,
+  ]
+    .filter(Boolean)
+    .join("\n");
+
+  const instructions = `You are "Zeus", a warm, professional career counselor and interviewer for Zepul.
+
+Your goal is to conduct an in-depth career discovery interview with a job seeker to deeply understand the kind of role they are looking for, so Zepul can match them with the most suitable open jobs afterwards.
+
+Conduct a natural, conversational interview lasting up to ${durationMinutes} minutes. Ask ONE question at a time, listen, acknowledge the answer, and ask thoughtful follow-up questions to go deep. Do not rush and do not ask multiple questions at once.
+
+Cover these areas thoroughly over the course of the conversation:
+1. The exact role / job title they are looking for right now (their "dream job")
+2. Why that role — what excites them about it
+3. Their current/most recent role and responsibilities
+4. Core technical skills, tools, and technologies they are strongest in
+5. Years of professional experience and seniority level they want (e.g., junior, mid, senior, lead)
+6. Domains or industries they prefer
+7. Type of company they want (startup, enterprise, agency, etc.)
+8. Work arrangement preference (remote, hybrid, on-site) and preferred locations
+9. Employment type (full-time, part-time, contract)
+10. Salary expectations (only if they are comfortable sharing)
+11. Deal-breakers or must-haves, and anything they want to avoid
+12. Career goals for the next few years
+
+Rules:
+- Be empathetic, encouraging and concise. The candidate is speaking, not typing.
+- Always acknowledge what they said before moving on.
+- Probe vague answers with gentle follow-ups to get specifics (especially concrete skills and the target role title).
+- Keep track of time. As you approach ${durationMinutes} minutes, begin wrapping up.
+- When you have covered the key areas (especially the target role and skills) and the candidate has nothing more to add, briefly summarize what you heard, thank them, and then call the 'end_interview' function to end the session.
+
+Start by warmly welcoming the candidate and asking what kind of role they are looking for.`;
+
+  const firstMessage = `Hi! I'm Zeus, your AI career guide from Zepul.
+
+I'm going to ask you some questions to really understand the kind of role you're looking for, so we can match you with the best opportunities. This is a relaxed conversation and can take up to ${durationMinutes} minutes — there's no rush.
+
+Just speak naturally, and I'll ask follow-up questions along the way.
+
+So, to start — what kind of role are you looking for right now?`;
+
+  const endInterviewFunction = {
+    type: "function",
+    function: {
+      name: "end_interview",
+      description:
+        "Call this function when you have understood the candidate's desired role, skills and preferences and the candidate has nothing more to add. This gracefully ends the interview so the transcript can be analyzed.",
+      parameters: {
+        type: "object",
+        properties: {
+          reason: {
+            type: "string",
+            description: "Brief reason for ending (e.g., 'Career discovery completed').",
+          },
+        },
+        required: ["reason"],
+      },
+    },
+  };
+
+  let webhookUrl = process.env.VAPI_WEBHOOK_URL;
+  if (!webhookUrl) {
+    const backendUrl = process.env.BACKEND_URL || process.env.FRONTEND_URL?.replace(/\/$/, "");
+    webhookUrl = backendUrl
+      ? `${backendUrl}/api/candidate-interview/webhook/vapi`
+      : "http://localhost:5880/api/candidate-interview/webhook/vapi";
+  } else {
+    webhookUrl = webhookUrl
+      .replace("/api/meetings/webhook/vapi", "/api/candidate-interview/webhook/vapi")
+      .replace("/api/job-description-sessions/webhook/vapi", "/api/candidate-interview/webhook/vapi");
+  }
+
+  console.log("🔗 Candidate Interview Vapi webhook URL:", webhookUrl);
+
+  const contextualInstructions = candidateSummary
+    ? `${instructions}\n\nCandidate context:\n${candidateSummary}`
+    : instructions;
+
+  return {
+    name: "Candidate Career Interviewer",
+    firstMessage,
+    model: {
+      provider: VAPI_MODEL_PROVIDER,
+      model: VAPI_MODEL_NAME,
+      messages: [{ role: "system", content: contextualInstructions }],
+      tools: [endInterviewFunction],
+    },
+    voice: {
+      provider: VAPI_VOICE_PROVIDER,
+      voiceId: VAPI_VOICE_ID,
+    },
+    serverUrl: webhookUrl,
+    serverMessages: [
+      "status-update",
+      "transcript",
+      "function-call",
+      "end-of-call-report",
+    ],
+  };
+};
+
+/**
+ * Create a Candidate Interview assistant and return joinConfig for the browser SDK
+ */
+export const startWebCallForCandidateInterview = async (context = {}) => {
+  const body = await buildCandidateInterviewAssistantBody(context);
+
+  if (!VAPI_API_KEY) {
+    console.warn("VAPI_API_KEY is not set. Returning mock config for candidate interview.");
+    return {
+      callId: `mock-call-${crypto.randomBytes(6).toString("hex")}`,
+      joinConfig: {
+        mock: true,
+        assistantId: "mock-assistant",
+        publicApiKey: VAPI_PUBLIC_API_KEY || "missing VAPI_PUBLIC_API_KEY",
+      },
+    };
+  }
+
+  const endpoint = `${VAPI_BASE_URL}/assistant`;
+  const response = await fetch(endpoint, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${VAPI_API_KEY}`,
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error(`Vapi API error (${response.status}):`, errorText);
+    throw new Error(`Failed to create candidate interview assistant: ${response.status} ${errorText}`);
+  }
+
+  const data = await response.json();
+  const assistantId = data.id || data.assistantId || data._id;
+  if (!assistantId) {
+    throw new Error("Assistant created but no ID returned from Vapi");
+  }
+
+  console.log("✅ Candidate Interview Vapi assistant created:", assistantId);
+
+  if (!VAPI_PUBLIC_API_KEY) {
+    console.warn("VAPI_PUBLIC_API_KEY is not set. Returning mock joinConfig.");
+    return {
+      callId: null,
+      joinConfig: { mock: true, assistantId, publicApiKey: "missing VAPI_PUBLIC_API_KEY" },
+    };
+  }
+
+  return {
+    callId: null,
+    joinConfig: { assistantId, publicApiKey: VAPI_PUBLIC_API_KEY },
+  };
+};
+
 export const startWebCallForMeeting = async ({ assistantId, context }) => {
   let resolvedAssistantId = assistantId;
 

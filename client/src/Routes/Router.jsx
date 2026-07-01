@@ -84,6 +84,13 @@ import Meeting from "../Pages/Meeting";
 import InterviewResults from "../Pages/InterviewResults";
 import DescribeJob from "../Pages/DescribeJob";
 import ConfirmationPage from "../Pages/ConfirmationPage";
+import CandidateSignup from "../Pages/CandidateSignup";
+import CandidateLogin from "../Pages/CandidateLogin";
+import CandidateDetailsPage from "../Pages/CandidateDetails";
+import CandidateDashboard from "../Pages/CandidateDashboard";
+import CandidateInterview from "../Pages/CandidateInterview";
+import CandidateJobDetail from "../Pages/CandidateJobDetail";
+import CandidateAppliedJobs from "../Pages/CandidateAppliedJobs";
 
 
 
@@ -241,6 +248,15 @@ const Router = () => {
 
             {/* Fallback route — redirect unknown paths to the Landing Page */}
             <Route path="*" element={<Navigate to="/" replace />} />
+
+            {/* Candidate Routes - Public - No Header/Footer */}
+            <Route path="/candidate/signup" element={<CandidateSignup />} />
+            <Route path="/candidate/login" element={<CandidateLogin />} />
+            <Route path="/candidate/details" element={<CandidateDetailsPage />} />
+            <Route path="/candidate/dashboard" element={<CandidateDashboard />} />
+            <Route path="/candidate/interview" element={<CandidateInterview />} />
+            <Route path="/candidate/applied" element={<CandidateAppliedJobs />} />
+            <Route path="/candidate/jobs/:jobId" element={<CandidateJobDetail />} />
 
             {/* Unified Login Route - No Header/Footer */}
             <Route path="/login" element={<UnifiedLogin />} />

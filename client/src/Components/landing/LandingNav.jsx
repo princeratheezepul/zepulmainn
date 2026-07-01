@@ -7,6 +7,9 @@ const LandingNav = () => {
     const location = useLocation();
     const navigate = useNavigate();
     const isAbout = location.pathname === '/about';
+    const isZepJobs = location.pathname.toLowerCase() === '/zepjobs';
+    const ctaLabel = isZepJobs ? 'Candidate Dashboard' : 'Start Hiring';
+    const ctaTarget = isZepJobs ? '/candidate/dashboard' : '/login';
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     useEffect(() => {
@@ -72,8 +75,8 @@ const LandingNav = () => {
                 </div>
 
                 <div className="lp-nav-right">
-                    <button className="lp-nav-btn desktop-only" onClick={() => navigate('/login')}>
-                        Start Hiring
+                    <button className="lp-nav-btn desktop-only" onClick={() => navigate(ctaTarget)}>
+                        {ctaLabel}
                         <svg viewBox="0 0 11 11" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                             <path d="M2 5.5h7M6 2.5l3 3-3 3" />
                         </svg>
@@ -102,9 +105,9 @@ const LandingNav = () => {
                     <div className="lp-sidebar-bottom">
                         <button className="lp-sidebar-btn" onClick={() => {
                             closeSidebar();
-                            navigate('/login');
+                            navigate(ctaTarget);
                         }}>
-                            Start Hiring
+                            {ctaLabel}
                             <svg viewBox="0 0 11 11" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                                 <path d="M2 5.5h7M6 2.5l3 3-3 3" />
                             </svg>

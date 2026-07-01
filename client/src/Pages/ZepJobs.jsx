@@ -1,12 +1,48 @@
 import React, { useEffect, useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
+import toast, { Toaster } from 'react-hot-toast';
+import { getApiUrl } from '../config/config';
 import './ZepJobs.css';
 import LandingBeyondCTA from '../Components/landing/LandingBeyondCTA';
 import LandingNav from '../Components/landing/LandingNav';
 import '../styles/LandingPage.css';
 
 const ZepJobs = () => {
+  const navigate = useNavigate();
   const [scrolled, setScrolled] = useState(false);
   const [hidden, setHidden] = useState(false);
+
+  const handleTalkToAgent = async () => {
+    let candidate = null;
+    try {
+      candidate = JSON.parse(localStorage.getItem('candidateInfo'));
+    } catch {
+      candidate = null;
+    }
+
+    // Not logged in as a candidate → send to candidate login
+    if (!candidate?._id) {
+      navigate('/candidate/login');
+      return;
+    }
+
+    // Check with the server whether this candidate already used the agent
+    try {
+      const res = await fetch(
+        getApiUrl(`/api/candidate-interview/candidate/${candidate._id}/latest`)
+      );
+      const data = await res.json().catch(() => ({}));
+      if (data?.hasInterviewed) {
+        toast('You have already used the AI agent.', { icon: 'ℹ️' });
+        return;
+      }
+    } catch {
+      // If the check fails, fall through and let the interview page guard handle it
+    }
+
+    // Logged in and hasn't talked yet → start the interview
+    navigate('/candidate/interview');
+  };
 
   const lastY = useRef(0);
   const tickerWords = ['Product Design', 'Remote Jobs', 'AI Matching', 'Full Time', 'UX Research', 'Engineering Roles', 'Marketing Jobs', 'Zepul AI', 'Hyderabad', 'Bangalore'];
@@ -69,6 +105,7 @@ const ZepJobs = () => {
 
   return (
     <div className="zep-jobs-page">
+      <Toaster position="top-center" />
 
       <LandingNav />
 
@@ -96,8 +133,8 @@ const ZepJobs = () => {
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" /><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16" /></svg>
                 Hiring? Meet Zepul Jobs
               </button> */}
-              <button className="search-btn blue-btn">
-                Talk to Zepul Works AI agent
+              <button className="search-btn blue-btn" onClick={handleTalkToAgent}>
+                Talk to AI Agent
                 <svg viewBox="0 0 11 11" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M2 5.5h7M6 2.5l3 3-3 3" /></svg>
               </button>
             </div>

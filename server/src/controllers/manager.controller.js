@@ -493,6 +493,7 @@ export const createJobm = async (req, res) => {
         managerId,
         recruiterId,
         company,
+        companyId,
         hiringDeadline,
         internalNotes,
         resumeAnalysisPoints
@@ -500,6 +501,21 @@ export const createJobm = async (req, res) => {
     console.log("managerId:", managerId);
 
     try {
+        // Resolve the company name. The AI job assistant references the manager's
+        // company by ObjectId (sent as companyId, or jammed into the company
+        // field), so look up the Company document and store its real name. The
+        // manual job form sends a plain company name string, which is kept as-is.
+        let companyName = company;
+        let resolvedCompanyId = companyId;
+        const companyRef = companyId || (mongoose.Types.ObjectId.isValid(company) ? company : null);
+        if (companyRef) {
+            const companyDoc = await Company.findById(companyRef);
+            if (companyDoc) {
+                companyName = companyDoc.name;
+                resolvedCompanyId = companyDoc._id;
+            }
+        }
+
         const job = await Job.create({
             jobtitle,
             description,
@@ -514,7 +530,8 @@ export const createJobm = async (req, res) => {
             preferredQualifications,
             priority,
             managerId,
-            company,
+            company: companyName,
+            companyId: resolvedCompanyId,
             hiringDeadline: hiringDeadline ? new Date(hiringDeadline) : null,
             internalNotes: internalNotes || "",
             resumeAnalysisPoints: Array.isArray(resumeAnalysisPoints) ? resumeAnalysisPoints : [],
