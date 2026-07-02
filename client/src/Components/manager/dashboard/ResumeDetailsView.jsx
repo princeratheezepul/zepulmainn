@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Mail, Phone, MapPin, Briefcase, Plus, CheckCircle, XCircle, HelpCircle } from 'lucide-react';
+import { Mail, Phone, MapPin, Briefcase, Plus, CheckCircle, XCircle } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { generateScorecardPDF } from '../../../utils/pdfGenerator';
+import HiringDecisionScorecard from '../../scorecard/HiringDecisionScorecard';
 
 // Circular progress bar component - Fixed with proper circle rendering
 const CircularProgress = ({ percentage, size = 160, strokeWidth = 14 }) => {
@@ -411,95 +412,8 @@ const ResumeDetailsView = ({ resumeData, onBack }) => {
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 lg:gap-6">
             {/* Left & Middle Column */}
             <div className="xl:col-span-2 space-y-4 lg:space-y-6">
-              {/* AI Resume Summary */}
-              <div className="p-6 border rounded-xl bg-gray-50">
-                <div className="text-sm font-semibold text-black mb-4">AI Resume Summary</div>
-                <div className="space-y-8">
-                  {resumeData.aiSummary && Object.entries(resumeData.aiSummary).map(([key, value]) => (
-                    <div key={key} className="flex gap-4 items-start">
-                      <div className="bg-gray-200 rounded-full w-8 h-8 flex-shrink-0 flex items-center justify-center mt-1">
-                        <HelpCircle size={18} className="text-gray-600" />
-                      </div>
-                      <div>
-                        <div className="font-bold text-gray-900 capitalize text-base mb-2">{key.replace(/([A-Z])/g, ' $1').trim()}</div>
-                        <p className="text-gray-700 text-sm leading-relaxed">{value}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* AI Scorecard - Separate Container */}
-              <div className=" p-6 border rounded-xl bg-gray-50">
-                <div className="text-lg font-bold text-black mb-8">AI Scorecard</div>
-                <div className="space-y-6">
-                  {resumeData.aiScorecard && Object.keys(resumeData.aiScorecard).length > 0 ?
-                    Object.entries(resumeData.aiScorecard).map(([key, value]) => {
-                      const numericValue = parseInt(value) || 0;
-                      const displayName = key === 'technicalSkillMatch' ? 'Technical Skill Match' :
-                        key === 'cultureFit' ? 'Culture Fit' :
-                          key === 'teamLeadership' ? 'Team Leadership' :
-                            key.charAt(0).toUpperCase() + key.slice(1);
-
-                      return (
-                        <div key={key} className="scorecard-item">
-                          <div className="flex justify-between items-center mb-3">
-                            <div className="text-gray-800 font-semibold text-base">{displayName}</div>
-                            <span className="font-bold text-gray-900 text-base">{numericValue}%</span>
-                          </div>
-                          <div className="w-full bg-gray-300 rounded-full h-3 overflow-hidden">
-                            <div
-                              className="bg-blue-600 h-3 rounded-full transition-all duration-500"
-                              style={{
-                                width: `${Math.min(Math.max(numericValue, 0), 100)}%`
-                              }}
-                            ></div>
-                          </div>
-                        </div>
-                      );
-                    }) : (
-                      // Fallback with sample data if no aiScorecard
-                      <div className="space-y-6">
-                        <div className="scorecard-item">
-                          <div className="flex justify-between items-center mb-3">
-                            <div className="text-gray-800 font-semibold text-base">Technical Skill Match</div>
-                            <span className="font-bold text-gray-900 text-base">85%</span>
-                          </div>
-                          <div className="w-full bg-gray-300 rounded-full h-3 overflow-hidden">
-                            <div className="bg-blue-600 h-3 rounded-full transition-all duration-500" style={{ width: '85%' }}></div>
-                          </div>
-                        </div>
-                        <div className="scorecard-item">
-                          <div className="flex justify-between items-center mb-3">
-                            <div className="text-gray-800 font-semibold text-base">Communication</div>
-                            <span className="font-bold text-gray-900 text-base">78%</span>
-                          </div>
-                          <div className="w-full bg-gray-300 rounded-full h-3 overflow-hidden">
-                            <div className="bg-blue-600 h-3 rounded-full transition-all duration-500" style={{ width: '78%' }}></div>
-                          </div>
-                        </div>
-                        <div className="scorecard-item">
-                          <div className="flex justify-between items-center mb-3">
-                            <div className="text-gray-800 font-semibold text-base">Culture Fit</div>
-                            <span className="font-bold text-gray-900 text-base">72%</span>
-                          </div>
-                          <div className="w-full bg-gray-300 rounded-full h-3 overflow-hidden">
-                            <div className="bg-blue-600 h-3 rounded-full transition-all duration-500" style={{ width: '72%' }}></div>
-                          </div>
-                        </div>
-                        <div className="scorecard-item">
-                          <div className="flex justify-between items-center mb-3">
-                            <div className="text-gray-800 font-semibold text-base">Team Leadership</div>
-                            <span className="font-bold text-gray-900 text-base">65%</span>
-                          </div>
-                          <div className="w-full bg-gray-300 rounded-full h-3 overflow-hidden">
-                            <div className="bg-blue-600 h-3 rounded-full transition-all duration-500" style={{ width: '65%' }}></div>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                </div>
-              </div>
+              {/* Hiring Decision Engine (replaces generic AI Resume Summary + AI Scorecard) */}
+              <HiringDecisionScorecard resumeData={resumeData} jobDetails={resumeData.jobId || {}} />
 
 
             </div>

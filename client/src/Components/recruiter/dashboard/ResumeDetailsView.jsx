@@ -1,93 +1,17 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Mail, Phone, MapPin, Briefcase, Plus, CheckCircle, XCircle, HelpCircle, Circle } from 'lucide-react';
+import { Mail, Phone, MapPin, Briefcase, Plus, CheckCircle } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { generateScorecardPDF } from '../../../utils/pdfGenerator';
 import AIInterviewQuestions from './AIInterviewQuestions';
 import InterviewTranscript from './InterviewTranscript';
 import MarketplaceAIInterviewQuestions from '../../marketplace/MarketplaceAIInterviewQuestions';
 import MeetingManagement from './MeetingManagement';
-
-const STOP_WORDS = new Set([
-  'the', 'and', 'for', 'with', 'from', 'this', 'that', 'have', 'will', 'your', 'about', 'into', 'over', 'more', 'than', 'were', 'been', 'being',
-  'able', 'using', 'skills', 'experience', 'must', 'should', 'could', 'would', 'their', 'them', 'they', 'those', 'these', 'such', 'also',
-  'each', 'every', 'ensure', 'ensuring', 'including', 'include', 'across', 'ability', 'strong', 'good', 'excellent', 'team', 'teams',
-  'work', 'working', 'within', 'without', 'through', 'across', 'provide', 'providing', 'make', 'making', 'take', 'taking', 'high', 'level',
-  'based', 'around', 'least', 'best', 'well', 'per', 'performs', 'perform', 'performance', 'lead', 'leading', 'leadership', 'deliver',
-  'delivering', 'drive', 'driving', 'support', 'supporting', 'manage', 'management', 'manager', 'co', 'etc'
-]);
-
-const tokenizeText = (text) => {
-  if (!text) return [];
-  return text
-    .toLowerCase()
-    .replace(/[^a-z0-9\s]/g, ' ')
-    .split(/\s+/)
-    .filter(Boolean);
-};
-
-const filterMeaningfulTokens = (tokens) =>
-  tokens.filter((token) => token.length > 2 && !STOP_WORDS.has(token));
-
-const buildResumeCorpus = (resumeData) => {
-  if (!resumeData) return '';
-  if (resumeData.raw_text && resumeData.raw_text.trim().length > 0) {
-    return resumeData.raw_text;
-  }
-
-  const segments = [
-    resumeData.aiSummary?.technicalExperience,
-    resumeData.aiSummary?.projectExperience,
-    resumeData.aiSummary?.education,
-    resumeData.aiSummary?.keyAchievements,
-    resumeData.aiSummary?.skillMatch,
-    resumeData.aiSummary?.competitiveFit,
-    resumeData.aiSummary?.consistencyCheck,
-    Array.isArray(resumeData.skills) ? resumeData.skills.join(' ') : '',
-    Array.isArray(resumeData.non_technical_skills) ? resumeData.non_technical_skills.join(' ') : '',
-    resumeData.experience,
-    resumeData.about,
-    resumeData.title,
-    resumeData.applicationDetails?.position
-  ];
-
-  return segments.filter(Boolean).join(' ');
-};
-
-const evaluateResumeAnalysisPoints = (resumeText, points) => {
-  if (!points || points.length === 0) {
-    return [];
-  }
-
-  const resumeTokens = filterMeaningfulTokens(tokenizeText(resumeText || ''));
-  const resumeTokenSet = new Set(resumeTokens);
-
-  return points.map((point, index) => {
-    const pointTokens = filterMeaningfulTokens(tokenizeText(point));
-
-    if (pointTokens.length === 0) {
-      return {
-        id: `resume-analysis-${index}`,
-        label: point,
-        score: 0,
-        matchedTokens: [],
-        totalTokens: 0
-      };
-    }
-
-    const matchedTokens = pointTokens.filter((token) => resumeTokenSet.has(token));
-    const ratio = matchedTokens.length / pointTokens.length;
-    const score = Math.round(ratio * 100);
-
-    return {
-      id: `resume-analysis-${index}`,
-      label: point,
-      score: Math.max(0, Math.min(100, score)),
-      matchedTokens,
-      totalTokens: pointTokens.length
-    };
-  });
-};
+import {
+  HiringFitAnalysis, ScoreBreakdown, CodingBreakdown,
+  InterviewEvaluation, HiringRecommendation,
+} from '../../scorecard/HiringDecisionScorecard';
+import { buildHiringDecision } from '../../../utils/hiringFitAnalysis';
 
 // Circular progress bar component - Fixed with proper circle rendering
 const CircularProgress = ({ percentage, size = 160, strokeWidth = 14 }) => {
@@ -176,8 +100,6 @@ const ResumeDetailsView = ({
     if (marketplaceJobDetails?._id) return marketplaceJobDetails._id;
     return null;
   }, [jobData, resumeData?.jobId, jobDetailsOverride, marketplaceJobDetails]);
-  const resumeCorpus = useMemo(() => buildResumeCorpus(resumeData), [resumeData]);
-  const [analysisScorecard, setAnalysisScorecard] = useState(null);
 
   // Guard: If no _id, show error and redirect
   useEffect(() => {
@@ -231,17 +153,12 @@ const ResumeDetailsView = ({
     }
   }, [jobData, resolvedJobId, isMarketplace]);
 
-  useEffect(() => {
-    const points = jobData?.resumeAnalysisPoints;
-    if (Array.isArray(points) && points.length > 0) {
-      setAnalysisScorecard(evaluateResumeAnalysisPoints(resumeCorpus, points));
-    } else {
-      setAnalysisScorecard(null);
-    }
-  }, [jobData, resumeCorpus]);
-
   // Job details resolved from available context (resume -> override -> marketplace)
   const jobDetails = jobData || {};
+
+  // Hiring Decision Engine: derive role-specific, evidence-based analysis from
+  // data already stored on the resume (+ job). Pure & cheap, so compute inline.
+  const decision = buildHiringDecision(resumeData, jobDetails);
 
   const [showInterviewQuestions, setShowInterviewQuestions] = useState(false);
   const [referredToManager, setReferredToManager] = useState(resumeData.referredToManager || false);
@@ -606,85 +523,23 @@ const ResumeDetailsView = ({
             </div>
           </div>
 
+          {/* Final Hiring Recommendation — surfaced first for fast decisions */}
+          <div className="mb-8">
+            <HiringRecommendation decision={decision} />
+          </div>
+
           {/* Main Content Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Left & Middle Column */}
             <div className="col-span-1 lg:col-span-2 space-y-8">
-              {/* AI Summary & Scorecard */}
-              <div className="p-6 border rounded-xl bg-gray-50">
-                <div className="text-lg font-bold text-black mb-8">AI Resume Summary</div>
-                <div className="space-y-8">
-                  {resumeData.aiSummary && Object.entries(resumeData.aiSummary).map(([key, value]) => (
-                    <div key={key} className="flex gap-4 items-start">
-                      <div className="bg-gray-200 rounded-full w-8 h-8 flex-shrink-0 flex items-center justify-center mt-1">
-                        <HelpCircle size={18} className="text-gray-600" />
-                      </div>
-                      <div>
-                        <div className="font-bold text-gray-900 capitalize text-base mb-2">
-                          {key === 'skillMatch' ? 'Skill Match' :
-                            key === 'competitiveFit' ? 'Competitive Fit & Market Prediction' :
-                              key === 'consistencyCheck' ? 'Consistency Check' :
-                                key.replace(/([A-Z])/g, ' $1').trim()}
-                        </div>
-                        <p className="text-gray-700 text-sm leading-relaxed">{value}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+              {/* Hiring Fit Analysis (replaces generic AI Resume Summary) */}
+              <HiringFitAnalysis decision={decision} />
 
-                <hr className="my-10 border-t border-gray-300" />
+              {/* CV Strength — every score explained */}
+              <ScoreBreakdown decision={decision} />
 
-                <div className="text-lg font-bold text-black mb-8">AI Scorecard</div>
-                {analysisScorecard && analysisScorecard.length > 0 ? (
-                  <div className="space-y-6">
-                    {analysisScorecard.map((item) => (
-                      <div key={item.id}>
-                        <div className="flex justify-between items-center mb-3">
-                          <div className="text-gray-800 font-semibold text-base">{item.label}</div>
-                          <span className="font-bold text-gray-900 text-base">{item.score}%</span>
-                        </div>
-                        <div className="w-full bg-gray-300 rounded-full h-3 overflow-hidden">
-                          <div
-                            className="bg-blue-600 h-3 rounded-full transition-all duration-500"
-                            style={{ width: `${item.score}%` }}
-                          ></div>
-                        </div>
-                        {item.totalTokens > 0 && (
-                          <div className="text-xs text-gray-500 mt-2">
-                            Matches {item.matchedTokens.length} / {item.totalTokens}
-                            {item.matchedTokens.length > 0 && (
-                              <span className="ml-2">
-                                ({item.matchedTokens.slice(0, 5).join(', ')}
-                                {item.matchedTokens.length > 5 ? ', …' : ''})
-                              </span>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="space-y-6">
-                    {resumeData.aiScorecard && Object.entries(resumeData.aiScorecard).map(([key, value]) => (
-                      <div key={key}>
-                        <div className="flex justify-between items-center mb-3">
-                          <div className="text-gray-800 capitalize font-semibold text-base">
-                            {key === 'technicalSkillMatch' ? 'Technical Skill Match' :
-                              key === 'competitiveFit' ? 'Competitive Fit & Market Prediction' :
-                                key === 'consistencyCheck' ? 'Consistency Check' :
-                                  key === 'teamLeadership' ? 'Team Leadership' :
-                                    key.replace(/([A-Z])/g, ' $1').trim()}
-                          </div>
-                          <span className="font-bold text-gray-900 text-base">{value}%</span>
-                        </div>
-                        <div className="w-full bg-gray-300 rounded-full h-3">
-                          <div className="bg-blue-600 h-3 rounded-full transition-all duration-500" style={{ width: `${value}%` }}></div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+              {/* Coding Assessment competency breakdown */}
+              <CodingBreakdown decision={decision} />
 
               {/* Application Details */}
               <div className="p-6 border rounded-xl bg-gray-50">
@@ -770,7 +625,16 @@ const ResumeDetailsView = ({
             jobId={jobDetails?._id || (typeof resumeData.jobId === "object" ? resumeData.jobId?._id : resumeData.jobId)}
           />
 
-          {/* Interview Transcript - Show only if evaluation exists and has results */}
+          {/* AI Interview Evaluation - evidence-based (communication, strongest/weakest) */}
+          {resumeData.interviewEvaluation &&
+            resumeData.interviewEvaluation.evaluationResults &&
+            resumeData.interviewEvaluation.evaluationResults.length > 0 && (
+              <div className="mt-8">
+                <InterviewEvaluation decision={decision} />
+              </div>
+            )}
+
+          {/* Interview Transcript - full raw detail (kept for reference) */}
           {resumeData.interviewEvaluation &&
             resumeData.interviewEvaluation.evaluationResults &&
             resumeData.interviewEvaluation.evaluationResults.length > 0 && (

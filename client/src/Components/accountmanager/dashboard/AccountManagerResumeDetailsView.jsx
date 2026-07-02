@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Mail, Phone, MapPin, Briefcase, Plus, CheckCircle, XCircle, HelpCircle, Circle } from 'lucide-react';
+import { Mail, Phone, MapPin, Briefcase, Plus, CheckCircle, XCircle, Circle } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { usePDF } from 'react-to-pdf';
+import HiringDecisionScorecard from '../../scorecard/HiringDecisionScorecard';
 
 // Circular progress bar component
 const CircularProgress = ({ percentage, size = 120, strokeWidth = 8 }) => {
@@ -591,40 +592,8 @@ const AccountManagerResumeDetailsView = ({ resume, onBack, onStatusUpdate }) => 
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 lg:gap-8">
             {/* Left & Middle Column */}
             <div className="xl:col-span-2 space-y-6 lg:space-y-8">
-                {/* AI Summary & Scorecard */}
-                <div className="p-6 border rounded-xl bg-gray-50">
-                    <div className="text-lg font-bold text-black mb-8">AI Resume Summary</div>
-                    <div className="space-y-8">
-                        {resume.aiSummary && Object.entries(resume.aiSummary).map(([key, value]) => (
-                            <div key={key} className="flex gap-4 items-start">
-                                <div className="bg-gray-200 rounded-full w-8 h-8 flex-shrink-0 flex items-center justify-center mt-1">
-                                    <HelpCircle size={18} className="text-gray-600" />
-                                </div>
-                                <div>
-                                    <div className="font-bold text-gray-900 capitalize text-base mb-2">{key.replace(/([A-Z])/g, ' $1').trim()}</div>
-                                    <p className="text-gray-700 text-sm leading-relaxed">{value}</p>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-
-                    <hr className="my-10 border-t border-gray-300" />
-                    
-                    <div className="text-lg font-bold text-black mb-8">AI Scorecard</div>
-                    <div className="space-y-6">
-                        {resume.aiScorecard && Object.entries(resume.aiScorecard).map(([key, value]) => (
-                            <div key={key}>
-                                <div className="flex justify-between items-center mb-3">
-                                    <div className="text-gray-800 capitalize font-semibold text-base">{key.replace(/([A-Z])/g, ' $1').trim()}</div>
-                                    <span className="font-bold text-gray-900 text-base">{value}%</span>
-                                </div>
-                                <div className="w-full bg-gray-300 rounded-full h-3">
-                                    <div className="bg-blue-600 h-3 rounded-full transition-all duration-500" style={{ width: `${value}%` }}></div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
+                {/* Hiring Decision Engine (replaces generic AI Resume Summary + AI Scorecard) */}
+                <HiringDecisionScorecard resumeData={resume} jobDetails={resume.jobId || {}} />
 
                 {/* Application Details */}
                 <div className="p-4 md:p-6 border rounded-xl bg-gray-50">
