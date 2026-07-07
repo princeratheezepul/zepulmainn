@@ -491,28 +491,28 @@ export const getFinalRecommendation = (resumeData = {}, jobData = {}, parts = {}
   // Role-specific, evidence-based reasoning.
   const matched = skillFit.strongMatches.map((m) => m.requirement);
   const missing = skillFit.missingSkills.map((m) => m.requirement);
-  const bits = [];
 
-  if (matched.length)
-    bits.push(`Candidate demonstrates strong ${listPhrase(matched)} capabilities relevant to ${role}`);
-  else
-    bits.push(`Candidate's resume shows limited direct evidence of the core skills for ${role}`);
+  let sentence = matched.length
+    ? `Candidate demonstrates strong ${listPhrase(matched)} capabilities relevant to ${role}`
+    : `Candidate's resume shows limited direct evidence of the core skills for ${role}`;
 
   const perf = [];
   if (coding.hasData) perf.push(`${coding.pass ? 'passed' : 'completed'} the coding assessment (${coding.overall}/100)`);
   if (interview.hasData) perf.push(`scored ${interview.avgScore10}/10 in the AI interview`);
-  if (perf.length) bits.push(`and ${perf.join(' and ')}`);
+  if (perf.length) sentence += `, and ${perf.join(' and ')}`;
+  sentence += '.';
 
+  let gap;
   if (missing.length) {
     const critical = risk.level === 'High';
-    bits.push(`. ${missing.length === 1 ? `Lack of ${missing[0]}` : `Missing evidence of ${listPhrase(missing)}`} is ${critical ? 'a significant gap for this role and should be closely validated' : 'noted but may be trainable; confirm in a final screen'}`);
+    gap = `${missing.length === 1 ? `Lack of ${missing[0]}` : `Missing evidence of ${listPhrase(missing)}`} is ${critical ? 'a significant gap for this role and should be closely validated' : 'noted but may be trainable; confirm in a final screen'}.`;
   } else {
-    bits.push('. No mandatory skill gaps were identified');
+    gap = 'No mandatory skill gaps were identified.';
   }
 
   return {
     recommendation,
-    reason: bits.join('') + '.',
+    reason: `${sentence} ${gap}`,
     composite,
     signals: signals.map(({ label, value }) => ({ label, value })),
     riskLevel: risk.level,
