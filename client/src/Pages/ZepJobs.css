@@ -4,9 +4,13 @@
   -webkit-font-smoothing: antialiased;
 }
 
-*,
-*::before,
-*::after {
+/* Scoped to the ZepJobs page only. This was previously a global `*` reset, which
+   (being unlayered) overrode Tailwind's margin/padding utilities across the whole
+   app. box-sizing is already provided globally by Tailwind's Preflight. */
+.zep-jobs-page,
+.zep-jobs-page *,
+.zep-jobs-page *::before,
+.zep-jobs-page *::after {
   margin: 0;
   padding: 0;
   box-sizing: border-box;

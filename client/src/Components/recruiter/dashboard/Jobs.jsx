@@ -219,7 +219,7 @@ const Jobs = () => {
   const filterCounts = getFilterCounts();
 
   return (
-    <div className="bg-gray-50 w-full px-2 sm:px-4 md:px-8 lg:px-16 py-0 min-h-screen relative">
+    <div className="bg-gray-50 w-full px-2 sm:px-4 md:px-8 lg:px-16 py-0 mb-8 min-h-screen relative">
       {/* Jobs List Header and Filters */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between pb-2 pt-2 border-b border-gray-200 mb-2 gap-2">
         <div className="flex flex-col justify-center">

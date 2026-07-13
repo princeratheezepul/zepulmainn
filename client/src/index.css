@@ -1,5 +1,20 @@
+/*
+  Cascade layer order. Bootstrap is placed AFTER Tailwind's `base` (Preflight) but
+  BEFORE `utilities`, so:
+    - Bootstrap's Reboot still wins over Preflight (base typography is unchanged), but
+    - Tailwind utility classes win over Bootstrap's element rules.
+  This fixes utilities (text-*, font-*, colors, spacing, …) not applying to semantic
+  tags like <h1>/<p>/<a> — previously Bootstrap was unlayered and beat every utility.
+  Anything unlayered (Bootstrap used to be) always beats layered CSS regardless of
+  specificity, which was the root cause.
+*/
+@layer theme, base, bootstrap, components, utilities;
+
 @import url("https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap");
-@import "tailwindcss";
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/preflight.css" layer(base);
+@import "bootstrap/dist/css/bootstrap.min.css" layer(bootstrap);
+@import "tailwindcss/utilities.css" layer(utilities);
 
 :root {
   --background-color: #f0f0f0;

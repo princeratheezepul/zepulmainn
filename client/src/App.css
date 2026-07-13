@@ -1,4 +1,5 @@
-@import "tailwindcss";
+/* Tailwind is imported once globally in index.css (with the correct layer order);
+   re-importing it here is redundant and would re-declare the cascade layers. */
 
 /* Candidate pipeline segment: rectangle with left and right triangles */
 
