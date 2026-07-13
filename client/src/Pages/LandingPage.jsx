@@ -10,7 +10,6 @@ import LandingHowItWorks from '../Components/landing/LandingHowItWorks';
 import LandingTwoPaths from '../Components/landing/LandingTwoPaths';
 import LandingEngagement from '../Components/landing/LandingEngagement';
 import LandingBeyondCTA from '../Components/landing/LandingBeyondCTA';
-import Footer from '../Shared/Footer';
 
 const LandingPage = () => {
     // Scroll reveal for .lp-reveal elements

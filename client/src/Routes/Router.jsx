@@ -5,6 +5,7 @@ import Loader from "../Components/Loader";
 import ProRecruitor from "../Pages/ProRecruitor";
 import ScrollToTop from "../Shared/ScrollToTop";// Importing ScrollToTop
 import PublicLayout from "../Layout/PublicLayout";
+import ConditionalFooter from "../Shared/ConditionalFooter";
 
 
 import "../App.css";
@@ -495,6 +496,11 @@ const Router = () => {
             } />
 
           </Routes>
+          {/* Footer lives inside the Suspense boundary so it only appears
+              once the lazy page content is ready — prevents the footer from
+              flashing above the page while a route chunk is still loading.
+              ConditionalFooter hides it on login/auth pages. */}
+          <ConditionalFooter />
         </AuthProvider>
       </Suspense>
     </Fragment>

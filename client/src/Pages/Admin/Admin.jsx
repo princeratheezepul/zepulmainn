@@ -130,9 +130,9 @@ const Admin = () => {
   }, []);
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="dashboard-shell-admin flex min-h-screen bg-gray-50">
       {/* Sidebar */}
-      <aside className="w-16 md:w-20 bg-black flex flex-col justify-between py-4 md:py-6 px-1 md:px-2 h-screen">
+      <aside className="w-16 md:w-20 bg-black flex flex-col justify-between py-4 md:py-6 px-1 md:px-2 h-screen fixed top-0 left-0 z-20">
         <div className="flex flex-col gap-8 md:gap-12 items-center">
           <div className="mb-8 cursor-pointer" onClick={() => { setActiveSidebar(0); setShowProfile(false); }}>
             <img

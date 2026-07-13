@@ -440,9 +440,9 @@ const AccountManager = () => {
   };
 
   return (
-    <div className="flex min-h-screen bg-[#F7F8FA]">
+    <div className="dashboard-shell-am flex min-h-screen bg-[#F7F8FA]">
       {/* Sidebar */}
-      <aside className="flex flex-col justify-between items-center bg-white w-20 py-6 sticky top-0 left-0 h-screen z-20 shadow-sm">
+      <aside className="flex flex-col justify-between items-center bg-white w-20 py-6 fixed top-0 left-0 h-screen z-20 shadow-sm">
         <div className="flex flex-col items-center w-full gap-6">
           {/* Logo */}
           <div className="mb-8">
@@ -506,7 +506,7 @@ const AccountManager = () => {
       {/* Main Content */}
       <main className="flex-1 bg-[#F7F8FA] min-h-screen">
         {activeView === 'dashboard' ? (
-          <div className="h-screen overflow-y-auto p-2 md:p-4">
+          <div className="min-h-screen p-2 md:p-4">
             {/* Header */}
             <div className="bg-transparent">
               <div className="flex items-start justify-between">
@@ -670,15 +670,15 @@ const AccountManager = () => {
             </div>
           </div>
         ) : activeView === 'jobs' ? (
-          <div className="h-screen overflow-y-auto p-2 md:p-6">
+          <div className="min-h-screen p-2 md:p-6">
             <AccountManagerJobs />
           </div>
         ) : activeView === 'company' ? (
-          <div className="h-screen overflow-y-auto p-2 md:p-6">
+          <div className="min-h-screen p-2 md:p-6">
             <CompanyList />
           </div>
         ) : activeView === 'profile' ? (
-          <div className="h-screen overflow-y-auto">
+          <div className="min-h-screen">
             <div className="flex w-full min-h-screen">
               <div className="w-1/4 bg-white border-r pt-16 px-8">
               <div className="text-xs text-gray-400 font-semibold mb-6">SETTINGS</div>

@@ -30,3 +30,46 @@
     opacity: 0.4;
   }
 }
+
+/*
+  Dashboard content offset for the fixed left sidebar.
+
+  The dashboard sidebar is `position: fixed` and only shown at the `lg` breakpoint
+  (>=1024px), so the main content must be pushed right by the sidebar's width.
+  Tailwind's `ml-20`/`ml-52` utilities can't be used here: a global universal reset
+  (`*, *::before, *::after { margin: 0 }`, see Pages/ZepJobs.css) is unlayered and
+  therefore overrides Tailwind's layered margin utilities, zeroing them out.
+
+  This rule is unlayered too, but has higher specificity than the reset's `*`
+  selector, so it reliably wins. It only applies at `lg`, matching sidebar visibility,
+  so smaller screens (where the sidebar is hidden) keep full-width content.
+*/
+@media (min-width: 1024px) {
+  .dashboard-content {
+    margin-left: 5rem; /* collapsed sidebar width (w-20) */
+  }
+
+  .dashboard-content--expanded {
+    margin-left: 13rem; /* expanded sidebar width (w-52) */
+  }
+}
+
+/*
+  Shell offsets for dashboards whose fixed sidebar is always visible (admin,
+  account manager). The sidebar is `position: fixed`, so the shell is padded by
+  the sidebar's width to keep content beside it. Explicit rules are used because
+  Tailwind's `pl-*`/`ml-*` utilities are neutralized by the global reset above.
+*/
+.dashboard-shell-admin {
+  padding-left: 4rem; /* admin sidebar w-16 (64px) */
+}
+
+@media (min-width: 768px) {
+  .dashboard-shell-admin {
+    padding-left: 5rem; /* admin sidebar md:w-20 (80px) */
+  }
+}
+
+.dashboard-shell-am {
+  padding-left: 5rem; /* account manager sidebar w-20 (80px) */
+}

@@ -1619,9 +1619,9 @@ export default function ManagerDashboard() {
       />
       
       <div
-        className={`flex-1 h-screen overflow-y-auto transition-all duration-300 ${
-          isCollapsed ? "ml-20" : "ml-52"
-        }`}
+        className={`dashboard-content ${
+          isCollapsed ? "" : "dashboard-content--expanded"
+        } flex-1 min-h-screen transition-all duration-300`}
       >
         {activeComponent === 'Profile' ? (
           <div className="flex-1">
