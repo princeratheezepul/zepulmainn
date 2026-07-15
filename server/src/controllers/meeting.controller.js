@@ -11,6 +11,7 @@ import {
   sendMeetingCancelEmail,
   sendMeetingRescheduleEmail,
 } from "../services/email.service.js";
+import { isS3Configured, uploadBufferToS3, getSignedImageUrl } from "../utils/s3.js";
 
 const openai = process.env.OPENAI_API ? new OpenAI({ apiKey: process.env.OPENAI_API }) : null;
 const INTERVIEW_SUMMARY_MODEL = "gpt-4o-mini";
@@ -1060,3 +1061,98 @@ export const handleVapiWebhook = async (req, res) => {
   }
 };
 
+
+// ---------------------------------------------------------------------------
+// Proctoring: webcam snapshots captured during the AI video interview.
+// Images live in a private S3 bucket; only the object key is stored, and
+// presigned URLs are minted when the recruiter opens the results dashboard.
+// ---------------------------------------------------------------------------
+
+const MAX_MEETING_SCREENSHOTS = 200;
+
+// @desc  Store one webcam frame for an interview session
+// @route POST /api/meetings/:token/screenshot  (PUBLIC — gated by the meeting token)
+export const uploadMeetingScreenshot = async (req, res) => {
+  try {
+    const { token } = req.params;
+    const meeting = await Meeting.findOne({ token });
+    if (!meeting) return res.status(404).json({ message: "Meeting not found" });
+
+    // Record consent once (client sends it with every frame).
+    if (req.body?.consent === "granted" || req.body?.consent === "denied") {
+      await Meeting.updateOne({ token }, { $set: { proctoringConsent: req.body.consent } });
+    }
+
+    // Storage not configured yet: accept-and-ignore so the interview is never blocked.
+    if (!isS3Configured()) {
+      return res.status(200).json({ stored: false, reason: "storage-not-configured" });
+    }
+    if (!req.file) return res.status(400).json({ message: "No image uploaded" });
+
+    // Only accept frames while the interview is live.
+    if (meeting.status !== "active") {
+      return res.status(409).json({ message: "Meeting is not active" });
+    }
+
+    const capturedAt = new Date();
+    const rand = crypto.randomBytes(6).toString("hex");
+    const key = `proctoring/interviews/${meeting._id}/${capturedAt.getTime()}-${rand}.jpg`;
+
+    await uploadBufferToS3(req.file.buffer, key, req.file.mimetype);
+
+    await Meeting.updateOne(
+      { token },
+      {
+        $push: {
+          screenshots: { $each: [{ key, capturedAt }], $slice: -MAX_MEETING_SCREENSHOTS },
+        },
+      }
+    );
+
+    return res.status(201).json({ stored: true, capturedAt });
+  } catch (error) {
+    console.error("Error uploading meeting screenshot:", error);
+    return res.status(500).json({ message: "Failed to store screenshot" });
+  }
+};
+
+// @desc  Fetch presigned URLs for an interview's proctoring snapshots
+// @route GET /api/meetings/:meetingId/screenshots  (recruiter — owner only)
+export const getMeetingScreenshots = async (req, res) => {
+  try {
+    const recruiterId = req.id || req.user?._id;
+    if (!recruiterId) return res.status(401).json({ message: "Recruiter not authorized" });
+
+    const { meetingId } = req.params;
+    const meeting = await Meeting.findById(meetingId);
+    if (!meeting) return res.status(404).json({ message: "Meeting not found" });
+
+    if (String(meeting.recruiterId) !== String(recruiterId)) {
+      return res.status(403).json({ message: "Not authorized to view these screenshots" });
+    }
+
+    const shots = meeting.screenshots || [];
+    const screenshots = (
+      await Promise.all(
+        shots.map(async (s) => {
+          try {
+            const url = await getSignedImageUrl(s.key);
+            return url ? { url, capturedAt: s.capturedAt } : null;
+          } catch (e) {
+            console.error("Presign failed for", s.key, e?.message);
+            return null;
+          }
+        })
+      )
+    ).filter(Boolean);
+
+    return res.status(200).json({
+      consent: meeting.proctoringConsent || null,
+      count: screenshots.length,
+      screenshots,
+    });
+  } catch (error) {
+    console.error("Error fetching meeting screenshots:", error);
+    return res.status(500).json({ message: "Failed to fetch screenshots" });
+  }
+};
