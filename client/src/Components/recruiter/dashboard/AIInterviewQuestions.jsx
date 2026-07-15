@@ -4,6 +4,7 @@ import { toast } from 'react-hot-toast';
 import { format, addDays } from 'date-fns';
 import ScheduleAssessmentModal from './ScheduleAssessmentModal';
 import AssessmentResultView from './AssessmentResultView';
+import ProctoringGallery from './ProctoringGallery';
 import ScheduleAvaloqAssessmentModal from './ScheduleAvaloqAssessmentModal';
 import AddAnswersPage from './AddAnswersPage';
 import { getAuthHeaders } from '../../../utils/authUtils';
@@ -590,6 +591,9 @@ const AIInterviewQuestions = ({ jobDetails, resumeData, onBack, onResumeUpdate }
                 <p className="text-sm mt-2">Link: <span className="font-mono bg-gray-100 px-2 py-1 rounded">{`${window.location.origin}/assessment/${resumeData.oa.assessmentId}`}</span></p>
               </div>
             )}
+            {resumeData.oa.assessmentId && (
+              <ProctoringGallery endpoint={`/api/assessment/${resumeData.oa.assessmentId}/screenshots`} />
+            )}
           </div>
         )}
 
@@ -614,6 +618,9 @@ const AIInterviewQuestions = ({ jobDetails, resumeData, onBack, onResumeUpdate }
                 <p>Avaloq Banking Assessment has been scheduled and sent to the candidate.</p>
                 <p className="text-sm mt-2">Link: <span className="font-mono bg-gray-100 px-2 py-1 rounded">{`${window.location.origin}/assessment/${resumeData.avaloqOa.assessmentId}`}</span></p>
               </div>
+            )}
+            {resumeData.avaloqOa.assessmentId && (
+              <ProctoringGallery endpoint={`/api/assessment/${resumeData.avaloqOa.assessmentId}/screenshots`} />
             )}
           </div>
         )}

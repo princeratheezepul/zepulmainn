@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import Editor from '@monaco-editor/react';
-import { Loader2, Play, Send, CheckCircle, AlertCircle, Clock, Check, X, ChevronLeft, ChevronRight, Award } from 'lucide-react';
+import { Loader2, Play, Send, CheckCircle, AlertCircle, Clock, Check, X, ChevronLeft, ChevronRight, Award, Camera } from 'lucide-react';
 import toast from 'react-hot-toast';
 import initSqlJs from 'sql.js';
 import { config } from '../config/config';
+import { requestCamera, stopStream, captureAndUpload, CAPTURE_INTERVAL_MS } from '../utils/proctoring';
 
 const CandidateAssessmentPage = () => {
     const { assessmentId } = useParams();
@@ -26,13 +27,84 @@ const CandidateAssessmentPage = () => {
     const [assessmentType, setAssessmentType] = useState('standard'); // 'standard' or 'avaloq'
     const sqlDbRef = useRef(null);
 
+    // Proctoring: this assessment is camera-gated. The test stays blocked (and the timer
+    // paused) until the candidate grants webcam access; frames are then captured periodically.
+    const [cameraReady, setCameraReady] = useState(false);
+    const [cameraDenied, setCameraDenied] = useState(false);
+    const videoRef = useRef(null);
+    const canvasRef = useRef(null);
+    const mediaStreamRef = useRef(null);
+    const captureIntervalRef = useRef(null);
+
     useEffect(() => {
         fetchAssessment();
     }, [assessmentId]);
 
-    // Timer countdown
+    // Acquire the webcam on mount. Does not touch videoRef here (it may not be mounted yet
+    // behind the loading state); a separate effect attaches the stream once both are ready.
     useEffect(() => {
-        if (!assessment || assessment.completed) return;
+        let cancelled = false;
+        const enableCamera = async () => {
+            try {
+                const stream = await requestCamera();
+                if (cancelled) { stopStream(stream); return; }
+                mediaStreamRef.current = stream;
+                setCameraReady(true);
+                setCameraDenied(false);
+            } catch (err) {
+                console.error('Camera access denied:', err);
+                setCameraDenied(true);
+                // Record the denial best-effort so the recruiter sees why no frames exist.
+                try {
+                    const form = new FormData();
+                    form.append('consent', 'denied');
+                    fetch(`${config.backendUrl}/api/assessment/${assessmentId}/screenshot`, {
+                        method: 'POST',
+                        body: form,
+                    }).catch(() => {});
+                } catch { /* ignore */ }
+            }
+        };
+        enableCamera();
+        return () => {
+            cancelled = true;
+            stopStream(mediaStreamRef.current);
+        };
+    }, [assessmentId]);
+
+    // Attach the live stream to the <video> once both the stream and the element exist.
+    useEffect(() => {
+        const el = videoRef.current;
+        if (!el || !mediaStreamRef.current) return;
+        if (el.srcObject !== mediaStreamRef.current) {
+            el.srcObject = mediaStreamRef.current;
+        }
+        el.play?.().catch(() => {});
+    }, [cameraReady, loading, assessment]);
+
+    // Proctoring capture loop: runs only while the camera is ready and the test is in progress.
+    // When the assessment completes (manual/auto submit) or the component unmounts, the cleanup
+    // clears the interval — so there is no separate teardown to maintain.
+    useEffect(() => {
+        if (!cameraReady || !assessment || assessment.completed) return;
+        const url = `${config.backendUrl}/api/assessment/${assessmentId}/screenshot`;
+        const tick = () => captureAndUpload(videoRef.current, canvasRef.current, url, 'granted');
+        const warmup = setTimeout(tick, 2500); // let the <video> start painting frames first
+        captureIntervalRef.current = setInterval(tick, CAPTURE_INTERVAL_MS);
+        return () => {
+            clearTimeout(warmup);
+            if (captureIntervalRef.current) {
+                clearInterval(captureIntervalRef.current);
+                captureIntervalRef.current = null;
+            }
+        };
+        // Depend on the assessment object (not just .completed) so capture starts once the
+        // assessment loads even if the camera was granted first, and stops when it completes.
+    }, [cameraReady, assessment, assessmentId]);
+
+    // Timer countdown — gated on cameraReady so time doesn't burn during the permission prompt.
+    useEffect(() => {
+        if (!assessment || assessment.completed || !cameraReady) return;
 
         const timer = setInterval(() => {
             setTimeRemaining(prev => {
@@ -46,7 +118,7 @@ const CandidateAssessmentPage = () => {
         }, 1000);
 
         return () => clearInterval(timer);
-    }, [assessment]);
+    }, [assessment, cameraReady]);
 
     const formatTime = (seconds) => {
         const mins = Math.floor(seconds / 60);
@@ -737,6 +809,46 @@ function ${functionName}(...args) {
 
     return (
         <div className="flex flex-col h-screen bg-gray-100 overflow-hidden">
+            {/* Offscreen canvas used to grab proctoring frames from the camera preview. */}
+            <canvas ref={canvasRef} style={{ display: 'none' }} />
+
+            {/* Proctoring gate: blocks the whole test until the candidate grants camera access. */}
+            {!cameraReady && (
+                <div className="fixed inset-0 z-50 bg-gray-900/80 backdrop-blur-sm flex items-center justify-center p-4">
+                    <div className="bg-white rounded-2xl shadow-xl max-w-md w-full text-center p-8">
+                        <div className="flex items-center justify-center w-16 h-16 rounded-full bg-blue-100 mx-auto mb-5">
+                            <Camera className="text-blue-600" size={32} />
+                        </div>
+                        <h2 className="text-2xl font-bold text-gray-900 mb-2">Camera access required</h2>
+                        {cameraDenied ? (
+                            <>
+                                <p className="text-gray-600 mb-6">
+                                    This assessment is <strong>proctored</strong>. Camera access was blocked.
+                                    Please allow the camera in your browser, then click Retry.
+                                </p>
+                                <button
+                                    onClick={() => window.location.reload()}
+                                    className="bg-blue-600 text-white px-5 py-2 rounded-lg font-medium hover:bg-blue-700"
+                                >
+                                    Retry
+                                </button>
+                            </>
+                        ) : (
+                            <>
+                                <p className="text-gray-600 mb-6">
+                                    This assessment is <strong>proctored</strong> — your webcam is captured
+                                    periodically for identity verification. Please click <strong>Allow</strong>
+                                    on the browser prompt to begin. Your timer will not start until then.
+                                </p>
+                                <div className="flex items-center justify-center gap-2 text-gray-500">
+                                    <Loader2 className="animate-spin" size={18} /> Waiting for camera…
+                                </div>
+                            </>
+                        )}
+                    </div>
+                </div>
+            )}
+
             {/* Header */}
             <header className="bg-white border-b border-gray-200 px-6 py-3 flex justify-between items-center shadow-sm z-10">
                 <div className="flex items-center gap-3">
@@ -746,6 +858,20 @@ function ${functionName}(...args) {
                         <div className="flex items-center gap-2 text-xs text-gray-500">
                             <span>Candidate: {assessment.candidateName}</span>
                         </div>
+                    </div>
+                    {/* Live camera preview — a visible reminder that the session is proctored. */}
+                    <div className="relative ml-2">
+                        <video
+                            ref={videoRef}
+                            autoPlay
+                            playsInline
+                            muted
+                            className="w-20 h-14 rounded-md object-cover bg-black border border-gray-300"
+                        />
+                        <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                        </span>
                     </div>
                 </div>
 

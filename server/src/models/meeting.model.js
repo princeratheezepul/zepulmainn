@@ -64,6 +64,18 @@ const meetingSchema = new mongoose.Schema(
     recordingUrl: {
       type: String,
     },
+    // Proctoring: periodic webcam snapshots captured during the interview.
+    // Only the S3 object key is stored; presigned URLs are minted on read.
+    screenshots: [
+      {
+        key: String, // e.g. proctoring/interviews/<meetingId>/<ts>-<rand>.jpg
+        capturedAt: Date,
+      },
+    ],
+    proctoringConsent: {
+      type: String,
+      enum: ["granted", "denied"],
+    },
     toolOutputs: {
       type: mongoose.Schema.Types.Mixed,
     },

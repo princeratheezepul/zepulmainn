@@ -3,6 +3,7 @@ import Vapi from "@vapi-ai/web";
 import { useParams } from "react-router-dom";
 import { Clock } from "lucide-react";
 import { getApiUrl } from "../config/config";
+import { captureAndUpload, CAPTURE_INTERVAL_MS } from "../utils/proctoring";
 
 const Meeting = () => {
   const { token } = useParams();
@@ -17,12 +18,32 @@ const Meeting = () => {
   const [timeWarning, setTimeWarning] = useState(null); // '10min', '5min', '2min', '1min', 'grace'
   const [gracePeriodActive, setGracePeriodActive] = useState(false);
   const [cameraStream, setCameraStream] = useState(null);
+  const [cameraDenied, setCameraDenied] = useState(false); // proctoring: camera required to start
   const videoRef = useRef(null);
+  const canvasRef = useRef(null); // offscreen canvas for capturing proctoring frames
+  const captureIntervalRef = useRef(null); // proctoring capture loop
   const mediaStreamRef = useRef(null);
   const vapiRef = useRef(null);
   const timerIntervalRef = useRef(null);
   const gracePeriodRef = useRef(null);
   const warningsShownRef = useRef(new Set()); // Track which warnings have been shown
+
+  // Proctoring: capture one webcam frame now and every CAPTURE_INTERVAL_MS.
+  // Reuses the already-live videoRef stream (no second getUserMedia). Best-effort uploads.
+  const startProctoring = () => {
+    if (captureIntervalRef.current) return; // already running
+    const url = getApiUrl(`/api/meetings/${token}/screenshot`);
+    const tick = () => captureAndUpload(videoRef.current, canvasRef.current, url, "granted");
+    tick();
+    captureIntervalRef.current = setInterval(tick, CAPTURE_INTERVAL_MS);
+  };
+
+  const stopProctoring = () => {
+    if (captureIntervalRef.current) {
+      clearInterval(captureIntervalRef.current);
+      captureIntervalRef.current = null;
+    }
+  };
 
   // Load meeting metadata
   useEffect(() => {
@@ -68,8 +89,10 @@ const Meeting = () => {
         }
         mediaStreamRef.current = stream;
         setCameraStream(stream);
+        setCameraDenied(false);
       } catch (err) {
         console.error("Unable to access camera:", err);
+        setCameraDenied(true); // proctoring: block the interview until camera is granted
       }
     };
 
@@ -77,6 +100,7 @@ const Meeting = () => {
 
     return () => {
       cancelled = true;
+      stopProctoring();
       if (mediaStreamRef.current) {
         mediaStreamRef.current.getTracks().forEach((t) => t.stop());
       }
@@ -175,6 +199,7 @@ const Meeting = () => {
                 console.log("Vapi stop called during auto-end (may show expected error):", err);
               }
             }
+            stopProctoring();
             if (mediaStreamRef.current) {
               mediaStreamRef.current.getTracks().forEach((t) => t.stop());
             }
@@ -249,6 +274,8 @@ const Meeting = () => {
         // Start timer
         const durationMs = (meeting?.durationMinutes || 40) * 60 * 1000;
         setTimeRemaining(durationMs);
+        // Proctoring: the meeting is now 'active' server-side, so frames will be accepted.
+        startProctoring();
       });
 
       vapi.on("call-end", () => {
@@ -259,6 +286,8 @@ const Meeting = () => {
         setGracePeriodActive(false);
         setTimeWarning(null);
         warningsShownRef.current.clear();
+        // Stop proctoring capture
+        stopProctoring();
         // Stop camera
         if (mediaStreamRef.current) {
           mediaStreamRef.current.getTracks().forEach((t) => t.stop());
@@ -306,6 +335,9 @@ const Meeting = () => {
     try {
       // Stop the Vapi call
       vapiRef.current.stop();
+
+      // Stop proctoring capture
+      stopProctoring();
 
       // Stop camera
       if (mediaStreamRef.current) {
@@ -572,14 +604,42 @@ const Meeting = () => {
                     )}
                   </div>
                 )}
+                {!isConnected && (
+                  <div className="alert alert-secondary py-2 px-3 mb-3 small d-flex align-items-center gap-2">
+                    <span aria-hidden="true">📷</span>
+                    <span>
+                      This interview is <strong>proctored</strong> — your webcam is
+                      captured periodically for identity verification. Camera access
+                      is required to start.
+                    </span>
+                  </div>
+                )}
+                {!isConnected && cameraDenied && (
+                  <div className="alert alert-warning py-2 px-3 mb-3 small">
+                    <strong>Camera blocked.</strong> Please allow camera access in your
+                    browser, then reload this page to begin.
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-outline-dark ms-2"
+                      onClick={() => window.location.reload()}
+                    >
+                      Reload
+                    </button>
+                  </div>
+                )}
                 <div className="mt-auto d-flex gap-2">
                   {!isConnected ? (
                     <button
                       className="btn btn-primary flex-grow-1"
                       onClick={startInterview}
-                      disabled={starting}
+                      disabled={starting || !cameraStream}
+                      title={!cameraStream ? "Waiting for camera access…" : undefined}
                     >
-                      {starting ? "Starting..." : "Start Interview"}
+                      {starting
+                        ? "Starting..."
+                        : !cameraStream
+                          ? "Waiting for camera…"
+                          : "Start Interview"}
                     </button>
                   ) : (
                     <button
@@ -590,6 +650,8 @@ const Meeting = () => {
                     </button>
                   )}
                 </div>
+                {/* Offscreen canvas used to grab proctoring frames from the video. */}
+                <canvas ref={canvasRef} style={{ display: "none" }} />
               </div>
             </div>
           </div>

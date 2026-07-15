@@ -7,6 +7,7 @@ import nodemailer from "nodemailer";
 import { executeJava, executeCpp, executePython } from "../services/codeExecution.service.js";
 import { sendMeetingInviteEmail } from "../services/email.service.js";
 import { sendWhatsAppMessage } from "../utils/whatsapp.js";
+import { isS3Configured, uploadBufferToS3, getSignedImageUrl } from "../utils/s3.js";
 
 const FRONTEND_URL = process.env.FRONTEND_URL || process.env.FRONT_END_URL || "http://localhost:5173";
 const INTERVIEW_LEAD_TIME_MS = 5 * 60 * 1000; // 5 minutes — gives the candidate a moment to read the invite
@@ -926,5 +927,118 @@ const evaluateSubmission = async (resumeId, submissions, questions, assessmentFi
   } catch (error) {
     console.error("Error evaluating submission:", error);
     // Fallback logic...
+  }
+};
+
+// ---------------------------------------------------------------------------
+// Proctoring: webcam snapshots captured during the coding test.
+// Images live in a private S3 bucket; we persist only the object key and mint
+// short-lived presigned URLs when a recruiter views the results.
+// ---------------------------------------------------------------------------
+
+// Keep at most this many frames per session (atomic $slice cap). A 90-min Avaloq
+// test at one frame / 30s produces ~180 frames, so this preserves full coverage
+// for normal sessions while bounding document growth against abuse.
+const MAX_ASSESSMENT_SCREENSHOTS = 200;
+
+// Resolve the resume and which sub-field ('oa' | 'avaloqOa') an assessmentId belongs to.
+const findResumeByAssessmentId = async (assessmentId) => {
+  let resume = await Resume.findOne({ "oa.assessmentId": assessmentId });
+  if (resume) return { resume, field: "oa" };
+  resume = await Resume.findOne({ "avaloqOa.assessmentId": assessmentId });
+  if (resume) return { resume, field: "avaloqOa" };
+  return { resume: null, field: null };
+};
+
+// @desc  Store one webcam frame for a coding-test session
+// @route POST /api/assessment/:assessmentId/screenshot  (PUBLIC — gated by assessmentId)
+export const uploadAssessmentScreenshot = async (req, res) => {
+  try {
+    const { assessmentId } = req.params;
+
+    const { resume, field } = await findResumeByAssessmentId(assessmentId);
+    if (!resume) return res.status(404).json({ message: "Assessment not found" });
+
+    // Record consent once (client sends it with every frame; harmless to re-set).
+    if (req.body?.consent === "granted" || req.body?.consent === "denied") {
+      await Resume.updateOne(
+        { [`${field}.assessmentId`]: assessmentId },
+        { $set: { [`${field}.proctoring.consent`]: req.body.consent } }
+      );
+    }
+
+    // Storage not configured yet: accept-and-ignore so the candidate is never blocked.
+    if (!isS3Configured()) {
+      return res.status(200).json({ stored: false, reason: "storage-not-configured" });
+    }
+    if (!req.file) return res.status(400).json({ message: "No image uploaded" });
+
+    const status = resume[field]?.status;
+    if (status === "completed" || status === "evaluated") {
+      return res.status(409).json({ message: "Assessment already completed" });
+    }
+
+    const capturedAt = new Date();
+    const rand = crypto.randomBytes(6).toString("hex");
+    // Key is fully server-derived — never trust a client-supplied path.
+    const key = `proctoring/assessments/${resume._id}/${assessmentId}/${capturedAt.getTime()}-${rand}.jpg`;
+
+    await uploadBufferToS3(req.file.buffer, key, req.file.mimetype);
+
+    await Resume.updateOne(
+      { [`${field}.assessmentId`]: assessmentId },
+      {
+        $push: {
+          [`${field}.screenshots`]: {
+            $each: [{ key, capturedAt }],
+            $slice: -MAX_ASSESSMENT_SCREENSHOTS,
+          },
+        },
+      }
+    );
+
+    return res.status(201).json({ stored: true, capturedAt });
+  } catch (error) {
+    console.error("Error uploading assessment screenshot:", error);
+    return res.status(500).json({ message: "Failed to store screenshot" });
+  }
+};
+
+// @desc  Fetch presigned URLs for a session's proctoring snapshots
+// @route GET /api/assessment/:assessmentId/screenshots  (recruiter/manager/admin)
+export const getAssessmentScreenshots = async (req, res) => {
+  try {
+    const { assessmentId } = req.params;
+    const { resume, field } = await findResumeByAssessmentId(assessmentId);
+    if (!resume) return res.status(404).json({ message: "Assessment not found" });
+
+    // Ownership: a recruiter may only read their own candidates' frames; managers/admins bypass.
+    if (req.role === "recruiter" && String(resume.recruiterId) !== String(req.id)) {
+      return res.status(403).json({ message: "Not authorized to view these screenshots" });
+    }
+
+    const shots = resume[field]?.screenshots || [];
+    const screenshots = (
+      await Promise.all(
+        shots.map(async (s) => {
+          try {
+            const url = await getSignedImageUrl(s.key);
+            return url ? { url, capturedAt: s.capturedAt } : null;
+          } catch (e) {
+            console.error("Presign failed for", s.key, e?.message);
+            return null;
+          }
+        })
+      )
+    ).filter(Boolean);
+
+    return res.status(200).json({
+      consent: resume[field]?.proctoring?.consent || null,
+      count: screenshots.length,
+      screenshots,
+    });
+  } catch (error) {
+    console.error("Error fetching assessment screenshots:", error);
+    return res.status(500).json({ message: "Failed to fetch screenshots" });
   }
 };
