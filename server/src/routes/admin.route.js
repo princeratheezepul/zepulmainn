@@ -1,9 +1,12 @@
 import {loginAdmin,registerAdmin,getAdminInfo,logoutAdmin,getManagerByAdmin, assignedCompany, removeManagerFromCompany, toggleJobStatusByAdmin, createCompany,getCompany,updatecompany, getRecruiterByAdmin, getJobsByAdmin, getCompanyByAdmin, createJobByAdmin, assignRecruitersByAdmin, forgotpassword,resetpassword,updatePassword, updatejobByAdmin, deletejob,getUniqueCandidates,getDetailsCandidate,updateNote, getAdminProfile, updateAdminProfile, getUserCounts, getUsersByAdmin,refreshAccessToken, deleteUserByAdmin, toggleUserStatusByAdmin, getJobsByAdminForDashboard, updateJobByAdminForDashboard, getJobByIdForAdminDashboard, assignRecruitersToJobByAdminDashboard, getCandidatesForJobByAdminDashboard, getResumesByJobForAdmin, updateResumeStatusByAdmin, updateResumeNoteByAdmin, getJobStatisticsForAdmin} from '../controllers/admin.controller.js';
 
+import { generateScorecard } from '../controllers/generateScorecard.controller.js';
+
 import Router from 'express';
 import { verifyJWT } from '../middleware/admin.auth.middleware.js';
 import { adminInviteGuard } from '../middleware/adminInviteGuard.js';
 import { adminRegisterLimiter } from '../middleware/rateLimiters.js';
+import { singleUpload } from '../middleware/multer.js';
 const router=Router();
 
 
@@ -70,6 +73,9 @@ router.route("/resumes/:resumeId/note").patch(verifyJWT, updateResumeNoteByAdmin
 
 // Admin Job Statistics route
 router.route("/job/:jobId/statistics").get(verifyJWT, getJobStatisticsForAdmin);
+
+// Generate a full scorecard from an uploaded resume + jobId and submit it to the job
+router.route("/generate-scorecard").post(verifyJWT, singleUpload, generateScorecard);
 
 // Place the parameterized route at the end
 router.route("/:adminId").get(verifyJWT,getAdminInfo);

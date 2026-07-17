@@ -60,6 +60,7 @@ import AccountManagerDashboard from "../Pages/AccountManager/Dashboard.jsx";
 import CandidateDetails from "../Components/CandidateDetails.jsx";
 import Candidate from "../Pages/Admin/Navigation/Candidate.jsx";
 import AdminCandidateDetails from "../Pages/Admin/AdminCandidateDetails.jsx";
+import GenerateScorecard from "../Pages/Admin/GenerateScorecard.jsx";
 import RecruiterPassSet from "../Components/RecruiterPassSet.jsx";
 import RecruiterForgotPassword from "../Pages/RecruiterForgotPassword.jsx";
 import RecruiterDashboard from "../Pages/RecruiterDashboard.jsx";
@@ -440,6 +441,11 @@ const Router = () => {
             <Route path="/admin/jobs/:jobid" element={
               <ProtectedRoute allowedRoles={['admin']}>
                 <AdminJobDetailPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/generatescorecard" element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <GenerateScorecard />
               </ProtectedRoute>
             } />
 
