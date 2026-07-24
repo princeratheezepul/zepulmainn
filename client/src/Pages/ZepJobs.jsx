@@ -104,11 +104,14 @@ const ZepJobs = () => {
   }, []);
 
   return (
+    <>
+    <Toaster position="top-center" />
+
+    <LandingNav />
+
+    {/* Nav lives OUTSIDE .zep-jobs-page so the page's `.zep-jobs-page *`
+        padding/margin reset doesn't strip the shared nav's spacing. */}
     <div className="zep-jobs-page">
-      <Toaster position="top-center" />
-
-      <LandingNav />
-
       {/* HERO */}
       <section className="hero">
         <div className="hero-left">
@@ -388,6 +391,7 @@ const ZepJobs = () => {
 
 
     </div>
+    </>
   );
 };
 
