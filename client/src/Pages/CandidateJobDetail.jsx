@@ -14,6 +14,7 @@ import {
   GraduationCap,
   FileText,
   CheckCircle2,
+  Download,
   X,
 } from "lucide-react";
 import * as pdfjsLib from "pdfjs-dist";
@@ -22,6 +23,7 @@ import workerUrl from "pdfjs-dist/build/pdf.worker.mjs?url";
 import mammoth from "mammoth";
 import toast, { Toaster } from "react-hot-toast";
 import { getApiUrl } from "../config/config";
+import { generateZepPrepPDF } from "../utils/zepPrepGenerator";
 
 GlobalWorkerOptions.workerSrc = workerUrl;
 
@@ -55,6 +57,7 @@ const CandidateJobDetail = () => {
   const [showUpload, setShowUpload] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitMsg, setSubmitMsg] = useState("");
+  const [prepLoading, setPrepLoading] = useState(false);
 
   useEffect(() => {
     if (!candidate?._id) {
@@ -170,6 +173,30 @@ const CandidateJobDetail = () => {
     disabled: submitting,
   });
 
+  // Fetch the candidate's ZepPrep pack (generating it on first request) and open
+  // it as a printable PDF. The content is cached server-side, so re-downloads are instant.
+  const handleDownloadPrep = async () => {
+    if (!application?.id) {
+      toast.error("Your prep document isn't ready yet — please refresh and try again.");
+      return;
+    }
+    setPrepLoading(true);
+    try {
+      const res = await fetch(
+        getApiUrl(
+          `/api/candidate-application/prep/${application.id}?candidateId=${candidate?._id || ""}`
+        )
+      );
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.prep) throw new Error(data.message || "Failed to build prep document");
+      await generateZepPrepPDF(data.prep);
+    } catch (err) {
+      toast.error(err.message || "Failed to build prep document");
+    } finally {
+      setPrepLoading(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -233,6 +260,26 @@ const CandidateJobDetail = () => {
           {application.appliedAt && (
             <p className="text-xs text-gray-500 mb-4">Applied on {formatDate(application.appliedAt)}</p>
           )}
+          <button
+            onClick={handleDownloadPrep}
+            disabled={prepLoading}
+            className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 disabled:cursor-wait text-white font-semibold py-2.5 rounded-lg transition-colors text-sm"
+          >
+            {prepLoading ? (
+              <>
+                <Loader2 size={16} className="animate-spin" />
+                Preparing your guide…
+              </>
+            ) : (
+              <>
+                <Download size={16} />
+                Download prep document
+              </>
+            )}
+          </button>
+          <p className="mt-2 mb-4 text-[11px] text-gray-400 text-center">
+            Your personalised ZepPrep interview guide (PDF)
+          </p>
           <button
             onClick={() => navigate("/candidate/applied")}
             className="w-full border border-gray-300 hover:bg-gray-50 text-gray-800 font-semibold py-2.5 rounded-lg transition-colors text-sm"

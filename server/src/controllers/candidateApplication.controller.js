@@ -5,6 +5,7 @@ import Candidate from "../models/candidate.model.js";
 import { determineResumeTag } from "../utils/tagHelper.js";
 import { analyzeResume, calculateATSScore } from "./bulkUpload.controller.js";
 import { generateAssessmentForResume, sendAssessmentEmail } from "./assessment.controller.js";
+import { warmPrepDocument } from "./prepDocument.controller.js";
 
 // Map the internal pipeline state to a candidate-friendly status label.
 // The candidate never sees scores/scorecards — only this high-level stage.
@@ -69,7 +70,7 @@ export const getCandidateJob = async (req, res) => {
     if (candidateId && mongoose.Types.ObjectId.isValid(candidateId)) {
       const existing = await Resume.findOne({ jobId, candidateId }).lean();
       if (existing) {
-        application = { status: friendlyStatus(existing), appliedAt: existing.createdAt };
+        application = { id: existing._id, status: friendlyStatus(existing), appliedAt: existing.createdAt };
       }
     }
 
@@ -110,7 +111,7 @@ export const applyToJob = async (req, res) => {
       return res.status(200).json({
         message: "You have already applied to this job",
         alreadyApplied: true,
-        application: { status: friendlyStatus(already), appliedAt: already.createdAt },
+        application: { id: already._id, status: friendlyStatus(already), appliedAt: already.createdAt },
       });
     }
 
@@ -174,6 +175,8 @@ export const applyToJob = async (req, res) => {
 
     // Kick off the normal pipeline after responding
     kickoffPipeline(saved._id);
+    // Warm the ZepPrep pack in the background so the candidate's download is instant.
+    warmPrepDocument(saved._id);
   } catch (err) {
     console.error("applyToJob error:", err);
     return res.status(500).json({ message: "Failed to submit application", error: err.message });

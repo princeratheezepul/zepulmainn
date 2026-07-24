@@ -348,6 +348,14 @@ const ResumeSchema = new mongoose.Schema(
       type: Boolean,
       default: false
     },
+
+    // ZepPrep — candidate-facing interview preparation pack, generated on apply.
+    // `content` holds the 10-section structured document; cached so re-downloads
+    // don't re-hit the model. Never contains hiring verdicts or numeric scores.
+    prepDocument: {
+      generatedAt: { type: Date, default: null },
+      content: { type: mongoose.Schema.Types.Mixed, default: null }
+    },
   },
   { timestamps: true }
 );
