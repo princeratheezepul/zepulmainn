@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Calendar, Clock, User, Briefcase, FileText, Play, Download, TrendingUp, Award, MessageSquare, AlertCircle, CheckCircle, XCircle, Target, BarChart3, Zap, Users, Brain, Mic, Star, HelpCircle, Mail, Phone, MapPin, ThumbsUp, Lightbulb, BookOpen } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { getApiUrl } from "../../../config/config";
+import ProctoringGallery from "./ProctoringGallery";
 
 const CircularProgress = ({ percentage, size = 160, strokeWidth = 14 }) => {
   const radius = (size - strokeWidth) / 2;
@@ -374,6 +375,12 @@ const InterviewResultsDashboard = ({ meetingId, onBack }) => {
                   </div>
                 </div>
               )}
+
+              {/* Proctoring snapshots captured during the interview (self-hides when none). */}
+              <ProctoringGallery
+                endpoint={`/api/meetings/${meetingId}/screenshots`}
+                title="Identity Verification — Webcam Snapshots"
+              />
 
               {/* Meeting Details */}
               <div className="p-6 border rounded-xl bg-gray-50">

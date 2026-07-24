@@ -177,7 +177,17 @@ const ResumeSchema = new mongoose.Schema(
         feedback: String,
         complexityAnalysis: String,
         improvementSuggestions: String
-      }
+      },
+
+      // Proctoring: periodic webcam snapshots captured during the coding test.
+      // We store only the S3 object key; presigned URLs are minted on read.
+      proctoring: {
+        consent: { type: String, enum: ['granted', 'denied'] }
+      },
+      screenshots: [{
+        key: String,       // S3 object key, e.g. proctoring/assessments/<resumeId>/<assessmentId>/<ts>-<rand>.jpg
+        capturedAt: Date
+      }]
     },
 
     // Avaloq Banking Assessment
@@ -224,7 +234,16 @@ const ResumeSchema = new mongoose.Schema(
         feedback: String,
         complexityAnalysis: String,
         improvementSuggestions: String
-      }
+      },
+
+      // Proctoring: periodic webcam snapshots captured during the Avaloq test.
+      proctoring: {
+        consent: { type: String, enum: ['granted', 'denied'] }
+      },
+      screenshots: [{
+        key: String,
+        capturedAt: Date
+      }]
     },
 
     // Interview Management
