@@ -269,6 +269,186 @@ export const buildZepPrepBody = (prep) => {
   `;
 };
 
+// ===========================================================================
+// Candidate Success Blueprint — the post-evaluation ZepPrep (manager download).
+// Reuses the same CSS, helpers and section scaffold as the apply-time pack.
+// ===========================================================================
+const dlRow = (dt, dd, wide) =>
+  dd ? `<div${wide ? ' class="wide"' : ""}><dt>${esc(dt)}</dt><dd>${esc(dd)}</dd></div>` : "";
+
+const renderBpCongrats = (text) => `
+  <section class="sec">
+    ${sectionHead("01", "Congratulations", "You've completed the evaluation")}
+    <div class="lead" style="margin:0;">${esc(text)}</div>
+  </section>`;
+
+const renderBpCompany = (ci) => `
+  <section class="sec">
+    ${sectionHead("02", "Company Intelligence", "Know who you're meeting")}
+    <div class="cards">
+      <div class="card plain">
+        <h4>The company</h4>
+        ${tickList(ci.overview) || '<p class="body">Research the company before your interview.</p>'}
+      </div>
+      <div class="card plain">
+        <h4>How they operate</h4>
+        ${tickList(ci.operating) || '<p class="body">Look up their leadership, culture and recent news.</p>'}
+      </div>
+    </div>
+  </section>`;
+
+const renderBpRole = (ri) => `
+  <section class="sec break">
+    ${sectionHead("03", "Role Intelligence", "What the job really involves")}
+    <div class="cards">
+      <div class="card plain">
+        <h4>Team structure</h4>${tickList(ri.teamStructure)}
+        <h4 style="margin-top:7pt;">Responsibilities</h4>${tickList(ri.responsibilities)}
+        <h4 style="margin-top:7pt;">Success metrics</h4>${tickList(ri.successMetrics)}
+      </div>
+      <div class="card plain">
+        <h4>Technologies</h4>${tickList(ri.technologies)}
+        <h4 style="margin-top:7pt;">Stakeholders</h4>${tickList(ri.stakeholders)}
+        <h4 style="margin-top:7pt;">Business impact</h4>${tickList(ri.businessImpact)}
+      </div>
+    </div>
+  </section>`;
+
+const renderBpEvaluation = (ev) => `
+  <section class="sec">
+    ${sectionHead("04", "Your Evaluation Highlights", "Evidence, not scores")}
+    <div class="cards">
+      <div class="card good"><h4>Key strengths demonstrated</h4>${tickList(ev.strengths)}</div>
+      <div class="card plain"><h4>Areas worth revisiting</h4>${tickList(ev.areasToRevisit)}</div>
+    </div>
+    <p class="note-inline">These are preparation opportunities, not shortcomings — a quick refresh helps you walk in fully prepared.</p>
+  </section>`;
+
+const renderBpClientGuidance = (cg) => `
+  <section class="sec break">
+    ${sectionHead("05", "Client Interview Guidance", "How to steer the conversation")}
+    <div class="cards">
+      <div class="card plain">
+        <h4>What interviewers will explore</h4>${tickList(cg.interviewersExplore)}
+        <h4 style="margin-top:7pt;">Topics to prepare</h4>${tickList(cg.topicsToPrepare)}
+      </div>
+      <div class="card plain">
+        <h4>Projects to highlight</h4>${tickList(cg.projectsToHighlight)}
+        <h4 style="margin-top:7pt;">Experiences to emphasise</h4>${tickList(cg.experiencesToEmphasise)}
+      </div>
+    </div>
+  </section>`;
+
+const renderBpRefresh = (items) => {
+  const rows = arr(items)
+    .map(
+      (t) => `
+      <div class="prow">
+        <span class="pill l">Revise</span>
+        <div>
+          <h5>${esc(t.topic)}</h5>
+          ${t.why ? `<div class="why">${esc(t.why)}</div>` : ""}
+          ${t.focus ? `<div class="focus"><b>Focus:</b> ${esc(t.focus)}</div>` : ""}
+        </div>
+      </div>`
+    )
+    .join("");
+  return `
+  <section class="sec">
+    ${sectionHead("06", "Technical Refresh", "Only what's worth reviewing")}
+    <div class="prio">${rows}</div>
+  </section>`;
+};
+
+// Statement-point section (bullet points, not question/answer pairs).
+const renderBpPoints = (num, title, kicker, points, brk) => `
+  <section class="sec ${brk ? "break" : ""}">
+    ${sectionHead(num, title, kicker)}
+    ${tickList(points)}
+  </section>`;
+
+const renderBpBehavioural = (beh) => `
+  <section class="sec break">
+    ${sectionHead("07", "Behavioural Preparation", "Tell your story well")}
+    ${beh.approach ? `<div class="lead" style="margin:0 0 8pt;"><b>How to answer:</b> ${esc(beh.approach)}</div>` : ""}
+    ${tickList(beh.points)}
+  </section>`;
+
+const renderBpCompensation = (comp) => `
+  <section class="sec break">
+    ${sectionHead("09", "Compensation & Negotiation Guidance", "Go in informed")}
+    <div class="dl">
+      ${dlRow("Estimated range", comp.estimatedRange, !comp.marketBenchmark)}
+      ${dlRow("Market benchmark", comp.marketBenchmark)}
+    </div>
+    ${
+      arr(comp.offerEvaluationTips).length
+        ? `<div class="card plain" style="margin-top:9pt;"><h4>Evaluating the offer</h4>${tickList(comp.offerEvaluationTips)}</div>`
+        : ""
+    }
+    <p class="note-inline">Ranges are indicative market estimates for context, not an offer.</p>
+  </section>`;
+
+const renderBpChecklist = (items) => {
+  const cells = arr(items)
+    .map(
+      (c) =>
+        `<div><span class="box"></span><span><b>${esc(c.label)}</b>${c.detail ? ` — ${esc(c.detail)}` : ""}</span></div>`
+    )
+    .join("");
+  return `
+  <section class="sec">
+    ${sectionHead("10", "Client Interview Checklist", "Before you join the call")}
+    <div class="check">${cells}</div>
+  </section>`;
+};
+
+export const buildBlueprintBody = (blueprint) => {
+  const meta = blueprint.meta || {};
+  const c = blueprint.content || {};
+  const footerLabel = [meta.company, meta.role].filter(Boolean).join(" — ");
+  const logoSrc = blueprint.logoUrl || "/zepul_trademark.jpg";
+  const metaLine = [
+    "Post-evaluation",
+    meta.generatedAt ? `Generated ${formatDate(meta.generatedAt)}` : "",
+    meta.ref ? `Ref ${meta.ref}` : "",
+  ].filter(Boolean).join("  ·  ");
+
+  return `
+  <div class="bp">
+  <img class="pagelogo" src="${esc(logoSrc)}" alt="Zepul" />
+
+  <header class="mast">
+    <div>
+      <div class="brand">
+        <span class="logo">Zep<span>Prep</span></span>
+        <span class="tag">Candidate Success Blueprint</span>
+      </div>
+      <h1>${esc(meta.role || "Your Next Interview")}</h1>
+      <div class="sub">${esc([meta.company, meta.candidateName ? `prepared for ${meta.candidateName}` : ""].filter(Boolean).join(" · "))}</div>
+      <div class="mmeta">${esc(metaLine)}</div>
+    </div>
+  </header>
+
+  ${renderBpCongrats(c.congratulations)}
+  ${renderBpCompany(c.companyIntelligence || {})}
+  ${renderBpRole(c.roleIntelligence || {})}
+  ${renderBpEvaluation(c.evaluation || {})}
+  ${renderBpClientGuidance(c.clientGuidance || {})}
+  ${renderBpRefresh(c.technicalRefresh)}
+  ${renderBpBehavioural(c.behavioural || {})}
+  ${renderBpPoints("08", "Personalised Practice Focus", "Close to the real thing", c.practicePoints, false)}
+  ${renderBpCompensation(c.compensation || {})}
+  ${renderBpChecklist(c.checklist)}
+
+  <footer class="endnote">
+    <span><b>ZepPrep</b> — ${esc(footerLabel) || "Candidate Success Blueprint"}</span>
+    <span>Prepared for the candidate · Confidential · Generated by Zepul</span>
+  </footer>
+  </div>
+  `;
+};
+
 export const ZEPPREP_CSS = `
   @page { size: A4; margin: 16mm 15mm 18mm; }
   :root {
@@ -298,6 +478,13 @@ export const ZEPPREP_CSS = `
   .mast .right { text-align:right; flex-shrink:0; display:flex; flex-direction:column; align-items:flex-end; gap:5pt; }
   .chip { font-family:var(--mono); font-size:6pt; letter-spacing:0.12em; text-transform:uppercase; padding:2.5pt 5pt; border-radius:3pt; background:var(--tint); color:var(--accent-ink); font-weight:600; }
   .metabox { font-family:var(--mono); font-size:6.4pt; color:var(--faint); line-height:1.6; text-align:right; }
+  /* Fixed brand logo — repeats top-right on every printed page. In paged media a
+     fixed element's origin is the content box (negative offsets are unreliable in
+     Chrome print), so it sits just inside the top-right; blueprint section kickers
+     are hidden to keep that corner clear. */
+  .pagelogo { position:fixed; top:2mm; right:0; height:13pt; width:auto; z-index:50; }
+  .bp .sec-kicker { display:none; }
+  .mmeta { font-family:var(--mono); font-size:6.4pt; letter-spacing:0.06em; text-transform:uppercase; color:var(--faint); margin-top:6pt; }
 
   .lead { background:var(--panel); border:0.5pt solid var(--rule); border-left:2.5pt solid var(--accent); border-radius:3pt; padding:8pt 11pt; margin:11pt 0 3pt; font-size:9.4pt; color:var(--ink-soft); }
   .lead b { color:var(--ink); }
@@ -359,18 +546,14 @@ export const ZEPPREP_CSS = `
   .break { break-before:page; }
 `;
 
-export const generateZepPrepPDF = async (prep) => {
-  try {
-    if (!prep || !prep.content) throw new Error("No prep content to render");
-    const inner = buildZepPrepBody(prep);
-    const title = `ZepPrep - ${prep.meta?.role || "Interview Prep"}`;
-    const printWindow = window.open("", "_blank", "width=900,height=700");
-    if (!printWindow) {
-      toast.error("Please allow pop-ups to download your prep document.");
-      return;
-    }
-
-    printWindow.document.write(`<!DOCTYPE html>
+// Shared: open a print window with the ZepPrep stylesheet and trigger Save-as-PDF.
+const openPrintDocument = (title, bodyHTML) => {
+  const printWindow = window.open("", "_blank", "width=900,height=700");
+  if (!printWindow) {
+    toast.error("Please allow pop-ups to download your document.");
+    return false;
+  }
+  printWindow.document.write(`<!DOCTYPE html>
 <html>
   <head>
     <title>${esc(title)}</title>
@@ -378,7 +561,7 @@ export const generateZepPrepPDF = async (prep) => {
     <style>${ZEPPREP_CSS}</style>
   </head>
   <body>
-    ${inner}
+    ${bodyHTML}
     <script>
       window.onload = function () {
         setTimeout(function () {
@@ -389,11 +572,37 @@ export const generateZepPrepPDF = async (prep) => {
     </script>
   </body>
 </html>`);
-    printWindow.document.close();
-    toast.success('Print dialog opened — choose "Save as PDF", and uncheck "Headers and footers" for a clean file.');
+  printWindow.document.close();
+  return true;
+};
+
+const PRINT_HINT =
+  'Print dialog opened — choose "Save as PDF", and uncheck "Headers and footers" for a clean file.';
+
+// Apply-time candidate prep pack.
+export const generateZepPrepPDF = async (prep) => {
+  try {
+    if (!prep || !prep.content) throw new Error("No prep content to render");
+    if (openPrintDocument(`ZepPrep - ${prep.meta?.role || "Interview Prep"}`, buildZepPrepBody(prep))) {
+      toast.success(PRINT_HINT);
+    }
   } catch (err) {
     console.error("ZepPrep PDF error:", err);
     toast.error("Failed to open the prep document. Please try again.");
+    throw err;
+  }
+};
+
+// Post-evaluation Candidate Success Blueprint.
+export const generateBlueprintPDF = async (blueprint) => {
+  try {
+    if (!blueprint || !blueprint.content) throw new Error("No blueprint content to render");
+    if (openPrintDocument(`ZepPrep Blueprint - ${blueprint.meta?.role || "Candidate"}`, buildBlueprintBody(blueprint))) {
+      toast.success(PRINT_HINT);
+    }
+  } catch (err) {
+    console.error("Blueprint PDF error:", err);
+    toast.error("Failed to open the blueprint. Please try again.");
     throw err;
   }
 };

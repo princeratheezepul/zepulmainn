@@ -356,6 +356,15 @@ const ResumeSchema = new mongoose.Schema(
       generatedAt: { type: Date, default: null },
       content: { type: mongoose.Schema.Types.Mixed, default: null }
     },
+
+    // Candidate Success Blueprint — the richer post-evaluation ZepPrep, built once
+    // the AI interview (and coding test, if any) are done. Draws on the interview
+    // and coding evidence to prepare the candidate for CLIENT interviews. Manager-
+    // downloadable. Like prepDocument, it carries no scores, ratings or verdicts.
+    blueprintDocument: {
+      generatedAt: { type: Date, default: null },
+      content: { type: mongoose.Schema.Types.Mixed, default: null }
+    },
   },
   { timestamps: true }
 );

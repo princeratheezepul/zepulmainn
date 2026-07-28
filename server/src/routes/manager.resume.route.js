@@ -1,10 +1,12 @@
 import express from "express";
 import { saveResume, saveResumeWithJob, getUserResumes, getResumesByJob, searchResumesByJobRole, getResumeById, getResume, requestAnotherRound, submitToManager, updateResumeStatus, scheduleInterview, getResumesByRecruiter, getResumesByTag, updateResumeTag, getResumeStatsByRecruiter, getMonthlySubmissionData, getMonthlyShortlistData, saveInterviewEvaluation, getAverageScoreData, getResumesByManager } from "../controllers/resume.controller.js";
 import { verifyJWT } from "../middleware/manager.auth.middleware.js";
+import { getBlueprintDocument } from "../controllers/blueprintDocument.controller.js";
 
 const router = express.Router();
 
 // More specific routes first
+router.get("/:resumeId/blueprint", verifyJWT, getBlueprintDocument);
 router.post("/save/:jobId", verifyJWT, saveResumeWithJob);
 router.post("/save", verifyJWT, saveResume);
 router.get("/recruiter", verifyJWT, getResumesByRecruiter);

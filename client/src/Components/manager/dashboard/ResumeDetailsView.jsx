@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Mail, Phone, MapPin, Briefcase, Plus, CheckCircle, XCircle } from 'lucide-react';
+import { Mail, Phone, MapPin, Briefcase, Plus, CheckCircle, XCircle, FileText } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { generateScorecardPDF } from '../../../utils/pdfGenerator';
+import { generateBlueprintPDF } from '../../../utils/zepPrepGenerator';
 import HiringDecisionScorecard from '../../scorecard/HiringDecisionScorecard';
 
 // Circular progress bar component - Fixed with proper circle rendering
@@ -73,6 +74,7 @@ const ResumeDetailsView = ({ resumeData, onBack }) => {
   const pdfRef = useRef();
   const resumeContentRef = useRef();
   const [pdfLoading, setPdfLoading] = useState(false);
+  const [blueprintLoading, setBlueprintLoading] = useState(false);
 
   // Guard: If no _id, show error and redirect
   useEffect(() => {
@@ -257,6 +259,28 @@ const ResumeDetailsView = ({ resumeData, onBack }) => {
     }
   };
 
+  // Candidate Success Blueprint — only available once the AI interview is complete.
+  const hasAiInterview = resumeData.interviewEvaluation?.evaluationResults?.length > 0;
+  const handleDownloadBlueprint = async () => {
+    setBlueprintLoading(true);
+    try {
+      const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+      const token = userInfo?.data?.accessToken;
+      const response = await fetch(
+        `${import.meta.env.VITE_BACKEND_URL}/api/manager/resumes/${resumeData._id}/blueprint`,
+        { headers: { 'Authorization': `Bearer ${token}` } }
+      );
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || !data.blueprint) throw new Error(data.message || 'Failed to build blueprint');
+      await generateBlueprintPDF(data.blueprint);
+    } catch (err) {
+      console.error('Blueprint Generation Error:', err);
+      toast.error(err.message || 'Failed to build blueprint');
+    } finally {
+      setBlueprintLoading(false);
+    }
+  };
+
   // Get score for circular progress
   const score = resumeData.overallScore || resumeData.ats_score || 0;
 
@@ -321,6 +345,27 @@ const ResumeDetailsView = ({ resumeData, onBack }) => {
               ) : null}
               Scorecard
             </button>
+
+            {/* Blueprint button — only once the candidate has completed the AI interview */}
+            {hasAiInterview && (
+              <button
+                onClick={handleDownloadBlueprint}
+                className="bg-indigo-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-indigo-700 transition-colors flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                type="button"
+                disabled={blueprintLoading}
+                title="Candidate Success Blueprint — interview preparation pack for the candidate"
+              >
+                {blueprintLoading ? (
+                  <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+                  </svg>
+                ) : (
+                  <FileText size={16} />
+                )}
+                Blueprint
+              </button>
+            )}
 
             {/* Show status indicators */}
             {currentStatus === 'shortlisted' && (
