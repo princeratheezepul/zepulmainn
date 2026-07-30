@@ -292,6 +292,40 @@ export const generateScorecard = async (req, res) => {
         recommendation: saved.recommendation,
         interviewQuestions: interview.evaluationResults.length,
       },
+      // Everything the client needs to render (and download) the full scorecard,
+      // in the same shape the on-screen scorecard components already consume.
+      fullResume: {
+        name: saved.name,
+        title: saved.title,
+        email: saved.email,
+        phone: saved.phone,
+        experience: saved.experience,
+        location: saved.location,
+        skills: saved.skills || [],
+        overallScore: saved.overallScore,
+        score: saved.score,
+        keyStrength: saved.keyStrength || [],
+        potentialConcern: saved.potentialConcern || [],
+        aiSummary: saved.aiSummary || {},
+        interviewEvaluation: {
+          evaluationResults: interview.evaluationResults.map((r) => ({
+            question: r.question,
+            answer: r.answer,
+            score: r.score,
+            summary: r.summary,
+          })),
+          aiInterviewSummary: interview.aiInterviewSummary,
+        },
+        includeCoding,
+        codingScore,
+        oa: oa
+          ? {
+              evaluation: oa.evaluation,
+              questionCount: (oa.questions || []).length,
+            }
+          : null,
+        appDate: new Date().toLocaleDateString(),
+      },
     });
   } catch (err) {
     console.error("Error generating scorecard:", err);
