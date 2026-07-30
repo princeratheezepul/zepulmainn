@@ -1,20 +1,12 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { usePDF, Resolution, Margin } from 'react-to-pdf';
 import toast from 'react-hot-toast';
-import { FileText, Upload, Loader2, CheckCircle2, AlertTriangle, Code2, MessageSquareText } from 'lucide-react';
+import { Upload, FileText, Loader2, CheckCircle2, AlertTriangle, Download } from 'lucide-react';
+import { buildScorecardHTML } from '../../utils/scorecardHtml';
 
 const OBJECT_ID_RE = /^[a-f\d]{24}$/i;
 const ACCEPTED = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
-
-const ScoreTile = ({ label, value, color, icon: Icon }) => (
-  <div className="flex flex-col items-center justify-center rounded-xl border border-gray-200 bg-white p-4">
-    <div className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-widest text-gray-500">
-      {Icon && <Icon size={13} />} {label}
-    </div>
-    <div className={`text-3xl font-bold ${color}`}>{value}</div>
-    <div className="text-xs text-gray-400">/ 100</div>
-  </div>
-);
 
 const GenerateScorecard = () => {
   const [jobId, setJobId] = useState('');
@@ -23,6 +15,25 @@ const GenerateScorecard = () => {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
+
+  // Capture the rendered scorecard card and download it as a PDF. targetRef wraps
+  // the inline-hex scorecard markup (buildScorecardHTML) — no Tailwind inside it,
+  // so html2canvas renders it faithfully and the PDF matches the card on screen.
+  const { toPDF, targetRef } = usePDF({
+    filename: `${(result?.scorecard?.name || 'candidate').replace(/\s+/g, '_')}_Scorecard.pdf`,
+    resolution: Resolution.HIGH,
+    page: { format: 'A4', orientation: 'portrait', margin: Margin.SMALL },
+  });
+
+  const handleDownloadPDF = async () => {
+    try {
+      toast.loading('Generating PDF…', { id: 'scorecard-pdf' });
+      await toPDF();
+      toast.success('Scorecard downloaded', { id: 'scorecard-pdf' });
+    } catch (err) {
+      toast.error(`Failed to generate PDF: ${err.message}`, { id: 'scorecard-pdf' });
+    }
+  };
 
   const pickFile = (selected) => {
     if (!selected) return;
@@ -196,53 +207,26 @@ const GenerateScorecard = () => {
 
         {/* Result */}
         {result && (
-          <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-            <div className="mb-5 flex items-center gap-2 text-green-700">
+          <div>
+            <div className="mb-4 flex items-center gap-2 text-green-700">
               <CheckCircle2 size={20} />
-              <span className="font-semibold">Scorecard generated and submitted</span>
+              <span className="font-semibold">Scorecard generated and submitted to {result.scorecard.jobTitle}</span>
             </div>
 
-            <div className="mb-5">
-              <div className="text-lg font-bold text-gray-900">{result.scorecard.name || 'Candidate'}</div>
-              <div className="text-sm text-gray-500">{result.scorecard.title}</div>
-              <div className="mt-1 text-xs text-gray-400">
-                {result.scorecard.email} · submitted to <span className="font-medium">{result.scorecard.jobTitle}</span>
-              </div>
-            </div>
-
-            <div className={`mb-5 grid gap-3 ${result.scorecard.includeCoding ? 'grid-cols-3' : 'grid-cols-2'}`}>
-              <ScoreTile label="CV Strength" value={result.scorecard.cvScore} color="text-amber-500" icon={FileText} />
-              {result.scorecard.includeCoding && (
-                <ScoreTile label="Coding" value={result.scorecard.codingScore} color="text-green-600" icon={Code2} />
-              )}
-              <ScoreTile
-                label="Interview"
-                value={result.scorecard.interviewScore}
-                color="text-blue-600"
-                icon={MessageSquareText}
-              />
-            </div>
-
-            <div className="mb-5 rounded-lg bg-gray-50 p-4">
-              <div className="text-[11px] font-semibold uppercase tracking-widest text-gray-500">Recommendation</div>
-              <p className="mt-1 text-sm text-gray-800">{result.scorecard.recommendation}</p>
-              <p className="mt-2 text-xs text-gray-500">
-                {result.scorecard.interviewQuestions} interview questions generated
-                {result.scorecard.includeCoding ? ' · coding assessment included' : ' · interview-only scorecard'}
-              </p>
-            </div>
-
-            <div className="mb-5 space-y-1 font-mono text-xs text-gray-400">
-              <div>resumeId: {result.resumeId}</div>
-              <div>rawTextId: {result.rawTextId}</div>
-            </div>
-
-            <div className="flex gap-3">
+            {/* Actions (kept OUTSIDE the capture target so they never appear in the PDF) */}
+            <div className="mb-4 flex flex-col gap-3 sm:flex-row">
+              <button
+                onClick={handleDownloadPDF}
+                className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700"
+              >
+                <Download size={16} />
+                Download scorecard PDF
+              </button>
               <Link
                 to={`/admin/candidates/${result.resumeId}`}
-                className="flex-1 rounded-lg bg-blue-600 px-4 py-2.5 text-center text-sm font-semibold text-white transition hover:bg-blue-700"
+                className="flex-1 rounded-lg border border-gray-300 px-4 py-2.5 text-center text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
               >
-                View scorecard
+                Open in dashboard
               </Link>
               <button
                 onClick={reset}
@@ -250,6 +234,19 @@ const GenerateScorecard = () => {
               >
                 Generate another
               </button>
+            </div>
+
+            <p className="mb-4 font-mono text-[11px] text-gray-400">
+              resumeId: {result.resumeId} &nbsp;·&nbsp; rawTextId: {result.rawTextId}
+            </p>
+
+            {/* Live preview — this exact node is what gets captured into the PDF. */}
+            <div className="overflow-x-auto rounded-xl border border-gray-200 bg-gray-100 p-4">
+              <div
+                ref={targetRef}
+                style={{ background: '#ffffff' }}
+                dangerouslySetInnerHTML={{ __html: buildScorecardHTML(result.fullResume) }}
+              />
             </div>
           </div>
         )}
