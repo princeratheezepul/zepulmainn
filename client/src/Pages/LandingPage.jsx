@@ -1,15 +1,17 @@
 import React, { useEffect } from 'react';
 import '../styles/LandingPage.css';
+import '../styles/LandingEcosystem.css';
 
 import LandingNav from '../Components/landing/LandingNav';
 import LandingHero from '../Components/landing/LandingHero';
 import LandingStats from '../Components/landing/LandingStats';
 import LandingTicker from '../Components/landing/LandingTicker';
 import LandingWhyCards from '../Components/landing/LandingWhyCards';
+import LandingFallShort from '../Components/landing/LandingFallShort';
+import LandingApproach from '../Components/landing/LandingApproach';
+import LandingProducts from '../Components/landing/LandingProducts';
+import LandingCoreValue from '../Components/landing/LandingCoreValue';
 import LandingHowItWorks from '../Components/landing/LandingHowItWorks';
-import LandingTwoPaths from '../Components/landing/LandingTwoPaths';
-import LandingEngagement from '../Components/landing/LandingEngagement';
-import LandingBeyondCTA from '../Components/landing/LandingBeyondCTA';
 
 const LandingPage = () => {
     // Scroll reveal for .lp-reveal elements
@@ -34,11 +36,11 @@ const LandingPage = () => {
             <LandingStats />
             <LandingTicker />
             <LandingWhyCards />
+            <LandingFallShort />
+            <LandingApproach />
             <LandingHowItWorks />
-            <LandingTwoPaths />
-            <LandingEngagement />
-            <LandingBeyondCTA />
-            
+            <LandingProducts />
+            <LandingCoreValue />
         </div>
     );
 };

@@ -14,7 +14,9 @@ const LandingHero = () => {
                         </h1>
                     </div>
                     <p className="lp-desc">
-                        An AI-powered, full-stack Talent Acquisition operating system combining intelligent sourcing, AI-assessed evaluations, advanced analytics, and a global partner network to deliver governed, decision-ready talent at scale powered by agile and lean execution for operational excellence, all on one unified platform.
+                        AI-powered Talent Acquisition Operating System
+that connects Employers, Job Seekers, and Recruitment Partners through a unified
+Agentic AI ecosystem.
                     </p>
                 </div>
 
@@ -46,7 +48,7 @@ const LandingHero = () => {
                                 </svg>
                             </div>
                             <div className="lp-hero-float-label">Active Talent Pool</div>
-                            <div className="lp-hero-float-value" style={{ fontSize: '22px' }}>400K+</div>
+                            <div className="lp-hero-float-value" style={{ fontSize: '22px' }}>200K+</div>
                             <div className="lp-hero-float-sub">Verified global candidates</div>
                         </div>
 
@@ -59,7 +61,7 @@ const LandingHero = () => {
                                     <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
                                 </svg>
                             </div>
-                            <div className="lp-hero-float-label">Global Recruiters</div>
+                            <div className="lp-hero-float-label">Recruitment Partner</div>
                             <div className="lp-hero-float-value" style={{ fontSize: '22px' }}>150+</div>
                             <div className="lp-hero-float-sub">On-demand recruiter network</div>
                         </div>

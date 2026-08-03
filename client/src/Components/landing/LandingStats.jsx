@@ -29,21 +29,21 @@ const LandingStats = () => {
         <div className="lp-stats">
             <div className="lp-stat">
                 <div className="lp-stat-n">
-                    <span ref={el => statRefs.current[0] = el} data-target="3" data-suffix="X">3X</span>
+                    <span ref={el => statRefs.current[0] = el} data-target="100" data-suffix="% AI">100% AI</span>
                 </div>
-                <div className="lp-stat-l">Productivity</div>
+                <div className="lp-stat-l">Hiring Execution</div>
             </div>
             <div className="lp-stat">
                 <div className="lp-stat-n">
-                    <span ref={el => statRefs.current[1] = el} data-target="40" data-suffix="%">40%</span>
+                    <span ref={el => statRefs.current[1] = el} data-target="150" data-suffix="+">150+</span>
                 </div>
-                <div className="lp-stat-l">Increase in Hiring Speed</div>
+                <div className="lp-stat-l">Global Recruitment Partners</div>
             </div>
             <div className="lp-stat">
                 <div className="lp-stat-n">
-                    <span ref={el => statRefs.current[2] = el} data-target="80" data-suffix="%">80%</span>
+                    <span ref={el => statRefs.current[2] = el} data-target="400" data-suffix="K+">400K+</span>
                 </div>
-                <div className="lp-stat-l">Reduction in Manual Work</div>
+                <div className="lp-stat-l">Decision Ready Talent Data</div>
             </div>
         </div>
     );
