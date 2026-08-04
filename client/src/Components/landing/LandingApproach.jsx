@@ -7,21 +7,32 @@ const CHIPS = [
     'Global On-Demand Recruiters',
 ];
 
+// each point is an array of its rendered lines — the breaks are authored, not
+// left to wrapping, so the diagram keeps its shape at every container width
 const LABELS = [
     {
         key: 'emp',
         title: 'Employers',
-        subs: ['AI Native Managed Services for Hiring', 'DIY Agentic AI Execution Layer Platform License'],
+        subs: [
+            ['AI Native Managed', 'Services for Hiring'],
+            ['DIY Agentic AI Execution Layer', 'Platform License'],
+        ],
     },
     {
         key: 'seek',
         title: 'Job Seekers',
-        subs: ['AI Agent Engaged Active Talent', 'Niche Global Talent'],
+        subs: [
+            ['Personalized AI career', 'coach and mentor'],
+            ['Greater transparency and', 'engagement throughout', 'the hiring journey'],
+        ],
     },
     {
         key: 'rec',
         title: 'Recruiters',
-        subs: ['In House · On Demand', '100% AI Powered + Global'],
+        subs: [
+            ['100% AI Powered + Global'],
+            ['In House + On Demand'],
+        ],
     },
 ];
 
@@ -92,7 +103,14 @@ const LandingApproach = () => {
                         {LABELS.map(({ key, title, subs }) => (
                             <div className={`lp-vl lp-vl-${key}`} key={key}>
                                 <span className="lp-vl-title">{title}</span>
-                                {subs.map(sub => <span className="lp-vl-sub" key={sub}>{sub}</span>)}
+                                <span className="lp-vl-bracket" aria-hidden="true" />
+                                <div className="lp-vl-subs">
+                                    {subs.map(lines => (
+                                        <span className="lp-vl-sub" key={lines[0]}>
+                                            {lines.map(line => <span className="lp-vl-line" key={line}>{line}</span>)}
+                                        </span>
+                                    ))}
+                                </div>
                             </div>
                         ))}
                     </div>

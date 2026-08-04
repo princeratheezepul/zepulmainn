@@ -8,7 +8,7 @@ const LandingHowItWorks = () => {
 
             <div className="lp-sc-scroll-wrapper" style={{ overflow: 'hidden', width: '100vw', maxWidth: '100%', padding: '0 20px', boxSizing: 'border-box' }}>
                 <img
-                    src="/zepul%20works.png"
+                    src="/zepul-works-flow.png"
                     alt="How Zepul Works Flow Diagram"
                     className="lp-reveal"
                     style={{

@@ -14,7 +14,7 @@ const Footer = () => {
         {/* Left Section - Logo and Disclaimer */}
         <div className="footer-left">
           <div className="footer-logo">
-            <img src="/assets/image.png" alt="ZEPUL" className="logo-img" />
+            <img src="/assets/logo.png" alt="ZEPUL" className="logo-img" />
           </div>
           <p className="footer-disclaimer">
             Zepul™ , it's partners, authorized vendors, and subsidiaries do not

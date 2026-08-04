@@ -527,7 +527,8 @@
   position: absolute;
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  align-items: center;
+  text-align: center;
 }
 
 .lp-vl-title {
@@ -539,31 +540,68 @@
   text-transform: uppercase;
 }
 
+/* org-chart bracket — a stem drops from the title into a rule whose two ends
+   turn down into ticks. Width is 50% so those ticks land exactly on the centres
+   of the two equal-width points below (25% / 75% of the group). */
+.lp-vl-bracket {
+  position: relative;
+  width: 50%;
+  height: 8px;
+  margin-top: 16px;
+  border: 1.5px solid var(--lp-ink);
+  border-bottom: 0;
+}
+
+.lp-vl-bracket::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 100%;
+  width: 1.5px;
+  height: 8px;
+  margin-left: -.75px;
+  background: var(--lp-ink);
+}
+
+.lp-vl-subs {
+  display: flex;
+  width: 100%;
+  margin-top: 7px;
+}
+
 .lp-vl-sub {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 0 5px;
   color: var(--lp-muted);
   font-size: clamp(8px, 1.8cqw, 9px);
   line-height: 1.5;
 }
 
-.lp-vl-emp {
-  top: 3%;
-  left: 50%;
-  transform: translateX(-50%);
-  max-width: 62%;
-  text-align: center;
+.lp-vl-line {
+  display: block;
+  white-space: nowrap;
 }
 
+.lp-vl-emp {
+  top: -3%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 66%;
+}
+
+/* the two lower groups reach a little past the square so they clear the
+   circles the way they do in the reference — the visual's column has room */
 .lp-vl-seek {
-  left: 1.5%;
-  bottom: 7%;
-  max-width: 33%;
+  left: -6%;
+  bottom: 0;
+  width: 50%;
 }
 
 .lp-vl-rec {
-  right: 1.5%;
-  bottom: 7%;
-  max-width: 33%;
-  text-align: right;
+  right: -6%;
+  bottom: 0;
+  width: 50%;
 }
 
 /* ══════════════════════════════════════════════════
@@ -634,12 +672,12 @@
 
 .lp-pv {
   flex-shrink: 0;
-  height: 290px;
+  height: 300px;
   display: flex;
   flex-direction: column;
   gap: 10px;
   padding: 20px 22px;
-  background: var(--lp-soft);
+  background: #EDEEF9;
   border-bottom: 1px solid var(--lp-rule);
   overflow: hidden;
 }
@@ -652,166 +690,147 @@
   text-transform: uppercase;
 }
 
-/* — managed service visual — */
-.lp-pv-service {
+/* — 1 · hiring pipeline funnel — */
+.lp-pv-funnel {
   justify-content: space-between;
 }
 
-.lp-pv-flow {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex: 1;
-  min-height: 0;
-}
-
-.lp-pv-node {
-  flex-shrink: 0;
-  width: 88px;
+.lp-pv-rows {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 5px;
-  text-align: center;
+  gap: 9px;
 }
 
-.lp-pv-node-icon {
-  width: 44px;
-  height: 44px;
+.lp-pv-row,
+.lp-pv-score {
   display: flex;
   align-items: center;
-  justify-content: center;
-  border: 1px solid var(--lp-rule);
-  border-radius: 50%;
-  background: #fff;
+  gap: 10px;
 }
 
-.lp-pv-node-icon.is-green {
-  border-color: rgba(13, 168, 100, .25);
-  background: rgba(13, 168, 100, .05);
-}
-
-.lp-pv-node-name {
-  color: var(--lp-ink);
-  font-size: 9.5px;
-  font-weight: 800;
+.lp-pv-row-name {
+  flex: 0 0 68px;
+  color: var(--lp-muted);
+  font-size: 10.5px;
   line-height: 1.2;
 }
 
-.lp-pv-node-sub {
-  color: var(--lp-muted);
-  font-size: 8px;
-  line-height: 1.4;
-}
-
-.lp-pv-middle {
+.lp-pv-track {
   flex: 1;
   min-width: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 7px;
+  height: 9px;
+  background: #DBDDF1;
+  overflow: hidden;
 }
 
-.lp-pv-tags {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  width: 100%;
-}
-
-.lp-pv-tag {
+.lp-pv-bar {
   display: block;
-  padding: 4px 6px;
-  border: 1px solid rgba(2, 75, 255, .15);
-  background: rgba(2, 75, 255, .07);
-  color: var(--lp-blue);
-  font-size: 8.5px;
-  font-weight: 800;
-  letter-spacing: .06em;
-  text-transform: uppercase;
-  text-align: center;
-  animation: lp-pvTagGlow 4s ease-in-out infinite;
+  width: var(--w);
+  height: 100%;
+  background: var(--lp-blue);
 }
 
-.lp-pv-tag:nth-child(2) {
-  animation-delay: .5s;
+/* the funnel fades toward the tail, then the final stage snaps back to full
+   strength — it is the outcome the whole card is about */
+.lp-pv-bar.is-t2 {
+  background: #5A4BEA;
 }
 
-.lp-pv-tag:nth-child(3) {
-  animation-delay: 1s;
+.lp-pv-bar.is-t3 {
+  background: #7466EE;
 }
 
-.lp-pv-tag:nth-child(4) {
-  animation-delay: 1.5s;
+.lp-pv-bar.is-t4 {
+  background: #9186F2;
 }
 
-@keyframes lp-pvTagGlow {
+/* bars fill only once the card has scrolled in, staggered down the funnel */
+.lp-pr-card.is-visible .lp-pv-bar {
+  animation: lp-pvBar .85s cubic-bezier(.22, 1, .36, 1) var(--d, 0ms) both;
+}
 
-  0%,
-  70%,
-  100% {
-    border-color: rgba(2, 75, 255, .15);
-    background: rgba(2, 75, 255, .07);
+@keyframes lp-pvBar {
+  from {
+    width: 0;
   }
 
-  20%,
-  40% {
-    border-color: rgba(2, 75, 255, .45);
-    background: rgba(2, 75, 255, .14);
+  to {
+    width: var(--w);
   }
 }
 
-.lp-pv-powered {
-  display: flex;
-  align-items: center;
-  gap: 4px;
+.lp-pv-row-val {
+  flex: 0 0 27px;
+  color: var(--lp-ink);
+  font-size: 10.5px;
+  font-weight: 700;
+  text-align: right;
+}
+
+.lp-pv-row-val.is-muted {
   color: var(--lp-muted);
-  font-size: 8px;
-  font-weight: 800;
-  white-space: nowrap;
+  font-weight: 400;
 }
 
-.lp-pv-stats {
-  flex-shrink: 0;
+.lp-pv-row-val.is-key {
+  color: var(--lp-blue);
+}
+
+.lp-pv-report {
   display: flex;
-  align-items: center;
-  justify-content: space-around;
-  padding: 10px 12px;
+  flex-direction: column;
+  gap: 8px;
+  padding: 11px 12px 12px;
   background: #fff;
   border: 1px solid var(--lp-rule);
 }
 
-.lp-pv-stat {
+.lp-pv-report-hd {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 2px;
-}
-
-.lp-pv-stat-n {
-  font-family: 'Lora', serif;
-  font-size: 20px;
-  line-height: 1;
-  letter-spacing: -.03em;
+  gap: 7px;
   color: var(--lp-blue);
 }
 
-.lp-pv-stat-l {
-  color: var(--lp-muted);
-  font-size: 7.5px;
+.lp-pv-report-title {
+  flex: 1;
+  min-width: 0;
+  color: var(--lp-ink);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.lp-pv-report-badge {
+  flex-shrink: 0;
+  padding: 3px 7px;
+  border: 1px solid rgba(2, 75, 255, .28);
+  background: rgba(2, 75, 255, .07);
+  color: var(--lp-blue);
+  font-size: 8.5px;
   font-weight: 800;
   letter-spacing: .08em;
   text-transform: uppercase;
 }
 
-.lp-pv-stat-div {
-  width: 1px;
-  height: 28px;
-  background: var(--lp-rule);
+.lp-pv-score .lp-pv-track {
+  height: 7px;
 }
 
-/* — pipeline visual — */
+.lp-pv-score-name {
+  flex: 0 0 54px;
+  color: var(--lp-muted);
+  font-size: 10px;
+}
+
+.lp-pv-score-val {
+  flex: 0 0 31px;
+  color: var(--lp-blue);
+  font-size: 10.5px;
+  font-weight: 800;
+  text-align: right;
+}
+
+/* — 2 · automated evaluation flow — */
 .lp-pv-pipe {
   display: flex;
   flex-direction: column;
@@ -823,14 +842,13 @@
 .lp-pv-step {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 7px 0;
+  gap: 12px;
 }
 
 .lp-pv-step-icon {
   flex-shrink: 0;
-  width: 26px;
-  height: 26px;
+  width: 30px;
+  height: 30px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -850,12 +868,12 @@
   background: var(--lp-blue);
   border-color: var(--lp-blue);
   color: #fff;
-  box-shadow: 0 0 0 4px rgba(2, 75, 255, .15);
+  box-shadow: 0 0 0 5px rgba(2, 75, 255, .15);
   animation: lp-pvPulse 2s ease-in-out infinite;
 }
 
 .lp-pv-step.is-pending .lp-pv-step-icon {
-  background: var(--lp-soft);
+  background: #fff;
   border-color: var(--lp-rule);
 }
 
@@ -863,11 +881,11 @@
 
   0%,
   100% {
-    box-shadow: 0 0 0 4px rgba(2, 75, 255, .15);
+    box-shadow: 0 0 0 5px rgba(2, 75, 255, .15);
   }
 
   50% {
-    box-shadow: 0 0 0 8px rgba(2, 75, 255, .06);
+    box-shadow: 0 0 0 9px rgba(2, 75, 255, .06);
   }
 }
 
@@ -883,28 +901,28 @@
   flex: 1;
   min-width: 0;
   color: var(--lp-ink);
-  font-size: 11px;
-  font-weight: 700;
+  font-size: 12.5px;
+  font-weight: 600;
 }
 
 .lp-pv-badge {
   flex-shrink: 0;
-  padding: 2px 7px;
-  font-size: 9px;
-  font-weight: 800;
+  padding: 3px 8px;
+  font-size: 9.5px;
+  font-weight: 700;
   white-space: nowrap;
 }
 
 .lp-pv-badge.is-score {
   color: var(--lp-eco-green);
   background: rgba(13, 168, 100, .08);
-  border: 1px solid rgba(13, 168, 100, .2);
+  border: 1px solid rgba(13, 168, 100, .22);
 }
 
 .lp-pv-badge.is-running {
   color: var(--lp-blue);
   background: rgba(2, 75, 255, .07);
-  border: 1px solid rgba(2, 75, 255, .2);
+  border: 1px solid rgba(2, 75, 255, .25);
 }
 
 .lp-pv-badge.is-waiting {
@@ -914,10 +932,11 @@
   border: 1px solid var(--lp-rule);
 }
 
+/* 14px keeps the stub centred under the 30px icon */
 .lp-pv-conn {
-  width: 1px;
-  height: 8px;
-  margin-left: 12px;
+  width: 2px;
+  height: 20px;
+  margin-left: 14px;
   background: var(--lp-rule);
 }
 
@@ -932,253 +951,154 @@
 .lp-pv-zero {
   display: flex;
   align-items: center;
-  gap: 7px;
-  padding: 8px 10px;
-  border: 1px solid rgba(2, 75, 255, .15);
-  background: rgba(2, 75, 255, .05);
+  gap: 8px;
+  padding: 11px 12px;
+  border: 1px solid rgba(2, 75, 255, .14);
+  background: rgba(2, 75, 255, .07);
   color: var(--lp-blue);
-  font-size: 9.5px;
+  font-size: 11px;
   font-weight: 700;
 }
 
-/* — chat visual — */
-.lp-pv-chat {
-  padding: 0;
-  gap: 0;
-  background: #FAFAFF;
-  justify-content: flex-start;
+/* — 3 · ai career matching — */
+.lp-pv-match {
+  justify-content: space-between;
 }
 
-.lp-pv-chat-hd {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 11px 14px;
-  background: #fff;
-  border-bottom: 1px solid var(--lp-rule);
-}
-
-.lp-pv-av-wrap {
-  position: relative;
-  flex-shrink: 0;
-}
-
-.lp-pv-av {
-  width: 28px;
-  height: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  background: var(--lp-blue);
-  color: #fff;
-  font-size: 11px;
-  font-weight: 800;
-}
-
-.lp-pv-av-dot {
-  position: absolute;
-  right: 0;
-  bottom: 0;
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: #22C55E;
-  border: 1.5px solid #fff;
-}
-
-.lp-pv-chat-id {
-  flex: 1;
-  min-width: 0;
-}
-
-.lp-pv-chat-name {
-  display: block;
-  color: var(--lp-ink);
-  font-size: 11px;
-  font-weight: 800;
-}
-
-.lp-pv-chat-status {
-  display: block;
-  color: var(--lp-muted);
-  font-size: 8px;
-}
-
-.lp-pv-chat-pulse {
-  display: flex;
-  align-items: center;
-  gap: 3px;
-}
-
-.lp-pv-chat-pulse span {
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background: var(--lp-blue);
-  animation: lp-pvDot 1.4s ease-in-out infinite;
-}
-
-.lp-pv-chat-pulse span:nth-child(2) {
-  animation-delay: .2s;
-}
-
-.lp-pv-chat-pulse span:nth-child(3) {
-  animation-delay: .4s;
-}
-
-@keyframes lp-pvDot {
-
-  0%,
-  100% {
-    opacity: .25;
-    transform: scale(.8);
-  }
-
-  50% {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-.lp-pv-msgs {
+.lp-pv-match-body {
   flex: 1;
   min-height: 0;
   display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* sized by its widest line rather than a fixed width, so the meta stays on one
+   line and whatever is left over goes to the match stack */
+.lp-pv-seeker {
+  flex: 0 0 auto;
+  display: flex;
   flex-direction: column;
-  gap: 7px;
-  padding: 10px 13px;
-  overflow: hidden;
-}
-
-.lp-pv-bubble {
-  max-width: 90%;
-  padding: 7px 10px;
-  font-size: 11px;
-  line-height: 1.55;
-  opacity: 0;
-  transform: translateY(6px);
-  animation: lp-pvBubbleIn .45s cubic-bezier(.22, 1, .36, 1) forwards;
-}
-
-.lp-pv-bubble:nth-child(1) {
-  animation-delay: .15s;
-}
-
-.lp-pv-bubble:nth-child(2) {
-  animation-delay: .75s;
-}
-
-.lp-pv-bubble:nth-child(3) {
-  animation-delay: 1.35s;
-}
-
-@keyframes lp-pvBubbleIn {
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.lp-pv-bubble.is-ai {
-  background: var(--lp-soft);
-  border: 1px solid var(--lp-rule);
-  border-radius: 0 7px 7px 7px;
-  color: var(--lp-ink);
-}
-
-.lp-pv-bubble.is-user {
-  align-self: flex-end;
-  background: var(--lp-blue);
-  border-radius: 7px 0 7px 7px;
-  color: #fff;
-}
-
-.lp-pv-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  margin-top: 5px;
-}
-
-.lp-pv-chips span {
-  padding: 2px 6px;
-  border: 1px solid rgba(2, 75, 255, .22);
-  background: #fff;
-  color: var(--lp-blue);
-  font-size: 8px;
-  font-weight: 800;
-}
-
-.lp-pv-typing {
-  display: flex;
   align-items: center;
-  gap: 4px;
-  padding: 2px 0;
+  gap: 3px;
+  text-align: center;
 }
 
-.lp-pv-typing span {
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: var(--lp-muted);
-  animation: lp-pvType 1.2s ease-in-out infinite;
-}
-
-.lp-pv-typing span:nth-child(2) {
-  animation-delay: .2s;
-}
-
-.lp-pv-typing span:nth-child(3) {
-  animation-delay: .4s;
-}
-
-@keyframes lp-pvType {
-
-  0%,
-  100% {
-    opacity: .25;
-    transform: translateY(0);
-  }
-
-  50% {
-    opacity: 1;
-    transform: translateY(-3px);
-  }
-}
-
-.lp-pv-chat-inp {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  padding: 8px 13px;
-  background: #fff;
-  border-top: 1px solid var(--lp-rule);
-}
-
-.lp-pv-inp-field {
-  flex: 1;
-  min-width: 0;
-  padding: 6px 9px;
-  border: 1px solid var(--lp-rule);
-  color: var(--lp-muted);
-  font-size: 10px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.lp-pv-inp-send {
-  flex-shrink: 0;
-  width: 26px;
-  height: 26px;
+.lp-pv-seeker-av {
+  width: 50px;
+  height: 50px;
+  margin-bottom: 5px;
   display: flex;
   align-items: center;
   justify-content: center;
+  border-radius: 50%;
   background: var(--lp-blue);
   color: #fff;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: .04em;
+  box-shadow: 0 0 0 6px rgba(2, 75, 255, .08);
+}
+
+.lp-pv-seeker-name {
+  color: var(--lp-ink);
+  font-size: 11.5px;
+  font-weight: 800;
+}
+
+.lp-pv-seeker-meta {
+  color: var(--lp-muted);
+  font-size: 9px;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.lp-pv-bridge {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 11px;
+}
+
+.lp-pv-agent {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 8px;
+  border: 1px solid rgba(2, 75, 255, .28);
+  background: rgba(2, 75, 255, .08);
+  color: var(--lp-blue);
+  font-size: 10px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.lp-pv-arrow {
+  display: block;
+  color: var(--lp-blue);
+  animation: lp-pvNudge 2.6s ease-in-out infinite;
+}
+
+@keyframes lp-pvNudge {
+
+  0%,
+  100% {
+    transform: translateX(-3px);
+  }
+
+  50% {
+    transform: translateX(3px);
+  }
+}
+
+/* the stack runs off the card edge on purpose — the match list continues
+   past what the card can show */
+.lp-pv-matches {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin-right: -30px;
+  background: #fff;
+  border: 1px solid var(--lp-rule);
+}
+
+.lp-pv-match-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 11px;
+  border-bottom: 1px solid var(--lp-rule);
+}
+
+.lp-pv-match-row:last-child {
+  border-bottom: 0;
+}
+
+.lp-pv-match-row.is-key {
+  background: rgba(2, 75, 255, .07);
+}
+
+.lp-pv-match-co {
+  flex: 1;
+  min-width: 0;
+  color: var(--lp-ink);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.lp-pv-match-role {
+  flex: 0 0 54px;
+  color: var(--lp-muted);
+  font-size: 9.5px;
+  line-height: 1.35;
+}
+
+.lp-pv-match-foot {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--lp-muted);
+  font-size: 10px;
 }
 
 /* — product copy — */
@@ -1585,11 +1505,25 @@
   .lp-vl-seek,
   .lp-vl-rec {
     position: static;
+    width: auto;
     max-width: none;
     transform: none;
+    align-items: flex-start;
     text-align: left;
     padding-left: 12px;
     border-left: 2px solid rgba(2, 75, 255, .3);
+  }
+
+  /* the bracket only reads against the diagram — the stacked list uses the
+     blue spine on the left instead */
+  .lp-vl-bracket {
+    display: none;
+  }
+
+  .lp-vl-subs {
+    flex-direction: column;
+    gap: 3px;
+    margin-top: 4px;
   }
 
   .lp-vl-title {
@@ -1597,6 +1531,7 @@
   }
 
   .lp-vl-sub {
+    padding: 0;
     font-size: 11.5px;
   }
 }
@@ -1645,13 +1580,9 @@
     padding: 16px;
   }
 
-  .lp-pv-node {
-    width: 74px;
-  }
-
-  .lp-pv-node-icon {
-    width: 38px;
-    height: 38px;
+  /* the bleed would clip the role column on a phone-width card */
+  .lp-pv-matches {
+    margin-right: -24px;
   }
 
   .lp-cv-card {
@@ -1686,9 +1617,8 @@
     transform: none;
   }
 
-  .lp-pv-bubble {
-    opacity: 1;
-    transform: none;
+  .lp-pv-bar {
+    width: var(--w);
   }
 
   .lp-vc {

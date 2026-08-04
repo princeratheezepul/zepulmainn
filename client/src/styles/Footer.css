@@ -35,10 +35,12 @@
   margin-bottom: 1rem;
 }
 
+/* no brightness(0) here — the old asset was white artwork that had to be
+   inverted for the light footer; the current logo already carries its own
+   colours and the filter would flatten the blue mark to black */
 .logo-img {
-  width: 80px;
+  width: 92px;
   height: auto;
-  filter: brightness(0);
 }
 
 .footer-disclaimer {
