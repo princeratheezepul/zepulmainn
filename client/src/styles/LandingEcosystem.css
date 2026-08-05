@@ -672,12 +672,12 @@
 
 .lp-pv {
   flex-shrink: 0;
-  height: 300px;
+  height: 290px;
   display: flex;
   flex-direction: column;
   gap: 10px;
   padding: 20px 22px;
-  background: #EDEEF9;
+  background: var(--lp-soft);
   border-bottom: 1px solid var(--lp-rule);
   overflow: hidden;
 }
@@ -690,147 +690,166 @@
   text-transform: uppercase;
 }
 
-/* — 1 · hiring pipeline funnel — */
-.lp-pv-funnel {
+/* — managed service visual — */
+.lp-pv-service {
   justify-content: space-between;
 }
 
-.lp-pv-rows {
-  display: flex;
-  flex-direction: column;
-  gap: 9px;
-}
-
-.lp-pv-row,
-.lp-pv-score {
+.lp-pv-flow {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
+  flex: 1;
+  min-height: 0;
 }
 
-.lp-pv-row-name {
-  flex: 0 0 68px;
-  color: var(--lp-muted);
-  font-size: 10.5px;
+.lp-pv-node {
+  flex-shrink: 0;
+  width: 88px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  text-align: center;
+}
+
+.lp-pv-node-icon {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--lp-rule);
+  border-radius: 50%;
+  background: #fff;
+}
+
+.lp-pv-node-icon.is-green {
+  border-color: rgba(13, 168, 100, .25);
+  background: rgba(13, 168, 100, .05);
+}
+
+.lp-pv-node-name {
+  color: var(--lp-ink);
+  font-size: 9.5px;
+  font-weight: 800;
   line-height: 1.2;
 }
 
-.lp-pv-track {
+.lp-pv-node-sub {
+  color: var(--lp-muted);
+  font-size: 8px;
+  line-height: 1.4;
+}
+
+.lp-pv-middle {
   flex: 1;
   min-width: 0;
-  height: 9px;
-  background: #DBDDF1;
-  overflow: hidden;
-}
-
-.lp-pv-bar {
-  display: block;
-  width: var(--w);
-  height: 100%;
-  background: var(--lp-blue);
-}
-
-/* the funnel fades toward the tail, then the final stage snaps back to full
-   strength — it is the outcome the whole card is about */
-.lp-pv-bar.is-t2 {
-  background: #5A4BEA;
-}
-
-.lp-pv-bar.is-t3 {
-  background: #7466EE;
-}
-
-.lp-pv-bar.is-t4 {
-  background: #9186F2;
-}
-
-/* bars fill only once the card has scrolled in, staggered down the funnel */
-.lp-pr-card.is-visible .lp-pv-bar {
-  animation: lp-pvBar .85s cubic-bezier(.22, 1, .36, 1) var(--d, 0ms) both;
-}
-
-@keyframes lp-pvBar {
-  from {
-    width: 0;
-  }
-
-  to {
-    width: var(--w);
-  }
-}
-
-.lp-pv-row-val {
-  flex: 0 0 27px;
-  color: var(--lp-ink);
-  font-size: 10.5px;
-  font-weight: 700;
-  text-align: right;
-}
-
-.lp-pv-row-val.is-muted {
-  color: var(--lp-muted);
-  font-weight: 400;
-}
-
-.lp-pv-row-val.is-key {
-  color: var(--lp-blue);
-}
-
-.lp-pv-report {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 11px 12px 12px;
+  align-items: center;
+  gap: 7px;
+}
+
+.lp-pv-tags {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+}
+
+.lp-pv-tag {
+  display: block;
+  padding: 4px 6px;
+  border: 1px solid rgba(2, 75, 255, .15);
+  background: rgba(2, 75, 255, .07);
+  color: var(--lp-blue);
+  font-size: 8.5px;
+  font-weight: 800;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  text-align: center;
+  animation: lp-pvTagGlow 4s ease-in-out infinite;
+}
+
+.lp-pv-tag:nth-child(2) {
+  animation-delay: .5s;
+}
+
+.lp-pv-tag:nth-child(3) {
+  animation-delay: 1s;
+}
+
+.lp-pv-tag:nth-child(4) {
+  animation-delay: 1.5s;
+}
+
+@keyframes lp-pvTagGlow {
+
+  0%,
+  70%,
+  100% {
+    border-color: rgba(2, 75, 255, .15);
+    background: rgba(2, 75, 255, .07);
+  }
+
+  20%,
+  40% {
+    border-color: rgba(2, 75, 255, .45);
+    background: rgba(2, 75, 255, .14);
+  }
+}
+
+.lp-pv-powered {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--lp-muted);
+  font-size: 8px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.lp-pv-stats {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 10px 12px;
   background: #fff;
   border: 1px solid var(--lp-rule);
 }
 
-.lp-pv-report-hd {
+.lp-pv-stat {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 7px;
+  gap: 2px;
+}
+
+.lp-pv-stat-n {
+  font-family: 'Lora', serif;
+  font-size: 20px;
+  line-height: 1;
+  letter-spacing: -.03em;
   color: var(--lp-blue);
 }
 
-.lp-pv-report-title {
-  flex: 1;
-  min-width: 0;
-  color: var(--lp-ink);
-  font-size: 11px;
-  font-weight: 700;
-}
-
-.lp-pv-report-badge {
-  flex-shrink: 0;
-  padding: 3px 7px;
-  border: 1px solid rgba(2, 75, 255, .28);
-  background: rgba(2, 75, 255, .07);
-  color: var(--lp-blue);
-  font-size: 8.5px;
+.lp-pv-stat-l {
+  color: var(--lp-muted);
+  font-size: 7.5px;
   font-weight: 800;
   letter-spacing: .08em;
   text-transform: uppercase;
 }
 
-.lp-pv-score .lp-pv-track {
-  height: 7px;
+.lp-pv-stat-div {
+  width: 1px;
+  height: 28px;
+  background: var(--lp-rule);
 }
 
-.lp-pv-score-name {
-  flex: 0 0 54px;
-  color: var(--lp-muted);
-  font-size: 10px;
-}
-
-.lp-pv-score-val {
-  flex: 0 0 31px;
-  color: var(--lp-blue);
-  font-size: 10.5px;
-  font-weight: 800;
-  text-align: right;
-}
-
-/* — 2 · automated evaluation flow — */
+/* — pipeline visual — */
 .lp-pv-pipe {
   display: flex;
   flex-direction: column;
@@ -842,13 +861,14 @@
 .lp-pv-step {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
+  padding: 7px 0;
 }
 
 .lp-pv-step-icon {
   flex-shrink: 0;
-  width: 30px;
-  height: 30px;
+  width: 26px;
+  height: 26px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -868,12 +888,12 @@
   background: var(--lp-blue);
   border-color: var(--lp-blue);
   color: #fff;
-  box-shadow: 0 0 0 5px rgba(2, 75, 255, .15);
+  box-shadow: 0 0 0 4px rgba(2, 75, 255, .15);
   animation: lp-pvPulse 2s ease-in-out infinite;
 }
 
 .lp-pv-step.is-pending .lp-pv-step-icon {
-  background: #fff;
+  background: var(--lp-soft);
   border-color: var(--lp-rule);
 }
 
@@ -881,11 +901,11 @@
 
   0%,
   100% {
-    box-shadow: 0 0 0 5px rgba(2, 75, 255, .15);
+    box-shadow: 0 0 0 4px rgba(2, 75, 255, .15);
   }
 
   50% {
-    box-shadow: 0 0 0 9px rgba(2, 75, 255, .06);
+    box-shadow: 0 0 0 8px rgba(2, 75, 255, .06);
   }
 }
 
@@ -901,28 +921,28 @@
   flex: 1;
   min-width: 0;
   color: var(--lp-ink);
-  font-size: 12.5px;
-  font-weight: 600;
+  font-size: 11px;
+  font-weight: 700;
 }
 
 .lp-pv-badge {
   flex-shrink: 0;
-  padding: 3px 8px;
-  font-size: 9.5px;
-  font-weight: 700;
+  padding: 2px 7px;
+  font-size: 9px;
+  font-weight: 800;
   white-space: nowrap;
 }
 
 .lp-pv-badge.is-score {
   color: var(--lp-eco-green);
   background: rgba(13, 168, 100, .08);
-  border: 1px solid rgba(13, 168, 100, .22);
+  border: 1px solid rgba(13, 168, 100, .2);
 }
 
 .lp-pv-badge.is-running {
   color: var(--lp-blue);
   background: rgba(2, 75, 255, .07);
-  border: 1px solid rgba(2, 75, 255, .25);
+  border: 1px solid rgba(2, 75, 255, .2);
 }
 
 .lp-pv-badge.is-waiting {
@@ -932,11 +952,10 @@
   border: 1px solid var(--lp-rule);
 }
 
-/* 14px keeps the stub centred under the 30px icon */
 .lp-pv-conn {
-  width: 2px;
-  height: 20px;
-  margin-left: 14px;
+  width: 1px;
+  height: 8px;
+  margin-left: 12px;
   background: var(--lp-rule);
 }
 
@@ -951,154 +970,253 @@
 .lp-pv-zero {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 11px 12px;
-  border: 1px solid rgba(2, 75, 255, .14);
-  background: rgba(2, 75, 255, .07);
+  gap: 7px;
+  padding: 8px 10px;
+  border: 1px solid rgba(2, 75, 255, .15);
+  background: rgba(2, 75, 255, .05);
   color: var(--lp-blue);
-  font-size: 11px;
+  font-size: 9.5px;
   font-weight: 700;
 }
 
-/* — 3 · ai career matching — */
-.lp-pv-match {
-  justify-content: space-between;
+/* — chat visual — */
+.lp-pv-chat {
+  padding: 0;
+  gap: 0;
+  background: #FAFAFF;
+  justify-content: flex-start;
 }
 
-.lp-pv-match-body {
-  flex: 1;
-  min-height: 0;
+.lp-pv-chat-hd {
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   gap: 10px;
+  padding: 11px 14px;
+  background: #fff;
+  border-bottom: 1px solid var(--lp-rule);
 }
 
-/* sized by its widest line rather than a fixed width, so the meta stays on one
-   line and whatever is left over goes to the match stack */
-.lp-pv-seeker {
-  flex: 0 0 auto;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 3px;
-  text-align: center;
+.lp-pv-av-wrap {
+  position: relative;
+  flex-shrink: 0;
 }
 
-.lp-pv-seeker-av {
-  width: 50px;
-  height: 50px;
-  margin-bottom: 5px;
+.lp-pv-av {
+  width: 28px;
+  height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
   background: var(--lp-blue);
   color: #fff;
-  font-size: 14px;
-  font-weight: 800;
-  letter-spacing: .04em;
-  box-shadow: 0 0 0 6px rgba(2, 75, 255, .08);
-}
-
-.lp-pv-seeker-name {
-  color: var(--lp-ink);
-  font-size: 11.5px;
+  font-size: 11px;
   font-weight: 800;
 }
 
-.lp-pv-seeker-meta {
-  color: var(--lp-muted);
-  font-size: 9px;
-  line-height: 1.4;
-  white-space: nowrap;
+.lp-pv-av-dot {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #22C55E;
+  border: 1.5px solid #fff;
 }
 
-.lp-pv-bridge {
-  flex: 0 0 auto;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 11px;
-}
-
-.lp-pv-agent {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 4px 8px;
-  border: 1px solid rgba(2, 75, 255, .28);
-  background: rgba(2, 75, 255, .08);
-  color: var(--lp-blue);
-  font-size: 10px;
-  font-weight: 800;
-  white-space: nowrap;
-}
-
-.lp-pv-arrow {
-  display: block;
-  color: var(--lp-blue);
-  animation: lp-pvNudge 2.6s ease-in-out infinite;
-}
-
-@keyframes lp-pvNudge {
-
-  0%,
-  100% {
-    transform: translateX(-3px);
-  }
-
-  50% {
-    transform: translateX(3px);
-  }
-}
-
-/* the stack runs off the card edge on purpose — the match list continues
-   past what the card can show */
-.lp-pv-matches {
-  flex: 1 1 auto;
-  min-width: 0;
-  margin-right: -30px;
-  background: #fff;
-  border: 1px solid var(--lp-rule);
-}
-
-.lp-pv-match-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 9px 11px;
-  border-bottom: 1px solid var(--lp-rule);
-}
-
-.lp-pv-match-row:last-child {
-  border-bottom: 0;
-}
-
-.lp-pv-match-row.is-key {
-  background: rgba(2, 75, 255, .07);
-}
-
-.lp-pv-match-co {
+.lp-pv-chat-id {
   flex: 1;
   min-width: 0;
+}
+
+.lp-pv-chat-name {
+  display: block;
   color: var(--lp-ink);
   font-size: 11px;
   font-weight: 800;
 }
 
-.lp-pv-match-role {
-  flex: 0 0 54px;
+.lp-pv-chat-status {
+  display: block;
   color: var(--lp-muted);
-  font-size: 9.5px;
-  line-height: 1.35;
+  font-size: 8px;
 }
 
-.lp-pv-match-foot {
+.lp-pv-chat-pulse {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.lp-pv-chat-pulse span {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--lp-blue);
+  animation: lp-pvDot 1.4s ease-in-out infinite;
+}
+
+.lp-pv-chat-pulse span:nth-child(2) {
+  animation-delay: .2s;
+}
+
+.lp-pv-chat-pulse span:nth-child(3) {
+  animation-delay: .4s;
+}
+
+@keyframes lp-pvDot {
+
+  0%,
+  100% {
+    opacity: .25;
+    transform: scale(.8);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.lp-pv-msgs {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 10px 13px;
+  overflow: hidden;
+}
+
+.lp-pv-bubble {
+  max-width: 90%;
+  padding: 7px 10px;
+  font-size: 11px;
+  line-height: 1.55;
+  opacity: 0;
+  transform: translateY(6px);
+  animation: lp-pvBubbleIn .45s cubic-bezier(.22, 1, .36, 1) forwards;
+}
+
+.lp-pv-bubble:nth-child(1) {
+  animation-delay: .15s;
+}
+
+.lp-pv-bubble:nth-child(2) {
+  animation-delay: .75s;
+}
+
+.lp-pv-bubble:nth-child(3) {
+  animation-delay: 1.35s;
+}
+
+@keyframes lp-pvBubbleIn {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.lp-pv-bubble.is-ai {
+  background: var(--lp-soft);
+  border: 1px solid var(--lp-rule);
+  border-radius: 0 7px 7px 7px;
+  color: var(--lp-ink);
+}
+
+.lp-pv-bubble.is-user {
+  align-self: flex-end;
+  background: var(--lp-blue);
+  border-radius: 7px 0 7px 7px;
+  color: #fff;
+}
+
+.lp-pv-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 5px;
+}
+
+.lp-pv-chips span {
+  padding: 2px 6px;
+  border: 1px solid rgba(2, 75, 255, .22);
+  background: #fff;
+  color: var(--lp-blue);
+  font-size: 8px;
+  font-weight: 800;
+}
+
+.lp-pv-typing {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 0;
+}
+
+.lp-pv-typing span {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--lp-muted);
+  animation: lp-pvType 1.2s ease-in-out infinite;
+}
+
+.lp-pv-typing span:nth-child(2) {
+  animation-delay: .2s;
+}
+
+.lp-pv-typing span:nth-child(3) {
+  animation-delay: .4s;
+}
+
+@keyframes lp-pvType {
+
+  0%,
+  100% {
+    opacity: .25;
+    transform: translateY(0);
+  }
+
+  50% {
+    opacity: 1;
+    transform: translateY(-3px);
+  }
+}
+
+.lp-pv-chat-inp {
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   gap: 7px;
+  padding: 8px 13px;
+  background: #fff;
+  border-top: 1px solid var(--lp-rule);
+}
+
+.lp-pv-inp-field {
+  flex: 1;
+  min-width: 0;
+  padding: 6px 9px;
+  border: 1px solid var(--lp-rule);
   color: var(--lp-muted);
   font-size: 10px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.lp-pv-inp-send {
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--lp-blue);
+  color: #fff;
 }
 
 /* — product copy — */
@@ -1580,9 +1698,13 @@
     padding: 16px;
   }
 
-  /* the bleed would clip the role column on a phone-width card */
-  .lp-pv-matches {
-    margin-right: -24px;
+  .lp-pv-node {
+    width: 74px;
+  }
+
+  .lp-pv-node-icon {
+    width: 38px;
+    height: 38px;
   }
 
   .lp-cv-card {
@@ -1617,8 +1739,9 @@
     transform: none;
   }
 
-  .lp-pv-bar {
-    width: var(--w);
+  .lp-pv-bubble {
+    opacity: 1;
+    transform: none;
   }
 
   .lp-vc {
