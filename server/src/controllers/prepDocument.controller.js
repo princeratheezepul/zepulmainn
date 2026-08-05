@@ -1,7 +1,12 @@
+import crypto from "crypto";
 import mongoose from "mongoose";
 import Resume from "../models/resume.model.js";
 import { Job } from "../models/job.model.js";
-import { generateTextWithRetry } from "./bulkUpload.controller.js";
+import {
+  generateTextWithRetry,
+  extractTextFromPDF,
+  extractTextFromDocx,
+} from "./bulkUpload.controller.js";
 
 /**
  * ZepPrep — the candidate-facing interview-preparation pack.
@@ -19,6 +24,10 @@ import { generateTextWithRetry } from "./bulkUpload.controller.js";
 
 const PREP_MODEL = "gpt-4o-mini";
 const MAX_RESUME_CHARS = 6000;
+const MAX_JD_CHARS = 6000;
+// Below this, extraction almost certainly failed (e.g. a scanned/image-only PDF)
+// and sending it to the model would just produce a hollow document.
+const MIN_USABLE_CHARS = 120;
 
 const parseJsonResponse = (text) => {
   const cleaned = String(text || "").replace(/```json|```/g, "").trim();
@@ -47,14 +56,22 @@ const formatSalaryAnchor = (salary) => {
   return "not specified";
 };
 
-const buildPrompt = (job, resume) => {
+const buildPrompt = (job, resume, { rawJd = false } = {}) => {
   const resumeText = (resume.raw_text || "").slice(0, MAX_RESUME_CHARS);
   const priorSkills = asArray(resume.skills).join(", ");
   const priorStrengths = asArray(resume.keyStrength).join(" | ");
 
-  return `You are a senior career coach writing a personalised interview-preparation pack ("ZepPrep") for a candidate who has just applied to a job through Zepul. The pack goes DIRECTLY TO THE CANDIDATE, so it is supportive and coaching in tone. It must NEVER contain numeric scores, a hiring recommendation, an accept/reject verdict, or anything that reads as an internal evaluation.
-
-=== THE JOB ===
+  // The upload flow has no structured Job document — only the JD the user pasted
+  // or uploaded — so the whole job block collapses to that raw text.
+  const jobBlock = rawJd
+    ? `=== THE JOB (raw job description supplied by the candidate) ===
+Everything known about this role is in the text below. Read the company name, role
+title, employment type, location, seniority and required skills out of it. Where a
+detail genuinely is not stated, say so rather than inventing it.
+"""
+${(job.description || "").slice(0, MAX_JD_CHARS)}
+"""`
+    : `=== THE JOB ===
 Company: ${job.company || "(not specified — infer the industry from the role and keep company facts general)"}
 Role: ${job.jobtitle || ""}
 Employment type: ${job.employmentType || "Full-time"}
@@ -67,7 +84,11 @@ Preferred qualifications: ${asArray(job.preferredQualifications).join(" | ") || 
 Description:
 """
 ${job.description || ""}
-"""
+"""`;
+
+  return `You are a senior career coach writing a personalised interview-preparation pack ("ZepPrep") for a candidate preparing to interview for a job through Zepul. The pack goes DIRECTLY TO THE CANDIDATE, so it is supportive and coaching in tone. It must NEVER contain numeric scores, a hiring recommendation, an accept/reject verdict, or anything that reads as an internal evaluation.
+
+${jobBlock}
 
 === THE CANDIDATE (resume) ===
 Detected skills: ${priorSkills || "see resume"}
@@ -132,7 +153,15 @@ Return ONLY this JSON, no markdown:
   ]
 }
 
-Provide 5 items in topicsToRevise (mix of High/Medium/Low), 5 in technicalQuestions, 5 in behaviouralQuestions, and 8 in checklist.`;
+Provide 5 items in topicsToRevise (mix of High/Medium/Low), 5 in technicalQuestions, 5 in behaviouralQuestions, and 8 in checklist.${
+    rawJd
+      ? `\n\nAlso include these top-level keys:
+- "candidateName": the candidate's full name exactly as written on the resume, or "" if it cannot be read.
+- "jdSalary": the pay stated in the job description, copied as written (e.g. "70-95 LPA", "₹18,00,000 per annum"). Use "" if the job description does not state pay — never guess here.
+- "jdCompany": the hiring company's name as written in the job description, or "" if not stated.
+- "jdLocation": the role's location as written in the job description, or "" if not stated.`
+      : ""
+  }`;
 };
 
 // Normalise whatever the model returns into the exact shape the client renders,
@@ -362,6 +391,192 @@ export const getPrepDocument = async (req, res) => {
     });
   } catch (err) {
     console.error("getPrepDocument error:", err);
+    return res.status(500).json({ message: "Failed to build prep document", error: err.message });
+  }
+};
+
+// --- anonymous resume + JD upload ------------------------------------------
+
+const SALARY_SEARCH_MODEL = "gpt-4o";
+
+/**
+ * Expected-salary block for the upload flow only.
+ *
+ * The job description is the source of truth: if it states pay, that is what the
+ * candidate sees. Only when it says nothing do we go to the web and look up what
+ * the role pays at that company, reported per annum in lakhs.
+ *
+ * Returns null when neither source yields anything, so the PDF omits the block
+ * rather than showing an empty or invented figure.
+ */
+const buildExpectedSalary = async ({ jdSalary, company, role, location }) => {
+  const stated = asString(jdSalary).replace(/[.,;\s]+$/, "");
+  if (stated) {
+    return {
+      source: "jd",
+      range: stated,
+      basis: "Stated in the job description you provided.",
+    };
+  }
+
+  if (!company && !role) return null;
+
+  const who = [role, company && `at ${company}`, location && `in ${location}`]
+    .filter(Boolean)
+    .join(" ");
+
+  try {
+    const { default: OpenAI } = await import("openai");
+    const client = new OpenAI({ apiKey: process.env.OPENAI_API });
+
+    const r = await client.responses.create({
+      model: SALARY_SEARCH_MODEL,
+      tools: [{ type: "web_search_preview" }],
+      input: `Search the web for current salary data for: ${who}.
+
+Report the total annual compensation range in Indian rupees, expressed in lakhs per annum (LPA).
+Prefer figures for this specific company; if none exist, use the market rate for this role,
+seniority and location and say so.
+
+Return ONLY this JSON, no markdown, no commentary:
+{"range":"e.g. ₹24–68 LPA","basis":"one short sentence naming what the figure is based on"}`,
+    });
+
+    const parsed = parseJsonResponse(r.output_text || "");
+    const range = asString(parsed.range);
+    if (!range) return null;
+
+    // No source list here on purpose: asking for pure JSON suppresses the API's
+    // url_citation annotations, and having the model name its own sources risks
+    // printing a fabricated attribution next to a salary figure.
+    return {
+      source: "research",
+      range,
+      basis: asString(parsed.basis) || "Based on published salary data for this role.",
+    };
+  } catch (err) {
+    console.error("[zepPrep] salary lookup failed:", err.message);
+    return null;
+  }
+};
+
+const textFromUpload = async (file) => {
+  if (!file) return "";
+  const { mimetype, originalname = "", buffer } = file;
+  const ext = originalname.toLowerCase().split(".").pop();
+
+  if (mimetype === "application/pdf" || ext === "pdf") {
+    return await extractTextFromPDF(buffer);
+  }
+  if (
+    mimetype === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+    ext === "docx"
+  ) {
+    return await extractTextFromDocx(buffer);
+  }
+  if (mimetype?.startsWith("text/") || ext === "txt") {
+    return buffer.toString("utf8");
+  }
+  throw new Error(`Unsupported file type: ${originalname || mimetype}`);
+};
+
+// @desc   Build a ZepPrep pack from an uploaded resume + job description.
+//         Anonymous: nothing is persisted, the document is returned inline for
+//         the client to render straight to PDF.
+// @route  POST /api/candidate-application/prep/from-upload   (multipart)
+export const generatePrepFromUpload = async (req, res) => {
+  try {
+    const resumeUpload = req.files?.resume?.[0];
+    const jdUpload = req.files?.jobDescription?.[0];
+    const jdPasted = String(req.body?.jobDescriptionText || "").trim();
+
+    if (!resumeUpload) return res.status(400).json({ message: "Please attach your resume." });
+    if (!jdUpload && !jdPasted) {
+      return res.status(400).json({ message: "Please attach or paste the job description." });
+    }
+
+    let resumeText;
+    let jdText;
+    try {
+      resumeText = String((await textFromUpload(resumeUpload)) || "").trim();
+      jdText = jdPasted || String((await textFromUpload(jdUpload)) || "").trim();
+    } catch (err) {
+      return res.status(415).json({ message: err.message || "Could not read that file." });
+    }
+
+    if (resumeText.length < MIN_USABLE_CHARS) {
+      return res.status(422).json({
+        message:
+          "We couldn't read any text from that resume. If it's a scanned image, please upload a text-based PDF or a DOCX.",
+      });
+    }
+    if (jdText.length < MIN_USABLE_CHARS) {
+      return res.status(422).json({
+        message: "The job description looks too short to work from. Please provide the full posting.",
+      });
+    }
+
+    // Shapes that satisfy buildPrompt/shapeContent without touching the database.
+    const job = {
+      company: "",
+      jobtitle: "",
+      employmentType: "",
+      location: "",
+      type: "",
+      experience: null,
+      salary: null,
+      skills: [],
+      keyResponsibilities: [],
+      preferredQualifications: [],
+      description: jdText,
+    };
+    const resume = { raw_text: resumeText, skills: [], keyStrength: [] };
+
+    let raw;
+    try {
+      raw = parseJsonResponse(
+        await generateTextWithRetry(buildPrompt(job, resume, { rawJd: true }), PREP_MODEL)
+      );
+    } catch (err) {
+      // Unlike the application flow there is no stored job/resume to build a
+      // meaningful fallback from, so ask the user to retry rather than hand back
+      // a hollow document.
+      console.error("[zepPrep] upload generation failed:", err.message);
+      return res.status(503).json({
+        message: "We couldn't build your prep document just now. Please try again in a moment.",
+      });
+    }
+
+    const content = shapeContent(raw, job, resume);
+
+    // Upload flow only — the apply flow never sets this, so its document is
+    // unchanged and the renderer simply skips the block.
+    const expectedSalary = await buildExpectedSalary({
+      jdSalary: raw.jdSalary,
+      company: asString(raw.jdCompany) || content.opportunity.company,
+      role: asString(raw.jdRole) || content.opportunity.role,
+      location: asString(raw.jdLocation) || content.opportunity.location,
+    });
+    if (expectedSalary) content.expectedSalary = expectedSalary;
+
+    const generatedAt = new Date();
+
+    return res.status(200).json({
+      prep: {
+        meta: {
+          candidateName: asString(raw.candidateName) || "Candidate",
+          role: content.opportunity.role || "",
+          company: content.opportunity.company || "",
+          generatedAt,
+          ref: buildRef(crypto.randomBytes(3).toString("hex"), content.opportunity.company),
+          // tells the PDF builder to drop the apply-time framing
+          source: "upload",
+        },
+        content,
+      },
+    });
+  } catch (err) {
+    console.error("generatePrepFromUpload error:", err);
     return res.status(500).json({ message: "Failed to build prep document", error: err.message });
   }
 };

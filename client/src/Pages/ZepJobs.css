@@ -220,7 +220,8 @@ body {
 .search-box {
   border: 1px solid var(--rule);
   border-radius: 0;
-  padding: 24px 24px 20px;
+  /* tabs run edge to edge, so the body carries the padding instead */
+  padding: 0;
   background: #fff;
   box-shadow: 0 4px 32px rgba(0, 0, 0, .06), 0 1px 4px rgba(0, 0, 0, .03);
   margin-bottom: 20px;
@@ -232,6 +233,52 @@ body {
 .search-box:focus-within {
   border-color: rgba(2, 75, 255, .3);
   box-shadow: 0 4px 40px rgba(2, 75, 255, .1), 0 1px 4px rgba(0, 0, 0, .03);
+}
+
+/* ── search box tabs ── */
+.search-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--rule);
+}
+
+.search-tab {
+  position: relative;
+  flex: 1;
+  padding: 15px 12px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: .01em;
+  color: var(--muted);
+  transition: color .2s ease, background .2s ease;
+}
+
+.search-tab:hover {
+  color: var(--ink);
+  background: var(--soft);
+}
+
+.search-tab.active {
+  color: var(--ink);
+  background: none;
+}
+
+/* -1px so the marker sits on the container border, not above it */
+.search-tab.active::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 2px;
+  background: var(--blue);
+}
+
+.search-tab-body {
+  padding: 24px 24px 20px;
 }
 
 .search-label {
@@ -271,6 +318,96 @@ body {
   padding-top: 16px;
   border-top: 1px solid var(--rule);
   margin-top: 12px;
+}
+
+.search-actions.prep {
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+/* ── interview prep tab ── */
+.prep-intro {
+  margin: 0 0 18px;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+.prep-uploads {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.prep-drop {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  padding: 22px 16px;
+  border: 1.5px dashed var(--rule);
+  text-align: center;
+  cursor: pointer;
+  transition: border-color .18s ease, background .18s ease;
+}
+
+/* the label wraps the input, so clicking anywhere in the zone still opens the
+   picker while drag-and-drop is handled on the label itself */
+.prep-drop input {
+  display: none;
+}
+
+.prep-drop:hover,
+.prep-drop.is-over {
+  border-color: rgba(2, 75, 255, .45);
+  background: rgba(2, 75, 255, .04);
+}
+
+.prep-drop.has-file {
+  border-style: solid;
+  border-color: rgba(2, 75, 255, .35);
+  background: rgba(2, 75, 255, .03);
+}
+
+.prep-drop svg {
+  width: 22px;
+  height: 22px;
+}
+
+.prep-drop-title {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.prep-drop-sub {
+  font-size: 11.5px;
+  line-height: 1.4;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+
+.prep-free {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 11px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #15803D;
+  background: #EAF7EE;
+}
+
+.prep-free svg {
+  width: 11px;
+  height: 11px;
+  flex-shrink: 0;
+}
+
+.search-btn:disabled {
+  opacity: .6;
+  cursor: not-allowed;
+  transform: none;
 }
 
 .search-btn {
@@ -1179,6 +1316,24 @@ body {
 
 /* ── MOBILE RESPONSIVENESS ── */
 @media (max-width: 768px) {
+  .search-tab {
+    padding: 13px 8px;
+    font-size: 12px;
+  }
+
+  .search-tab-body {
+    padding: 20px 18px 18px;
+  }
+
+  .prep-uploads {
+    grid-template-columns: 1fr;
+  }
+
+  .search-actions.prep {
+    justify-content: flex-start;
+    gap: 12px;
+  }
+
   .jobs {
     padding: 30px 20px;
   }

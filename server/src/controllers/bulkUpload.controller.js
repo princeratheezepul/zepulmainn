@@ -647,7 +647,7 @@ const processResumeBuffer = async (buffer, fileName, mimeType, job, bulkJobData 
 };
 
 // Extract text from PDF using pdfjs-dist with CommonJS require
-const extractTextFromPDF = async (buffer) => {
+export const extractTextFromPDF = async (buffer) => {
   try {
     console.log('PDF extraction - Buffer type:', typeof buffer);
     console.log('PDF extraction - Buffer length:', buffer?.length);
@@ -716,7 +716,7 @@ const extractTextFromPDF = async (buffer) => {
 };
 
 // Extract text from DOCX
-const extractTextFromDocx = async (buffer) => {
+export const extractTextFromDocx = async (buffer) => {
   try {
     const result = await mammoth.extractRawText({ buffer });
     return result.value;

@@ -9,6 +9,9 @@
     "dev": "nodemon src/index.js",
     "postinstall": "patch-package || true"
   },
+  "engines": {
+    "node": ">=20"
+  },
   "author": "",
   "license": "ISC",
   "description": "",

@@ -188,12 +188,31 @@ const renderStrategy = (s) => `
     </div>
   </section>`;
 
-const renderSalary = (s) => {
+/**
+ * Expected salary — only present on packs built from an uploaded resume + JD.
+ * Omitted entirely on every other prep document, so their layout is unchanged.
+ */
+const renderExpectedSalary = (x) => {
+  if (!x || !x.range) return "";
+  const fromJd = x.source === "jd";
+  return `
+  <div class="paybox">
+    <div class="paybox-head">
+      <span class="paybox-label">Expected Salary</span>
+      <span class="paybox-src">${fromJd ? "From the job description" : "Researched from public salary data"}</span>
+    </div>
+    <div class="paybox-range">${esc(x.range)}</div>
+    ${x.basis ? `<div class="paybox-basis">${esc(x.basis)}</div>` : ""}
+  </div>`;
+};
+
+const renderSalary = (s, expected) => {
   const row = (dt, dd, wide) =>
     dd ? `<div${wide ? ' class="wide"' : ""}><dt>${esc(dt)}</dt><dd>${esc(dd)}</dd></div>` : "";
   return `
   <section class="sec break">
     ${sectionHead("09", "Salary & Market Insights", "Context for the conversation")}
+    ${renderExpectedSalary(expected)}
     <div class="dl">
       ${row("Estimated range", s.estimatedRange)}
       ${row("Typical for your experience", s.typicalForExperience)}
@@ -226,6 +245,18 @@ export const buildZepPrepBody = (prep) => {
   const c = prep.content || {};
   const footerLabel = [meta.company, meta.role].filter(Boolean).join(" — ");
 
+  // The upload flow builds a pack from a resume + JD the visitor supplied; nobody
+  // applied to anything, so the apply-time framing has to change with it.
+  const fromUpload = meta.source === "upload";
+  const chipLabel = fromUpload ? "Generated from your upload" : "Generated on apply";
+  const lead = fromUpload
+    ? `You gave us your resume and the job description you're targeting. <b>ZepPrep</b> compares the two and turns
+       them into a focused preparation pack — what to research, what to revise, and the questions you are most
+       likely to face. Work through it top to bottom.`
+    : `You applied to this role through Zepul. <b>ZepPrep</b> turns the job description, the company, and your own
+       profile into a focused preparation pack — what to research, what to revise, and the questions you are most
+       likely to face. Work through it top to bottom.`;
+
   return `
   <header class="mast">
     <div>
@@ -237,7 +268,7 @@ export const buildZepPrepBody = (prep) => {
       <div class="sub">${esc([meta.company, meta.candidateName ? `prepared for ${meta.candidateName}` : ""].filter(Boolean).join(" · "))}</div>
     </div>
     <div class="right">
-      <span class="chip">Generated on apply</span>
+      <span class="chip">${esc(chipLabel)}</span>
       <div class="metabox">
         ${meta.generatedAt ? `Generated ${esc(formatDate(meta.generatedAt))}<br>` : ""}
         ${meta.ref ? `Ref ${esc(meta.ref)}` : ""}
@@ -245,11 +276,7 @@ export const buildZepPrepBody = (prep) => {
     </div>
   </header>
 
-  <div class="lead">
-    You applied to this role through Zepul. <b>ZepPrep</b> turns the job description, the company, and your own
-    profile into a focused preparation pack — what to research, what to revise, and the questions you are most
-    likely to face. Work through it top to bottom.
-  </div>
+  <div class="lead">${lead}</div>
 
   ${renderOpportunity(c.opportunity || {})}
   ${renderCompany(c.company || {})}
@@ -259,7 +286,7 @@ export const buildZepPrepBody = (prep) => {
   ${renderQuestions("06", "Likely Technical Questions", "Customised to you · not generic", c.technicalQuestions, "why you")}
   ${renderQuestions("07", "Likely Behavioural Questions", "Mapped to the company's values", c.behaviouralQuestions, "angle")}
   ${renderStrategy(c.interviewStrategy || {})}
-  ${renderSalary(c.salary || {})}
+  ${renderSalary(c.salary || {}, c.expectedSalary)}
   ${renderChecklist(c.checklist)}
 
   <footer class="endnote">
@@ -544,6 +571,15 @@ export const ZEPPREP_CSS = `
 
   .note-inline { font-size:8.4pt; color:var(--muted); font-style:italic; margin-top:6pt; }
   .break { break-before:page; }
+
+  /* expected salary — upload-built packs only */
+  .paybox { border:0.5pt solid var(--accent); border-left:2.5pt solid var(--accent); border-radius:4pt;
+            background:var(--tint); padding:9pt 11pt; margin-bottom:9pt; break-inside:avoid; }
+  .paybox-head { display:flex; align-items:baseline; justify-content:space-between; gap:8pt; }
+  .paybox-label { font-size:7.6pt; font-weight:700; letter-spacing:0.09em; text-transform:uppercase; color:var(--accent); }
+  .paybox-src { font-size:7.4pt; color:var(--muted); }
+  .paybox-range { font-size:16pt; font-weight:700; color:var(--ink); letter-spacing:-0.01em; margin-top:3pt; }
+  .paybox-basis { font-size:8.6pt; color:var(--ink-soft); line-height:1.45; margin-top:3pt; }
 `;
 
 // Shared: open a print window with the ZepPrep stylesheet and trigger Save-as-PDF.

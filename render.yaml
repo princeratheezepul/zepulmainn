@@ -8,3 +8,7 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
+      # express@5 requires Node >=18; express-rate-limit@8 expects >=20.
+      # Pin it so Render's default runtime can't silently break the build.
+      - key: NODE_VERSION
+        value: "20"

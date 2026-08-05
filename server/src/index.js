@@ -1,3 +1,8 @@
+// MUST stay the first import: validates required env vars before any auth
+// module is evaluated, so a missing secret fails with a clear message instead
+// of an import-time throw from an unrelated middleware file.
+import "./config/validateEnv.js";
+
 import express from "express";
 
 import ServerConfig from "./config/ServerConfig.js";
@@ -25,6 +30,7 @@ import meetingRoutes from "./routes/meeting.route.js";
 import resumeDataRoutes from "./routes/resumeData.route.js";
 import confirmRoutes from "./routes/confirm.route.js";
 import jobDescriptionSessionRoutes from "./routes/jobDescriptionSession.routes.js";
+import hackerrankRoutes from "./routes/hackerrank.routes.js";
 import { expireStaleMeetings } from "./services/meeting.service.js";
 import { cleanupExpiredSessions } from "./utils/sessionManager.js";
 const app = express();
@@ -103,15 +109,16 @@ app.use((req, res, next) => {
 
 app.use(cookieParser());
 
-// Debug version endpoint - check which code is deployed
+// Debug version endpoint - check which code is deployed.
+// Reports the real commit (Render injects RENDER_GIT_COMMIT) rather than a
+// hardcoded string, so a stale deployment is visible instead of silent.
+const bootedAt = new Date().toISOString();
 app.get('/api/version', (req, res) => {
   res.json({
-    version: '2ee3276',
-    timestamp: new Date().toISOString(),
-    routes: [
-      '/api/resumes', '/api/recruiter', '/api/assessment', '/api/jobs', '/api/meetings'
-    ],
-    assessmentRoutesLoaded: typeof assessmentRoutes !== 'undefined'
+    commit: process.env.RENDER_GIT_COMMIT || 'unknown',
+    branch: process.env.RENDER_GIT_BRANCH || 'unknown',
+    bootedAt,
+    now: new Date().toISOString(),
   });
 });
 
@@ -135,6 +142,8 @@ app.use("/api/assessment", assessmentRoutes);
 app.use("/api/meetings", meetingRoutes);
 app.use("/api/resume-data", resumeDataRoutes);
 app.use("/api/confirm", confirmRoutes);
+app.use("/api/job-description-sessions", jobDescriptionSessionRoutes);
+app.use("/api/hackerrank", hackerrankRoutes);
 
 // JSON 404 Handler for API routes
 app.use("/api", (req, res) => {

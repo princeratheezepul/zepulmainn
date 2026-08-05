@@ -489,6 +489,50 @@
   display: block;
 }
 
+/* infinity mark — tall glyph, so it is sized off the core's height */
+.lp-loop-mark {
+  height: 56%;
+  width: auto;
+  display: block;
+  overflow: visible;
+}
+
+/* faint under-layer: the shape never disappears, it just loses its colour */
+.lp-mark-ghost {
+  opacity: .13;
+}
+
+/* the wipe is tilted ~18deg so the fill line follows the glyph's diagonal
+   sweep instead of cutting straight across it. Travel distances are measured
+   against the rotated rect: -480 clears the top of the 347-tall viewBox with
+   the leading feather, -1200 carries the trailing feather past it too, so the
+   loop restarts from an empty glyph with no visible jump. */
+.lp-mark-wipe {
+  transform-box: fill-box;
+  transform-origin: center;
+  transform: translateY(80px) rotate(-18deg);
+  animation: lp-markFill 5s ease-in-out infinite;
+}
+
+@keyframes lp-markFill {
+
+  /* empty — wipe parked below the glyph */
+  0% {
+    transform: translateY(80px) rotate(-18deg);
+  }
+
+  /* flooded to the top */
+  46%,
+  58% {
+    transform: translateY(-480px) rotate(-18deg);
+  }
+
+  /* drains out of the bottom, same upward direction */
+  100% {
+    transform: translateY(-1200px) rotate(-18deg);
+  }
+}
+
 @keyframes lp-loopBreathe {
 
   0%,
@@ -745,8 +789,18 @@
   .lp-loop-core,
   .lp-loop-glow,
   .lp-loop-card,
-  .lp-loop-ai {
+  .lp-loop-ai,
+  .lp-mark-wipe {
     animation: none;
+  }
+
+  /* parked at the flooded position — mark reads as fully coloured */
+  .lp-mark-wipe {
+    transform: translateY(-480px) rotate(-18deg);
+  }
+
+  .lp-mark-ghost {
+    opacity: 0;
   }
 
   .lp-loop-glow {
