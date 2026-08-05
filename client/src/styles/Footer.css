@@ -389,14 +389,18 @@
     justify-content: flex-start;
   }
 
-  .footer-bottom {
+  /* Pages/ZepJobs.css ships unscoped global .footer-bottom / .footer-bottom-left
+     rules that land after this file in the bundle, so plain class selectors here
+     lose to them. Qualifying with .footer-container outranks those without
+     touching the ZepJobs footer. */
+  .footer-container .footer-bottom {
     flex-direction: column;
     align-items: flex-start;
     gap: 2rem;
     text-align: left;
   }
 
-  .footer-bottom-left {
+  .footer-container .footer-bottom-left {
     flex-direction: column;
     align-items: flex-start;
     gap: 1.5rem;
@@ -431,9 +435,19 @@
     height: 35px;
   }
 
+  /* One block is headed by a text title, the other by a 25px logo. Giving both
+     headers an identical 25px slot with their content top-aligned makes the two
+     headings start level AND the two subtexts below them start level. */
   .cert-title {
     font-size: 0.6rem;
     white-space: nowrap;
+    height: 25px;
+    display: flex;
+    align-items: flex-start;
+  }
+
+  .dpiit-group {
+    gap: 0;
   }
 
   .cert-subtitle {

@@ -408,256 +408,350 @@
   min-height: auto;
 }
 
-.lp-hero-orbit {
+/* ── HERO ECOSYSTEM LOOP ──
+   Authored against a 680px square. Every size below is a share of that square
+   (% for geometry, cqw for type and spacing) so the whole diagram scales as one
+   piece — no per-breakpoint retuning. */
+.lp-loop-stage {
+  container-type: inline-size;
   position: relative;
-  width: 460px;
-  height: 460px;
+  width: min(100%, 560px);
+  aspect-ratio: 1;
 }
 
-.lp-orbit-ring {
+/* static guide circle — 460/680 */
+.lp-loop-path {
   position: absolute;
-  border-radius: 50%;
   top: 50%;
   left: 50%;
+  width: 67.647%;
+  aspect-ratio: 1;
   transform: translate(-50%, -50%);
-  opacity: 0;
+  border-radius: 50%;
+  border: 1.5px dashed rgba(2, 75, 255, .2);
 }
 
-.lp-orbit-ring-outer {
-  width: 440px;
-  height: 440px;
-  border: 1px solid rgba(2, 75, 255, .08);
-  animation: lp-orbitRingIn 1s ease .5s forwards, lp-orbitSpin 40s linear infinite;
+/* rotating arrow ring */
+.lp-loop-flow {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
 }
 
-.lp-orbit-ring-mid {
-  width: 340px;
-  height: 340px;
-  border: 1px solid rgba(2, 75, 255, .12);
-  animation: lp-orbitRingIn 1s ease .65s forwards, lp-orbitSpin 28s linear infinite reverse;
+.lp-loop-arrows {
+  transform-origin: 340px 340px;
+  animation: lp-loopSpin 14s linear infinite;
 }
 
-.lp-orbit-ring-inner {
-  width: 200px;
-  height: 200px;
-  border: 1.5px solid rgba(2, 75, 255, .18);
-  animation: lp-orbitRingIn 1s ease .8s forwards, lp-orbitSpin 18s linear infinite;
+.lp-loop-arrows path {
+  fill: none;
+  stroke: #1a1a1a;
+  stroke-width: 3;
+  stroke-linecap: round;
 }
 
-@keyframes lp-orbitRingIn {
+@keyframes lp-loopSpin {
+  from {
+    transform: rotate(0deg);
+  }
+
   to {
-    opacity: 1;
+    transform: rotate(360deg);
   }
 }
 
-@keyframes lp-orbitSpin {
-  to {
-    transform: translate(-50%, -50%) rotate(360deg);
-  }
-}
-
-.lp-hero-orb {
+/* centre core — 190/680 */
+.lp-loop-core {
   position: absolute;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%) scale(.6);
-  width: 100px;
-  height: 100px;
+  width: 27.941%;
+  aspect-ratio: 1;
+  margin: 0;
+  transform: translate(-50%, -50%);
   border-radius: 50%;
-  background: radial-gradient(circle at 35% 35%, #4d83ff, #024BFF 50%, #0030bb);
-  box-shadow: 0 0 60px rgba(2, 75, 255, .25), 0 0 24px rgba(2, 75, 255, .15), inset 0 2px 6px rgba(255, 255, 255, .25);
-  display: grid;
-  place-items: center;
-  z-index: 3;
-  opacity: 0;
-  animation: lp-orbIn 1s cubic-bezier(.34, 1.56, .64, 1) .9s forwards;
+  background: #fff;
+  border: clamp(2px, .44cqw, 3px) solid var(--lp-blue);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 20px rgba(2, 75, 255, .1);
+  z-index: 5;
+  animation: lp-loopBreathe 2.5s ease-in-out infinite;
 }
 
-.lp-hero-orb svg {
-  width: 40px;
-  height: 40px;
-  color: #fff;
+.lp-loop-core img {
+  width: 66%;
+  height: auto;
+  display: block;
 }
 
-@keyframes lp-orbIn {
-  to {
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
-  }
-}
-
-.lp-orb-dot {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  border-radius: 50%;
-  z-index: 4;
-}
-
-.lp-orb-dot-a {
-  width: 8px;
-  height: 8px;
-  background: var(--lp-blue);
-  box-shadow: 0 0 10px rgba(2, 75, 255, .5);
-  transform-origin: 0 0;
-  opacity: 0;
-  animation: lp-orbDotA 9s linear 1.2s infinite;
-}
-
-.lp-orb-dot-b {
-  width: 5px;
-  height: 5px;
-  background: rgba(2, 75, 255, .3);
-  transform-origin: 0 0;
-  opacity: 0;
-  animation: lp-orbDotB 14s linear 1.4s infinite;
-}
-
-.lp-orb-dot-c {
-  width: 6px;
-  height: 6px;
-  background: var(--lp-blue);
-  transform-origin: 0 0;
-  opacity: 0;
-  animation: lp-orbDotA 12s linear 1.6s infinite reverse;
-}
-
-@keyframes lp-orbDotA {
-  0% {
-    opacity: .8;
-    transform: rotate(0deg) translateX(210px) rotate(0deg);
-  }
-
-  100% {
-    opacity: .8;
-    transform: rotate(360deg) translateX(210px) rotate(-360deg);
-  }
-}
-
-@keyframes lp-orbDotB {
-  0% {
-    opacity: .4;
-    transform: rotate(120deg) translateX(150px) rotate(-120deg);
-  }
-
-  100% {
-    opacity: .4;
-    transform: rotate(480deg) translateX(150px) rotate(-480deg);
-  }
-}
-
-/* Floating glassmorphism cards */
-.lp-hero-float {
-  position: absolute;
-  background: rgba(255, 255, 255, .88);
-  border: 1px solid rgba(2, 75, 255, .12);
-  border-radius: 14px;
-  padding: 12px 16px;
-  backdrop-filter: blur(14px);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, .07), 0 1px 3px rgba(0, 0, 0, .04);
-  opacity: 0;
-  z-index: 6;
-}
-
-.lp-hero-float-ai {
-  top: -10px;
-  right: -30px;
-  animation: lp-floatIn .7s ease 1.2s forwards, lp-floatBob 5s ease-in-out 2s infinite;
-}
-
-.lp-hero-float-speed {
-  bottom: 20px;
-  left: -40px;
-  animation: lp-floatIn .7s ease 1.4s forwards, lp-floatBob 6s ease-in-out 2.2s infinite reverse;
-}
-
-.lp-hero-float-match {
-  top: 30px;
-  left: -50px;
-  animation: lp-floatIn .7s ease 1.6s forwards, lp-floatBob 5.5s ease-in-out 2.4s infinite;
-}
-
-.lp-hero-float-quality {
-  bottom: -5px;
-  right: -20px;
-  animation: lp-floatIn .7s ease 1.8s forwards, lp-floatBob 6.5s ease-in-out 2.6s infinite reverse;
-}
-
-@keyframes lp-floatIn {
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes lp-floatBob {
+@keyframes lp-loopBreathe {
 
   0%,
   100% {
-    transform: translateY(0);
+    transform: translate(-50%, -50%) scale(1);
   }
 
   50% {
-    transform: translateY(-8px);
+    transform: translate(-50%, -50%) scale(1.02);
   }
 }
 
-.lp-hero-float-icon {
-  width: 28px;
-  height: 28px;
-  border-radius: 7px;
-  background: rgba(2, 75, 255, .08);
-  display: grid;
-  place-items: center;
-  margin-bottom: 6px;
+.lp-loop-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 27.941%;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: radial-gradient(circle, #4D7CFF 0%, rgba(77, 124, 255, 0) 70%);
+  animation: lp-loopGlow 2s ease-out infinite;
+  pointer-events: none;
 }
 
-.lp-hero-float-icon svg {
-  width: 14px;
-  height: 14px;
-  color: var(--lp-blue);
+@keyframes lp-loopGlow {
+  0% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0;
+  }
+
+  20% {
+    transform: translate(-50%, -50%) scale(1.05);
+    opacity: .15;
+  }
+
+  60% {
+    transform: translate(-50%, -50%) scale(1.35);
+    opacity: 0;
+  }
+
+  100% {
+    opacity: 0;
+  }
 }
 
-.lp-hero-float-icon.green {
-  background: rgba(16, 185, 129, .1);
+/* connection points on the ring — 14/680, at 177.4 / 502.6 */
+.lp-loop-dot {
+  position: absolute;
+  width: 2.059%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: #1a1a1a;
+  transform: translate(-50%, -50%);
+  z-index: 3;
 }
 
-.lp-hero-float-icon.green svg {
-  color: #10b981;
+.lp-loop-dot.is-emp {
+  top: 26.088%;
+  left: 26.088%;
 }
 
-.lp-hero-float-label {
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: .08em;
-  text-transform: uppercase;
-  color: var(--lp-muted);
-  margin-bottom: 5px;
+.lp-loop-dot.is-rec {
+  top: 73.912%;
+  left: 73.912%;
 }
 
-.lp-hero-float-value {
-  font-family: 'Lora', serif;
-  font-size: 22px;
-  font-weight: 700;
-  color: var(--lp-ink);
+.lp-loop-dot.is-seek {
+  top: 73.912%;
+  left: 26.088%;
+}
+
+/* stakeholder cards — 150x60 at 127.9 / 552.1 */
+.lp-loop-card {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: 22.059%;
+  height: 8.824%;
+  background: var(--lp-blue);
+  border-radius: 1.47cqw;
   display: flex;
   align-items: center;
-  gap: 6px;
+  justify-content: center;
+  gap: 1.176cqw;
+  padding: 0 1.765cqw;
+  box-shadow: 0 4px 14px rgba(2, 75, 255, .2);
+  z-index: 4;
+  border: 2px solid transparent;
 }
 
-.lp-hero-float-badge {
-  font-family: 'DM Sans', sans-serif;
-  font-size: 10px;
-  font-weight: 600;
-  padding: 2px 8px;
-  border-radius: 100px;
-  background: rgba(2, 75, 255, .1);
-  color: var(--lp-blue);
+.lp-loop-card svg {
+  width: 2.941cqw;
+  height: 2.941cqw;
+  flex-shrink: 0;
 }
 
-.lp-hero-float-sub {
-  font-size: 11px;
-  color: var(--lp-muted);
-  margin-top: 3px;
+.lp-loop-card span {
+  font-size: 1.912cqw;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.25;
+}
+
+.lp-loop-card.is-emp {
+  top: 18.809%;
+  left: 18.809%;
+  animation: lp-loopPulseEmp 6s linear infinite;
+}
+
+.lp-loop-card.is-rec {
+  top: 81.191%;
+  left: 81.191%;
+  animation: lp-loopPulseRec 6s linear infinite;
+}
+
+.lp-loop-card.is-seek {
+  top: 81.191%;
+  left: 18.809%;
+  animation: lp-loopPulseSeek 6s linear infinite;
+}
+
+/* each card lights as the sweep reaches it — offsets match the 14s ring only
+   loosely, the point is a staggered rhythm rather than exact sync */
+@keyframes lp-loopPulseEmp {
+
+  0%,
+  26% {
+    border-color: transparent;
+    box-shadow: 0 4px 14px rgba(2, 75, 255, .2);
+  }
+
+  28% {
+    border-color: #fff;
+    box-shadow: 0 0 0 4px rgba(77, 124, 255, .45), 0 4px 14px rgba(2, 75, 255, .2);
+  }
+
+  32%,
+  100% {
+    border-color: transparent;
+    box-shadow: 0 4px 14px rgba(2, 75, 255, .2);
+  }
+}
+
+@keyframes lp-loopPulseRec {
+
+  0%,
+  59% {
+    border-color: transparent;
+    box-shadow: 0 4px 14px rgba(2, 75, 255, .2);
+  }
+
+  61% {
+    border-color: #fff;
+    box-shadow: 0 0 0 4px rgba(77, 124, 255, .45), 0 4px 14px rgba(2, 75, 255, .2);
+  }
+
+  65%,
+  100% {
+    border-color: transparent;
+    box-shadow: 0 4px 14px rgba(2, 75, 255, .2);
+  }
+}
+
+@keyframes lp-loopPulseSeek {
+
+  0%,
+  92% {
+    border-color: transparent;
+    box-shadow: 0 4px 14px rgba(2, 75, 255, .2);
+  }
+
+  94% {
+    border-color: #fff;
+    box-shadow: 0 0 0 4px rgba(77, 124, 255, .45), 0 4px 14px rgba(2, 75, 255, .2);
+  }
+
+  98%,
+  100% {
+    border-color: transparent;
+    box-shadow: 0 4px 14px rgba(2, 75, 255, .2);
+  }
+}
+
+/* agentic AI hub, sitting on the ring at 502.6 / 177.4 */
+.lp-loop-ai {
+  position: absolute;
+  top: 26.088%;
+  left: 73.912%;
+  transform: translate(-50%, -50%);
+  width: 22.059%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: #EEF1F6;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: .882cqw;
+  z-index: 4;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, .08);
+  border: 2px solid transparent;
+  animation: lp-loopPulseAi 6s linear infinite;
+}
+
+.lp-loop-ai span {
+  font-size: 2.059cqw;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.lp-loop-ai svg {
+  width: 6.471cqw;
+  height: 6.471cqw;
+}
+
+@keyframes lp-loopPulseAi {
+  0% {
+    border-color: var(--lp-blue);
+    box-shadow: 0 0 0 5px rgba(2, 75, 255, .3), 0 4px 16px rgba(15, 23, 42, .08);
+  }
+
+  4%,
+  29% {
+    border-color: transparent;
+    box-shadow: 0 4px 16px rgba(15, 23, 42, .08);
+  }
+
+  33% {
+    border-color: var(--lp-blue);
+    box-shadow: 0 0 0 5px rgba(2, 75, 255, .3), 0 4px 16px rgba(15, 23, 42, .08);
+  }
+
+  37%,
+  62% {
+    border-color: transparent;
+    box-shadow: 0 4px 16px rgba(15, 23, 42, .08);
+  }
+
+  67% {
+    border-color: var(--lp-blue);
+    box-shadow: 0 0 0 5px rgba(2, 75, 255, .3), 0 4px 16px rgba(15, 23, 42, .08);
+  }
+
+  71%,
+  100% {
+    border-color: transparent;
+    box-shadow: 0 4px 16px rgba(15, 23, 42, .08);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  .lp-loop-arrows,
+  .lp-loop-core,
+  .lp-loop-glow,
+  .lp-loop-card,
+  .lp-loop-ai {
+    animation: none;
+  }
+
+  .lp-loop-glow {
+    opacity: .12;
+  }
 }
 
 /* ── STATS STRIP ── */
@@ -1990,7 +2084,6 @@
   color: var(--lp-muted);
 }
 
-
 /* ── VERTICAL GAP REDUCTIONS FOR SCREENS LARGER THAN MOBILE ── */
 @media (min-width: 769px) {
   .lp-why.lp-section-pad {
@@ -2045,48 +2138,6 @@
     padding: 36px 24px 56px;
     min-height: auto;
     align-items: center;
-  }
-
-  /* Scale orbit down for tablets */
-  .lp-hero-orbit {
-    width: 320px;
-    height: 320px;
-  }
-
-  .lp-orbit-ring-outer {
-    width: 310px;
-    height: 310px;
-  }
-
-  .lp-orbit-ring-mid {
-    width: 240px;
-    height: 240px;
-  }
-
-  .lp-orbit-ring-inner {
-    width: 140px;
-    height: 140px;
-  }
-
-  /* Reposition floats closer so they don't overflow */
-  .lp-hero-float-match {
-    top: 10px;
-    left: -16px;
-  }
-
-  .lp-hero-float-ai {
-    top: -10px;
-    right: -10px;
-  }
-
-  .lp-hero-float-speed {
-    bottom: 10px;
-    left: -16px;
-  }
-
-  .lp-hero-float-quality {
-    bottom: -5px;
-    right: -10px;
   }
 
   .lp-stats {
@@ -2168,104 +2219,6 @@
   .lp-hero-right {
     padding: 20px 16px 48px;
     overflow: hidden;
-  }
-
-  /* Compact orbit for phones */
-  .lp-hero-orbit {
-    width: 240px;
-    height: 240px;
-  }
-
-  .lp-orbit-ring-outer {
-    width: 232px;
-    height: 232px;
-  }
-
-  .lp-orbit-ring-mid {
-    width: 180px;
-    height: 180px;
-  }
-
-  .lp-orbit-ring-inner {
-    width: 106px;
-    height: 106px;
-  }
-
-  /* Smaller center orb */
-  .lp-hero-orb {
-    width: 64px;
-    height: 64px;
-  }
-
-  .lp-hero-orb svg {
-    width: 26px;
-    height: 26px;
-  }
-
-  /* Compact all four cards to orbit closely */
-  .lp-hero-float-match {
-    top: 6px;
-    left: -12px;
-    padding: 6px 8px;
-    border-radius: 8px;
-    z-index: 6;
-  }
-
-  .lp-hero-float-ai {
-    top: -12px;
-    right: -4px;
-    padding: 6px 8px;
-    border-radius: 8px;
-    z-index: 6;
-  }
-
-  .lp-hero-float-speed {
-    bottom: 6px;
-    left: -12px;
-    padding: 6px 8px;
-    border-radius: 8px;
-    z-index: 6;
-  }
-
-  .lp-hero-float-quality {
-    bottom: -12px;
-    right: -4px;
-    padding: 6px 8px;
-    border-radius: 8px;
-    z-index: 6;
-  }
-
-  .lp-hero-float-icon {
-    width: 20px;
-    height: 20px;
-    margin-bottom: 3px;
-    border-radius: 5px;
-  }
-
-  .lp-hero-float-icon svg {
-    width: 11px;
-    height: 11px;
-  }
-
-  .lp-hero-float-label {
-    font-size: 7.5px;
-    margin-bottom: 2px;
-  }
-
-  .lp-hero-float-value {
-    font-size: 14px !important;
-    gap: 3px;
-  }
-
-  .lp-hero-float-badge {
-    font-size: 8px;
-    padding: 2px 5px;
-  }
-
-  .lp-hero-float-sub {
-    font-size: 8px;
-    margin-top: 1px;
-    max-width: 85px;
   }
 }
 
