@@ -208,7 +208,7 @@ const LandingProducts = () => {
                             Built Around Real <span className="lp-blue">Business Needs</span>
                         </h2>
                     </div>
-                    <p className="lp-eco-copy">Three intelligent products. One ecosystem. Every stakeholder covered.</p>
+                    <p className="lp-eco-copy">Three intelligent solutions. One ecosystem. Built for every Stakeholder in Hiring.</p>
                 </div>
 
                 <div className="lp-pr-grid" ref={gridRef}>

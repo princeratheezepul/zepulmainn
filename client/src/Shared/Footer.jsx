@@ -53,7 +53,7 @@ const Footer = () => {
           <div className="contact-item">
             <MdLocationOn className="contact-icon" />
             <div className="contact-text">
-              <div className="address-label">Product HQ</div>
+              <div className="address-label">Global HQ</div>
               <div className="address-text">56 Weighton Road, Harrow,</div>
               <div className="address-text">London, United Kingdom</div>
             </div>

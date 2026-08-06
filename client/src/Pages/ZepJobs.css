@@ -1314,8 +1314,64 @@ body {
   }
 }
 
+/* ── TABLET ── */
+@media (max-width: 1024px) {
+  .hero {
+    padding: 72px 32px 52px;
+    gap: 48px;
+  }
+}
+
 /* ── MOBILE RESPONSIVENESS ── */
 @media (max-width: 768px) {
+  /* Hero stacks: copy + search box first, trending previews underneath.
+     padding-top clears the 62px fixed nav. */
+  .hero {
+    grid-template-columns: 1fr;
+    gap: 40px;
+    padding: 88px 20px 44px;
+    margin-top: 0;
+  }
+
+  .hero-pre {
+    margin-bottom: 18px;
+  }
+
+  .hero-h1 {
+    font-size: clamp(30px, 9.5vw, 44px);
+    letter-spacing: -.035em;
+    line-height: 1.08;
+    margin-bottom: 16px;
+  }
+
+  .hero-desc {
+    font-size: 14px;
+    line-height: 1.65;
+    max-width: none;
+    margin-bottom: 28px;
+  }
+
+  .search-textarea {
+    font-size: 18px;
+    height: 96px;
+  }
+
+  .trust-badges {
+    gap: 10px 16px;
+  }
+
+  .trust-badge {
+    font-size: 11.5px;
+  }
+
+  .hero-right {
+    padding-top: 0;
+  }
+
+  .hero-job-preview {
+    padding: 16px 18px;
+  }
+
   .search-tab {
     padding: 13px 8px;
     font-size: 12px;
@@ -1421,5 +1477,30 @@ body {
   /* The image hides the Company Name in the meta list on mobile */
   .jc-meta-item:first-child {
     display: none;
+  }
+}
+
+/* ── SMALL PHONES ── */
+@media (max-width: 480px) {
+  .hero {
+    padding: 80px 16px 36px;
+    gap: 32px;
+  }
+
+  .hero-h1 {
+    font-size: clamp(27px, 8.6vw, 34px);
+  }
+
+  .search-tab-body {
+    padding: 18px 14px 16px;
+  }
+
+  .search-textarea {
+    font-size: 17px;
+    height: 84px;
+  }
+
+  .hero-job-preview {
+    padding: 14px 16px;
   }
 }

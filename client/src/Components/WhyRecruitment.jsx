@@ -25,7 +25,7 @@ const WhyRecruitment = () => {
             icon: "/technology-icon.png",
             title: "Technology",
             description:
-                "Recruitment technology exists, but execution is fragmented. Poor adoption and manual workarounds limit impact and outcomes.",
+                "Recruitment technology exists, but there is no intelligent platform where employers, recruiters, and job seekers come together. Millions of SaaS tools solve individual tasks, but none deliver end-to-end hiring across all stakeholders.",
         },
     ];
 

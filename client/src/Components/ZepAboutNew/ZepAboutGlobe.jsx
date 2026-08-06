@@ -84,8 +84,6 @@ const ZepAboutGlobe = () => {
                     }
                 }}
                 style={{
-                    width: 500,
-                    height: 500,
                     cursor: 'grab',
                     contain: 'layout paint size',
                 }}

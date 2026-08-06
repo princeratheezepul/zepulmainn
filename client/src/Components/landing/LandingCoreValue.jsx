@@ -42,7 +42,7 @@ const CARDS = [
             '30–50% lower hiring costs',
             'Built for high-volume, geo-independent hiring',
             'Access to niche talent through global recruiter network',
-            'Human involvement only at final decision stage',
+            'AI-Assessed, Decision-Ready Talent in 48 Hours',
         ],
     },
     {
@@ -50,14 +50,15 @@ const CARDS = [
         cat: 'DIY Platform',
         title: 'DIY Agentic AI Execution Layer',
         kpi: '4×',
-        kpiLabel: 'Productive',
+        kpiLabel: 'Productivity',
         sub: 'Replace manual recruiting with autonomous AI',
         points: [
-            '1 license = productivity of ~4 recruiters',
-            'Up to 60% savings on payroll, tools & infrastructure',
-            '24×7 autonomous hiring — no operational overhead',
+            '100% AI Execution—JD Creation, Sourcing, Matching, Assessments & Interviews',
+            '1 License = Output of ~4–6 recruiters',
+            '24×7 autonomous hiring & Global hiring capability',
             'Enterprise-grade scalability for high-volume hiring',
-            'Real-time dashboards and performance analytics',
+            'Real-Time Dashboards, Performance Analytics & Decision-Ready Report Cards',
+            'Up to 60% savings on payroll, tools & infrastructure',
         ],
     },
     {
@@ -69,9 +70,9 @@ const CARDS = [
         sub: 'Beyond a portal — a personal AI career partner',
         points: [
             'Personalized AI career coach and mentor',
-            'Access to global opportunities ',
+            'Access to global opportunities to job seekers',
             '⁠Greater transparency and engagement throughout the hiring journey',
-            '⁠Personalized AI Upskill',
+            'AI-Guided Personalized Upskilling',
         ],
     },
     {
@@ -84,8 +85,9 @@ const CARDS = [
         points: [
             'Access  to global business, means zero bdm cost',
             'Free access to world class AI execution layer, means zero operations cost',
-            '⁠On demand earning opportunitie',
-            '⁠Our AI boosts your efficiency and quality, giving you a clear competitive advantage',
+            'Monetize Your Recruitment Expertise with Near-Zero Overheads⁠',
+            'Our AI amplifies your speed, quality, and capacity, helping you outperform the competition',
+            'Work Only on Relevant Opportunities - Anytime, Anywhere.'
            
         ],
     },

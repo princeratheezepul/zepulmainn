@@ -166,7 +166,7 @@ const LandingWhyCards = () => {
                     </div>
                     <div className="lp-why-card-body">
                         <div className="lp-why-card-title">Technology</div>
-                        <div className="lp-why-card-desc">Recruitment technology exists, but execution is fragmented. Poor adoption and manual workarounds limit impact and outcomes.</div>
+                        <div className="lp-why-card-desc">Recruitment technology exists, but there is no intelligent platform where employers, recruiters, and job seekers come together. Millions of SaaS tools solve individual tasks, but none deliver end-to-end hiring across all stakeholders.</div>
                     </div>
                 </div>
 

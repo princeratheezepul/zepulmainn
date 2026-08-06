@@ -43,7 +43,12 @@ const ZepAboutPartners = () => {
                 <div className="team-card-overlay"></div>
               </div>
               <div className="team-card-body">
-                <div className="team-card-name">Srikanth Dhanwada</div>
+                <a
+                  className="team-card-name"
+                  href="https://www.linkedin.com/in/srikanth-dhanwada-b9a94787/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >Srikanth Dhanwada</a>
                 <div className="team-card-role">Founder & CEO</div>
 
                 {/* <div className="team-card-socials">
@@ -60,7 +65,12 @@ const ZepAboutPartners = () => {
                 {/* <div className="team-card-tag">Leadership</div> */}
               </div>
               <div className="team-card-body">
-                <div className="team-card-name">Tarun Ghulati</div>
+                <a
+                  className="team-card-name"
+                  href="https://www.linkedin.com/in/tarunghulati"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >Tarun Ghulati</a>
                 <div className="team-card-role">Co-Founder</div>
 
                 {/* <div className="team-card-socials">
@@ -76,7 +86,12 @@ const ZepAboutPartners = () => {
                 <div className="team-card-overlay"></div>
               </div>
               <div className="team-card-body">
-                <div className="team-card-name">Syed Reena Sumera</div>
+                <a
+                  className="team-card-name"
+                  href="https://www.linkedin.com/in/reena-sumera-93aa35a7"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >Syed Reena Sumera</a>
                 <div className="team-card-role">CBO</div>
 
                 {/* <div className="team-card-socials">
