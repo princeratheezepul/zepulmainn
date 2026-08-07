@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import toast, { Toaster } from "react-hot-toast";
 import { config } from "../config/config";
+import AuthLogo from "../Shared/AuthLogo";
 
 const roleEndpoints = {
   recruiter: "/api/recruiter/signin",
@@ -85,7 +86,8 @@ export default function UnifiedLogin() {
   ];
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row bg-white">
+    <div className="relative min-h-screen flex flex-col md:flex-row bg-white">
+      <AuthLogo />
       <Toaster position="top-center" />
       {/* Left illustration */}
       <div className="hidden md:flex flex-col justify-center items-center md:w-1/2 bg-gray-50 relative p-4">

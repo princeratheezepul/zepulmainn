@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Loader from "../../Components/ui/Loader.jsx";
 import { useAuth } from "../../context/AuthContext";
+import AuthLogo from "../../Shared/AuthLogo";
 
 export default function AdminLogin() {
   const navigate = useNavigate();
@@ -74,7 +75,8 @@ export default function AdminLogin() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-white">
+    <div className="relative flex items-center justify-center min-h-screen bg-white">
+      <AuthLogo />
       <div className="w-full max-w-md px-6">
         <div className="text-center mb-8">
           <h1 className="text-2xl font-medium text-gray-900">

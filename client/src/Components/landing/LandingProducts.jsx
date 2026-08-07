@@ -163,21 +163,21 @@ const PRODUCTS = [
         audience: 'For Employers',
         name: 'Zep Recruit',
         type: 'Fullstack AI Recruitment Managed Services',
-        desc: 'We handle the heavy lifting — AI sourcing, CV assessment, and structured interviews. Decision-ready report cards with zero manual coordination.',
+        desc: 'Let us handle the heavy lifting. Our AI-powered platform, combined with expertrecruiters, manages the entire hiring process—from JD creation, AI-driven sourcing and CV assessment to tailored coding tests and structured AI interviews. You receive decision-ready talent reports with detailed evaluations, along with real-time market insights and benchmarking analytics. The result is a faster, more efficient hiring model that consistently outperforms traditional recruitment.',
     },
     {
         Visual: PipelineVisual,
         audience: 'For Recruiters',
         name: 'Zep Pro Recruiter',
         type: 'DIY AI Recruitment Platform',
-        desc: 'AI-driven execution layer — CV analysis, coding tests, and automated interviews. Comprehensive report cards generated with zero human intervention.',
+        desc: 'Our Agentic AI Hiring Execution Layer is an autonomous AI platform that sits on top of existing HR systems to execute the entire hiring lifecycle—from JD creation and intelligent sourcing to AI-powered CV reading, ranking, JD matching, dynamic coding assessments, AI interviews, and decision-ready candidate scorecards. By orchestrating AI agents, workflows, and third-party tools, it delivers a fully autonomous hiring experience with zero human intervention until the final hiring decision.',
     },
     {
         Visual: ChatVisual,
         audience: 'For Job Seekers',
         name: 'Zep Jobs',
         type: 'Agentic AI Job Portal',
-        desc: 'Your personal AI career partner. Understands your aspirations, matches you with global opportunities, and connects you to decision-makers — at no cost.',
+        desc: 'Agentic AI powered job portal where Talent Meets Opportunity ....Job seeker’s personal AI career partner that understand their aspirations and scans millions of opportunities, prepares them for interviews, and connects them directly with decision-makers — at no cost.',
     },
 ];
 

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import toast, { Toaster } from "react-hot-toast";
 import { config } from "../config/config";
+import AuthLogo from "../Shared/AuthLogo";
 
 export default function CandidateLogin() {
   const navigate = useNavigate();
@@ -40,7 +41,8 @@ export default function CandidateLogin() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row bg-white">
+    <div className="relative min-h-screen flex flex-col md:flex-row bg-white">
+      <AuthLogo />
       <Toaster position="top-center" />
       {/* Left illustration */}
       <div className="hidden md:flex flex-col justify-center items-center md:w-1/2 bg-gray-50 relative p-4">

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import toast, { Toaster } from "react-hot-toast";
 import { useMarketplaceAuth } from "../context/MarketplaceAuthContext";
+import AuthLogo from "../Shared/AuthLogo";
 
 const ROLE_CONFIG = {
   partnerlead: {
@@ -78,7 +79,8 @@ export default function MarketplaceUnifiedLogin() {
   const signupRoute = ROLE_CONFIG[selectedRole].signupRoute;
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row bg-white">
+    <div className="relative min-h-screen flex flex-col md:flex-row bg-white">
+      <AuthLogo />
       <Toaster position="top-center" />
       {/* Left illustration */}
       <div className="hidden md:flex flex-col justify-center items-center md:w-1/2 bg-gray-50 relative p-4">

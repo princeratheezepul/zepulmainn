@@ -152,11 +152,15 @@
   color: #0066ff;
 }
 
-/* Report Section */
+/* Report Section — sits under the disclaimer in the left column */
 .report-section {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
+}
+
+.footer-left .report-section {
+  margin-top: 1rem;
 }
 
 .report-link {

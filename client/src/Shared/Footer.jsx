@@ -22,6 +22,19 @@ const Footer = () => {
             anyone claims otherwise, please report such violations
             immediately.
           </p>
+
+          {/* Report Violations */}
+          <div className="report-section">
+            <Link to="/report-violations" className="report-link">
+              Report Violations
+            </Link>
+            <a href="mailto:support@zepul.com" className="support-email">
+              Support@zepul.com
+            </a>
+            <a href="mailto:legal@zepul.com" className="support-email">
+              legal@zepul.com
+            </a>
+          </div>
         </div>
 
         {/* Middle Section - Navigation Links */}
@@ -97,19 +110,6 @@ const Footer = () => {
               className="social-icon"
             >
               <FaLinkedin />
-            </a>
-          </div>
-
-          {/* Report Violations */}
-          <div className="report-section">
-            <Link to="/report-violations" className="report-link">
-              Report Violations
-            </Link>
-            <a href="mailto:support@zepul.com" className="support-email">
-              Support@zepul.com
-            </a>
-            <a href="mailto:legal@zepul.com" className="support-email">
-              legal@zepul.com
             </a>
           </div>
         </div>
