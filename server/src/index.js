@@ -119,6 +119,10 @@ app.get('/api/version', (req, res) => {
     branch: process.env.RENDER_GIT_BRANCH || 'unknown',
     bootedAt,
     now: new Date().toISOString(),
+    // Whether the key reached the process — a boolean, never the key itself.
+    // A misconfigured deploy is otherwise invisible from outside: the service
+    // stays healthy and only the AI calls fail, deep inside a request.
+    openaiConfigured: Boolean(process.env.OPENAI_API),
   });
 });
 
