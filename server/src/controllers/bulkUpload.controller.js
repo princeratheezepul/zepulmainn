@@ -1394,6 +1394,11 @@ const LEGACY_MODEL_MAP = {
 
 const resolveModel = (name) => LEGACY_MODEL_MAP[name] || name || DEFAULT_TEXT_MODEL;
 
+// Lets callers tell "the server has no API key" (a deployment fault that will not
+// fix itself) apart from "the model call failed" (usually transient), so they can
+// log and message each one honestly instead of blaming both on a passing glitch.
+export const isOpenAIConfigured = () => Boolean(openai);
+
 export const generateTextWithRetry = async (prompt, modelName = DEFAULT_TEXT_MODEL, maxRetries = 3) => {
   if (!openai) {
     throw new Error("OpenAI API is not configured. Please set OPENAI_API.");

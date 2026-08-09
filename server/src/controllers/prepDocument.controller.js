@@ -6,6 +6,7 @@ import {
   generateTextWithRetry,
   extractTextFromPDF,
   extractTextFromDocx,
+  isOpenAIConfigured,
 } from "./bulkUpload.controller.js";
 
 /**
@@ -332,19 +333,31 @@ const ensurePrepContent = async (resume, job, { force = false } = {}) => {
   }
 
   let content;
+  let isFallback = false;
   try {
     const raw = parseJsonResponse(await generateTextWithRetry(buildPrompt(job, resume), PREP_MODEL));
     content = shapeContent(raw, job, resume);
   } catch (err) {
-    console.error(`[zepPrep] generation failed for resume ${resume._id}, using fallback:`, err.message);
+    console.error(`[zepPrep] generation failed for resume ${resume._id}, using fallback:`, {
+      reason: isOpenAIConfigured() ? "model call failed" : "OPENAI_API is not set on this server",
+      status: err?.status,
+      code: err?.error?.code ?? err?.code,
+      message: err?.message,
+    });
     content = buildFallbackContent(job, resume);
+    isFallback = true;
   }
 
   const generatedAt = new Date();
-  await Resume.updateOne(
-    { _id: resume._id },
-    { $set: { "prepDocument.content": content, "prepDocument.generatedAt": generatedAt } }
-  );
+  // Only cache a real generation. Caching the fallback would pin every candidate
+  // who downloaded during an outage to the degraded document forever, since the
+  // cache hit above short-circuits before we ever retry the model.
+  if (!isFallback) {
+    await Resume.updateOne(
+      { _id: resume._id },
+      { $set: { "prepDocument.content": content, "prepDocument.generatedAt": generatedAt } }
+    );
+  }
   return { content, generatedAt, fromCache: false };
 };
 
@@ -541,9 +554,18 @@ export const generatePrepFromUpload = async (req, res) => {
       // Unlike the application flow there is no stored job/resume to build a
       // meaningful fallback from, so ask the user to retry rather than hand back
       // a hollow document.
-      console.error("[zepPrep] upload generation failed:", err.message);
+      const misconfigured = !isOpenAIConfigured();
+      console.error("[zepPrep] upload generation failed:", {
+        reason: misconfigured ? "OPENAI_API is not set on this server" : "model call failed",
+        status: err?.status,
+        code: err?.error?.code ?? err?.code,
+        message: err?.message,
+      });
       return res.status(503).json({
-        message: "We couldn't build your prep document just now. Please try again in a moment.",
+        // Retrying cannot fix a missing API key, so don't promise that it will.
+        message: misconfigured
+          ? "Prep document generation is unavailable right now. Please contact support if this continues."
+          : "We couldn't build your prep document just now. Please try again in a moment.",
       });
     }
 

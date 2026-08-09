@@ -12,3 +12,9 @@ services:
       # Pin it so Render's default runtime can't silently break the build.
       - key: NODE_VERSION
         value: "20"
+      # Declared (not valued) so the dashboard prompts for it and its absence is
+      # visible in the blueprint. Without it every AI path — ZepPrep, resume
+      # analysis, scorecards — fails at the "OpenAI is not configured" guard while
+      # the service itself stays healthy, which is easy to miss.
+      - key: OPENAI_API
+        sync: false
