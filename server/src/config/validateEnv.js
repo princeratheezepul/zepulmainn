@@ -26,13 +26,40 @@ const REQUIRED = [
 
 // Non-fatal: the server boots, but the related feature is degraded.
 const RECOMMENDED = [
-  { name: "FRONTEND_URL", why: "CORS allow-list for the deployed frontend" },
-  { name: "OPENAI_API", why: "resume analysis, scorecards and AI generation" },
+  { name: "FRONTEND_URL", aliases: [], why: "CORS allow-list for the deployed frontend" },
+  {
+    name: "OPENAI_API",
+    // The OpenAI SDK and every published guide call this OPENAI_API_KEY, so that
+    // is the name people reach for when setting it in a hosting dashboard. This
+    // codebase reads the shorter one, and the mismatch is invisible: the var
+    // looks present, the service boots clean, and every AI call fails at the
+    // "not configured" guard. Accept both.
+    aliases: ["OPENAI_API_KEY"],
+    why: "resume analysis, scorecards and AI generation",
+  },
 ];
 
 const isSet = (key) => typeof process.env[key] === "string" && process.env[key].trim() !== "";
 
+// Copy an alias onto the canonical name so consumers only ever read one variable.
+// Trims too: a value pasted with a stray newline authenticates as a bad key.
+const normalizeAliases = () => {
+  for (const { name, aliases = [] } of [...REQUIRED, ...RECOMMENDED]) {
+    if (isSet(name)) {
+      process.env[name] = process.env[name].trim();
+      continue;
+    }
+    const source = aliases.find(isSet);
+    if (source) {
+      process.env[name] = process.env[source].trim();
+      console.log(`[env] Using ${source} for ${name}.`);
+    }
+  }
+};
+
 export const validateEnv = () => {
+  normalizeAliases();
+
   const missing = REQUIRED.filter(
     ({ name, aliases }) => !isSet(name) && !aliases.some(isSet)
   );
