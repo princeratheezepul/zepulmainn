@@ -1,7 +1,7 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Autoplay, Navigation } from 'swiper/modules';
-import { FaArrowLeft, FaArrowRight } from 'react-icons/fa';
+import { FaArrowLeft, FaArrowRight, FaTimes } from 'react-icons/fa';
 import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/autoplay';
@@ -9,8 +9,30 @@ import '../styles/AboutSpotlight.css';
 
 const AboutSpotlight = () => {
     const swiperRef = useRef(null);
+    const [activeArticle, setActiveArticle] = useState(null);
 
     const articles = [
+        {
+            title: "A truly memorable evening at the UK House of Lords graciously hosted by Lord Uday Nagaraju.",
+            description: "A truly memorable evening at the UK House of Lords graciously hosted by my dear friend Lord Uday Nagaraju. He inspired confidence among the business leaders who had travelled from various states across India to explore opportunities in the UK and understand the areas of support available to them.",
+            link: "https://www.linkedin.com/posts/tarunghulati_a-truly-memorable-evening-at-the-uk-house-ugcPost-7470492508708560896-NAdI?utm_source=share&utm_medium=member_desktop&rcm=ACoAABJ4leYBclPh-DfkZKrFw7Q-Je-L9Duz7zQ",
+            image: "/assets/spotlight_house_of_lords.jpg"
+        },
+        {
+            title: "Zepul at the UK\u2013India Business & Innovation Ecosystem: A Farewell to Gareth Wynn Owen",
+            description: "Zepul was pleased to be part of the Hyderabad ecosystem gathering that marked the farewell of Gareth Wynn Owen, British Deputy High Commissioner for Andhra Pradesh and Telangana. Gareth has played an important role in strengthening engagement between the United Kingdom and the region, with a focus on business and trade, science and innovation, education, and sustainable growth. For Zepul, the occasion was more than a farewell. It was an opportunity to connect with leaders and ecosystem builders working towards stronger global collaboration between India and the UK.",
+            link: null,
+            image: "/assets/spotlight24.jpg",
+            fullText: [
+                "Zepul was pleased to be part of the Hyderabad ecosystem gathering that marked the farewell of Gareth Wynn Owen, British Deputy High Commissioner for Andhra Pradesh and Telangana.",
+                "Gareth has played an important role in strengthening engagement between the United Kingdom and the region, with a focus on business and trade, science and innovation, education, and sustainable growth.",
+                "For Zepul, the occasion was more than a farewell. It was an opportunity to connect with leaders and ecosystem builders working towards stronger global collaboration between India and the UK.",
+                "As an AI-powered Talent Acquisition Operating System, Zepul is building technology and talent infrastructure that enables organisations to discover, evaluate and hire talent more efficiently across markets. With our growing engagement across India, the UK, UAE and Ireland, we believe that the future of talent is increasingly global, connected and AI-driven.",
+                "The UK\u2013India relationship continues to create opportunities for businesses, technology companies, entrepreneurs and talent to collaborate across borders. Gatherings such as these reinforce the importance of relationships, knowledge exchange and shared ambition in building that ecosystem.",
+                "We thank Gareth for his contribution to the Hyderabad ecosystem and wish him every success in his next chapter.",
+                "From Hyderabad to the world \u2014 Zepul continues to build the future of talent."
+            ]
+        },
         {
             title: "London remains a world-class city by almost any international measure.",
             description: "London remains a world-class city by almost any international measure. I will continue to play my part in ensuring London remains a destination of choice.",
@@ -103,9 +125,28 @@ const AboutSpotlight = () => {
         }
     ];
     
-    const handleReadMore = (link) => {
-        window.open(link, '_blank', 'noopener,noreferrer');
+    const handleReadMore = (article) => {
+        if (article.link) {
+            window.open(article.link, '_blank', 'noopener,noreferrer');
+        } else if (article.fullText) {
+            setActiveArticle(article);
+        }
     };
+
+    // Close the modal on Escape and lock background scroll while it is open
+    useEffect(() => {
+        if (!activeArticle) return;
+        const handleKeyDown = (e) => {
+            if (e.key === 'Escape') setActiveArticle(null);
+        };
+        document.addEventListener('keydown', handleKeyDown);
+        const previousOverflow = document.body.style.overflow;
+        document.body.style.overflow = 'hidden';
+        return () => {
+            document.removeEventListener('keydown', handleKeyDown);
+            document.body.style.overflow = previousOverflow;
+        };
+    }, [activeArticle]);
 
     return (
         <div className="about-spotlight-container">
@@ -150,7 +191,7 @@ const AboutSpotlight = () => {
                                 <div className="spotlight-content">
                                     <h3 className="spotlight-card-title">{article.title}</h3>
                                     <p className="spotlight-description">{article.description}</p>
-                                    <button className="read-more-btn" onClick={() => handleReadMore(article.link)}>
+                                    <button className="read-more-btn" onClick={() => handleReadMore(article)}>
                                         Read More
                                     </button>
                                 </div>
@@ -167,6 +208,37 @@ const AboutSpotlight = () => {
                     <FaArrowRight />
                 </button>
             </div>
+
+            {activeArticle && (
+                <div className="spotlight-modal-overlay" onClick={() => setActiveArticle(null)}>
+                    <div
+                        className="spotlight-modal"
+                        role="dialog"
+                        aria-modal="true"
+                        aria-label={activeArticle.title}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <button
+                            className="spotlight-modal-close"
+                            onClick={() => setActiveArticle(null)}
+                            aria-label="Close"
+                        >
+                            <FaTimes />
+                        </button>
+                        <img
+                            src={activeArticle.image}
+                            alt={activeArticle.title}
+                            className="spotlight-modal-image"
+                        />
+                        <div className="spotlight-modal-body">
+                            <h3 className="spotlight-modal-title">{activeArticle.title}</h3>
+                            {activeArticle.fullText.map((paragraph, i) => (
+                                <p key={i} className="spotlight-modal-paragraph">{paragraph}</p>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

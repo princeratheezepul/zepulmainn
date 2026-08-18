@@ -10,6 +10,7 @@ import { analyzeResume, calculateATSScore } from "./bulkUpload.controller.js";
 import { generateAssessmentForResume, sendAssessmentEmail } from "./assessment.controller.js";
 import { sendWhatsAppMessage } from "../utils/whatsapp.js";
 import { canAccessResume } from "../utils/resourceAccess.js";
+import { screenCvStrength, cutoffRejectionFields } from "../utils/cvStrength.js";
 
 // Fire-and-forget: generate the coding assessment for a newly-saved resume, then notify the candidate.
 // WhatsApp is only sent if the email was successfully sent — the WhatsApp text references the email.
@@ -131,6 +132,13 @@ export const saveResumeWithJob = async (req, res) => {
       }
     }
 
+    // Screen against the job's CV strength cutoff. Below it, the candidate is
+    // rejected here and the downstream pipeline never starts.
+    const screening = screenCvStrength(job, resumeObject);
+    if (screening.belowCutoff) {
+      Object.assign(resumeObject, cutoffRejectionFields(screening.score, screening.cutoff));
+    }
+
     const newResume = new Resume(resumeObject);
 
     console.log("Creating new resume document:", newResume);
@@ -139,6 +147,19 @@ export const saveResumeWithJob = async (req, res) => {
 
     // Increment totalApplication_number for the job
     await Job.findByIdAndUpdate(jobId, { $inc: { totalApplication_number: 1 } });
+
+    if (screening.belowCutoff) {
+      console.log(
+        `[cvStrength] Resume ${saved._id} rejected — score ${screening.score} below cutoff ${screening.cutoff} for job ${jobId}`
+      );
+      return res.status(201).json({
+        message: "Resume saved and automatically rejected — CV strength is below this job's cutoff.",
+        resume: saved,
+        autoRejected: true,
+        cvStrength: screening.score,
+        cvStrengthCutoff: screening.cutoff,
+      });
+    }
 
     res.status(201).json({ message: "Resume saved successfully", resume: saved });
 

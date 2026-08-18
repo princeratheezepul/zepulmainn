@@ -2,7 +2,15 @@ import React, { useEffect, useRef, useState } from "react";
 import Vapi from "@vapi-ai/web";
 import { getApiUrl } from "../config/config";
 
-const DescribeJob = () => {
+/**
+ * Voice agent that walks the user through describing a role.
+ *
+ * Used standalone at /describeJob and in the /register-first-job onboarding
+ * flow. When embedded (e.g. the manager dashboard's Create Job), pass `onBack`
+ * to show a back control and `onDone` to return the user to the host screen
+ * once the session is captured.
+ */
+const DescribeJob = ({ onBack, onDone }) => {
     const [sessionId, setSessionId] = useState(null);
     const [loading, setLoading] = useState(true);
     const [starting, setStarting] = useState(false);
@@ -191,9 +199,15 @@ const DescribeJob = () => {
                         Your job description has been recorded and saved. The Zepul team will
                         process your responses and structure the job posting.
                     </p>
-                    <div style={styles.successNote}>
-                        You can close this window.
-                    </div>
+                    {typeof onDone === "function" ? (
+                        <button style={styles.btnPrimary} onClick={onDone}>
+                            Back to Jobs
+                        </button>
+                    ) : (
+                        <div style={styles.successNote}>
+                            You can close this window.
+                        </div>
+                    )}
                 </div>
             </div>
         );
@@ -205,7 +219,12 @@ const DescribeJob = () => {
             {/* Header */}
             <header style={styles.header}>
                 <div style={styles.headerInner}>
-                    <img src="/zepul_trademark.jpg" alt="Zepul" style={styles.logo} />
+                    {typeof onBack === "function" && (
+                        <button style={styles.btnBack} onClick={onBack} aria-label="Back">
+                            ←
+                        </button>
+                    )}
+                    <img src="/assets/logo.png" alt="Zepul" style={styles.logo} />
                     <div>
                         <div style={styles.headerTitle}>AI Job Description Assistant</div>
                         <div style={styles.headerSub}>Describe your role — we'll handle the rest</div>
@@ -243,7 +262,7 @@ const DescribeJob = () => {
                             <span
                                 style={{
                                     ...styles.speakingBadge,
-                                    background: isSpeaking ? "#22c55e" : "#6b7280",
+                                    background: isSpeaking ? "#16A34A" : "#94A3B8",
                                 }}
                             >
                                 {isSpeaking ? "Speaking..." : "Listening"}
@@ -257,11 +276,11 @@ const DescribeJob = () => {
                             style={{
                                 ...styles.avatar,
                                 background: isSpeaking
-                                    ? "linear-gradient(135deg, #6366f1, #8b5cf6)"
-                                    : "linear-gradient(135deg, #374151, #1f2937)",
+                                    ? "linear-gradient(135deg, #2563EB, #1D4ED8)"
+                                    : "linear-gradient(135deg, #94A3B8, #64748B)",
                                 boxShadow: isSpeaking
-                                    ? "0 0 30px rgba(99,102,241,0.6), 0 0 60px rgba(139,92,246,0.3)"
-                                    : "0 8px 24px rgba(0,0,0,0.3)",
+                                    ? "0 0 0 10px rgba(37,99,235,0.12), 0 8px 24px rgba(37,99,235,0.28)"
+                                    : "0 4px 14px rgba(16,24,40,0.12)",
                                 transform: isSpeaking ? "scale(1.06)" : "scale(1)",
                             }}
                         >
@@ -352,16 +371,15 @@ const WaveIcon = ({ speaking }) => (
 const styles = {
     page: {
         minHeight: "100vh",
-        background: "linear-gradient(135deg, #0f0e17 0%, #1a1a2e 50%, #16213e 100%)",
+        background: "#F7F8FA",
         fontFamily: "'Inter', 'Segoe UI', system-ui, sans-serif",
-        color: "#f1f5f9",
+        color: "#111827",
         display: "flex",
         flexDirection: "column",
     },
     header: {
-        background: "rgba(255,255,255,0.04)",
-        backdropFilter: "blur(12px)",
-        borderBottom: "1px solid rgba(255,255,255,0.08)",
+        background: "#fff",
+        borderBottom: "1px solid #E5E7EB",
         padding: "16px 32px",
         display: "flex",
         alignItems: "center",
@@ -376,36 +394,49 @@ const styles = {
         height: 40,
         width: 112,
         objectFit: "contain",
-        borderRadius: 6,
+    },
+    btnBack: {
+        background: "#fff",
+        border: "1px solid #E5E7EB",
+        color: "#4B5563",
+        borderRadius: 10,
+        width: 36,
+        height: 36,
+        fontSize: 18,
+        cursor: "pointer",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        flexShrink: 0,
     },
     headerTitle: {
         fontWeight: 700,
         fontSize: 18,
-        color: "#f1f5f9",
+        color: "#111827",
     },
     headerSub: {
         fontSize: 12,
-        color: "#94a3b8",
+        color: "#6B7280",
         marginTop: 2,
     },
     liveBadge: {
         display: "flex",
         alignItems: "center",
         gap: 6,
-        background: "rgba(239,68,68,0.15)",
-        border: "1px solid rgba(239,68,68,0.4)",
+        background: "#FEF2F2",
+        border: "1px solid #FECACA",
         borderRadius: 20,
         padding: "4px 12px",
         fontSize: 12,
         fontWeight: 700,
-        color: "#ef4444",
+        color: "#DC2626",
         letterSpacing: "0.08em",
     },
     liveDot: {
         width: 8,
         height: 8,
         borderRadius: "50%",
-        background: "#ef4444",
+        background: "#DC2626",
         animation: "pulse 1.5s infinite",
     },
     main: {
@@ -421,27 +452,27 @@ const styles = {
     },
     panel: {
         flex: 1,
-        background: "rgba(255,255,255,0.04)",
-        backdropFilter: "blur(12px)",
+        background: "#fff",
         borderRadius: 16,
-        border: "1px solid rgba(255,255,255,0.08)",
+        border: "1px solid #E5E7EB",
+        boxShadow: "0 1px 2px rgba(16,24,40,0.04)",
         display: "flex",
         flexDirection: "column",
         overflow: "hidden",
     },
     panelHeader: {
         padding: "16px 20px",
-        borderBottom: "1px solid rgba(255,255,255,0.07)",
+        borderBottom: "1px solid #E5E7EB",
         fontWeight: 600,
         fontSize: 14,
-        color: "#cbd5e1",
+        color: "#374151",
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
     },
     videoWrap: {
         flex: 1,
-        background: "#000",
+        background: "#E2E8F0",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -472,7 +503,7 @@ const styles = {
     },
     avatarLabel: {
         fontSize: 14,
-        color: "#94a3b8",
+        color: "#6B7280",
         textAlign: "center",
         margin: 0,
     },
@@ -488,26 +519,26 @@ const styles = {
     infoBox: {
         margin: "0 20px 20px",
         padding: 16,
-        background: "rgba(99,102,241,0.08)",
-        border: "1px solid rgba(99,102,241,0.2)",
+        background: "#EFF6FF",
+        border: "1px solid #BFDBFE",
         borderRadius: 12,
     },
     infoTitle: {
         fontSize: 13,
         fontWeight: 600,
-        color: "#a5b4fc",
+        color: "#1D4ED8",
         margin: "0 0 8px 0",
     },
     infoList: {
         margin: 0,
         paddingLeft: 18,
         fontSize: 13,
-        color: "#94a3b8",
+        color: "#4B5563",
         lineHeight: 1.7,
     },
     infoConnectedText: {
         fontSize: 13,
-        color: "#94a3b8",
+        color: "#4B5563",
         margin: 0,
         lineHeight: 1.6,
     },
@@ -517,7 +548,7 @@ const styles = {
     btnPrimary: {
         width: "100%",
         padding: "14px 20px",
-        background: "linear-gradient(135deg, #6366f1, #8b5cf6)",
+        background: "#2563EB",
         color: "#fff",
         border: "none",
         borderRadius: 12,
@@ -530,13 +561,14 @@ const styles = {
         gap: 8,
         transition: "opacity 0.2s, transform 0.2s",
         letterSpacing: "0.02em",
+        boxShadow: "0 4px 12px rgba(37,99,235,0.24)",
     },
     btnDanger: {
         width: "100%",
         padding: "14px 20px",
-        background: "rgba(239,68,68,0.15)",
-        color: "#f87171",
-        border: "1px solid rgba(239,68,68,0.4)",
+        background: "#FEF2F2",
+        color: "#DC2626",
+        border: "1px solid #FECACA",
         borderRadius: 12,
         fontSize: 16,
         fontWeight: 700,
@@ -551,7 +583,7 @@ const styles = {
         display: "inline-block",
         width: 16,
         height: 16,
-        border: "2px solid rgba(255,255,255,0.3)",
+        border: "2px solid rgba(255,255,255,0.4)",
         borderTopColor: "#fff",
         borderRadius: "50%",
         animation: "spin 0.8s linear infinite",
@@ -561,43 +593,43 @@ const styles = {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        background: "linear-gradient(135deg, #0f0e17 0%, #1a1a2e 50%, #16213e 100%)",
+        background: "#F7F8FA",
         fontFamily: "'Inter', system-ui, sans-serif",
     },
     card: {
-        background: "rgba(255,255,255,0.05)",
-        border: "1px solid rgba(255,255,255,0.1)",
+        background: "#fff",
+        border: "1px solid #E5E7EB",
         borderRadius: 20,
         padding: "48px 40px",
         maxWidth: 480,
         width: "90%",
         textAlign: "center",
-        backdropFilter: "blur(12px)",
+        boxShadow: "0 8px 28px rgba(16,24,40,0.08)",
     },
     cardTitle: {
         fontSize: 24,
         fontWeight: 700,
-        color: "#f1f5f9",
+        color: "#111827",
         margin: "0 0 12px 0",
     },
     cardSubtitle: {
         fontSize: 15,
-        color: "#94a3b8",
+        color: "#6B7280",
         margin: "0 0 20px 0",
         lineHeight: 1.6,
     },
     successNote: {
         fontSize: 13,
-        color: "#64748b",
+        color: "#6B7280",
         padding: "10px 16px",
-        background: "rgba(255,255,255,0.05)",
+        background: "#F3F4F6",
         borderRadius: 8,
     },
     spinner: {
         width: 40,
         height: 40,
-        border: "3px solid rgba(255,255,255,0.1)",
-        borderTopColor: "#6366f1",
+        border: "3px solid #E5E7EB",
+        borderTopColor: "#2563EB",
         borderRadius: "50%",
         animation: "spin 0.8s linear infinite",
     },

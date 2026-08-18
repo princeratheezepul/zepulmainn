@@ -3,11 +3,24 @@ import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import ProPricingSelector from "../Components/ProPricingSelector";
 
+// The auth cookie covers the onboarding flow, but inside the manager dashboard
+// the session is carried by the token in localStorage — send both.
+function authHeaders() {
+    const headers = { "Content-Type": "application/json" };
+    try {
+        const token = JSON.parse(localStorage.getItem("userInfo"))?.data?.accessToken;
+        if (token) headers.Authorization = `Bearer ${token}`;
+    } catch {
+        // no stored token — fall back to the cookie
+    }
+    return headers;
+}
+
 async function callJobChat({ mode, history }) {
     const backendUrl = import.meta.env.VITE_BACKEND_URL;
     const response = await fetch(`${backendUrl}/api/manager/job-chat`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: authHeaders(),
         credentials: "include",
         body: JSON.stringify({ mode, history }),
     });
@@ -19,7 +32,15 @@ async function callJobChat({ mode, history }) {
     return data.content || "";
 }
 
-export default function JobChatAgent() {
+/**
+ * AI chat that interviews the user about a role and creates the job for them.
+ *
+ * Used standalone in the /register-first-job onboarding flow, where finishing
+ * leads into plan selection. When embedded elsewhere (e.g. the manager
+ * dashboard's Create Job), pass `onComplete` to handle the finish yourself and
+ * `onBack` to show a back control.
+ */
+export default function JobChatAgent({ onComplete, onBack }) {
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState("");
     const [isTyping, setIsTyping] = useState(true);
@@ -107,6 +128,10 @@ export default function JobChatAgent() {
                 },
                 skills: Array.isArray(jobData.skills) ? jobData.skills.map(String) : [],
                 experience: Number(jobData.experience) || 0,
+                // Optional 0-100 threshold; null when the manager declined to set one.
+                cvStrengthCutoff: Number.isFinite(Number(jobData.cvStrengthCutoff))
+                    ? Number(jobData.cvStrengthCutoff)
+                    : null,
                 keyResponsibilities: Array.isArray(jobData.keyResponsibilities) ? jobData.keyResponsibilities.map(String) : [],
                 preferredQualifications: Array.isArray(jobData.preferredQualifications) ? jobData.preferredQualifications.map(String) : [],
                 openpositions: Number(jobData.openpositions) || 1,
@@ -124,7 +149,7 @@ export default function JobChatAgent() {
             const backendUrl = import.meta.env.VITE_BACKEND_URL;
             const res = await fetch(`${backendUrl}/api/manager/create-job`, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: authHeaders(),
                 credentials: "include",
                 body: JSON.stringify(finalPayload),
             });
@@ -134,8 +159,15 @@ export default function JobChatAgent() {
                 throw new Error(errData.message || `Server error ${res.status}`);
             }
 
-            setMessages((prev) => [...prev, { sender: "bot", text: "✅ Your job has been created and published successfully! Loading your plan options..." }]);
-            setTimeout(() => setShowPricing(true), 2000);
+            // Embedded (dashboard) callers handle the finish themselves; the
+            // onboarding flow falls through to plan selection.
+            if (typeof onComplete === "function") {
+                setMessages((prev) => [...prev, { sender: "bot", text: "✅ Your job has been created and published successfully! Taking you back to your jobs…" }]);
+                setTimeout(() => onComplete(), 2000);
+            } else {
+                setMessages((prev) => [...prev, { sender: "bot", text: "✅ Your job has been created and published successfully! Loading your plan options..." }]);
+                setTimeout(() => setShowPricing(true), 2000);
+            }
 
         } catch (error) {
             console.error("Job creation error:", error);
@@ -187,6 +219,16 @@ export default function JobChatAgent() {
     return (
         <div className="flex flex-col h-[600px] w-full max-w-2xl mx-auto bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden font-sans">
             <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-4 flex items-center gap-3 shadow-sm">
+                {typeof onBack === "function" && (
+                    <button
+                        type="button"
+                        onClick={onBack}
+                        aria-label="Back"
+                        className="text-white/80 hover:text-white text-xl font-bold leading-none px-1"
+                    >
+                        ←
+                    </button>
+                )}
                 <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center shadow-inner border border-white/30">
                     <span className="text-xl">🤖</span>
                 </div>

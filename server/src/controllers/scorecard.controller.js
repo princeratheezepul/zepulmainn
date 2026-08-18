@@ -2,6 +2,8 @@ import Scorecard from "../models/scorecard.model.js";
 import ResumeData from "../models/resumeData.model.js";
 import nodemailer from "nodemailer";
 import { generateTextWithRetry } from "./bulkUpload.controller.js";
+import { Job } from "../models/job.model.js";
+import { screenCvStrength, cutoffRejectionFeedback } from "../utils/cvStrength.js";
 
 export const savescorecard = async (req, res) => {
   try {
@@ -17,6 +19,14 @@ export const savescorecard = async (req, res) => {
       resumeDataId
     } = req.body;
 
+    // A scorecard for a candidate whose CV strength is under the job's cutoff
+    // is stored as rejected — it never enters the normal review queue.
+    let screening = { belowCutoff: false };
+    if (jobId) {
+      const job = await Job.findById(jobId).select("cvStrengthCutoff");
+      if (job) screening = screenCvStrength(job, resume);
+    }
+
     const scorecard = new Scorecard({
       candidateId,
       resume,
@@ -26,7 +36,13 @@ export const savescorecard = async (req, res) => {
       evaluatedAnswers,
       jobId,
       resumeId: resumeDataId || undefined,
-      submittedAt: new Date()
+      submittedAt: new Date(),
+      ...(screening.belowCutoff
+        ? {
+            isRejected: true,
+            rejectFeedback: cutoffRejectionFeedback(screening.score, screening.cutoff),
+          }
+        : {}),
     });
 
     await scorecard.save();
@@ -37,7 +53,17 @@ export const savescorecard = async (req, res) => {
       console.log("Linked ResumeData", resumeDataId, "with Scorecard", scorecard._id);
     }
 
-    res.status(200).json({ success: true, message: "Scorecard saved successfully.", scorecardId: scorecard._id });
+    res.status(200).json({
+      success: true,
+      message: screening.belowCutoff
+        ? "Scorecard saved and marked rejected — CV strength is below this job's cutoff."
+        : "Scorecard saved successfully.",
+      scorecardId: scorecard._id,
+      autoRejected: screening.belowCutoff,
+      ...(screening.belowCutoff
+        ? { cvStrength: screening.score, cvStrengthCutoff: screening.cutoff }
+        : {}),
+    });
   } catch (err) {
     console.error("Error saving scorecard:", err);
     res.status(500).json({ success: false, message: "Failed to save scorecard." });

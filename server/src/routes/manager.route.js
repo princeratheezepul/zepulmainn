@@ -1,12 +1,40 @@
 import { loginUser, logoutUser, registerUser, forgotpassword, resetpassword, changeEmail, changeEmailRequest, createJobm, getAllJobsm, updateJobm, assignedJobm, getManagerInfo, updatePassword, getManagerProfile, updateManagerProfile, createManagerByAdmin, validateSetPassword, setPassword, searchRecruitersByManager, refreshAccessToken, getMarketplaceMetrics, createMarketplaceCompany, getMarketplaceCompanies, getMarketplaceCompanyById, createMarketplaceJob, getMarketplaceJobsByCompany, getMarketplaceJobRoles, getMarketplaceJobById, getMarketplaceUserById, getManagerMarketplaceCandidates, getManagerMarketplaceResume, getAllMarketplaceJobs, createProRecruiterCompany } from '../controllers/manager.controller.js';
 import { jobChat } from '../controllers/jobChat.controller.js';
+import { createJobFromJD } from '../controllers/jobFromJD.controller.js';
 
+import multer from 'multer';
 import Router from 'express';
 import { verifyJWT } from '../middleware/manager.auth.middleware.js';
 import { verifyJWT as verifyAdminJWT } from '../middleware/admin.auth.middleware.js';
 import { openAILimiter } from '../middleware/rateLimiters.js';
 import { anyAuth } from '../middleware/anyAuth.middleware.js';
 const router = Router();
+
+// Job description upload for the "Upload JD" creation flow. Memory storage —
+// the buffer only lives long enough to pull its text out; nothing is persisted.
+const jdUpload = multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 10 * 1024 * 1024, files: 1 },
+    fileFilter: (req, file, cb) => {
+        const ok = [
+            "application/pdf",
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            "text/plain",
+        ];
+        if (ok.includes(file.mimetype)) return cb(null, true);
+        cb(new Error("Only PDF, DOCX or TXT files are allowed"), false);
+    },
+});
+
+// Surface multer's own rejections (size/type) as JSON instead of a 500 stack.
+const handleUploadErrors = (handler) => (req, res, next) =>
+    handler(req, res, (err) => {
+        if (!err) return next();
+        const tooBig = err.code === "LIMIT_FILE_SIZE";
+        return res
+            .status(tooBig ? 413 : 415)
+            .json({ message: tooBig ? "The file must be under 10MB." : err.message });
+    });
 
 
 router.route("/register").post(
@@ -35,6 +63,12 @@ router.route("/set-password/:id/:token").post(setPassword);
 
 router.route("/create-job").post(verifyJWT, createJobm);
 router.route("/job-chat").post(verifyJWT, openAILimiter, jobChat);
+router.route("/job-from-jd").post(
+    verifyJWT,
+    openAILimiter,
+    handleUploadErrors(jdUpload.single("jobDescription")),
+    createJobFromJD
+);
 router.route("/get-jobs/:managerId").get(verifyJWT, getAllJobsm);
 router.route("/job/:jobId").put(verifyJWT, updateJobm);
 router.route("/assign-recruiter/:jobId").post(verifyJWT, assignedJobm);

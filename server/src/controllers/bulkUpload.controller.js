@@ -43,6 +43,7 @@ import mongoose from "mongoose";
 import OpenAI from "openai";
 import mammoth from "mammoth";
 import { determineResumeTag } from "../utils/tagHelper.js";
+import { screenCvStrength, cutoffRejectionFields } from "../utils/cvStrength.js";
 import { google } from 'googleapis';
 import fs from 'fs';
 import path from 'path';
@@ -1113,6 +1114,16 @@ const saveResumeToDatabase = async (analysis, atsResult, job, rawText, bulkJobDa
     } else if (bulkJobData.managerId) {
       resumeObject.managerId = bulkJobData.managerId;
     }
+  }
+
+  // Same CV strength cutoff that gates single uploads — a job's threshold
+  // applies however the resume arrives.
+  const screening = screenCvStrength(job, resumeObject);
+  if (screening.belowCutoff) {
+    Object.assign(resumeObject, cutoffRejectionFields(screening.score, screening.cutoff));
+    console.log(
+      `[cvStrength] Bulk resume rejected — score ${screening.score} below cutoff ${screening.cutoff} for job ${job._id}`
+    );
   }
 
   console.log('Saving resume to database:', {

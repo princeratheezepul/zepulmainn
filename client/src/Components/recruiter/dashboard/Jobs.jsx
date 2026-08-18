@@ -3,8 +3,12 @@ import JobCard from './JobCard.jsx';
 import JobDetails from './JobDetails.jsx';
 import CandidateList from './CandidateList.jsx';
 import CreateJobManager from './CreateJobManager.jsx';
+import CreateJobOptions from './CreateJobOptions.jsx';
+import CreateJobFromJD from './CreateJobFromJD.jsx';
 import JobSidebar from './JobSidebar.jsx';
 import EditJobPanel from './EditJobPanel.jsx';
+import JobChatAgent from '../../../Pages/JobChatAgent.jsx';
+import DescribeJob from '../../../Pages/DescribeJob.jsx';
 
 const Jobs = () => {
   const [jobs, setJobs] = useState([]);
@@ -16,7 +20,9 @@ const Jobs = () => {
   const [activeFilter, setActiveFilter] = useState('all');
   const [selectedJob, setSelectedJob] = useState(null);
   const [showCandidateList, setShowCandidateList] = useState(false);
-  const [showCreateJob, setShowCreateJob] = useState(false);
+  // null = jobs list. 'choose' = pick a creation method, then one of
+  // 'manual' | 'chat' | 'voice' for the flow the user picked.
+  const [createJobMode, setCreateJobMode] = useState(null);
   const [showEditJob, setShowEditJob] = useState(false);
 
   // Fetch jobs on component mount and when page/filter changes
@@ -208,10 +214,45 @@ const Jobs = () => {
     fetchJobCounts();
   };
 
-  if (showCreateJob) {
+  // Leaving any of the create-job flows drops back to the refreshed jobs list.
+  const closeCreateJob = () => {
+    setCreateJobMode(null);
+    fetchJobs();
+    fetchJobCounts();
+  };
+
+  if (createJobMode) {
     return (
       <div className="w-full min-h-screen bg-[#F7F8FA]">
-        <CreateJobManager onBack={() => setShowCreateJob(false)} />
+        {createJobMode === 'choose' && (
+          <CreateJobOptions
+            onSelect={setCreateJobMode}
+            onBack={() => setCreateJobMode(null)}
+          />
+        )}
+        {createJobMode === 'manual' && (
+          <CreateJobManager
+            onBack={() => setCreateJobMode('choose')}
+            onCreated={closeCreateJob}
+          />
+        )}
+        {createJobMode === 'chat' && (
+          <div className="min-h-screen flex items-center justify-center p-4">
+            <JobChatAgent
+              onBack={() => setCreateJobMode('choose')}
+              onComplete={closeCreateJob}
+            />
+          </div>
+        )}
+        {createJobMode === 'voice' && (
+          <DescribeJob onBack={() => setCreateJobMode('choose')} onDone={closeCreateJob} />
+        )}
+        {createJobMode === 'upload' && (
+          <CreateJobFromJD
+            onBack={() => setCreateJobMode('choose')}
+            onCreated={closeCreateJob}
+          />
+        )}
       </div>
     );
   }
@@ -265,7 +306,7 @@ const Jobs = () => {
         <div
           className="ml-0 md:ml-8 px-10 py-2 rounded-xl border border-blue-500 text-lg font-semibold text-black bg-white hover:bg-blue-50 hover:text-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 cursor-pointer"
           style={{ boxShadow: '0 0 0 2px #2563eb' }}
-          onClick={() => setShowCreateJob(true)}
+          onClick={() => setCreateJobMode('choose')}
         >
           Create Job
         </div>

@@ -2,10 +2,12 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./ZepJobs.css";
 import { getApiUrl } from "../config/config";
+import InterviewPrepPanel from "../Components/InterviewPrepPanel";
 
 export default function CandidateDashboard() {
   const navigate = useNavigate();
   const [dreamJob, setDreamJob] = useState("");
+  const [activeTab, setActiveTab] = useState("find");
 
   // Per-candidate interview state — fetched from the server so it never leaks
   // between different candidates using the same browser.
@@ -59,6 +61,10 @@ export default function CandidateDashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Once the interview is done the dream-job tab is gone, so prep is the only
+  // tab left — don't let a stale "find" selection render an empty box.
+  const currentTab = hasInterviewed ? "prep" : activeTab;
+
   const handleLogout = () => {
     localStorage.removeItem("candidateInfo");
     localStorage.removeItem("candidateToken");
@@ -105,24 +111,61 @@ export default function CandidateDashboard() {
           </div>
         ) : (
         <>
-        {/* Search box — shown only until the candidate completes their interview */}
-        {!hasInterviewed && (
-          <div className="search-box mt-4">
-            <label className="search-label">Describe your dream job</label>
-            <textarea
-              className="search-textarea"
-              placeholder="Senior Product Designer At An Early-Stage Startup..."
-              value={dreamJob}
-              onChange={(e) => setDreamJob(e.target.value)}
-            ></textarea>
-            <div className="search-actions">
-              <button className="search-btn blue-btn" onClick={() => navigate("/candidate/interview")}>
-                Talk to AI Agent
-                <svg viewBox="0 0 11 11" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M2 5.5h7M6 2.5l3 3-3 3" /></svg>
+        {/* Search box. The dream-job tab drops away once the candidate has done
+            their interview, but interview prep stays available either way — it's
+            most useful once they actually have interviews lined up. */}
+        <div className="search-box mt-4">
+          <div className="search-tabs" role="tablist" aria-label="Job search or interview prep">
+            {!hasInterviewed && (
+              <button
+                type="button"
+                role="tab"
+                id="tab-find"
+                aria-selected={currentTab === "find"}
+                aria-controls="panel-find"
+                className={`search-tab${currentTab === "find" ? " active" : ""}`}
+                onClick={() => setActiveTab("find")}
+              >
+                Find a Job
               </button>
-            </div>
+            )}
+            <button
+              type="button"
+              role="tab"
+              id="tab-prep"
+              aria-selected={currentTab === "prep"}
+              aria-controls="panel-prep"
+              className={`search-tab${currentTab === "prep" ? " active" : ""}`}
+              onClick={() => setActiveTab("prep")}
+            >
+              Get Free Interview Prep
+            </button>
           </div>
-        )}
+
+          <div className="search-tab-body">
+            {currentTab === "find" && (
+              <div className="search-panel" role="tabpanel" id="panel-find" aria-labelledby="tab-find">
+                <label className="search-label">Describe your dream job</label>
+                <textarea
+                  className="search-textarea"
+                  placeholder="Senior Product Designer At An Early-Stage Startup..."
+                  value={dreamJob}
+                  onChange={(e) => setDreamJob(e.target.value)}
+                ></textarea>
+                <div className="search-actions">
+                  <button className="search-btn blue-btn" onClick={() => navigate("/candidate/interview")}>
+                    Talk to AI Agent
+                    <svg viewBox="0 0 11 11" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M2 5.5h7M6 2.5l3 3-3 3" /></svg>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {currentTab === "prep" && (
+              <InterviewPrepPanel id="panel-prep" labelledBy="tab-prep" />
+            )}
+          </div>
+        </div>
 
         {/* Recommended from AI interview */}
         <div className="mt-6">

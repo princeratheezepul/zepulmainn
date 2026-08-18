@@ -42,6 +42,14 @@ const JobSchema = new mongoose.Schema(
     experience: {
       type: Number,
     },
+    // Minimum CV match score (0-100) a candidate must reach for this role.
+    // null means no cutoff has been set for the job.
+    cvStrengthCutoff: {
+      type: Number,
+      min: 0,
+      max: 100,
+      default: null,
+    },
     priority: {
       type: [String],
       enum: ['Low', 'Medium', 'High'],

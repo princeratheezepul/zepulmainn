@@ -475,6 +475,16 @@ export { loginUser, logoutUser, registerUser, forgotpassword, resetpassword, cha
 // using manager job crud opwerations
 
 
+// CV strength cutoff is an optional 0-100 match score. Anything blank, absent
+// or non-numeric is stored as null ("no cutoff") rather than 0, which would
+// otherwise read as a real threshold. Out-of-range values are clamped.
+const normalizeCutoff = (value) => {
+    if (value === undefined || value === null || value === "") return null;
+    const num = Number(value);
+    if (!Number.isFinite(num)) return null;
+    return Math.min(100, Math.max(0, Math.round(num)));
+};
+
 export const createJobm = async (req, res) => {
     console.log(req.body);
     const {
@@ -487,6 +497,7 @@ export const createJobm = async (req, res) => {
         salary,
         skills,
         experience,
+        cvStrengthCutoff,
         keyResponsibilities,
         preferredQualifications,
         priority,
@@ -526,6 +537,7 @@ export const createJobm = async (req, res) => {
             salary,
             skills,
             experience,
+            cvStrengthCutoff: normalizeCutoff(cvStrengthCutoff),
             keyResponsibilities,
             preferredQualifications,
             priority,

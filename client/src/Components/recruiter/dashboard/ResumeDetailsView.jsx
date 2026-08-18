@@ -481,6 +481,28 @@ const ResumeDetailsView = ({
           </div>
         )}
 
+        {/* Rejected on submission — screening stops here, so say so plainly
+            rather than letting the recruiter wait on a pipeline that never ran. */}
+        {resumeData.isRejected && (
+          <div className="mb-6 p-6 bg-red-50 border border-red-200 rounded-lg">
+            <div className="flex items-start gap-3">
+              <svg className="h-6 w-6 text-red-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M18 10A8 8 0 112 10a8 8 0 0116 0zm-8-4a1 1 0 011 1v3a1 1 0 11-2 0V7a1 1 0 011-1zm0 8a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
+              </svg>
+              <div>
+                <div className="text-lg font-bold text-red-900">Candidate Rejected</div>
+                <p className="text-red-700 text-sm mt-1">
+                  {resumeData.rejectFeedback ||
+                    "This candidate has been rejected and will not move forward in the process."}
+                </p>
+                <p className="text-red-600 text-xs mt-2">
+                  No assessment was generated and no emails were sent for this candidate.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Success message for career applications */}
         {isCareer && (
           <div className="mb-6 p-6 bg-green-50 border border-green-200 rounded-lg">

@@ -98,6 +98,12 @@ const ResumeUpload = ({ onBack, jobDetails }) => {
             })
           : Promise.resolve(null)
       ]);
+      if (saved.autoRejected) {
+        toast.error(
+          `Rejected — CV strength ${Math.round(saved.cvStrength)}% is below this job's cutoff of ${saved.cvStrengthCutoff}%.`,
+          { duration: 6000 }
+        );
+      }
       setParsedData(saved.resume);
 
     } catch (error) {

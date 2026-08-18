@@ -146,13 +146,13 @@ const Sidebar = ({ activeComponent, setActiveComponent, isCollapsed, setIsCollap
         <div className="flex items-center justify-between px-4 py-2 relative w-full">
           {isCollapsed ? (
             <img
-              src="/assets/favicon.png"
+              src="/assets/logo-mark.png"
               alt="Logo"
               className="w-8 h-8 object-contain"
             />
           ) : (
             <img
-              src="/zepul_trademark.jpg"
+              src="/assets/logo.png"
               alt="Zepul Logo"
               className="h-10 w-28 object-contain"
             />

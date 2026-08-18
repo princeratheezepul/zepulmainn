@@ -1,28 +1,38 @@
 import React, { useState } from 'react';
 import toast from 'react-hot-toast';
 
-export default function CreateJobManager({ onBack }) {
-  const [jobTitle, setJobTitle] = useState("");
-  const [company, setCompany] = useState("");
-  const [location, setLocation] = useState("");
-  const [type, setType] = useState("");
-  const [employmentType, setEmploymentType] = useState("");
-  const [openings, setOpenings] = useState("");
-  const [description, setDescription] = useState("");
-  const [skills, setSkills] = useState([]);
+// `onBack` cancels out of the form; `onCreated` (optional) runs instead of
+// `onBack` once a job is actually created, so callers can route the two
+// outcomes differently. Falls back to `onBack` when not supplied.
+// `initialValues` (optional) seeds the fields — used by the Upload JD flow to
+// drop the parsed posting in for review before it is created.
+export default function CreateJobManager({ onBack, onCreated, initialValues }) {
+  const seed = initialValues || {};
+  const seedText = (value) => (value === undefined || value === null ? "" : String(value));
+  const seedList = (value) => (Array.isArray(value) ? value : []);
+
+  const [jobTitle, setJobTitle] = useState(seedText(seed.jobtitle));
+  const [company, setCompany] = useState(seedText(seed.company));
+  const [location, setLocation] = useState(seedText(seed.location));
+  const [type, setType] = useState(seedText(seed.type));
+  const [employmentType, setEmploymentType] = useState(seedText(seed.employmentType));
+  const [openings, setOpenings] = useState(seedText(seed.openpositions));
+  const [description, setDescription] = useState(seedText(seed.description));
+  const [skills, setSkills] = useState(seedList(seed.skills));
   const [skillInput, setSkillInput] = useState("");
-  const [keyResponsibilities, setKeyResponsibilities] = useState([]);
+  const [keyResponsibilities, setKeyResponsibilities] = useState(seedList(seed.keyResponsibilities));
   const [keyRespInput, setKeyRespInput] = useState("");
-  const [preferredQualifications, setPreferredQualifications] = useState([]);
+  const [preferredQualifications, setPreferredQualifications] = useState(seedList(seed.preferredQualifications));
   const [prefQualInput, setPrefQualInput] = useState("");
-  const [resumeAnalysisPoints, setResumeAnalysisPoints] = useState([]);
+  const [resumeAnalysisPoints, setResumeAnalysisPoints] = useState(seedList(seed.resumeAnalysisPoints));
   const [resumePointInput, setResumePointInput] = useState("");
   const [hiringDeadline, setHiringDeadline] = useState("");
   const [internalNotes, setInternalNotes] = useState("");
   const [priority, setPriority] = useState("");
-  const [salaryMin, setSalaryMin] = useState("");
-  const [salaryMax, setSalaryMax] = useState("");
-  const [experience, setExperience] = useState("");
+  const [salaryMin, setSalaryMin] = useState(seed.salary?.min ? String(seed.salary.min) : "");
+  const [salaryMax, setSalaryMax] = useState(seed.salary?.max ? String(seed.salary.max) : "");
+  const [experience, setExperience] = useState(seed.experience ? String(seed.experience) : "");
+  const [cvStrengthCutoff, setCvStrengthCutoff] = useState(seedText(seed.cvStrengthCutoff));
   const [isLoading, setIsLoading] = useState(false);
 
   // Add point handlers
@@ -126,6 +136,7 @@ export default function CreateJobManager({ onBack }) {
         salary,
         skills,
         experience: experience ? Number(experience) : 0,
+        cvStrengthCutoff: cvStrengthCutoff === "" ? null : Number(cvStrengthCutoff),
         keyResponsibilities,
         preferredQualifications,
         priority: priority ? [priority] : [],
@@ -149,7 +160,7 @@ export default function CreateJobManager({ onBack }) {
         if (typeof window.refreshJobs === 'function') {
           window.refreshJobs();
         }
-        onBack();
+        (typeof onCreated === 'function' ? onCreated : onBack)();
       } else {
         toast.error(data.message || "Failed to create job");
       }
@@ -186,6 +197,7 @@ export default function CreateJobManager({ onBack }) {
               <option value="">Select Type</option>
               <option value="remote">Remote</option>
               <option value="onsite">Onsite</option>
+              <option value="hybrid">Hybrid</option>
             </select>
           </div>
           <div>
@@ -294,6 +306,22 @@ export default function CreateJobManager({ onBack }) {
           <div>
             <label className="block text-gray-500 text-sm mb-1">Experience (years)</label>
             <input type="number" className="w-full border border-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500 bg-white text-base" placeholder="Years" value={experience} onChange={e => setExperience(e.target.value)} min={0} />
+          </div>
+          {/* CV Strength Cutoff */}
+          <div>
+            <label className="block text-gray-500 text-sm mb-1">CV Strength Cutoff</label>
+            <input
+              type="number"
+              className="w-full border border-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500 bg-white text-base"
+              placeholder="e.g. 70"
+              value={cvStrengthCutoff}
+              onChange={e => setCvStrengthCutoff(e.target.value)}
+              min={0}
+              max={100}
+            />
+            <p className="text-xs text-gray-400 mt-1">
+              Minimum CV match score (0–100) a candidate must reach for this role. Leave blank for no cutoff.
+            </p>
           </div>
           {/* Hiring Deadline */}
           <div>

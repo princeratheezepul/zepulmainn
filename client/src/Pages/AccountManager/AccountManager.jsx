@@ -446,7 +446,7 @@ const AccountManager = () => {
         <div className="flex flex-col items-center w-full gap-6">
           {/* Logo */}
           <div className="mb-8">
-            <img src="/zepul_sidebar_logo.png" alt="Logo" className="h-6 w-6 filter brightness-0" />
+            <img src="/assets/logo-mark.png" alt="Logo" className="h-8 w-8 object-contain" />
           </div>
           <hr className="w-10 border-gray-700 mb-8" />
           {/* Icons */}
