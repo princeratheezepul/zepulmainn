@@ -176,13 +176,20 @@ export const generateScorecard = async (req, res) => {
     const job = await Job.findById(jobId);
     if (!job) return res.status(404).json({ message: "Job not found" });
 
-    // 1. Resume file -> raw text
+    // 1. Resume file -> raw text.
+    //    Decide on the extension first and only fall back to the browser-reported
+    //    mimetype: .docx arrives as application/octet-stream (or an empty type)
+    //    whenever the uploading OS has no Office MIME mapping registered.
+    const ext = (file.originalname || "").split(".").pop().toLowerCase();
+    const isPdf = ext === "pdf" || file.mimetype === "application/pdf";
+    const isDocx =
+      ext === "docx" ||
+      file.mimetype === "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+
     let rawText;
-    if (file.mimetype === "application/pdf") {
+    if (isPdf) {
       rawText = await extractTextFromPDF(file.buffer);
-    } else if (
-      file.mimetype === "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-    ) {
+    } else if (isDocx) {
       rawText = await extractTextFromDocx(file.buffer);
     } else {
       return res.status(400).json({ message: "Unsupported file format. Upload a PDF or DOCX." });

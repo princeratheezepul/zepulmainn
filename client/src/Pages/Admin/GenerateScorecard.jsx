@@ -6,7 +6,10 @@ import { Upload, FileText, Loader2, CheckCircle2, AlertTriangle, Download } from
 import { buildScorecardHTML } from '../../utils/scorecardHtml';
 
 const OBJECT_ID_RE = /^[a-f\d]{24}$/i;
-const ACCEPTED = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+// Match on the extension, not on file.type: browsers report .docx as an empty
+// string or application/octet-stream whenever the OS has no Office MIME mapping
+// (common on Windows without Office, on Linux, and via drag-and-drop).
+const ACCEPTED_EXT_RE = /\.(pdf|docx)$/i;
 
 const GenerateScorecard = () => {
   const [jobId, setJobId] = useState('');
@@ -37,8 +40,8 @@ const GenerateScorecard = () => {
 
   const pickFile = (selected) => {
     if (!selected) return;
-    if (!ACCEPTED.includes(selected.type)) {
-      toast.error('Please upload a PDF or DOCX resume');
+    if (!ACCEPTED_EXT_RE.test(selected.name || '')) {
+      toast.error('Please upload a PDF or DOCX resume (.doc is not supported)');
       return;
     }
     setFile(selected);
@@ -136,7 +139,7 @@ const GenerateScorecard = () => {
             >
               <input
                 type="file"
-                accept=".pdf,.docx"
+                accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                 className="hidden"
                 disabled={loading}
                 onChange={(e) => pickFile(e.target.files?.[0])}
