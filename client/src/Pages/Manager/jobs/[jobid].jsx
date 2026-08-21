@@ -212,13 +212,13 @@ const   ManagerJobDetailPage = () => {
           {/* Back Button */}
           <div className="bg-gray-50 w-full px-4 md:px-0 pt-6 pb-2">
             <button
-              onClick={() => navigate('/manager/dashboard')}
+              onClick={() => navigate('/manager/dashboard?tab=Jobs')}
               className="text-blue-600 hover:text-blue-800 font-medium text-sm flex items-center gap-2 mb-4"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
               </svg>
-              Back to Dashboard
+              Back to Jobs
             </button>
           </div>
           {/* Improved Header Row */}

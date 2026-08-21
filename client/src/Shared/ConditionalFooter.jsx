@@ -8,6 +8,7 @@ const HIDE_FOOTER_PATHS = [
   "/login",
   "/admin/login",
   "/candidate/login",
+  "/candidate/dashboard",
   "/marketplace/login",
 ];
 

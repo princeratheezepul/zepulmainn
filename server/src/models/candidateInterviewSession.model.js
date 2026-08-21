@@ -44,6 +44,12 @@ const candidateInterviewSessionSchema = new mongoose.Schema(
       ],
       default: [],
     },
+    // Live job postings sourced from the web (OpenAI web search). Cached here so
+    // the dashboard doesn't pay for a fresh search on every page load.
+    webJobs: {
+      items: { type: [mongoose.Schema.Types.Mixed], default: [] },
+      fetchedAt: { type: Date, default: null },
+    },
     meta: {
       type: mongoose.Schema.Types.Mixed,
     },

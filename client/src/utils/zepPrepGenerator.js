@@ -244,6 +244,7 @@ export const buildZepPrepBody = (prep) => {
   const meta = prep.meta || {};
   const c = prep.content || {};
   const footerLabel = [meta.company, meta.role].filter(Boolean).join(" — ");
+  const logoSrc = prep.logoUrl || "/assets/logo.png";
 
   // The upload flow builds a pack from a resume + JD the visitor supplied; nobody
   // applied to anything, so the apply-time framing has to change with it.
@@ -268,6 +269,7 @@ export const buildZepPrepBody = (prep) => {
       <div class="sub">${esc([meta.company, meta.candidateName ? `prepared for ${meta.candidateName}` : ""].filter(Boolean).join(" · "))}</div>
     </div>
     <div class="right">
+      <img class="mast-logo" src="${esc(logoSrc)}" alt="Zepul" />
       <span class="chip">${esc(chipLabel)}</span>
       <div class="metabox">
         ${meta.generatedAt ? `Generated ${esc(formatDate(meta.generatedAt))}<br>` : ""}
@@ -401,21 +403,6 @@ const renderBpBehavioural = (beh) => `
     ${tickList(beh.points)}
   </section>`;
 
-const renderBpCompensation = (comp) => `
-  <section class="sec break">
-    ${sectionHead("09", "Compensation & Negotiation Guidance", "Go in informed")}
-    <div class="dl">
-      ${dlRow("Estimated range", comp.estimatedRange, !comp.marketBenchmark)}
-      ${dlRow("Market benchmark", comp.marketBenchmark)}
-    </div>
-    ${
-      arr(comp.offerEvaluationTips).length
-        ? `<div class="card plain" style="margin-top:9pt;"><h4>Evaluating the offer</h4>${tickList(comp.offerEvaluationTips)}</div>`
-        : ""
-    }
-    <p class="note-inline">Ranges are indicative market estimates for context, not an offer.</p>
-  </section>`;
-
 const renderBpChecklist = (items) => {
   const cells = arr(items)
     .map(
@@ -425,7 +412,7 @@ const renderBpChecklist = (items) => {
     .join("");
   return `
   <section class="sec">
-    ${sectionHead("10", "Client Interview Checklist", "Before you join the call")}
+    ${sectionHead("09", "Client Interview Checklist", "Before you join the call")}
     <div class="check">${cells}</div>
   </section>`;
 };
@@ -465,7 +452,6 @@ export const buildBlueprintBody = (blueprint) => {
   ${renderBpRefresh(c.technicalRefresh)}
   ${renderBpBehavioural(c.behavioural || {})}
   ${renderBpPoints("08", "Personalised Practice Focus", "Close to the real thing", c.practicePoints, false)}
-  ${renderBpCompensation(c.compensation || {})}
   ${renderBpChecklist(c.checklist)}
 
   <footer class="endnote">
@@ -503,6 +489,7 @@ export const ZEPPREP_CSS = `
   .mast h1 { font-size:19pt; font-weight:800; letter-spacing:-0.02em; line-height:1.08; margin-top:9pt; }
   .mast .sub { font-size:9.5pt; color:var(--muted); margin-top:3pt; }
   .mast .right { text-align:right; flex-shrink:0; display:flex; flex-direction:column; align-items:flex-end; gap:5pt; }
+  .mast .right .mast-logo { height:14pt; width:auto; margin-bottom:2pt; }
   .chip { font-family:var(--mono); font-size:6pt; letter-spacing:0.12em; text-transform:uppercase; padding:2.5pt 5pt; border-radius:3pt; background:var(--tint); color:var(--accent-ink); font-weight:600; }
   .metabox { font-family:var(--mono); font-size:6.4pt; color:var(--faint); line-height:1.6; text-align:right; }
   /* Fixed brand logo — repeats top-right on every printed page. In paged media a

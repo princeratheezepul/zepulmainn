@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import AddRecruiter from "../../Components/manager/AddRecruiter";
 import ManagerAccountSettings from '../../Components/manager/ManagerAccountSettings';
 import MarketplaceDashboard from '../../Components/manager/MarketplaceDashboard';
@@ -8,6 +9,10 @@ import Jobs from '../../Components/recruiter/dashboard/Jobs';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, ResponsiveContainer, ReferenceLine } from 'recharts';
 
 
+
+// Sections the sidebar can open. Mirrored in the URL as ?tab= so a refresh, or
+// returning from a job detail page, lands on the section the manager left.
+const MANAGER_TABS = ['Dashboard', 'Recruiter', 'Jobs', 'Profile'];
 
 const stageLabels = [
   "Applications",
@@ -1229,7 +1234,17 @@ export default function ManagerDashboard() {
   const offsetReviewed = gapLength / 2;
   const offsetPending = reviewedLength + gapLength / 2;
 
-  const [activeComponent, setActiveComponent] = useState('Dashboard');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const requestedTab = searchParams.get('tab');
+  const [activeComponent, setActiveComponentState] = useState(
+    MANAGER_TABS.includes(requestedTab) ? requestedTab : 'Dashboard'
+  );
+
+  // Dashboard is the default, so it stays as a bare /manager/dashboard URL.
+  const setActiveComponent = (name) => {
+    setActiveComponentState(name);
+    setSearchParams(name && name !== 'Dashboard' ? { tab: name } : {}, { replace: true });
+  };
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [detailRecruiterId, setDetailRecruiterId] = useState(null);

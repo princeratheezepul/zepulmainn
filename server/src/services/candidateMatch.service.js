@@ -209,13 +209,35 @@ const scoreJob = (job, profile) => {
  * Match the profile against all open jobs in the database.
  * Returns an array of { job, score, reasons } sorted by score desc.
  */
-export const matchJobs = async (profile, { limit = 12 } = {}) => {
+export const matchJobs = async (
+  profile,
+  { limit = 12, fallbackToRecent = true, requireAnyTerm = [] } = {}
+) => {
   const jobs = await Job.find({ isClosed: { $ne: true }, isActive: { $ne: false } })
     .sort({ createdAt: -1 })
     .limit(300)
     .lean();
 
+  // For a free-text search the typed words must actually appear somewhere in the
+  // job. Without this the candidate's stored interview keywords alone score every
+  // job around 20%, so even a nonsense query came back with a full page of hits.
+  const terms = toArray(requireAnyTerm).map(lc).filter((t) => t.length >= 3);
+  const matchesQuery = (job) => {
+    if (!terms.length) return true;
+    const text = [
+      lc(job.jobtitle),
+      lc(job.description),
+      toArray(job.skills).map(lc).join(" "),
+      toArray(job.keyResponsibilities).map(lc).join(" "),
+      toArray(job.preferredQualifications).map(lc).join(" "),
+      lc(job.location),
+      lc(job.company),
+    ].join(" ");
+    return terms.some((t) => text.includes(t));
+  };
+
   const scored = jobs
+    .filter(matchesQuery)
     .map((job) => {
       const { score, reasons } = scoreJob(job, profile);
       return { job, score, reasons };
@@ -223,8 +245,49 @@ export const matchJobs = async (profile, { limit = 12 } = {}) => {
     .filter((m) => m.score > 0)
     .sort((a, b) => b.score - a.score);
 
-  // If nothing scored (e.g. empty profile), fall back to most recent jobs
-  const results = scored.length ? scored : jobs.slice(0, limit).map((job) => ({ job, score: 0, reasons: [] }));
+  // If nothing scored (e.g. empty profile), fall back to most recent jobs. A
+  // free-text search opts out — showing unrelated roles for a specific query
+  // reads as broken, where an empty result reads as an honest "nothing found".
+  const results =
+    scored.length || !fallbackToRecent
+      ? scored
+      : jobs.slice(0, limit).map((job) => ({ job, score: 0, reasons: [] }));
 
   return results.slice(0, limit);
+};
+
+/**
+ * Build a matching profile for a free-text job search. The typed query drives the
+ * target role and keywords; the candidate's interview profile, when they have one,
+ * supplies soft context (skills, experience, location) so results stay personal.
+ */
+export const extractQueryTerms = (query) =>
+  uniq(
+    lc(query)
+      .replace(/[^a-z0-9+#.\s]/g, " ")
+      .split(/\s+/)
+      .filter((w) => w.length >= 3 && !STOP_WORDS.has(w))
+  );
+
+export const buildQueryProfile = (query, baseProfile = null) => {
+  const q = String(query || "").trim();
+  const base = baseProfile || {};
+  const words = extractQueryTerms(q);
+
+  return {
+    // The whole typed phrase acts as the target title — scoreJob matches it
+    // against job titles in both directions, so "senior react dev" still hits
+    // a "React Developer" posting.
+    desiredRoles: q ? [q] : toArray(base.desiredRoles),
+    skills: toArray(base.skills),
+    experienceYears: typeof base.experienceYears === "number" ? base.experienceYears : null,
+    seniority: String(base.seniority || ""),
+    locations: toArray(base.locations),
+    workType: String(base.workType || ""),
+    employmentType: String(base.employmentType || ""),
+    industries: toArray(base.industries),
+    summary: q,
+    keywords: uniq([...words, ...toArray(base.keywords).map(lc)]),
+    source: "query",
+  };
 };

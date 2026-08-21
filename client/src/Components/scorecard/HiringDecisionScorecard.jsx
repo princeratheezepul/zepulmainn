@@ -21,18 +21,13 @@ const SectionCard = ({ title, icon: Icon, subtitle, children, className = '' }) 
 );
 
 // Labelled progress bar (matches existing scorecard bars).
-const ScoreBar = ({ label, value, max = 100, suffix = '%', reason, weight }) => {
+const ScoreBar = ({ label, value, max = 100, suffix = '%', reason }) => {
   const pct = Math.max(0, Math.min(100, (value / max) * 100));
   return (
     <div>
       <div className="flex justify-between items-center mb-2">
         <div className="text-gray-800 font-semibold text-sm flex items-center gap-2">
           {label}
-          {weight != null && (
-            <span className="text-[11px] font-medium text-gray-500 bg-gray-200 rounded-full px-2 py-0.5">
-              Weight {weight}%
-            </span>
-          )}
         </div>
         <span className="font-bold text-gray-900 text-sm">{value}{suffix}</span>
       </div>
@@ -163,7 +158,7 @@ export const ScoreBreakdown = ({ decision }) => {
       </div>
       <div className="space-y-4">
         {scoreBreakdown.components.map((c) => (
-          <ScoreBar key={c.key} label={c.label} value={c.score} weight={c.weight} reason={c.reason} />
+          <ScoreBar key={c.key} label={c.label} value={c.score} reason={c.reason} />
         ))}
       </div>
     </SectionCard>

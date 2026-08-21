@@ -140,11 +140,6 @@ Return ONLY this JSON, no markdown:
     "points": ["5 behavioural preparation POINTS written as plain statements, NOT questions — each tells the candidate which story or quality to be ready to demonstrate, tied to their evidence"]
   },
   "practicePoints": ["5 personalised practice POINTS written as plain statements, NOT questions — each names a topic or scenario to rehearse that resembles what the client will probe, tied to the resume, JD, company and interview"],
-  "compensation": {
-    "estimatedRange": "indicative range for this role and location",
-    "marketBenchmark": "one line on current market rates",
-    "offerEvaluationTips": ["2 bullets"]
-  },
   "checklist": [ { "label": "", "detail": "short actionable line" } ]
 }
 
@@ -171,7 +166,6 @@ const shapeContent = (raw, job, resume) => {
   const ev = raw.evaluation || {};
   const cg = raw.clientGuidance || {};
   const beh = raw.behavioural || {};
-  const comp = raw.compensation || {};
 
   const checklist = asArray(raw.checklist)
     .map((i) => ({ label: asString(i?.label), detail: asString(i?.detail) }))
@@ -209,11 +203,6 @@ const shapeContent = (raw, job, resume) => {
       points: asArray(beh.points),
     },
     practicePoints: asArray(raw.practicePoints),
-    compensation: {
-      estimatedRange: asString(comp.estimatedRange),
-      marketBenchmark: asString(comp.marketBenchmark),
-      offerEvaluationTips: asArray(comp.offerEvaluationTips),
-    },
     checklist: checklist.length ? checklist : defaultChecklist(),
   };
 };
@@ -283,11 +272,6 @@ const buildFallbackContent = (job, resume) => {
     practicePoints: jobSkills.slice(0, 5).map(
       (s) => `Rehearse how you have applied ${s} in a real project, with a specific example and outcome.`
     ),
-    compensation: {
-      estimatedRange: "Research current market rates for this role and location before discussing numbers.",
-      marketBenchmark: "",
-      offerEvaluationTips: ["Weigh growth and learning alongside compensation.", "Clarify role expectations and progression before accepting."],
-    },
     checklist: defaultChecklist(),
   };
 };

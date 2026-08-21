@@ -6,6 +6,9 @@ import {
   endSession,
   getMatches,
   getLatestForCandidate,
+  getWebJobsForCandidate,
+  searchJobsForCandidate,
+  searchWebJobsForCandidateQuery,
   handleWebhook,
 } from "../controllers/candidateInterview.controller.js";
 
@@ -16,6 +19,11 @@ router.post("/webhook/vapi", handleWebhook);
 
 // Per-candidate latest interview (multi-segment path, no conflict with /:sessionId)
 router.get("/candidate/:candidateId/latest", getLatestForCandidate);
+router.get("/candidate/:candidateId/web-jobs", getWebJobsForCandidate);
+
+// On-demand search once the candidate has completed their interview
+router.post("/candidate/:candidateId/search", searchJobsForCandidate);
+router.post("/candidate/:candidateId/search/web", searchWebJobsForCandidateQuery);
 
 router.post("/", createSession);
 router.get("/:sessionId", getSession);
