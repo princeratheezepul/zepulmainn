@@ -3,7 +3,7 @@
  * Make message icon cursor-pointer.
  */
 import React, { useState, useEffect } from 'react';
-import { Users, MessageSquare, X, CheckCircle, XCircle } from 'lucide-react';
+import { Users, MessageSquare, X, CheckCircle, XCircle, ArrowUpDown, ArrowDown, ArrowUp } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import ResumeDetailsView from './ResumeDetailsView';
 
@@ -34,6 +34,9 @@ const SavedResumes = ({ jobId, onBack, jobtitle }) => {
   const [noteSaving, setNoteSaving] = useState(false);
   const [noteMsg, setNoteMsg] = useState('');
   const [actionLoading, setActionLoading] = useState({});
+  // null = default order (as returned by the API, i.e. creation time).
+  // Clicking the SCORE header cycles: default -> desc -> asc -> default.
+  const [scoreSort, setScoreSort] = useState(null);
 
   useEffect(() => {
     fetchResumes();
@@ -171,6 +174,29 @@ const SavedResumes = ({ jobId, onBack, jobtitle }) => {
 
   // Filtered resumes
   const filteredResumes = filter === 'all' ? resumes : resumes.filter(r => r.status === filter);
+
+  // Same value the SCORE cell renders; null when the candidate has no score yet.
+  const getScoreValue = (resume) => {
+    const raw = resume.overallScore || resume.ats_score;
+    const num = Number(raw);
+    return raw && Number.isFinite(num) ? num : null;
+  };
+
+  const toggleScoreSort = () => {
+    setScoreSort(prev => (prev === 'desc' ? 'asc' : prev === 'asc' ? null : 'desc'));
+  };
+
+  // Unscored candidates always sit at the bottom, whichever direction is active.
+  const visibleResumes = scoreSort
+    ? [...filteredResumes].sort((a, b) => {
+        const aScore = getScoreValue(a);
+        const bScore = getScoreValue(b);
+        if (aScore === null && bScore === null) return 0;
+        if (aScore === null) return 1;
+        if (bScore === null) return -1;
+        return scoreSort === 'desc' ? bScore - aScore : aScore - bScore;
+      })
+    : filteredResumes;
 
   // Sidebar note save handler
   const handleSaveNote = async () => {
@@ -340,20 +366,39 @@ const SavedResumes = ({ jobId, onBack, jobtitle }) => {
               <tr className="border-b border-gray-100">
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CANDIDATE</th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">APPLIED DATE</th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">SCORE</th>
+                <th
+                  className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  aria-sort={scoreSort === 'desc' ? 'descending' : scoreSort === 'asc' ? 'ascending' : 'none'}
+                >
+                  <button
+                    type="button"
+                    onClick={toggleScoreSort}
+                    title={scoreSort === 'desc' ? 'Sorted high to low — click for low to high' : scoreSort === 'asc' ? 'Sorted low to high — click to reset' : 'Click to sort by score, high to low'}
+                    className={`inline-flex items-center gap-1 uppercase tracking-wider font-medium cursor-pointer hover:text-gray-900 transition-colors focus:outline-none ${scoreSort ? 'text-gray-900' : ''}`}
+                  >
+                    SCORE
+                    {scoreSort === 'desc' ? (
+                      <ArrowDown size={14} />
+                    ) : scoreSort === 'asc' ? (
+                      <ArrowUp size={14} />
+                    ) : (
+                      <ArrowUpDown size={14} className="text-gray-400" />
+                    )}
+                  </button>
+                </th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">STATUS</th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">NOTES</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-100">
-              {filteredResumes.length === 0 ? (
+              {visibleResumes.length === 0 ? (
                 <tr>
                   <td colSpan="5" className="px-6 py-8 text-center text-gray-500">
                     No candidates found for this filter.
                   </td>
                 </tr>
               ) : (
-                filteredResumes.map((resume) => (
+                visibleResumes.map((resume) => (
                   <tr key={resume._id} className="hover:bg-gray-50 cursor-pointer" onClick={() => setSelectedResume(resume)}>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">

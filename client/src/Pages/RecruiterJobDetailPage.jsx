@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { MapPin, Briefcase, Calendar, Users, IndianRupee, CalendarDays, Pencil, X } from 'lucide-react';
+import { MapPin, Briefcase, Calendar, Users, IndianRupee, CalendarDays, Pencil, X, Database } from 'lucide-react';
 import Sidebar from '../Components/recruiter/dashboard/Sidebar';
 import Settings from '../Components/recruiter/dashboard/Settings';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import ResumeUpload from '../Components/recruiter/dashboard/ResumeUpload';
 import SavedResumes from '../Components/recruiter/dashboard/SavedResumes';
 import ZepDBJobMatch from '../Components/recruiter/dashboard/ZepDBJobMatch';
+import ZepDBBulkSubmit from '../Components/recruiter/dashboard/ZepDBBulkSubmit';
 import toast from 'react-hot-toast';
 
 const RecruiterJobDetailPage = () => {
@@ -18,6 +19,7 @@ const RecruiterJobDetailPage = () => {
   const { jobId } = useParams();
   const [showResumeUpload, setShowResumeUpload] = useState(false);
   const [showSavedResumes, setShowSavedResumes] = useState(false);
+  const [showZepDBBulkSubmit, setShowZepDBBulkSubmit] = useState(false);
   const [resumeUploadFromCandidateList, setResumeUploadFromCandidateList] = useState(false);
   const [resumeCount, setResumeCount] = useState(0);
   const [preloadedResumes, setPreloadedResumes] = useState([]);
@@ -229,6 +231,14 @@ const RecruiterJobDetailPage = () => {
                 </div>
                 <div className="flex gap-3">
                   {/* Remove 'View Applications' button. Candidate List button below triggers SavedResumes. */}
+                  <div
+                    className="flex items-center gap-2 border border-blue-600 text-blue-600 hover:bg-blue-50 font-semibold px-3 py-2 rounded-full text-sm cursor-pointer hover:shadow-md"
+                    onClick={() => setShowZepDBBulkSubmit(true)}
+                    title="Auto-submit every matching ZepDB candidate to this job"
+                  >
+                    <Database size={16} />
+                    Upload Resume from ZepDB
+                  </div>
                   <div className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-3 py-2 rounded-full text-sm cursor-pointer hover:shadow-md" onClick={() => setShowResumeUpload(true)}>Submit Resume</div>
                 </div>
               </div>
@@ -333,6 +343,23 @@ const RecruiterJobDetailPage = () => {
             </div>
             {/* </div> */}
         </div>        
+      )}
+      {showZepDBBulkSubmit && (
+        <ZepDBBulkSubmit
+          jobId={jobId}
+          jobTitle={job.jobtitle}
+          onClose={() => setShowZepDBBulkSubmit(false)}
+          onComplete={() => {
+            // Newly submitted ZepDB resumes should show up in the counts/list right away
+            fetchJob();
+            fetchResumeCount();
+            preloadResumes();
+          }}
+          onViewCandidates={() => {
+            setShowZepDBBulkSubmit(false);
+            setShowSavedResumes(true);
+          }}
+        />
       )}
     </div>
   </div>

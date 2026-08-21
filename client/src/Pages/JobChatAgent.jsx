@@ -53,6 +53,7 @@ export default function JobChatAgent({ onComplete, onBack }) {
     const historyRef = useRef([]);
     const chatContainerRef = useRef(null);
     const initializedRef = useRef(false);
+    const inputRef = useRef(null);
 
     useEffect(() => {
         if (initializedRef.current) return;
@@ -85,6 +86,15 @@ export default function JobChatAgent({ onComplete, onBack }) {
             });
         }
     }, [messages, isTyping]);
+
+    // The box stays enabled while the bot replies so the caret is never dropped,
+    // but scrolling/re-render can still steal focus — put it back when the bot
+    // finishes so the user can keep answering without clicking the box again.
+    useEffect(() => {
+        if (!isTyping && !isFinished) {
+            inputRef.current?.focus();
+        }
+    }, [isTyping, isFinished]);
 
     const extractAndCreateJob = async (history) => {
         try {
@@ -276,12 +286,18 @@ export default function JobChatAgent({ onComplete, onBack }) {
 
             <div className="p-4 bg-white border-t border-gray-100">
                 <form onSubmit={handleSend} className="relative flex items-center">
+                    {/* Only the finished state disables the box. Disabling it while the bot
+                        is typing blurred it after every message, forcing the user to click
+                        back in; handleSend already ignores sends while it's busy. */}
                     <input
+                        ref={inputRef}
                         type="text"
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
                         placeholder={isFinished ? "Session complete! Processing..." : "Type your answer here..."}
-                        disabled={isTyping || isFinished}
+                        disabled={isFinished}
+                        autoFocus
+                        autoComplete="off"
                         className="w-full pl-5 pr-14 py-4 bg-gray-50 border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all disabled:opacity-50 text-sm"
                     />
                     <button
