@@ -1,4 +1,5 @@
 import { toast } from 'react-hot-toast';
+import { getScoreBreakdown } from './hiringFitAnalysis';
 
 // Score gauge — colored arc on a light grey ring, centered numeric label (no %).
 const scoreGaugeSVG = (value, color, size = 92, strokeWidth = 8) => {
@@ -16,6 +17,162 @@ const scoreGaugeSVG = (value, color, size = 92, strokeWidth = 8) => {
       <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;">
         <span style="color: ${color}; font-size: 22px; font-weight: 700; line-height: 1;">${v}</span>
       </div>
+    </div>
+  `;
+};
+
+/* ── Candidate resume appendix ──────────────────────────────────────────────
+   The original upload is never persisted (parsed in memory at upload time), so
+   the resume is rebuilt from the stored parse. education / work_experience /
+   certifications are Mixed in the DB, so a value can be a string, an array of
+   strings, or an array of objects — handle each shape. Resume text is arbitrary
+   candidate input, so it gets escaped rather than interpolated raw.           */
+
+const escapeHTML = (value) =>
+  String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+const isEmptyValue = (v) =>
+  v === null || v === undefined || v === '' ||
+  (Array.isArray(v) && v.length === 0) ||
+  (typeof v === 'object' && !Array.isArray(v) && Object.keys(v).length === 0);
+
+const humanizeKey = (key) =>
+  String(key).replace(/[_-]+/g, ' ').trim().replace(/\b\w/g, (c) => c.toUpperCase());
+
+// Flatten a value to a single readable string (used for object fields and pills).
+const flattenValue = (v) => {
+  if (isEmptyValue(v)) return '';
+  if (Array.isArray(v)) return v.map(flattenValue).filter(Boolean).join(', ');
+  if (typeof v === 'object') return Object.values(v).map(flattenValue).filter(Boolean).join(' — ');
+  return String(v);
+};
+
+// One entry: a plain line for strings, a small labelled block for objects
+// (e.g. { company, role, duration }).
+const resumeEntryHTML = (entry) => {
+  if (isEmptyValue(entry)) return '';
+  if (Array.isArray(entry)) return entry.map(resumeEntryHTML).join('');
+  if (typeof entry !== 'object') {
+    return `<div style="font-size: 12px; color: #374151; line-height: 1.5; margin-bottom: 4px;">${escapeHTML(entry)}</div>`;
+  }
+  const rows = Object.entries(entry)
+    .filter(([, v]) => !isEmptyValue(v))
+    .map(([k, v]) => {
+      const text = flattenValue(v);
+      if (!text) return '';
+      return `<div style="font-size: 12px; color: #374151; line-height: 1.5;"><span style="font-weight: 600; color: #111827;">${escapeHTML(humanizeKey(k))}: </span>${escapeHTML(text)}</div>`;
+    })
+    .join('');
+  return rows
+    ? `<div style="background: #f9fafb; border-radius: 6px; padding: 8px 10px; margin-bottom: 6px; page-break-inside: avoid;">${rows}</div>`
+    : '';
+};
+
+const resumeSectionTitle = (title) => `
+  <div style="font-size: 13px; font-weight: 700; color: #111827; margin-bottom: 6px; border-bottom: 1px solid #e5e7eb; padding-bottom: 3px;">${escapeHTML(title)}</div>
+`;
+
+const resumeSectionHTML = (title, value) => {
+  const body = resumeEntryHTML(value);
+  return body ? `<div style="margin-bottom: 14px;">${resumeSectionTitle(title)}${body}</div>` : '';
+};
+
+// Skills / languages read better as one wrapped line than as one line per item.
+const resumeInlineSectionHTML = (title, value) => {
+  const text = flattenValue(value).replace(/, /g, ' · ');
+  return text
+    ? `<div style="margin-bottom: 14px;">${resumeSectionTitle(title)}<div style="font-size: 12px; color: #374151; line-height: 1.6;">${escapeHTML(text)}</div></div>`
+    : '';
+};
+
+// Two-column Label / value grid for the candidate's profile details.
+const resumeFactsHTML = (facts) => {
+  const rows = facts
+    .filter(([, v]) => !isEmptyValue(v))
+    .map(([label, v]) => `
+      <div style="display: flex; gap: 6px; font-size: 11.5px; line-height: 1.5;">
+        <span style="color: #6b7280; min-width: 104px; flex-shrink: 0;">${escapeHTML(label)}</span>
+        <span style="color: #111827; font-weight: 600;">${escapeHTML(flattenValue(v))}</span>
+      </div>
+    `).join('');
+  return rows
+    ? `<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px 20px; background: #f9fafb; border-radius: 6px; padding: 10px 12px; margin-bottom: 14px; page-break-inside: avoid;">${rows}</div>`
+    : '';
+};
+
+// The candidate's resume, appended as the final page(s) of the scorecard.
+// Everything the parse kept is included: profile facts, the structured sections,
+// the analysis notes the scorecard body doesn't already show, and — always, not
+// just as a fallback — the full extracted resume text.
+const buildResumeAppendix = (resumeData) => {
+  const app = resumeData.applicationDetails || {};
+  const factsHTML = resumeFactsHTML([
+    ['Email', resumeData.email],
+    ['Phone', resumeData.phone],
+    ['Location', resumeData.location],
+    ['Experience', resumeData.experience],
+    ['Applied For', app.position],
+    ['Applied On', app.date],
+    ['Notice Period', app.noticePeriod],
+    ['Source', app.source],
+    ['Category', resumeData.tag || resumeData.suggested_resume_category],
+    ['Job Changes', resumeData.number_of_job_jumps],
+    ['Avg. Tenure', resumeData.average_job_duration_months
+      ? `${resumeData.average_job_duration_months} months` : ''],
+  ]);
+
+  const sections = [
+    resumeSectionHTML('Professional Summary', resumeData.about),
+    resumeSectionHTML('Work Experience', resumeData.work_experience),
+    resumeSectionHTML('Education', resumeData.education),
+    resumeSectionHTML('Certifications', resumeData.certifications),
+    resumeInlineSectionHTML('Technical Skills', resumeData.skills),
+    resumeInlineSectionHTML('Other Skills', resumeData.non_technical_skills),
+    resumeInlineSectionHTML('Languages', resumeData.languages),
+    resumeInlineSectionHTML('Recommended Roles', resumeData.recommended_job_roles),
+  ].join('');
+
+  // The parts of the AI summary the scorecard body doesn't already print.
+  const aiSummary = resumeData.aiSummary || {};
+  const insights = [
+    ['Technical Experience', aiSummary.technicalExperience],
+    ['Education', aiSummary.education],
+    ['Competitive Fit', aiSummary.competitiveFit],
+    ['Consistency Check', aiSummary.consistencyCheck],
+  ].filter(([, v]) => !isEmptyValue(v));
+
+  const insightsHTML = insights.length ? `
+    <div style="margin-bottom: 14px;">
+      ${resumeSectionTitle('Resume Analysis Notes')}
+      ${insights.map(([label, text]) => `
+        <div style="font-size: 12px; color: #374151; line-height: 1.5; margin-bottom: 4px;">
+          <span style="font-weight: 600; color: #111827;">${escapeHTML(label)}: </span>${escapeHTML(text)}
+        </div>
+      `).join('')}
+    </div>
+  ` : '';
+
+  // The resume as extracted from the uploaded file — the complete record, kept
+  // verbatim below the structured summary rather than used only as a fallback.
+  const rawText = typeof resumeData.raw_text === 'string' ? resumeData.raw_text.trim() : '';
+  const fullTextHTML = rawText ? `
+    <div>
+      ${resumeSectionTitle('Full Resume Text')}
+      <div style="font-size: 11px; color: #374151; line-height: 1.55; white-space: pre-wrap;">${escapeHTML(rawText)}</div>
+    </div>
+  ` : '';
+
+  // Profile facts alone aren't a resume — only open a page if there's substance.
+  if (!sections && !insightsHTML && !fullTextHTML) return '';
+
+  return `
+    <div style="page-break-before: always; margin-top: 20px; background: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 24px;">
+      <div style="font-size: 18px; font-weight: 700; color: #111827;">Candidate Resume</div>
+      <div style="font-size: 13px; font-weight: 600; color: #374151; margin-top: 2px; margin-bottom: 12px;">${escapeHTML(resumeData.name || 'Candidate')}${resumeData.title ? ` — ${escapeHTML(resumeData.title)}` : ''}</div>
+      ${factsHTML}
+      ${sections}
+      ${insightsHTML}
+      ${fullTextHTML}
     </div>
   `;
 };
@@ -158,6 +315,38 @@ const generatePDFContent = (resumeData, note = '') => {
     </div>
   `;
 
+  // === Section: CV Strength — Score Breakdown ===
+  // Same data the scorecard UI renders (utils/hiringFitAnalysis), laid out for print.
+  const scoreBreakdown = getScoreBreakdown(resumeData);
+
+  const scoreBreakdownHTML = scoreBreakdown.hasData ? `
+    <div style="margin-bottom: 16px;">
+      ${sectionLabel('CV Strength — Score Breakdown')}
+      <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; padding: 12px 14px;">
+        <div style="display: flex; align-items: baseline; gap: 5px; margin-bottom: 10px;">
+          <span style="font-size: 26px; font-weight: 700; color: #111827; line-height: 1;">${scoreBreakdown.total}</span>
+          <span style="font-size: 12px; font-weight: 600; color: #6b7280;">/ 100</span>
+          ${scoreBreakdown.headline ? `<span style="font-size: 11px; color: #6b7280; margin-left: 6px;">${scoreBreakdown.headline}</span>` : ''}
+        </div>
+        ${scoreBreakdown.components.map((c) => {
+          const pct = Math.max(0, Math.min(100, Number(c.score) || 0));
+          return `
+            <div style="margin-bottom: 8px; page-break-inside: avoid;">
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 3px;">
+                <span style="font-size: 12px; font-weight: 600; color: #1f2937;">${c.label}</span>
+                <span style="font-size: 12px; font-weight: 700; color: #111827;">${pct}%</span>
+              </div>
+              <div style="width: 100%; height: 6px; background: #e5e7eb; border-radius: 9999px; overflow: hidden;">
+                <div style="width: ${pct}%; height: 6px; background: #2563eb; border-radius: 9999px;"></div>
+              </div>
+              ${c.reason ? `<p style="font-size: 11px; color: #6b7280; line-height: 1.4; margin: 4px 0 0 0;">${c.reason}</p>` : ''}
+            </div>
+          `;
+        }).join('')}
+      </div>
+    </div>
+  ` : '';
+
   // === Section: AI Resume Summary — only these three, in this order ===
   const summaryEntriesToRender = [
     ['Project Experience', aiSummary.projectExperience || 'Project experience summary not available.'],
@@ -227,12 +416,16 @@ const generatePDFContent = (resumeData, note = '') => {
       </div>`
     : '';
 
+  // === Optional: Candidate Resume — appended as the final page(s) ===
+  const resumeAppendixHTML = buildResumeAppendix(resumeData);
+
   return `
     <div style="max-width: 760px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; border: 1px solid #e5e7eb; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);">
       ${headerHTML}
       ${scoreRowHTML}
       <div style="padding: 16px 32px;">
         ${assessmentHTML}
+        ${scoreBreakdownHTML}
         ${aiResumeSummaryHTML}
         ${codingAssessmentHTML}
         ${interviewSummaryHTML}
@@ -240,6 +433,7 @@ const generatePDFContent = (resumeData, note = '') => {
       ${footerHTML}
     </div>
     ${addedNotesHTML}
+    ${resumeAppendixHTML}
   `;
 };
 

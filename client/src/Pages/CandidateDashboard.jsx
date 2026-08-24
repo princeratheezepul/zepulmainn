@@ -3,11 +3,17 @@ import { useNavigate } from "react-router-dom";
 import "./ZepJobs.css";
 import { getApiUrl } from "../config/config";
 import InterviewPrepPanel from "../Components/InterviewPrepPanel";
+import CandidateProfilePanel from "../Components/candidate/CandidateProfilePanel";
 
 export default function CandidateDashboard() {
   const navigate = useNavigate();
   const [dreamJob, setDreamJob] = useState("");
   const [activeTab, setActiveTab] = useState("find");
+  const [profileOpen, setProfileOpen] = useState(false);
+  // The resume mapped to this candidate, surfaced on the dashboard and managed
+  // from the profile panel.
+  const [resume, setResume] = useState(null);
+  const [resumeLoading, setResumeLoading] = useState(true);
 
   // Per-candidate interview state — fetched from the server so it never leaks
   // between different candidates using the same browser.
@@ -70,6 +76,33 @@ export default function CandidateDashboard() {
       }
     };
     load();
+    return () => {
+      active = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // The candidate's own resume, so the dashboard can show whether one is mapped
+  // to them without opening the profile panel.
+  useEffect(() => {
+    if (!candidate?._id) return;
+    let active = true;
+    const loadResume = async () => {
+      try {
+        setResumeLoading(true);
+        const res = await fetch(getApiUrl(`/api/candidate/${candidate._id}/resume`), {
+          headers: { Authorization: `Bearer ${localStorage.getItem("candidateToken")}` },
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!active) return;
+        setResume(res.ok ? data.data?.resume || null : null);
+      } catch {
+        if (active) setResume(null);
+      } finally {
+        if (active) setResumeLoading(false);
+      }
+    };
+    loadResume();
     return () => {
       active = false;
     };
@@ -262,9 +295,18 @@ export default function CandidateDashboard() {
           >
             Applied Jobs
           </button>
-          <span className="text-sm text-gray-600 hidden md:inline">
-            {candidate?.fullName || candidate?.email || "Candidate"}
-          </span>
+          <button
+            onClick={() => setProfileOpen(true)}
+            className="flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-blue-600 cursor-pointer"
+            title="Your profile and resume"
+          >
+            <span className="w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold">
+              {(candidate?.fullName || candidate?.email || "C").charAt(0).toUpperCase()}
+            </span>
+            <span className="hidden md:inline">
+              {candidate?.fullName || candidate?.email || "Profile"}
+            </span>
+          </button>
           <button
             onClick={handleLogout}
             className="text-sm font-medium text-blue-600 hover:underline cursor-pointer"
@@ -280,6 +322,41 @@ export default function CandidateDashboard() {
           <div className="text-lg font-bold text-black mb-0">Jobs</div>
           <p className="text-xs text-gray-500">Roles matched to you from your AI career interview</p>
         </div>
+
+        {/* The resume mapped to this candidate — the profile panel is where it
+            gets viewed and replaced. */}
+        {!resumeLoading && (
+          <div
+            className={`flex flex-wrap items-center justify-between gap-3 rounded-xl border px-4 py-3 mb-4 ${
+              resume ? "bg-white border-gray-200" : "bg-amber-50 border-amber-200"
+            }`}
+          >
+            <div className="flex items-center gap-3 min-w-0">
+              <span className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${resume ? "bg-blue-50" : "bg-amber-100"}`}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={resume ? "#2563eb" : "#b45309"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                  <polyline points="14 2 14 8 20 8" />
+                </svg>
+              </span>
+              <div className="min-w-0">
+                <div className="text-sm font-semibold text-gray-900 truncate">
+                  {resume ? resume.parsed?.title || "Your resume" : "No resume on your profile yet"}
+                </div>
+                <div className="text-xs text-gray-500 truncate">
+                  {resume
+                    ? `${resume.fileName ? `${resume.fileName} · ` : ""}updated ${new Date(resume.updatedAt).toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" })}`
+                    : "Add your resume so we can match you to the right roles."}
+                </div>
+              </div>
+            </div>
+            <button
+              onClick={() => setProfileOpen(true)}
+              className="shrink-0 text-sm font-semibold px-4 py-2 rounded-lg border border-blue-600 text-blue-600 hover:bg-blue-50 transition-colors cursor-pointer"
+            >
+              {resume ? "View / Update Resume" : "Upload Resume"}
+            </button>
+          </div>
+        )}
 
         {loading ? (
           <div className="flex justify-center py-16">
@@ -508,6 +585,13 @@ export default function CandidateDashboard() {
         </>
         )}
       </div>
+
+      <CandidateProfilePanel
+        candidate={candidate}
+        open={profileOpen}
+        onClose={() => setProfileOpen(false)}
+        onResumeUpdated={setResume}
+      />
     </div>
   );
 }

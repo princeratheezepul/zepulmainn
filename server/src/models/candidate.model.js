@@ -27,6 +27,15 @@ const candidateSchema = new mongoose.Schema(
       type: String,
       default: '',
     },
+    // The candidate's own resume, mapped to their profile and managed from the
+    // candidate dashboard. Uploading again replaces what's here. `parsed` is the
+    // AI reading of `text` and may be null if the parse was unavailable.
+    resume: {
+      fileName: { type: String, default: '' },
+      text: { type: String, default: '' },
+      parsed: { type: mongoose.Schema.Types.Mixed, default: null },
+      updatedAt: { type: Date, default: null },
+    },
   },
   { timestamps: true }
 );

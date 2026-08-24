@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import JobCard from './JobCard.jsx';
 import JobDetails from './JobDetails.jsx';
 import CandidateList from './CandidateList.jsx';
@@ -11,6 +12,7 @@ import JobChatAgent from '../../../Pages/JobChatAgent.jsx';
 import DescribeJob from '../../../Pages/DescribeJob.jsx';
 
 const Jobs = () => {
+  const navigate = useNavigate();
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
@@ -180,6 +182,11 @@ const Jobs = () => {
     setSelectedJob(job);
   };
 
+  // The applicants count on a card skips job details and opens that job's candidate list.
+  const handleShowJobCandidates = (job) => {
+    navigate(`/manager/jobs/${job._id || job.id}/candidates`);
+  };
+
   const handleBack = () => {
     setSelectedJob(null);
     setShowCandidateList(false);
@@ -325,7 +332,7 @@ const Jobs = () => {
               </div>
             ) : (
               jobs.map((job) => (
-                <JobCard key={job._id || job.id} job={job} onClick={handleJobClick} />
+                <JobCard key={job._id || job.id} job={job} onClick={handleJobClick} onShowCandidates={handleShowJobCandidates} />
               ))
             )}
           </div>

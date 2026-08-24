@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Briefcase, MapPin, Calendar, Users } from 'lucide-react';
 
-const JobCard = ({ job, onClick }) => {
+const JobCard = ({ job, onClick, onShowCandidates }) => {
   const navigate = useNavigate();
   // Function to truncate description to 3 lines
   const truncateDescription = (text, maxLines = 3) => {
@@ -138,7 +138,13 @@ const JobCard = ({ job, onClick }) => {
           </div>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
-          <div className="flex items-center gap-1.5 text-xs text-gray-600 bg-gray-100 font-medium px-2 py-1 rounded-md">
+          {/* Opens this job's candidate list directly, when the parent wires it up. */}
+          <div
+            className={`flex items-center gap-1.5 text-xs text-gray-600 bg-gray-100 font-medium px-2 py-1 rounded-md ${onShowCandidates ? 'cursor-pointer hover:bg-gray-200 hover:text-gray-900' : ''}`}
+            onClick={onShowCandidates ? (e) => { e.stopPropagation(); onShowCandidates(job); } : undefined}
+            role={onShowCandidates ? 'button' : undefined}
+            title={onShowCandidates ? 'View candidate list' : undefined}
+          >
             <Users size={14} className="text-gray-500"/>
             <span>{job.totalApplication_number || 0} Applicants Submitted</span>
           </div>

@@ -3,7 +3,7 @@
  * Make message icon cursor-pointer.
  */
 import React, { useState, useEffect } from 'react';
-import { Users, MessageSquare, X } from 'lucide-react';
+import { Users, MessageSquare, X, ArrowUpDown, ArrowDown, ArrowUp } from 'lucide-react';
 import ResumeDetailsView from './ResumeDetailsView';
 import { getAuthHeaders } from '../../../utils/authUtils';
 
@@ -33,6 +33,9 @@ const SavedResumes = ({ jobId, onBack, jobtitle, preloadedResumes = [], resumesL
   const [note, setNote] = useState('');
   const [noteSaving, setNoteSaving] = useState(false);
   const [noteMsg, setNoteMsg] = useState('');
+  // null = default order (as returned by the API, i.e. creation time).
+  // Clicking the SCORE header cycles: default -> desc -> asc -> default.
+  const [scoreSort, setScoreSort] = useState(null);
 
   useEffect(() => {
     // Only fetch if we don't have preloaded data
@@ -72,6 +75,27 @@ const SavedResumes = ({ jobId, onBack, jobtitle, preloadedResumes = [], resumesL
 
   // Filtered resumes
   const filteredResumes = filter === 'all' ? resumes : resumes.filter(r => r.status === filter);
+
+  const getScoreValue = (resume) => {
+    const num = Number(resume.overallScore);
+    return resume.overallScore && Number.isFinite(num) ? num : null;
+  };
+
+  const toggleScoreSort = () => {
+    setScoreSort(prev => (prev === 'desc' ? 'asc' : prev === 'asc' ? null : 'desc'));
+  };
+
+  // Unscored candidates always sit at the bottom, whichever direction is active.
+  const visibleResumes = scoreSort
+    ? [...filteredResumes].sort((a, b) => {
+        const aScore = getScoreValue(a);
+        const bScore = getScoreValue(b);
+        if (aScore === null && bScore === null) return 0;
+        if (aScore === null) return 1;
+        if (bScore === null) return -1;
+        return scoreSort === 'desc' ? bScore - aScore : aScore - bScore;
+      })
+    : filteredResumes;
 
   // Sidebar note save handler
   const handleSaveNote = async () => {
@@ -252,13 +276,32 @@ const SavedResumes = ({ jobId, onBack, jobtitle, preloadedResumes = [], resumesL
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Candidate</th>
                 <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Applied date</th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Score</th>
+                <th
+                  className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase"
+                  aria-sort={scoreSort === 'desc' ? 'descending' : scoreSort === 'asc' ? 'ascending' : 'none'}
+                >
+                  <button
+                    type="button"
+                    onClick={toggleScoreSort}
+                    title={scoreSort === 'desc' ? 'Sorted high to low — click for low to high' : scoreSort === 'asc' ? 'Sorted low to high — click to reset' : 'Click to sort by score, high to low'}
+                    className={`inline-flex items-center gap-1 uppercase font-semibold cursor-pointer hover:text-gray-900 transition-colors focus:outline-none ${scoreSort ? 'text-gray-900' : ''}`}
+                  >
+                    Score
+                    {scoreSort === 'desc' ? (
+                      <ArrowDown size={14} />
+                    ) : scoreSort === 'asc' ? (
+                      <ArrowUp size={14} />
+                    ) : (
+                      <ArrowUpDown size={14} className="text-gray-400" />
+                    )}
+                  </button>
+                </th>
                 <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Status</th>
                 <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Notes</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-100">
-              {filteredResumes.length === 0 ? (
+              {visibleResumes.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="text-center py-12">
                     <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />
@@ -267,7 +310,7 @@ const SavedResumes = ({ jobId, onBack, jobtitle, preloadedResumes = [], resumesL
                   </td>
                 </tr>
               ) : (
-                filteredResumes.map((resume) => (
+                visibleResumes.map((resume) => (
                   <tr
                     key={resume._id}
                     className="hover:bg-gray-50 cursor-pointer transition"

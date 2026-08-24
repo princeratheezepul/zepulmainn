@@ -1,17 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { MapPin, Briefcase, Calendar, Users, IndianRupee, CalendarDays, Pencil, X } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import SavedResumes from '../../../Components/manager/dashboard/SavedResumes';
 import toast from 'react-hot-toast';
 
 const   ManagerJobDetailPage = () => {
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const location = useLocation();
   const [jobData, setJobData] = useState(null);
   const { jobid: jobId } = useParams();
   const [resumeCount, setResumeCount] = useState(0);
-  const [showSavedResumes, setShowSavedResumes] = useState(false);
+  // The candidate list lives at /manager/jobs/:jobid/candidates so it can be
+  // linked to directly (e.g. from the applicants count on a job card).
+  const showSavedResumes = /\/candidates\/?$/.test(location.pathname);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editSaving, setEditSaving] = useState(false);
   const [editForm, setEditForm] = useState(null);
@@ -202,7 +205,7 @@ const   ManagerJobDetailPage = () => {
   }
 
   if (showSavedResumes) {
-    return <SavedResumes onBack={() => setShowSavedResumes(false)} jobId={jobId} jobtitle={job.jobtitle} />;
+    return <SavedResumes onBack={() => navigate(`/manager/jobs/${jobId}`)} jobId={jobId} jobtitle={job.jobtitle} />;
   }
 
   return (
@@ -231,7 +234,7 @@ const   ManagerJobDetailPage = () => {
               <div className="flex flex-col gap-3">
                 <button 
                   className="bg-black hover:bg-gray-800 text-white font-semibold px-5 py-2 rounded-lg text-sm cursor-pointer flex items-center gap-2"
-                  onClick={() => setShowSavedResumes(true)}
+                  onClick={() => navigate(`/manager/jobs/${jobId}/candidates`)}
                 >
                   <Users size={18} className="text-white" />
                   {resumeCount} Candidate List

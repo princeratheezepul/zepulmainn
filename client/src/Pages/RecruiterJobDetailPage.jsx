@@ -234,7 +234,7 @@ const RecruiterJobDetailPage = () => {
                   <div
                     className="flex items-center gap-2 border border-blue-600 text-blue-600 hover:bg-blue-50 font-semibold px-3 py-2 rounded-full text-sm cursor-pointer hover:shadow-md"
                     onClick={() => setShowZepDBBulkSubmit(true)}
-                    title="Auto-submit every matching ZepDB candidate to this job"
+                    title="Pick matching ZepDB candidates and submit them to this job"
                   >
                     <Database size={16} />
                     Upload Resume from ZepDB
