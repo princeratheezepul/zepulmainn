@@ -49,7 +49,7 @@ export default function ProRecruiterSignup() {
                 throw new Error(data.message || "Registration failed");
             }
             toast.success("Account created! Redirecting to sign in...");
-            setTimeout(() => navigate("/signin"), 1500);
+            setTimeout(() => navigate("/signin/prorecruiter"), 1500);
         } catch (error) {
             toast.error(error.message || "Registration failed");
         } finally {
@@ -138,7 +138,7 @@ export default function ProRecruiterSignup() {
                     </form>
                     <div className="mt-6 text-center text-sm text-gray-500">
                         Already have an account?{' '}
-                        <Link to="/signin" className="text-blue-600 font-medium hover:underline">Sign in</Link>
+                        <Link to="/signin/prorecruiter" className="text-blue-600 font-medium hover:underline">Sign in</Link>
                     </div>
                     <div className="mt-4 flex flex-col md:flex-row items-center justify-between text-xs text-gray-400">
                         <span>

@@ -261,7 +261,7 @@ const Router = () => {
 
             {/* Unified Login Route - No Header/Footer */}
             <Route path="/login" element={<UnifiedLogin />} />
-            <Route path="/signin" element={<SignIn />} />
+            <Route path="/signin/prorecruiter" element={<SignIn />} />
             <Route path="/signup/prorecruiter" element={<ProRecruiterSignup />} />
             <Route path="/onboarding/company" element={<CompanyOnboarding />} />
             <Route path="/register-first-job" element={<FirstJobRegistration />} />

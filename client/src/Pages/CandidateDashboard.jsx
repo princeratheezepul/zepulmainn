@@ -32,9 +32,13 @@ export default function CandidateDashboard() {
   const [search, setSearch] = useState(null); // { query, jobs, webJobs }
   const [searchLoading, setSearchLoading] = useState(false);
   const [searchWebLoading, setSearchWebLoading] = useState(false);
+  const [searchError, setSearchError] = useState("");
+  const [searchWebError, setSearchWebError] = useState("");
   // Identifies the newest search so a slower, superseded one can't write its
   // results or clear the spinners belonging to the search that replaced it.
   const searchIdRef = useRef(0);
+  // Lets a superseded search actually be cancelled rather than just ignored.
+  const searchAbortRef = useRef(null);
 
   const candidate = (() => {
     try {
@@ -144,26 +148,46 @@ export default function CandidateDashboard() {
     const query = searchQuery.trim();
     if (!query || !candidate?._id) return;
 
+    // Cancel whatever the previous search still had in flight. The web half runs
+    // for 10-25s against a paid search API, so letting a search the candidate has
+    // already replaced run to completion costs real money for nothing.
+    searchAbortRef.current?.abort();
+    const controller = new AbortController();
+    searchAbortRef.current = controller;
+
     const id = ++searchIdRef.current;
     setSearch({ query, jobs: [], webJobs: [] });
+    setSearchError("");
+    setSearchWebError("");
     setSearchLoading(true);
     setSearchWebLoading(true);
 
     const isCurrent = () => searchIdRef.current === id;
 
-    const post = (path) =>
-      fetch(getApiUrl(`/api/candidate-interview/candidate/${candidate._id}/${path}`), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query }),
-      }).then((res) => res.json().catch(() => ({})));
+    const post = async (path) => {
+      const res = await fetch(
+        getApiUrl(`/api/candidate-interview/candidate/${candidate._id}/${path}`),
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ query }),
+          signal: controller.signal,
+        }
+      );
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.message || "Something went wrong. Please try again.");
+      return data;
+    };
 
     post("search")
       .then((data) => {
         if (!isCurrent()) return;
         setSearch((prev) => (prev ? { ...prev, jobs: Array.isArray(data.matches) ? data.matches : [] } : prev));
       })
-      .catch(() => {})
+      .catch((err) => {
+        if (!isCurrent() || err?.name === "AbortError") return;
+        setSearchError(err?.message || "We couldn't run that search. Please try again.");
+      })
       .finally(() => {
         if (isCurrent()) setSearchLoading(false);
       });
@@ -173,7 +197,10 @@ export default function CandidateDashboard() {
         if (!isCurrent()) return;
         setSearch((prev) => (prev ? { ...prev, webJobs: Array.isArray(data.jobs) ? data.jobs : [] } : prev));
       })
-      .catch(() => {})
+      .catch((err) => {
+        if (!isCurrent() || err?.name === "AbortError") return;
+        setSearchWebError(err?.message || "We couldn't reach the web search. Please try again.");
+      })
       .finally(() => {
         if (isCurrent()) setSearchWebLoading(false);
       });
@@ -181,11 +208,18 @@ export default function CandidateDashboard() {
 
   const clearSearch = () => {
     searchIdRef.current += 1;
+    searchAbortRef.current?.abort();
+    searchAbortRef.current = null;
     setSearch(null);
     setSearchQuery("");
+    setSearchError("");
+    setSearchWebError("");
     setSearchLoading(false);
     setSearchWebLoading(false);
   };
+
+  // Don't leave a search running against a screen the candidate has left.
+  useEffect(() => () => searchAbortRef.current?.abort(), []);
 
   const handleLogout = () => {
     localStorage.removeItem("candidateInfo");
@@ -212,6 +246,18 @@ export default function CandidateDashboard() {
           </div>
           {job.description && (
             <p className="text-sm text-gray-600 mb-3 line-clamp-2">{job.description}</p>
+          )}
+          {Array.isArray(job.matchReasons) && job.matchReasons.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 mb-3">
+              {job.matchReasons.slice(0, 3).map((reason) => (
+                <span
+                  key={reason}
+                  className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-100"
+                >
+                  {reason}
+                </span>
+              ))}
+            </div>
           )}
           <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500">
             {job.company && <span className="font-medium text-gray-700">{job.company}</span>}
@@ -258,6 +304,18 @@ export default function CandidateDashboard() {
           </div>
           {job.description && (
             <p className="text-sm text-gray-600 mb-3 line-clamp-2">{job.description}</p>
+          )}
+          {Array.isArray(job.matchReasons) && job.matchReasons.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 mb-3">
+              {job.matchReasons.slice(0, 3).map((reason) => (
+                <span
+                  key={reason}
+                  className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-100"
+                >
+                  {reason}
+                </span>
+              ))}
+            </div>
           )}
           <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500">
             {job.company && <span className="font-medium text-gray-700">{job.company}</span>}
@@ -436,10 +494,10 @@ export default function CandidateDashboard() {
                   <div className="flex gap-2">
                     <button
                       type="submit"
-                      disabled={!searchQuery.trim() || searchLoading || searchWebLoading}
+                      disabled={!searchQuery.trim() || searchLoading}
                       className="shrink-0 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium px-5 py-2.5 rounded-lg transition-colors cursor-pointer"
                     >
-                      {searchLoading || searchWebLoading ? "Searching…" : "Search"}
+                      {searchLoading ? "Searching…" : "Search"}
                     </button>
                     {search && (
                       <button
@@ -484,12 +542,19 @@ export default function CandidateDashboard() {
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600" />
                 <span className="text-sm text-gray-600">Searching Zepul roles…</span>
               </div>
+            ) : searchError ? (
+              <div className="bg-red-50 border border-red-200 rounded-xl p-5 text-center">
+                <p className="text-sm text-red-700">{searchError}</p>
+              </div>
             ) : search.jobs.length > 0 ? (
               <div className="space-y-3">{search.jobs.map(renderDbJob)}</div>
             ) : (
               <div className="bg-white border border-gray-200 rounded-xl p-5 text-center">
                 <p className="text-sm text-gray-600">
                   No roles from Zepul&rsquo;s own network matched this search.
+                </p>
+                <p className="text-xs text-gray-500 mt-1">
+                  Try a broader wording — a role on its own, without the location or seniority.
                 </p>
               </div>
             )}
@@ -506,6 +571,10 @@ export default function CandidateDashboard() {
                 <div className="bg-white border border-gray-200 rounded-xl p-8 flex items-center justify-center gap-3">
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600" />
                   <span className="text-sm text-gray-600">Searching the web…</span>
+                </div>
+              ) : searchWebError ? (
+                <div className="bg-red-50 border border-red-200 rounded-xl p-5 text-center">
+                  <p className="text-sm text-red-700">{searchWebError}</p>
                 </div>
               ) : search.webJobs.length > 0 ? (
                 <div className="space-y-3">{search.webJobs.map(renderWebJob)}</div>

@@ -6,10 +6,10 @@ import { Job } from "../models/job.model.js";
 import { startWebCallForCandidateInterview } from "../services/vapi.service.js";
 import {
   analyzeTranscript,
-  matchJobs,
-  buildQueryProfile,
-  extractQueryTerms,
+  recommendJobs,
+  searchJobs,
 } from "../services/candidateMatch.service.js";
+import { buildSearchIntent, buildProfileIntent } from "../services/searchIntent.service.js";
 import { searchWebJobs, isWebJobSearchConfigured } from "../services/webJobSearch.service.js";
 
 const VAPI_API_KEY = process.env.VAPI_API_KEY;
@@ -58,7 +58,8 @@ const shapeJob = (job, score, reasons) => ({
 // Run analysis + matching for a session and persist the result.
 const analyzeAndMatch = async (session) => {
   const profile = await analyzeTranscript(session.transcript);
-  const matches = await matchJobs(profile, { limit: 12 });
+  const resume = await loadCandidateResume(session.candidateId);
+  const matches = await recommendJobs(profile, { limit: 12, resume });
 
   session.analysis = profile;
   session.matchedJobs = matches.map((m) => ({
@@ -264,6 +265,9 @@ export const getLatestForCandidate = async (req, res) => {
   }
 };
 
+// Longest search text accepted from a candidate, anywhere it is read.
+const MAX_QUERY_LEN = 200;
+
 // ─── GET /api/candidate-interview/candidate/:candidateId/web-jobs ───────────
 // Live postings scraped from the internet via OpenAI web search, matched to the
 // candidate's interview profile. Served separately from the DB matches so a slow
@@ -286,20 +290,33 @@ export const getWebJobsForCandidate = async (req, res) => {
       return res.status(200).json({ jobs: [], cached: false, configured: isWebJobSearchConfigured() });
     }
 
+    // An optional ?q= narrows the same endpoint to one request. The cached items
+    // belong to the plain profile search, so a narrowed call neither reads nor
+    // overwrites them.
+    const narrowing = String(req.query?.q || "").trim().slice(0, MAX_QUERY_LEN);
+
     const cached = session.webJobs?.items || [];
     const fetchedAt = session.webJobs?.fetchedAt ? new Date(session.webJobs.fetchedAt).getTime() : 0;
     const isFresh = cached.length > 0 && Date.now() - fetchedAt < WEB_JOBS_TTL_MS;
     const forceRefresh = String(req.query?.refresh || "") === "true";
 
-    if (isFresh && !forceRefresh) {
+    if (isFresh && !forceRefresh && !narrowing) {
       return res.status(200).json({ jobs: cached, cached: true, fetchedAt: session.webJobs.fetchedAt });
     }
 
-    const jobs = await searchWebJobs(session.analysis, {
+    const resume = await loadCandidateResume(candidateId);
+    const intent = narrowing
+      ? await buildSearchIntent({ query: narrowing, profile: session.analysis, resume })
+      : buildProfileIntent(session.analysis, resume);
+
+    const jobs = await searchWebJobs(intent, {
       jobsLimit: Number(req.query?.jobs) || 5,
       internshipsLimit: Number(req.query?.internships) || 5,
-      query: String(req.query?.q || ""),
     });
+
+    if (narrowing) {
+      return res.status(200).json({ jobs, cached: false, configured: isWebJobSearchConfigured() });
+    }
 
     if (jobs.length) {
       session.webJobs = { items: jobs, fetchedAt: new Date() };
@@ -325,8 +342,6 @@ export const getWebJobsForCandidate = async (req, res) => {
 // on demand. The typed query drives the match; their interview profile supplies
 // soft context so results stay personal.
 
-const MAX_QUERY_LEN = 200;
-
 // Load the candidate's stored profile, if they have completed an interview.
 const loadCandidateProfile = async (candidateId) => {
   const session = await CandidateInterviewSession.findOne({
@@ -334,6 +349,29 @@ const loadCandidateProfile = async (candidateId) => {
     status: "analyzed",
   }).sort({ updatedAt: -1 });
   return session?.analysis || null;
+};
+
+// The parsed resume, when the candidate has uploaded one. Its skills and job
+// title round out what the interview picked up — the two sources rarely cover
+// exactly the same ground, and together they make the match noticeably sharper.
+const loadCandidateResume = async (candidateId) => {
+  if (!candidateId || !mongoose.Types.ObjectId.isValid(candidateId)) return null;
+  try {
+    const candidate = await Candidate.findById(candidateId).select("resume").lean();
+    return candidate?.resume?.parsed || null;
+  } catch (err) {
+    console.error("loadCandidateResume error:", err.message);
+    return null;
+  }
+};
+
+// Everything the matcher needs about one candidate, fetched in parallel.
+const loadMatchContext = async (candidateId) => {
+  const [profile, resume] = await Promise.all([
+    loadCandidateProfile(candidateId),
+    loadCandidateResume(candidateId),
+  ]);
+  return { profile, resume };
 };
 
 const readQuery = (req) => String(req.body?.query ?? req.query?.q ?? "").trim().slice(0, MAX_QUERY_LEN);
@@ -350,16 +388,12 @@ export const searchJobsForCandidate = async (req, res) => {
     const query = readQuery(req);
     if (!query) return res.status(400).json({ message: "Please enter what you're looking for" });
 
-    const profile = await loadCandidateProfile(candidateId);
-    const searchProfile = buildQueryProfile(query, profile);
+    const { profile, resume } = await loadMatchContext(candidateId);
+    const intent = await buildSearchIntent({ query, profile, resume });
 
     // No recent-jobs fallback: an empty result is the honest answer to a query
     // that matches nothing, and beats padding the list with unrelated roles.
-    const matches = await matchJobs(searchProfile, {
-      limit: 12,
-      fallbackToRecent: false,
-      requireAnyTerm: extractQueryTerms(query),
-    });
+    const matches = await searchJobs(intent, { limit: 12 });
 
     return res.status(200).json({
       query,
@@ -415,16 +449,20 @@ export const searchWebJobsForCandidateQuery = async (req, res) => {
     const cached = readWebSearchCache(cacheKey);
     if (cached) return res.status(200).json({ query, jobs: cached, cached: true });
 
-    const profile = await loadCandidateProfile(candidateId);
-    const searchProfile = buildQueryProfile(query, profile);
+    const { profile, resume } = await loadMatchContext(candidateId);
+    const intent = await buildSearchIntent({ query, profile, resume });
 
-    // Respect what they typed: an internship-flavoured query returns internships,
-    // anything else stays jobs-dominant with a couple of internships alongside.
-    const wantsInternships = INTERNSHIP_QUERY_RE.test(query);
-    const jobs = await searchWebJobs(searchProfile, {
-      jobsLimit: wantsInternships ? 0 : 8,
-      internshipsLimit: wantsInternships ? 10 : 2,
-      query,
+    // Respect what they typed. An internship search returns internships and
+    // nothing else; any other search returns only real openings. Mixing a couple
+    // of internships into every search was both off-target and expensive — it
+    // cost a second web-search pass to deliver two results nobody asked for.
+    const wantsInternships =
+      INTERNSHIP_QUERY_RE.test(intent.constraints.employmentType || "") ||
+      INTERNSHIP_QUERY_RE.test(query);
+
+    const jobs = await searchWebJobs(intent, {
+      jobsLimit: wantsInternships ? 0 : 10,
+      internshipsLimit: wantsInternships ? 10 : 0,
     });
 
     if (jobs.length) writeWebSearchCache(cacheKey, jobs);

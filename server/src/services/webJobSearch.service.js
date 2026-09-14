@@ -1,5 +1,7 @@
 import crypto from "crypto";
 import OpenAI from "openai";
+import { indexDocument, FLAT_IDF } from "./jobText.util.js";
+import { scoreDocument } from "./jobRank.service.js";
 
 const openai = process.env.OPENAI_API ? new OpenAI({ apiKey: process.env.OPENAI_API }) : null;
 
@@ -120,28 +122,59 @@ const extractJson = (text) => {
 };
 
 // Build the natural-language search brief the web-search tool works from.
-const buildSearchBrief = (profile = {}, extraQuery = "") => {
-  const roles = toArray(profile.desiredRoles).map(str).filter(Boolean);
-  const skills = toArray(profile.skills).map(str).filter(Boolean).slice(0, 12);
-  const locations = toArray(profile.locations).map(str).filter(Boolean);
-  const industries = toArray(profile.industries).map(str).filter(Boolean).slice(0, 5);
-
+//
+// The brief separates what the candidate just asked for from what we know about
+// them. Everything used to be flattened into one list of preferences, so a search
+// for "product design internship in Berlin" competed with five interview-derived
+// preferences and the model routinely returned senior roles in other cities.
+const buildSearchBrief = (intent = {}) => {
+  const c = intent.constraints || {};
+  const soft = intent.soft || {};
   const lines = [];
+
+  const roles = toArray(intent.roles).map(str).filter(Boolean);
+  const skills = toArray(intent.skills).map(str).filter(Boolean).slice(0, 12);
+
+  if (intent.query) lines.push(`The candidate searched for: "${str(intent.query)}"`);
   if (roles.length) lines.push(`Target roles: ${roles.join(", ")}`);
   if (skills.length) lines.push(`Skills: ${skills.join(", ")}`);
-  if (typeof profile.experienceYears === "number") {
-    lines.push(`Experience: ~${profile.experienceYears} years`);
-  }
-  if (profile.seniority) lines.push(`Seniority: ${profile.seniority}`);
-  if (locations.length) lines.push(`Preferred locations: ${locations.join(", ")}`);
-  if (profile.workType) lines.push(`Work type: ${profile.workType}`);
-  if (profile.employmentType) lines.push(`Employment type: ${profile.employmentType}`);
-  if (industries.length) lines.push(`Industries: ${industries.join(", ")}`);
-  if (profile.summary) lines.push(`What they want: ${str(profile.summary)}`);
-  if (extraQuery) lines.push(`Additional request from the candidate: ${str(extraQuery)}`);
 
-  if (!lines.length && toArray(profile.keywords).length) {
-    lines.push(`Keywords: ${toArray(profile.keywords).slice(0, 20).join(", ")}`);
+  // Stated in the search box, so these are requirements rather than preferences.
+  const required = [];
+  if (toArray(c.locations).length) {
+    required.push(`location must be ${toArray(c.locations).map(str).join(" or ")}`);
+  }
+  if (c.workType) required.push(`${c.workType} work`);
+  if (c.employmentType) required.push(`${c.employmentType} positions`);
+  if (c.seniority) required.push(`${c.seniority}-level`);
+  if (typeof c.minExperience === "number") {
+    required.push(
+      typeof c.maxExperience === "number"
+        ? `${c.minExperience}-${c.maxExperience} years of experience`
+        : `${c.minExperience}+ years of experience`
+    );
+  }
+  if (required.length) {
+    lines.push(`HARD REQUIREMENTS — discard any posting that does not satisfy these: ${required.join("; ")}.`);
+  }
+
+  // Known from the AI interview and the resume. Used to choose between postings
+  // that already satisfy the requirements, never to override them.
+  const background = [];
+  const softSkills = toArray(soft.skills).map(str).filter(Boolean).slice(0, 10);
+  if (softSkills.length) background.push(`skills: ${softSkills.join(", ")}`);
+  if (typeof soft.experienceYears === "number") background.push(`~${soft.experienceYears} years of experience`);
+  if (soft.seniority) background.push(`${soft.seniority} level`);
+  if (toArray(soft.locations).length && !toArray(c.locations).length) {
+    background.push(`usually based in ${toArray(soft.locations).map(str).join(", ")}`);
+  }
+  if (soft.workType && !c.workType) background.push(`prefers ${soft.workType} work`);
+  if (background.length) {
+    lines.push(`Candidate background (tie-breakers only): ${background.join("; ")}.`);
+  }
+
+  if (!lines.length && toArray(soft.keywords).length) {
+    lines.push(`Keywords: ${toArray(soft.keywords).slice(0, 20).join(", ")}`);
   }
 
   return lines.join("\n");
@@ -295,22 +328,74 @@ const dedupe = (jobs) => {
 };
 
 /**
+ * Re-score what the web search returned against the same intent the database
+ * search used.
+ *
+ * The model reports its own matchScore, but those numbers are not comparable
+ * across two independent searches and they reflect the model's reading of the
+ * brief rather than the candidate's constraints. Re-scoring locally lets a
+ * posting that contradicts the search — the wrong city, a senior role for an
+ * internship query — be dropped instead of being ranked on its own say-so.
+ */
+const rerankWebJobs = (jobs, intent) => {
+  const hasIntent =
+    toArray(intent?.roles).length ||
+    toArray(intent?.skills).length ||
+    toArray(intent?.keywords).length;
+  if (!hasIntent) return jobs.sort(byScore);
+
+  const rescored = [];
+  for (const job of jobs) {
+    const idx = indexDocument({
+      job,
+      title: job.jobtitle,
+      skills: [],
+      body: [job.description, job.company].filter(Boolean).join(" "),
+      location: job.location,
+      type: job.type,
+      employmentType: job.employmentType,
+      experience: null,
+      createdAt: null,
+    });
+
+    // Web postings carry a one-line summary rather than a full description, so
+    // they are scored with a flat term weighting and judged on a looser gate
+    // than database rows — there is simply less text to match against.
+    const { score, queryCoverage, penalty, reasons } = scoreDocument(idx, intent, FLAT_IDF);
+
+    if (penalty >= 20) continue; // Contradicts something the candidate asked for.
+    // A posting whose title has nothing to do with the search, matching only in
+    // the body ("hire React developers for our clients" on a recruiter listing),
+    // tops out just under this. Anything with a real title hit clears it easily.
+    if (queryCoverage < 0.35) continue;
+
+    const modelScore = Number(job.matchScore) || 0;
+    const blended = modelScore > 0 ? Math.round(score * 0.6 + modelScore * 0.4) : score;
+
+    rescored.push({
+      ...job,
+      matchScore: Math.max(0, Math.min(100, blended)),
+      matchReasons: [...new Set([...reasons, ...toArray(job.matchReasons)])].slice(0, 4),
+    });
+  }
+
+  return rescored.sort(byScore);
+};
+
+/**
  * Search the live web for postings that fit the candidate's profile, returning a
  * guaranteed mix of regular jobs and internships. Uses the OpenAI Responses API
  * with the built-in web search tool.
  *
  * Never throws — returns [] on any failure so the DB results still render.
  */
-export const searchWebJobs = async (
-  profile,
-  { jobsLimit = 5, internshipsLimit = 5, query = "" } = {}
-) => {
+export const searchWebJobs = async (intent, { jobsLimit = 5, internshipsLimit = 5 } = {}) => {
   if (!openai) {
     console.warn("searchWebJobs: OPENAI_API is not set — skipping web job search");
     return [];
   }
 
-  const brief = buildSearchBrief(profile, query);
+  const brief = buildSearchBrief(intent);
   if (!brief.trim()) return [];
 
   const jobsTarget = Math.max(0, Math.min(10, jobsLimit));
@@ -341,10 +426,13 @@ export const searchWebJobs = async (
     );
   }
 
-  let pool = dedupe([
-    ...(jobsResult.status === "fulfilled" ? jobsResult.value : []),
-    ...(internshipsResult.status === "fulfilled" ? internshipsResult.value : []),
-  ]);
+  let pool = rerankWebJobs(
+    dedupe([
+      ...(jobsResult.status === "fulfilled" ? jobsResult.value : []),
+      ...(internshipsResult.status === "fulfilled" ? internshipsResult.value : []),
+    ]),
+    intent
+  );
 
   // Classify off the detected flag rather than which search produced it — either
   // pass can leak the other category despite the prompt.
@@ -358,11 +446,15 @@ export const searchWebJobs = async (
   // A single pass often under-delivers on internships. Run one broadened top-up
   // for whichever category came up short — capped at one extra round so cost and
   // latency stay bounded.
+  // Only worth a second round-trip when a category came back badly short; a pass
+  // that nearly filled its quota does not justify the extra 10-25s and the cost.
+  const isShort = (got, target) => target > 0 && got < Math.max(1, Math.ceil(target * 0.6));
+
   const shortfalls = [];
-  if (jobs.length < jobsTarget) {
+  if (isShort(jobs.length, jobsTarget)) {
     shortfalls.push({ internshipsOnly: false, need: jobsTarget - jobs.length });
   }
-  if (internships.length < internshipsTarget) {
+  if (isShort(internships.length, internshipsTarget)) {
     shortfalls.push({ internshipsOnly: true, need: internshipsTarget - internships.length });
   }
 
@@ -386,7 +478,7 @@ export const searchWebJobs = async (
       .forEach((r) => console.error("searchWebJobs top-up error:", r.reason?.message || r.reason));
 
     if (extra.length) {
-      pool = dedupe([...pool, ...extra]);
+      pool = rerankWebJobs(dedupe([...pool, ...extra]), intent);
       ({ jobs, internships } = pick(pool));
     }
   }

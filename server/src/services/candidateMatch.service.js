@@ -1,23 +1,26 @@
+/**
+ * Matching candidates to the jobs in Zepul's own database.
+ *
+ * Two entry points: recommendations built from the AI interview profile, and
+ * on-demand search driven by what the candidate typed. Both rank through the
+ * same scorer (jobRank.service.js) so a posting is judged identically in either
+ * list; they differ only in how strict the relevance gate is.
+ */
+
 import OpenAI from "openai";
 import { Job } from "../models/job.model.js";
+import { indexDocument, buildIdf, tokenize, FLAT_IDF } from "./jobText.util.js";
+import { rankDocuments } from "./jobRank.service.js";
+import { buildProfileIntent, intentQueryTerms } from "./searchIntent.service.js";
 
 const openai = process.env.OPENAI_API ? new OpenAI({ apiKey: process.env.OPENAI_API }) : null;
 const MODEL = "gpt-4o-mini";
 
-// Common stop words to ignore when building a keyword profile from raw text
-const STOP_WORDS = new Set([
-  "the", "and", "for", "with", "that", "this", "you", "your", "are", "was", "were",
-  "have", "has", "had", "but", "not", "from", "they", "them", "their", "would",
-  "want", "looking", "role", "job", "work", "like", "really", "just", "about",
-  "into", "what", "when", "where", "which", "who", "will", "can", "could", "should",
-  "more", "some", "any", "yeah", "okay", "know", "think", "kind", "going", "good",
-  "great", "well", "right", "lot", "also", "able", "i'm", "i've", "it's", "zeus",
-  "zepul", "interview", "candidate", "assistant", "hello", "thanks", "thank",
-]);
-
 const toArray = (v) => (Array.isArray(v) ? v.filter(Boolean) : v ? [v] : []);
 const lc = (s) => String(s || "").toLowerCase();
 const uniq = (arr) => [...new Set(arr)];
+
+// ─── Interview transcript → career profile ──────────────────────────────────
 
 /**
  * Extract a structured career profile from the interview transcript.
@@ -93,12 +96,7 @@ Output only raw JSON, no markdown.`,
   }
 
   // Fallback: derive keywords directly from the candidate's words
-  const keywords = uniq(
-    lc(text)
-      .replace(/[^a-z0-9+#.\s]/g, " ")
-      .split(/\s+/)
-      .filter((w) => w.length >= 3 && !STOP_WORDS.has(w))
-  ).slice(0, 40);
+  const keywords = uniq(tokenize(text)).slice(0, 40);
 
   return {
     desiredRoles: [],
@@ -115,179 +113,124 @@ Output only raw JSON, no markdown.`,
   };
 };
 
-/**
- * Score a single job against the extracted profile. Returns { score, reasons }.
- * Score is normalized to 0-100.
- */
-const scoreJob = (job, profile) => {
-  const reasons = [];
-  let score = 0;
+// ─── Job corpus ─────────────────────────────────────────────────────────────
+//
+// Every open posting is tokenised once and held in memory for a minute, rather
+// than re-read and re-parsed on each search. That is what lets the search score
+// the whole board instead of the 300 most recent rows, at a fraction of the work
+// the old per-request scan cost — and the document frequencies the scorer needs
+// can only be computed over the corpus as a whole.
 
-  const jobTitle = lc(job.jobtitle);
-  const jobSkills = toArray(job.skills).map(lc);
-  const jobText = [
-    jobTitle,
-    lc(job.description),
-    toArray(job.keyResponsibilities).map(lc).join(" "),
-    toArray(job.preferredQualifications).map(lc).join(" "),
-  ].join(" ");
+// One minute, so a newly posted job surfaces promptly without every search
+// paying to re-read and re-tokenise the board.
+const CORPUS_TTL_MS = 60 * 1000;
+const CORPUS_MAX = 5000;
 
-  const desiredRoles = toArray(profile.desiredRoles).map(lc);
-  const profileSkills = toArray(profile.skills).map(lc);
-  const keywords = toArray(profile.keywords).map(lc);
+const JOB_FIELDS =
+  "jobtitle company location type employmentType experience skills description " +
+  "keyResponsibilities preferredQualifications createdAt";
 
-  // 1) Role title match (strongest signal) — up to 45
-  let titleHit = false;
-  for (const role of desiredRoles) {
-    if (!role) continue;
-    if (jobTitle.includes(role) || role.includes(jobTitle)) {
-      score += 45;
-      reasons.push(`Title matches your target role "${job.jobtitle}"`);
-      titleHit = true;
-      break;
-    }
-    // partial: share a significant word
-    const roleWords = role.split(/\s+/).filter((w) => w.length >= 4);
-    if (roleWords.some((w) => jobTitle.includes(w))) {
-      score += 25;
-      reasons.push(`Title is related to "${job.jobtitle}"`);
-      titleHit = true;
-      break;
-    }
-  }
+let corpus = { at: 0, indexes: [], idf: FLAT_IDF };
+let refreshing = null;
 
-  // 2) Skills overlap — up to 35
-  if (profileSkills.length && jobSkills.length) {
-    const overlap = profileSkills.filter((s) =>
-      jobSkills.some((js) => js.includes(s) || s.includes(js))
-    );
-    if (overlap.length) {
-      const pts = Math.min(35, overlap.length * 12);
-      score += pts;
-      reasons.push(`Skills match: ${uniq(overlap).slice(0, 5).join(", ")}`);
-    }
-  }
+const toJobDoc = (job) => ({
+  job,
+  title: job.jobtitle || "",
+  company: job.company || "",
+  location: job.location || "",
+  type: job.type || "",
+  employmentType: job.employmentType || "",
+  experience: typeof job.experience === "number" ? job.experience : null,
+  createdAt: job.createdAt || null,
+  skills: toArray(job.skills),
+  body: [
+    job.description || "",
+    toArray(job.keyResponsibilities).join(" "),
+    toArray(job.preferredQualifications).join(" "),
+  ].join(" "),
+});
 
-  // 3) Skills/keywords found in the job description — up to 20
-  const descTerms = uniq([...profileSkills, ...keywords]).filter(Boolean);
-  if (descTerms.length) {
-    const descHits = descTerms.filter((t) => t.length >= 3 && jobText.includes(t));
-    if (descHits.length) {
-      const pts = Math.min(20, descHits.length * 4);
-      score += pts;
-      if (!titleHit || score < 50) {
-        reasons.push(`Relevant to: ${uniq(descHits).slice(0, 4).join(", ")}`);
-      }
-    }
-  }
-
-  // 4) Experience proximity — up to 10
-  if (typeof profile.experienceYears === "number" && typeof job.experience === "number") {
-    const diff = Math.abs(profile.experienceYears - job.experience);
-    if (diff <= 1) {
-      score += 10;
-      reasons.push(`Experience level fits (~${job.experience} yrs)`);
-    } else if (diff <= 3) {
-      score += 5;
-    }
-  }
-
-  // 5) Work type / location preference — up to 10
-  if (profile.workType && lc(job.type) === lc(profile.workType)) {
-    score += 6;
-    reasons.push(`${job.type} work as you preferred`);
-  }
-  if (toArray(profile.locations).some((loc) => loc && lc(job.location).includes(lc(loc)))) {
-    score += 4;
-    reasons.push(`Located in your preferred area`);
-  }
-
-  return { score: Math.min(100, Math.round(score)), reasons: uniq(reasons).slice(0, 4) };
-};
-
-/**
- * Match the profile against all open jobs in the database.
- * Returns an array of { job, score, reasons } sorted by score desc.
- */
-export const matchJobs = async (
-  profile,
-  { limit = 12, fallbackToRecent = true, requireAnyTerm = [] } = {}
-) => {
+const refreshCorpus = async () => {
   const jobs = await Job.find({ isClosed: { $ne: true }, isActive: { $ne: false } })
+    .select(JOB_FIELDS)
     .sort({ createdAt: -1 })
-    .limit(300)
+    .limit(CORPUS_MAX)
     .lean();
 
-  // For a free-text search the typed words must actually appear somewhere in the
-  // job. Without this the candidate's stored interview keywords alone score every
-  // job around 20%, so even a nonsense query came back with a full page of hits.
-  const terms = toArray(requireAnyTerm).map(lc).filter((t) => t.length >= 3);
-  const matchesQuery = (job) => {
-    if (!terms.length) return true;
-    const text = [
-      lc(job.jobtitle),
-      lc(job.description),
-      toArray(job.skills).map(lc).join(" "),
-      toArray(job.keyResponsibilities).map(lc).join(" "),
-      toArray(job.preferredQualifications).map(lc).join(" "),
-      lc(job.location),
-      lc(job.company),
-    ].join(" ");
-    return terms.some((t) => text.includes(t));
-  };
+  const indexes = jobs.map((job) => indexDocument(toJobDoc(job)));
+  corpus = { at: Date.now(), indexes, idf: buildIdf(indexes) };
+  return corpus;
+};
 
-  const scored = jobs
-    .filter(matchesQuery)
-    .map((job) => {
-      const { score, reasons } = scoreJob(job, profile);
-      return { job, score, reasons };
+const loadCorpus = async () => {
+  if (corpus.indexes.length && Date.now() - corpus.at < CORPUS_TTL_MS) return corpus;
+  if (refreshing) return refreshing;
+
+  refreshing = refreshCorpus()
+    .catch((err) => {
+      console.error("loadCorpus error:", err.message);
+      // Serve the previous snapshot rather than failing the search outright.
+      return corpus;
     })
-    .filter((m) => m.score > 0)
-    .sort((a, b) => b.score - a.score);
+    .finally(() => {
+      refreshing = null;
+    });
 
-  // If nothing scored (e.g. empty profile), fall back to most recent jobs. A
-  // free-text search opts out — showing unrelated roles for a specific query
-  // reads as broken, where an empty result reads as an honest "nothing found".
-  const results =
-    scored.length || !fallbackToRecent
-      ? scored
-      : jobs.slice(0, limit).map((job) => ({ job, score: 0, reasons: [] }));
+  return refreshing;
+};
 
-  return results.slice(0, limit);
+// ─── Ranking entry points ───────────────────────────────────────────────────
+
+const shape = (results) =>
+  results.map((r) => ({ job: r.doc.job, score: r.score, reasons: r.reasons }));
+
+// A result has to account for this much of the query's weighted meaning to be
+// shown. Below it, the posting shares only incidental words with the search.
+const SEARCH_MIN_COVERAGE = 0.4;
+const SEARCH_MIN_SCORE = 20;
+// Recommendations are presented as "matched to you from your AI interview", so
+// the bar is higher than for a search the candidate can see the wording of — a
+// weak match here reads as the product being wrong about them.
+const RECOMMEND_MIN_SCORE = 25;
+
+/**
+ * On-demand search. The gate is deliberately strict: an empty result is the
+ * honest answer to a query nothing matches, and it beats a full page of roles
+ * that merely share the word "developer" with what was typed.
+ */
+export const searchJobs = async (intent, { limit = 12 } = {}) => {
+  const { indexes, idf } = await loadCorpus();
+  if (!indexes.length) return [];
+
+  const terms = intentQueryTerms(intent);
+  const results = rankDocuments(indexes, intent, idf, {
+    limit,
+    minScore: SEARCH_MIN_SCORE,
+    minCoverage: terms.length ? SEARCH_MIN_COVERAGE : 0,
+  });
+
+  return shape(results);
 };
 
 /**
- * Build a matching profile for a free-text job search. The typed query drives the
- * target role and keywords; the candidate's interview profile, when they have one,
- * supplies soft context (skills, experience, location) so results stay personal.
+ * Recommendations from the interview profile. Everything the interview said is a
+ * preference rather than a requirement, so there is no coverage gate — but a
+ * posting still has to clear a floor before it is presented as "matched to you".
  */
-export const extractQueryTerms = (query) =>
-  uniq(
-    lc(query)
-      .replace(/[^a-z0-9+#.\s]/g, " ")
-      .split(/\s+/)
-      .filter((w) => w.length >= 3 && !STOP_WORDS.has(w))
-  );
+export const recommendJobs = async (profile, { limit = 12, resume = null } = {}) => {
+  const { indexes, idf } = await loadCorpus();
+  if (!indexes.length) return [];
 
-export const buildQueryProfile = (query, baseProfile = null) => {
-  const q = String(query || "").trim();
-  const base = baseProfile || {};
-  const words = extractQueryTerms(q);
+  const intent = buildProfileIntent(profile, resume);
+  const results = rankDocuments(indexes, intent, idf, {
+    limit,
+    minScore: RECOMMEND_MIN_SCORE,
+    minCoverage: 0,
+  });
 
-  return {
-    // The whole typed phrase acts as the target title — scoreJob matches it
-    // against job titles in both directions, so "senior react dev" still hits
-    // a "React Developer" posting.
-    desiredRoles: q ? [q] : toArray(base.desiredRoles),
-    skills: toArray(base.skills),
-    experienceYears: typeof base.experienceYears === "number" ? base.experienceYears : null,
-    seniority: String(base.seniority || ""),
-    locations: toArray(base.locations),
-    workType: String(base.workType || ""),
-    employmentType: String(base.employmentType || ""),
-    industries: toArray(base.industries),
-    summary: q,
-    keywords: uniq([...words, ...toArray(base.keywords).map(lc)]),
-    source: "query",
-  };
+  if (results.length) return shape(results);
+
+  // Nothing cleared the floor (an empty or unusable profile). Show the newest
+  // openings so the dashboard is not blank, with no score claimed for them.
+  return indexes.slice(0, limit).map((idx) => ({ job: idx.doc.job, score: 0, reasons: [] }));
 };
