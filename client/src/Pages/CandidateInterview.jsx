@@ -309,7 +309,7 @@ const CandidateInterview = () => {
           <img src="/assets/logo.png" alt="Zepul" style={{ height: 32 }} />
           <div>
             <div style={S.headerTitle}>AI Career Interview</div>
-            <div style={S.headerSub}>Tell Zeus about your dream role — up to 30 minutes</div>
+            <div style={S.headerSub}>Tell Thea about your dream role — up to 30 minutes</div>
           </div>
         </div>
         {isConnected && (
@@ -322,7 +322,7 @@ const CandidateInterview = () => {
       <main style={S.main}>
         <div style={S.panel}>
           <div style={S.panelHeader}>
-            <span>🤖 Zeus — AI Interviewer</span>
+            <span>🤖 Thea — AI Interviewer</span>
             {isConnected && (
               <span
                 style={{
@@ -352,7 +352,7 @@ const CandidateInterview = () => {
             </div>
             <p style={S.avatarLabel}>
               {isSpeaking
-                ? "Zeus is speaking…"
+                ? "Thea is speaking…"
                 : isConnected
                 ? "Listening — speak naturally"
                 : "Ready to discover your ideal role"}
@@ -365,7 +365,7 @@ const CandidateInterview = () => {
                 <p style={S.infoTitle}>How it works</p>
                 <ul style={S.infoList}>
                   <li>Click <strong>Start Interview</strong> and allow microphone access</li>
-                  <li>Zeus will ask about the role you want, your skills & preferences</li>
+                  <li>Thea will ask about the role you want, your skills & preferences</li>
                   <li>Speak naturally and go in depth — it can take up to 30 minutes; after 30 minutes all further iterations will be manual</li>
                   <li>When you're done, we'll analyze it and show jobs that fit you</li>
                 </ul>

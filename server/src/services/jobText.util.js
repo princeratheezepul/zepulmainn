@@ -120,7 +120,7 @@ export const STOP_WORDS = new Set([
   "work", "like", "really", "just", "about", "into", "what", "when", "where",
   "which", "who", "will", "can", "could", "should", "more", "some", "any",
   "yeah", "okay", "know", "think", "kind", "going", "good", "great", "well",
-  "right", "lot", "also", "able", "i'm", "i've", "it's", "zeus", "zepul",
+  "right", "lot", "also", "able", "i'm", "i've", "it's", "thea", "zeus", "zepul",
   "interview", "candidate", "assistant", "hello", "thanks", "thank", "need",
   "find", "show", "give", "please", "position", "positions", "opening",
   "openings", "opportunity", "opportunities", "hiring", "apply", "near", "around",

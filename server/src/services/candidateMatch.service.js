@@ -53,7 +53,7 @@ export const analyzeTranscript = async (transcript) => {
           {
             role: "system",
             content:
-              "You analyze a career-discovery interview transcript between an AI interviewer (Zeus) and a job seeker. Extract the candidate's job preferences. Output ONLY a valid JSON object.",
+              "You analyze a career-discovery interview transcript between an AI interviewer (Thea) and a job seeker. Extract the candidate's job preferences. Output ONLY a valid JSON object.",
           },
           {
             role: "user",

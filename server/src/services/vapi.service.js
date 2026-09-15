@@ -11,6 +11,12 @@ const VAPI_MODEL_PROVIDER = process.env.VAPI_MODEL_PROVIDER || "openai";
 const VAPI_MODEL_NAME = process.env.VAPI_MODEL_NAME || "gpt-4o-mini";
 const VAPI_VOICE_PROVIDER = process.env.VAPI_VOICE_PROVIDER || "11labs";
 const VAPI_VOICE_ID = process.env.VAPI_VOICE_ID || "pNInz6obpgDQGcFmaJgB";
+// Thea, the candidate career interviewer, has her own female voice. Kept separate
+// from VAPI_VOICE_ID so the shared interviewer voice can change without affecting her.
+const VAPI_CANDIDATE_VOICE_PROVIDER =
+  process.env.VAPI_CANDIDATE_VOICE_PROVIDER || VAPI_VOICE_PROVIDER;
+const VAPI_CANDIDATE_VOICE_ID =
+  process.env.VAPI_CANDIDATE_VOICE_ID || "21m00Tcm4TlvDq8ikWAM";
 const VAPI_ASSISTANT_NAME = process.env.VAPI_ASSISTANT_NAME || "AI Interviewer";
 
 let cachedPromptTemplate = null;
@@ -269,7 +275,7 @@ export const deleteAssistant = async (assistantId) => {
  * This AI interviews a recruiter to gather a full job description.
  */
 export const buildJobDescriptionAssistantBody = async () => {
-  const instructions = `You are a professional job description assistant. Your job is to conduct a structured, friendly voice conversation with a recruiter or hiring manager to help them fully describe a job opening.
+  const instructions = `You are "Zeus", a professional job description assistant for Zepul. Your job is to conduct a structured, friendly voice conversation with a recruiter or hiring manager to help them fully describe a job opening.
 
 You will ask them about every important aspect of the job in a natural, conversational way. Do not rush — ask one topic at a time and ask follow-up questions if an answer is vague or incomplete.
 
@@ -297,10 +303,11 @@ Rules:
 - If the recruiter says they are done or happy with the description, call the 'end_description' function to end the session.
 - Do NOT ask all questions at once. Guide the conversation naturally.
 - Keep your messages concise and clear. The recruiter is speaking, not typing.
+- If asked who you are, you are Zeus, Zepul's job description assistant.
 
 Start by welcoming the recruiter and asking them to begin describing the role.`;
 
-  const firstMessage = `Hi there! I'm your AI job description assistant from Zepul.
+  const firstMessage = `Hi there! I'm Zeus, your AI job description assistant from Zepul.
 
 I'll guide you through describing your job opening step by step. We'll cover everything — from the role's day-to-day responsibilities to the team culture and compensation.
 
@@ -347,7 +354,7 @@ Whenever you're ready, go ahead and tell me — what role are you hiring for?`;
   console.log("🔗 Job Description Vapi webhook URL:", webhookUrl);
 
   return {
-    name: "Job Description Assistant",
+    name: "Zeus — Job Description Assistant",
     firstMessage,
     model: {
       provider: VAPI_MODEL_PROVIDER,
@@ -459,7 +466,7 @@ export const buildCandidateInterviewAssistantBody = async (context = {}) => {
     .filter(Boolean)
     .join("\n");
 
-  const instructions = `You are "Zeus", a warm, professional career counselor and interviewer for Zepul.
+  const instructions = `You are "Thea", a warm, professional career counselor and interviewer for Zepul.
 
 Your goal is to conduct an in-depth career discovery interview with a job seeker to deeply understand the kind of role they are looking for, so Zepul can match them with the most suitable open jobs afterwards.
 
@@ -488,7 +495,7 @@ Rules:
 
 Start by warmly welcoming the candidate and asking what kind of role they are looking for.`;
 
-  const firstMessage = `Hi! I'm Zeus, your AI career guide from Zepul.
+  const firstMessage = `Hi! I'm Thea, your AI career guide from Zepul.
 
 I'm going to ask you some questions to really understand the kind of role you're looking for, so we can match you with the best opportunities. This is a relaxed conversation and can take up to ${durationMinutes} minutes — there's no rush.
 
@@ -534,7 +541,7 @@ So, to start — what kind of role are you looking for right now?`;
     : instructions;
 
   return {
-    name: "Candidate Career Interviewer",
+    name: "Thea — Candidate Career Interviewer",
     firstMessage,
     model: {
       provider: VAPI_MODEL_PROVIDER,
@@ -543,8 +550,8 @@ So, to start — what kind of role are you looking for right now?`;
       tools: [endInterviewFunction],
     },
     voice: {
-      provider: VAPI_VOICE_PROVIDER,
-      voiceId: VAPI_VOICE_ID,
+      provider: VAPI_CANDIDATE_VOICE_PROVIDER,
+      voiceId: VAPI_CANDIDATE_VOICE_ID,
     },
     serverUrl: webhookUrl,
     serverMessages: [

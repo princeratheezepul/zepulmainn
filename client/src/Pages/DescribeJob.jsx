@@ -226,7 +226,7 @@ const DescribeJob = ({ onBack, onDone }) => {
                     )}
                     <img src="/assets/logo.png" alt="Zepul" style={styles.logo} />
                     <div>
-                        <div style={styles.headerTitle}>AI Job Description Assistant</div>
+                        <div style={styles.headerTitle}>Zeus — AI Job Description Assistant</div>
                         <div style={styles.headerSub}>Describe your role — we'll handle the rest</div>
                     </div>
                 </div>
@@ -257,7 +257,7 @@ const DescribeJob = ({ onBack, onDone }) => {
                 {/* AI Panel */}
                 <div style={styles.panel}>
                     <div style={styles.panelHeader}>
-                        <span>🤖 AI Assistant</span>
+                        <span>🤖 Zeus — AI Assistant</span>
                         {isConnected && (
                             <span
                                 style={{
@@ -288,7 +288,7 @@ const DescribeJob = ({ onBack, onDone }) => {
                         </div>
                         <p style={styles.avatarLabel}>
                             {isSpeaking
-                                ? "AI is speaking..."
+                                ? "Zeus is speaking..."
                                 : isConnected
                                     ? "Listening to you — speak naturally"
                                     : "Ready to help you describe your job"}
@@ -302,7 +302,7 @@ const DescribeJob = ({ onBack, onDone }) => {
                                 <p style={styles.infoTitle}>How it works</p>
                                 <ul style={styles.infoList}>
                                     <li>Click <strong>Start Description</strong> below</li>
-                                    <li>The AI will greet you and ask about your role</li>
+                                    <li>Zeus will greet you and ask about your role</li>
                                     <li>Speak naturally — cover skills, responsibilities, team, salary & more</li>
                                     <li>Click <strong>End Description</strong> whenever you're done</li>
                                 </ul>
