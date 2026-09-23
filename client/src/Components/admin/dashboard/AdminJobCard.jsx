@@ -1,181 +1,77 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Briefcase, MapPin, Calendar, Users } from 'lucide-react';
+import { Card, StatusPill, Chip } from './AdminUI';
 
 const AdminJobCard = ({ job, onClick }) => {
   const navigate = useNavigate();
-  // Function to truncate description to 3 lines
-  const truncateDescription = (text, maxLines = 3) => {
-    if (!text) return '';
-    const lines = text.split('\n');
-    const truncatedLines = lines.slice(0, maxLines);
-    const result = truncatedLines.join('\n');
-    return result + (lines.length > maxLines ? '...' : '');
-  };
 
-  // Function to get company display info
-  const getCompanyDisplay = () => {
-    if (job.company) {
-      // If job has company name, show it
-      return {
-        type: 'letter',
-        content: job.company.charAt(0)?.toUpperCase() || 'C',
-        name: job.company
-      };
-    } else if (job.companyId) {
-      // If company has a logo, show it, otherwise show first letter
-      return {
-        type: 'logo',
-        content: job.companyLogo || job.companyName?.charAt(0)?.toUpperCase() || 'C',
-        name: job.companyName || 'Company'
-      };
-    } else {
-      // Determine creator type and display appropriate info
-      if (job.adminId) {
-        return {
-          type: 'letter',
-          content: 'A',
-          name: `Admin: ${job.adminId.fullname || job.adminId.username || 'Unknown'}`
-        };
-      } else if (job.managerId) {
-        return {
-          type: 'letter',
-          content: 'M',
-          name: `Manager: ${job.managerId.fullname || job.managerId.username || 'Unknown'}`
-        };
-      } else {
-        return {
-          type: 'letter',
-          content: 'J',
-          name: 'Job'
-        };
-      }
-    }
-  };
+  const deadlinePassed =
+    job.hiringDeadline && new Date(job.hiringDeadline) < new Date(new Date().setHours(0, 0, 0, 0));
 
-  // Function to check if hiring deadline has passed
-  const isDeadlinePassed = () => {
-    if (job.hiringDeadline) {
-      const deadlineDate = new Date(job.hiringDeadline);
-      const today = new Date();
-      today.setHours(0, 0, 0, 0); // Reset time to start of day for accurate comparison
-      return deadlineDate < today;
-    }
-    return false;
-  };
+  // Closed and past-deadline roles read as inactive; high priority surfaces as
+  // urgent, and anything raised in the last week is flagged as new.
+  const status = (() => {
+    if (job.isClosed) return { text: 'Closed', tone: 'grey' };
+    if (deadlinePassed) return { text: 'Deadline passed', tone: 'red' };
+    if (job.priority?.includes('High')) return { text: 'Urgent', tone: 'amber' };
+    const days = Math.floor((Date.now() - new Date(job.createdAt)) / 86400000);
+    if (days <= 7) return { text: 'New', tone: 'green' };
+    return { text: 'Live', tone: 'green' };
+  })();
 
-  // Function to determine job status badge
-  const getJobStatus = () => {
-    // Check if job is closed
-    if (job.isClosed) {
-      return { text: 'Close', className: 'bg-gray-200 text-gray-700' };
-    }
-    
-    // Check if hiring deadline has passed
-    if (job.hiringDeadline) {
-      const deadlineDate = new Date(job.hiringDeadline);
-      const today = new Date();
-      today.setHours(0, 0, 0, 0); // Reset time to start of day for accurate comparison
-      
-      if (deadlineDate < today) {
-        return { text: 'Close', className: 'bg-red-100 text-red-700' };
-      }
-    }
-    
-    // Check if priority is high (urgent)
-    if (job.priority && job.priority.includes('High')) {
-      return { text: 'Urgent', className: 'bg-yellow-100 text-yellow-700' };
-    }
-    
-    // Check if job was created within 7 days (new)
-    const createdAt = new Date(job.createdAt);
-    const now = new Date();
-    const daysDiff = Math.floor((now - createdAt) / (1000 * 60 * 60 * 24));
-    
-    if (daysDiff <= 7) {
-      return { text: 'New', className: 'bg-green-100 text-green-700' };
-    }
-    
-    return null; // No status badge
-  };
+  const company =
+    job.company ||
+    job.companyName ||
+    (job.adminId && `Admin: ${job.adminId.fullname || job.adminId.username}`) ||
+    (job.managerId && `Manager: ${job.managerId.fullname || job.managerId.username}`) ||
+    'Zepul';
 
-  const companyInfo = getCompanyDisplay();
-  const jobStatus = getJobStatus();
+  const openings = job.openpositions || 1;
+  const recruiters = job.assignedRecruiters?.length || 0;
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 mb-4 flex flex-col relative cursor-pointer" onClick={() => onClick(job)}>
-      <div className="absolute top-4 right-4">
-        {jobStatus && (
-          <span className={`text-xs font-semibold px-3 py-1 rounded-full ${jobStatus.className}`}>
-            {jobStatus.text}
-          </span>
+    <Card
+      className="p-[17px] cursor-pointer hover:border-[#c7d5ff] transition-colors flex flex-col"
+      onClick={() => onClick(job)}
+    >
+      <div className="flex items-start justify-between gap-2">
+        <StatusPill tone={status.tone}>{status.text}</StatusPill>
+        {job.cvStrengthCutoff != null && (
+          <span className="text-[#024bff] font-extrabold text-[11px]">CV &ge; {job.cvStrengthCutoff}</span>
         )}
       </div>
-      <div className="pr-16">
-        <div className="text-xl font-bold text-gray-800">{job.jobtitle}</div>
-        <p className="text-gray-600 mt-2 text-sm max-w-2xl whitespace-pre-line" style={{ 
-          display: '-webkit-box',
-          WebkitLineClamp: 3,
-          WebkitBoxOrient: 'vertical',
-          overflow: 'hidden'
-        }}>
-          {truncateDescription(job.description)}
-        </p>
+
+      <h3 className="text-sm font-bold mt-3 mb-1.5">{job.jobtitle}</h3>
+
+      <div className="text-[10px] text-[#778092] leading-[1.8]">
+        {company}
+        <br />
+        {[job.type, job.location].filter(Boolean).join(' · ') || 'Location not set'}
+        {job.experience ? ` · ${job.experience}+ yrs` : ''}
+        <br />
+        {openings} opening{openings !== 1 ? 's' : ''} · {job.totalApplication_number || 0} candidates
       </div>
-      <div className="mt-4 pt-4 flex justify-between items-end">
-        <div className="flex items-center flex-wrap gap-x-4 gap-y-2 text-sm text-gray-600">
-          <div className="flex items-center gap-2">
-            {companyInfo.type === 'logo' && job.companyLogo ? (
-              <img src={job.companyLogo} alt={companyInfo.name} className="w-5 h-5" />
-            ) : (
-              <div className="w-5 h-5 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-semibold">
-                {companyInfo.content}
-              </div>
-            )}
-            <span className="font-medium text-gray-700">{companyInfo.name}</span>
-          </div>
-          <div className="flex items-center gap-1.5 border border-gray-200 rounded-md px-2 py-1">
-            <MapPin size={16} className="text-gray-400" />
-            <span>{job.type} - {job.location}</span>
-          </div>
-          <div className="flex items-center gap-1.5 border border-gray-200 rounded-md px-2 py-1">
-            <Briefcase size={16} className="text-gray-400" />
-            <span>{job.employmentType || 'Full-time'} • {job.openpositions || 1} opening{job.openpositions !== 1 ? 's' : ''}</span>
-          </div>
-          <div className="flex items-center gap-1.5 border border-gray-200 rounded-md px-2 py-1">
-            <Calendar size={16} className="text-gray-400" />
-            <span>Posted {job.createdAt ? new Date(job.createdAt).toLocaleDateString('en-US', { 
-              year: 'numeric', 
-              month: 'short', 
-              day: 'numeric' 
-            }) : 'N/A'}</span>
-          </div>
-        </div>
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2 text-sm text-gray-600 bg-gray-100 font-medium px-3 py-2 rounded-lg">
-            <Users size={18} className="text-gray-500"/>
-            <span>{job.totalApplication_number || 0} Applicants Submitted</span>
-          </div>
-          {/* Assigned Recruiters */}
-          <div className="flex items-center gap-2 text-sm text-gray-600 bg-blue-50 font-medium px-3 py-2 rounded-lg">
-            <Users size={18} className="text-blue-500"/>
-            <span>{job.assignedRecruiters?.length || 0} Recruiter{(job.assignedRecruiters?.length || 0) !== 1 ? 's' : ''} Assigned</span>
-          </div>
-          {!job.isClosed && !isDeadlinePassed() && (
-            <div 
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors text-sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                navigate(`/admin/jobs/${job._id || job.id}`);
-              }}
-            >
-              View Job
-            </div>
-          )}
-        </div>
+
+      <div className="flex-1">
+        <Chip>{job.employmentType || 'Full-time'}</Chip>
+        <Chip>
+          {recruiters} recruiter{recruiters !== 1 ? 's' : ''} assigned
+        </Chip>
       </div>
-    </div>
+
+      {!job.isClosed && !deadlinePassed && (
+        <button
+          className="mt-3 w-full border border-[#e7ebf2] rounded-lg py-2 text-[11px] font-bold text-[#024bff] hover:bg-[#f6f8fb] transition-colors cursor-pointer"
+          onClick={(e) => {
+            e.stopPropagation();
+            navigate(`/admin/jobs/${job._id || job.id}`);
+          }}
+        >
+          View job
+        </button>
+      )}
+    </Card>
   );
 };
 
-export default AdminJobCard; 
+export default AdminJobCard;

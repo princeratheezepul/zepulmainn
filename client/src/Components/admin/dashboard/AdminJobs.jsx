@@ -5,6 +5,7 @@ import AdminJobDetails from './AdminJobDetails';
 import AdminCandidateList from './AdminCandidateList';
 import AdminCreateJob from './AdminCreateJob';
 import AdminJobSidebar from './AdminJobSidebar';
+import { Card, PageHead, PrimaryButton, GhostButton, LoadingRow } from './AdminUI';
 
 const AdminJobs = () => {
   const navigate = useNavigate();
@@ -207,100 +208,66 @@ const AdminJobs = () => {
   const filterCounts = getFilterCounts();
 
   return (
-    <div className="bg-gray-50 w-full px-2 sm:px-4 md:px-8 lg:px-16 py-0 min-h-screen relative">
-      {/* Jobs List Header and Filters */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between pb-8 pt-8 border-b border-gray-200 mb-8 gap-4">
-        <div className="flex flex-col justify-center">
-          <div className="text-3xl font-bold text-black mb-1">All Jobs</div>
-          <p className="text-base text-gray-500">View and manage all jobs in the system (Admin, Manager, and Account Manager created)</p>
-        </div>
-        <div className="flex-1 flex justify-center">
-          <div className="flex gap-4 flex-wrap">
-            <div 
-              className={`rounded-lg px-6 py-2 text-base font-semibold shadow border border-black cursor-pointer transition-colors ${
-                activeFilter === 'all' ? 'bg-black text-white' : 'bg-white text-black hover:bg-gray-100'
-              }`}
-              onClick={() => handleFilterChange('all')}
-            >
-              All Jobs ({filterCounts.all})
-            </div>
-            <div 
-              className={`rounded-lg px-6 py-2 text-base font-semibold border border-black cursor-pointer transition-colors ${
-                activeFilter === 'opened' ? 'bg-black text-white' : 'bg-white text-black hover:bg-gray-100'
-              }`}
-              onClick={() => handleFilterChange('opened')}
-            >
-              Opened Jobs ({filterCounts.opened})
-            </div>
-            <div 
-              className={`rounded-lg px-6 py-2 text-base font-semibold border border-black cursor-pointer transition-colors ${
-                activeFilter === 'urgent' ? 'bg-black text-white' : 'bg-white text-black hover:bg-gray-100'
-              }`}
-              onClick={() => handleFilterChange('urgent')}
-            >
-              Urgent ({filterCounts.urgent})
-            </div>
-            <div 
-              className={`rounded-lg px-6 py-2 text-base font-semibold border border-black cursor-pointer transition-colors ${
-                activeFilter === 'closed' ? 'bg-black text-white' : 'bg-white text-black hover:bg-gray-100'
-              }`}
-              onClick={() => handleFilterChange('closed')}
-            >
-              Closed Jobs ({filterCounts.closed})
-            </div>
-          </div>
-        </div>
-        <div
-          className="ml-0 md:ml-8 px-10 py-2 rounded-xl border border-blue-500 text-lg font-semibold text-black bg-white hover:bg-blue-50 hover:text-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 cursor-pointer"
-          style={{ boxShadow: '0 0 0 2px #2563eb' }}
-          onClick={() => setShowCreateJob(true)}
-        >
-          Create Job
-        </div>
+    <div className="p-5 md:p-7 max-w-[1500px] relative">
+      <PageHead
+        eyebrow="Platform"
+        title="All Jobs"
+        sub="Every requirement raised across Zepul — by admins, managers and account managers"
+        action={<PrimaryButton onClick={() => setShowCreateJob(true)}>+ Create Job</PrimaryButton>}
+      />
+
+      <div className="flex flex-wrap gap-2 mb-4">
+        {[
+          { key: 'all', label: 'All Jobs', count: filterCounts.all },
+          { key: 'opened', label: 'Open', count: filterCounts.opened },
+          { key: 'urgent', label: 'Urgent', count: filterCounts.urgent },
+          { key: 'closed', label: 'Closed', count: filterCounts.closed },
+        ].map((f) => (
+          <button
+            key={f.key}
+            onClick={() => handleFilterChange(f.key)}
+            className={`px-3 py-2 rounded-lg text-[11px] font-bold cursor-pointer transition-colors border ${
+              activeFilter === f.key
+                ? 'bg-[#eaf0ff] text-[#024bff] border-[#c7d5ff]'
+                : 'bg-white text-[#778092] border-[#e7ebf2] hover:bg-[#f6f8fb]'
+            }`}
+          >
+            {f.label} ({f.count})
+          </button>
+        ))}
       </div>
-      
+
       {loading ? (
-        <div className="flex justify-center items-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-        </div>
+        <LoadingRow label="Loading jobs…" />
+      ) : jobs.length === 0 ? (
+        <Card className="p-[17px] text-xs text-[#778092]">
+          {activeFilter === 'all'
+            ? 'No jobs found in the system. Create your first job.'
+            : `No ${activeFilter} jobs found.`}
+        </Card>
       ) : (
-        <>
-          <div>
-            {jobs.length === 0 ? (
-              <div className="text-center text-gray-500 py-8">
-                {activeFilter === 'all' ? 'No jobs found in the system. Create your first job!' : `No ${activeFilter} jobs found.`}
-              </div>
-            ) : (
-              jobs.map((job) => (
-                <AdminJobCard key={job._id || job.id} job={job} onClick={handleJobClick} />
-              ))
-            )}
-          </div>
-          
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="flex justify-center items-center gap-2 mt-6">
-              <div
-                onClick={() => handlePageChange(currentPage - 1)}
-                disabled={currentPage === 1}
-                className="px-3 py-2 rounded-lg border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 cursor-pointer"
-              >
-                Previous
-              </div>
-              <span className="px-3 py-2">
-                Page {currentPage} of {totalPages}
-              </span>
-              <div
-                onClick={() => handlePageChange(currentPage + 1)}
-                disabled={currentPage === totalPages}
-                className="px-3 py-2 rounded-lg border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 cursor-pointer"
-              >
-                Next
-              </div>
-            </div>
-          )}
-        </>
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-[13px]">
+          {jobs.map((job) => (
+            <AdminJobCard key={job._id || job.id} job={job} onClick={handleJobClick} />
+          ))}
+        </div>
       )}
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex justify-center items-center gap-2 mt-5">
+          <GhostButton onClick={() => currentPage > 1 && handlePageChange(currentPage - 1)}>
+            Previous
+          </GhostButton>
+          <span className="px-3 text-xs text-[#778092]">
+            Page {currentPage} of {totalPages}
+          </span>
+          <GhostButton onClick={() => currentPage < totalPages && handlePageChange(currentPage + 1)}>
+            Next
+          </GhostButton>
+        </div>
+      )}
+
       {/* Sidebar for Job Details */}
       <AdminJobSidebar open={!!selectedJob} onClose={handleBack}>
         {selectedJob && !showCandidateList && (

@@ -1,9 +1,40 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {  FaUser, FaUsers, FaUserTie, FaUserShield, FaChartLine,  FaEdit, FaTrash,  FaBriefcase, FaSave } from 'react-icons/fa';
+import { FaEdit, FaTrash, FaSave } from 'react-icons/fa';
+import {
+  LayoutDashboard,
+  Users as UsersIcon,
+  Building2,
+  Briefcase,
+  UserCheck,
+  Handshake,
+  Building,
+  Sparkles,
+  Wallet,
+  BarChart3,
+  Settings as SettingsIcon,
+  Search,
+  Menu,
+} from 'lucide-react';
 
 import AdminJobs from '../../Components/admin/dashboard/AdminJobs';
 import AdminCompanyDetails from '../../Components/admin/dashboard/AdminCompanyDetails.jsx';
+import AdminOverview from '../../Components/admin/dashboard/AdminOverview.jsx';
+import AdminCandidatesPanel from '../../Components/admin/dashboard/AdminCandidatesPanel.jsx';
+import AdminPartners from '../../Components/admin/dashboard/AdminPartners.jsx';
+import AdminEmployers from '../../Components/admin/dashboard/AdminEmployers.jsx';
+import AdminAutomation from '../../Components/admin/dashboard/AdminAutomation.jsx';
+import AdminFinance from '../../Components/admin/dashboard/AdminFinance.jsx';
+import AdminReports from '../../Components/admin/dashboard/AdminReports.jsx';
+import { useAdminPlatformData } from '../../Components/admin/dashboard/useAdminPlatformData';
+import {
+  PageHead,
+  PrimaryButton,
+  GhostButton,
+  TableCard,
+  StatusPill,
+  LoadingRow,
+} from '../../Components/admin/dashboard/AdminUI.jsx';
 import JobCard from '../../Components/recruiter/dashboard/JobCard';
 import JobDetails from '../../Components/recruiter/dashboard/JobDetails';
 import CandidateList from '../../Components/recruiter/dashboard/CandidateList';
@@ -11,334 +42,191 @@ import { useAuth } from '../../context/AuthContext';
 import { logoutUser } from '../../utils/authUtils';
 import toast from 'react-hot-toast';
 
+/**
+ * Admin console sections. `fullBleed` screens ship their own page padding, so the
+ * shell hands them the content area untouched.
+ */
+const NAV = [
+  { name: 'Overview', icon: LayoutDashboard },
+  { name: 'Users', icon: UsersIcon, fullBleed: true },
+  { name: 'Organizations', icon: Building2, fullBleed: true },
+  { name: 'Jobs', icon: Briefcase, fullBleed: true },
+  { name: 'Candidates', icon: UserCheck },
+  { name: 'Recruitment Partners', icon: Handshake },
+  { name: 'Employers', icon: Building },
+  { name: 'AI & Automation', icon: Sparkles },
+  { name: 'Finance', icon: Wallet },
+  { name: 'Reports', icon: BarChart3 },
+  { name: 'System Settings', icon: SettingsIcon, fullBleed: true },
+];
+
+const initialsOf = (name) =>
+  (name || 'Zepul Admin')
+    .split(' ')
+    .filter(Boolean)
+    .map((word) => word[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase();
+
 const Admin = () => {
-  const [showProfile, setShowProfile] = useState(false);
-  const [activeSidebar, setActiveSidebar] = useState(0); // 0: dashboard, 1: user roles, 2: jobs, 3: company data
-  const [stats, setStats] = useState([
-    { label: 'Total Users', value: 0, change: '+0%', percentageDisplay: '+0%', icon: <FaUser />, since: 'Since last week' },
-    { label: 'Manager', value: 0, change: '+0%', percentageDisplay: '+0%', icon: <FaUserTie />, since: 'Since last week' },
-    { label: 'Recruiter', value: 0, change: '+0%', percentageDisplay: '+0%', icon: <FaUsers />, since: 'Since last week' },
-    { label: 'Account Manager', value: 0, change: '+0%', percentageDisplay: '+0%', icon: <FaUserShield />, since: 'Since last week' },
-    { label: 'Success Ratio', value: '0%', change: '+0', percentageDisplay: '+0%', icon: <FaChartLine />, since: 'Since last week' },
-  ]);
-  const { user, isAuthenticated } = useAuth();
+  const [active, setActive] = useState('Overview');
+  const [navOpen, setNavOpen] = useState(false);
+  const [jump, setJump] = useState('');
+  const { user } = useAuth();
+  const platform = useAdminPlatformData();
 
-  // Fetch user counts on component mount
+  // Legacy screens (user roles, jobs) refresh the header metrics through this
+  // global hook — point it at the shared loader so every section stays in sync.
   useEffect(() => {
-    fetchUserCounts();
-  }, []);
-
-  const fetchUserCounts = async () => {
-    try {
-      const userInfo = JSON.parse(localStorage.getItem("userInfo"));
-      if (!userInfo?.data?.accessToken) {
-        console.error('No authentication token found');
-        return;
-      }
-
-      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/admin/user-counts`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${userInfo.data.accessToken}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        const counts = data.data;
-
-        // Helper function to format change display
-        const formatChange = (change) => {
-          if (change.count > 0) {
-            return `+${change.count} (+${change.percentage}%)`;
-          } else if (change.count < 0) {
-            return `${change.count} (${change.percentage}%)`;
-          } else {
-            return `0 (0%)`;
-          }
-        };
-
-        // Helper function to extract percentage for display
-        const getPercentageDisplay = (change) => {
-          if (change.count > 0) {
-            return `+${change.percentage}%`;
-          } else if (change.count < 0) {
-            return `${change.percentage}%`;
-          } else {
-            return `0%`;
-          }
-        };
-
-        // Update dashboard stats with user counts from entire database
-        // Total Users = sum of all user types (manager + recruiter + account manager) excluding admin
-        // Individual counts = count of users for each specific type in the entire database
-        setStats([
-          {
-            label: 'Total Users',
-            value: counts.total,
-            change: formatChange(counts.changes.total),
-            percentageDisplay: getPercentageDisplay(counts.changes.total),
-            icon: <FaUser />,
-            since: 'Since last week'
-          },
-          {
-            label: 'Manager',
-            value: counts.managers,
-            change: formatChange(counts.changes.managers),
-            percentageDisplay: getPercentageDisplay(counts.changes.managers),
-            icon: <FaUserTie />,
-            since: 'Since last week'
-          },
-          {
-            label: 'Recruiter',
-            value: counts.recruiters,
-            change: formatChange(counts.changes.recruiters),
-            percentageDisplay: getPercentageDisplay(counts.changes.recruiters),
-            icon: <FaUsers />,
-            since: 'Since last week'
-          },
-          {
-            label: 'Account Manager',
-            value: counts.accountManagers,
-            change: formatChange(counts.changes.accountManagers),
-            percentageDisplay: getPercentageDisplay(counts.changes.accountManagers),
-            icon: <FaUserShield />,
-            since: 'Since last week'
-          },
-          {
-            label: 'Success Ratio',
-            value: '0%',
-            change: '+0',
-            percentageDisplay: '+0%',
-            icon: <FaChartLine />,
-            since: 'Since last week'
-          },
-        ]);
-      }
-    } catch (error) {
-      console.error('Error fetching user counts:', error);
-    }
-  };
-
-  // Make fetchUserCounts available globally for other components
-  useEffect(() => {
-    window.fetchUserCounts = fetchUserCounts;
+    window.fetchUserCounts = platform.refresh;
     return () => {
       delete window.fetchUserCounts;
     };
-  }, []);
+  }, [platform.refresh]);
+
+  const go = (name) => {
+    setActive(name);
+    setNavOpen(false);
+    setJump('');
+  };
+
+  const section = NAV.find((n) => n.name === active) || NAV[0];
+  const query = jump.trim().toLowerCase();
+  const matches = query ? NAV.filter((n) => n.name.toLowerCase().includes(query)) : [];
+
+  const renderSection = () => {
+    switch (active) {
+      case 'Users':
+        return <UserRoles />;
+      case 'Organizations':
+        return <AdminCompanyDetails />;
+      case 'Jobs':
+        return <AdminJobs />;
+      case 'Candidates':
+        return <AdminCandidatesPanel platform={platform} />;
+      case 'Recruitment Partners':
+        return <AdminPartners platform={platform} />;
+      case 'Employers':
+        return <AdminEmployers platform={platform} onNavigate={go} />;
+      case 'AI & Automation':
+        return <AdminAutomation platform={platform} />;
+      case 'Finance':
+        return <AdminFinance platform={platform} />;
+      case 'Reports':
+        return <AdminReports platform={platform} onNavigate={go} />;
+      case 'System Settings':
+        return <AccountInfoPage onBack={() => go('Overview')} />;
+      default:
+        return <AdminOverview platform={platform} onNavigate={go} />;
+    }
+  };
 
   return (
-    <div className="dashboard-shell-admin flex min-h-screen bg-gray-50">
+    <div className="dashboard-shell-admin min-h-screen bg-[#f6f8fb] text-[#1d2430]">
       {/* Sidebar */}
-      <aside className="w-16 md:w-20 bg-black flex flex-col justify-between py-4 md:py-6 px-1 md:px-2 h-screen fixed top-0 left-0 z-20">
-        <div className="flex flex-col gap-8 md:gap-12 items-center">
-          <div className="mb-8 cursor-pointer" onClick={() => { setActiveSidebar(0); setShowProfile(false); }}>
-            <img
-              src="/zepul_sidebar_logo.png"
-              alt="Zepul Logo"
-              className="h-7 w-7 object-contain"
-            />
-          </div>
-          <FaUsers className={`text-lg md:text-xl cursor-pointer ${activeSidebar === 1 ? 'text-blue-600' : 'text-gray-400'}`} onClick={() => { setActiveSidebar(1); setShowProfile(false); }} />
-          <FaBriefcase className={`text-lg md:text-xl cursor-pointer ${activeSidebar === 2 ? 'text-blue-600' : 'text-gray-400'}`} onClick={() => { setActiveSidebar(2); setShowProfile(false); }} />
-          <FaChartLine className={`text-lg md:text-xl cursor-pointer ${activeSidebar === 3 ? 'text-blue-600' : 'text-gray-400'}`} onClick={() => { setActiveSidebar(3); setShowProfile(false); }} />
-          {/* <FaCog className="text-lg md:text-xl text-gray-400 hover:text-blue-600 cursor-pointer" /> */}
+      <aside
+        className={`fixed top-0 bottom-0 left-0 w-[245px] bg-[#0e1728] text-white px-[15px] py-[22px] z-30 overflow-y-auto transition-transform duration-200 ${
+          navOpen ? 'translate-x-0' : '-translate-x-full'
+        } lg:translate-x-0`}
+      >
+        <div className="text-[25px] font-extrabold px-2.5 pb-[26px] cursor-pointer" onClick={() => go('Overview')}>
+          zepul<span className="text-[#9ab2ff]">™</span>
         </div>
-        <div className="flex flex-col items-center">
-          <img
-            src="https://randomuser.me/api/portraits/men/32.jpg"
-            alt="profile"
-            className="w-8 h-8 md:w-10 md:h-10 rounded-full border-2 border-blue-600 cursor-pointer"
-            onClick={() => setShowProfile(true)}
-          />
+
+        <div className="bg-[#182238] border border-[#293750] rounded-[10px] px-3 py-2.5 mb-[18px]">
+          <small className="block text-[#8794aa] text-[9px] uppercase tracking-wide">Signed in as</small>
+          <b className="text-xs">{user?.fullname || 'Zepul Admin'}</b>
         </div>
+
+        <nav>
+          {NAV.map((item) => {
+            const Icon = item.icon;
+            return (
+              <button
+                key={item.name}
+                onClick={() => go(item.name)}
+                className={`flex items-center gap-2.5 w-full text-left px-3 py-2.5 rounded-lg my-[3px] text-xs cursor-pointer transition-colors ${
+                  active === item.name
+                    ? 'bg-[#202d45] text-white'
+                    : 'text-[#aab5c7] hover:bg-[#202d45] hover:text-white'
+                }`}
+              >
+                <Icon size={15} strokeWidth={2} />
+                {item.name}
+              </button>
+            );
+          })}
+        </nav>
       </aside>
-      {/* Main Content or Profile Page */}
-      {showProfile ? (
-        <AccountInfoPage onBack={() => setShowProfile(false)} />
-      ) : activeSidebar === 1 ? (
-        <UserRoles />
-      ) : activeSidebar === 2 ? (
-        <AdminJobs />
-      ) : activeSidebar === 3 ? (
-        <AdminCompanyDetails />
-      ) : (
-        <div className="flex-1 flex flex-col">
-          {/* Top Bar */}
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center px-4 md:px-8 py-4 md:py-6 bg-white gap-4">
-            <div>
-              <div className="text-xs text-blue-600 font-semibold">DASHBOARD</div>
-              <div className="text-xl md:text-2xl font-bold">Admin Overview</div>
-            </div>
-          </div>
-          {/* Separator Line */}
-          <div className="flex justify-center px-4 md:px-8">
-            <div className="w-4/5 h-px bg-gray-200"></div>
-          </div>
 
-          {/* Stats Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 px-4 md:px-8 py-6">
-            {stats.map((stat, idx) => {
-              // Determine if change is positive, negative, or neutral
-              const isPositive = stat.change.includes('+') && !stat.change.includes('0 (0%)');
-              const isNegative = stat.change.includes('-') && !stat.change.includes('0 (0%)');
-              const isNeutral = stat.change.includes('0 (0%)');
-
-              return (
-                <div key={idx} className="bg-white rounded-lg shadow-sm border border-gray-100 p-6 cursor-pointer hover:shadow-md transition-shadow duration-200">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center">
-                        <span className="text-blue-600 text-lg">{stat.icon}</span>
-                      </div>
-                      <div>
-                        <div className="text-gray-600 text-sm font-medium">{stat.label}</div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="mb-4">
-                    <div className="text-2xl md:text-3xl font-bold text-gray-900">{stat.value}</div>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium ${isPositive ? 'bg-green-50 text-green-600' :
-                        isNegative ? 'bg-red-50 text-red-600' :
-                          'bg-gray-50 text-gray-600'
-                      }`}>
-                      <span className={`text-xs ${isPositive ? 'text-green-600' : isNegative ? 'text-red-600' : 'text-gray-600'}`}>
-                        {isPositive ? '▲' : isNegative ? '▼' : '—'}
-                      </span>
-                      <span>{stat.percentageDisplay}</span>
-                    </div>
-                    <span className="text-gray-400 text-xs">{stat.since}</span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Main Dashboard Content */}
-          <div className="flex flex-col gap-4 md:gap-6 px-4 md:px-8 pb-4 md:pb-8">
-            {/* Chart */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-4 md:p-8">
-              <div className="font-bold text-xl md:text-2xl mb-6">Company Stats</div>
-              <div className="w-full h-64 md:h-80 relative">
-                {/* Y-axis labels */}
-                <div className="absolute left-0 top-4 flex flex-col justify-between h-56 md:h-72 z-10">
-                  <span className="text-gray-400 font-semibold text-sm">30K</span>
-                  <span className="text-gray-400 font-semibold text-sm">20K</span>
-                  <span className="text-gray-400 font-semibold text-sm">10K</span>
-                  <span className="text-gray-400 font-semibold text-sm">0</span>
-                </div>
-                {/* Chart SVG */}
-                <svg viewBox="0 0 1200 240" className="w-full h-56 md:h-72">
-                  {/* Area gradient */}
-                  <defs>
-                    <linearGradient id="area-gradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.1" />
-                      <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
-                    </linearGradient>
-                  </defs>
-
-                  {/* Grid lines */}
-                  <g stroke="#f3f4f6" strokeWidth="1" opacity="0.5">
-                    <line x1="0" y1="60" x2="1200" y2="60" />
-                    <line x1="0" y1="120" x2="1200" y2="120" />
-                    <line x1="0" y1="180" x2="1200" y2="180" />
-                  </g>
-
-                  {/* Dashed line (comparison/target) */}
-                  <polyline
-                    fill="none"
-                    stroke="#60a5fa"
-                    strokeWidth="1"
-                    strokeDasharray="6,4"
-                    points="0,132 133,168 266,60 399,120 532,108 665,96 798,72 931,84 1064,84 1197,72"
-                    opacity="0.6"
-                  />
-
-                  {/* Main solid line */}
-                  <polyline
-                    fill="none"
-                    stroke="#2563eb"
-                    strokeWidth="2"
-                    points="0,108 133,144 266,96 399,72 532,72 665,36 798,12 931,24 1064,60 1197,48"
-                    style={{ filter: 'drop-shadow(0 1px 2px rgba(37, 99, 235, 0.1))' }}
-                  />
-
-                  {/* Area under main line */}
-                  <polygon
-                    fill="url(#area-gradient)"
-                    points="0,240 0,108 133,144 266,96 399,72 532,72 665,36 798,12 931,24 1064,60 1197,48 1197,240"
-                  />
-                </svg>
-
-                {/* X-axis labels */}
-                <div className="absolute left-0 right-0 bottom-2 flex justify-between text-gray-500 font-semibold text-sm px-4">
-                  <span>Jan</span>
-                  <span>Feb</span>
-                  <span>Mar</span>
-                  <span>Apr</span>
-                  <span>May</span>
-                  <span>Jun</span>
-                  <span>Jul</span>
-                  <span>Aug</span>
-                  <span>Sep</span>
-                  <span>Oct</span>
-                </div>
-              </div>
-            </div>
-            {/* User Table */}
-            <div className="bg-white rounded-2xl md:rounded-3xl shadow p-4 md:p-8 border">
-              <div className="font-bold text-xl md:text-2xl mb-4 md:mb-6">User Account Overview</div>
-              <div className="flex flex-col sm:flex-row justify-end gap-2 md:gap-4 mb-4">
-                <div className="bg-black text-white px-4 md:px-6 py-2 rounded-lg text-xs md:text-sm font-medium focus:outline-none">All Data <span className="ml-1">▼</span></div>
-                <div className="bg-black text-white px-4 md:px-6 py-2 rounded-lg text-xs md:text-sm font-medium focus:outline-none">2022 <span className="ml-1">▼</span></div>
-              </div>
-              <div className="overflow-x-auto">
-                <table className="w-full text-left">
-                  <thead>
-                    <tr className="text-gray-500 text-sm md:text-base border-b font-medium">
-                      <th className="py-3 md:py-4 pl-2">User Name</th>
-                      <th className="py-3 md:py-4">Role</th>
-                      <th className="py-3 md:py-4">Status</th>
-                      <th className="py-3 md:py-4">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {users.map((user, idx) => (
-                      <tr key={idx} className="border-b last:border-b-0 hover:bg-gray-50 transition">
-                        <td className="py-3 md:py-5 pl-2 text-sm md:text-base font-normal">{user.name}</td>
-                        <td className="py-3 md:py-5 text-sm md:text-base font-normal">{user.role}</td>
-                        <td className="py-3 md:py-5 text-sm md:text-base font-normal">{user.status}</td>
-                        <td className="py-3 md:py-5 text-sm md:text-base font-normal"><div className="text-blue-500 hover:underline">Edit</div></td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        </div>
+      {navOpen && (
+        <div className="fixed inset-0 bg-black/40 z-20 lg:hidden" onClick={() => setNavOpen(false)} />
       )}
+
+      <div className="lg:ml-[245px]">
+        {/* Top bar */}
+        <header className="h-[68px] bg-white border-b border-[#e7ebf2] flex items-center justify-between px-4 md:px-7 sticky top-0 z-10">
+          <div className="flex items-center gap-3">
+            <button
+              className="lg:hidden text-[#778092] cursor-pointer"
+              onClick={() => setNavOpen(true)}
+              aria-label="Open navigation"
+            >
+              <Menu size={20} />
+            </button>
+
+            <div className="relative hidden sm:block">
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#98a1b0]" />
+              <input
+                className="w-[260px] md:w-[330px] pl-8 pr-3 py-[9px] border border-[#e7ebf2] rounded-lg bg-[#f8f9fb] text-xs outline-none focus:border-[#c7d5ff]"
+                placeholder="Jump to a section…"
+                value={jump}
+                onChange={(e) => setJump(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && matches[0]) go(matches[0].name);
+                  if (e.key === 'Escape') setJump('');
+                }}
+              />
+              {matches.length > 0 && (
+                <div className="absolute left-0 top-[46px] w-[260px] md:w-[330px] bg-white border border-[#e7ebf2] rounded-lg shadow-[0_8px_25px_#0001] overflow-hidden">
+                  {matches.map((m) => (
+                    <button
+                      key={m.name}
+                      className="block w-full text-left px-3 py-2 text-xs hover:bg-[#f6f8fb] cursor-pointer"
+                      onClick={() => go(m.name)}
+                    >
+                      {m.name}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-[#778092] hidden sm:block">Zepul Admin</span>
+            <div
+              className="w-[34px] h-[34px] rounded-full bg-[#e5ebff] text-[#024bff] grid place-items-center font-extrabold text-[11px] cursor-pointer"
+              onClick={() => go('System Settings')}
+              title="Account settings"
+            >
+              {initialsOf(user?.fullname)}
+            </div>
+          </div>
+        </header>
+
+        <main>
+          {section.fullBleed ? (
+            renderSection()
+          ) : (
+            <div className="p-5 md:p-7 max-w-[1500px]">{renderSection()}</div>
+          )}
+        </main>
+      </div>
     </div>
   );
 };
-
-
-
-const users = [
-  { name: 'Sita', role: 'Ux Designer', status: 'Activate' },
-  { name: 'Geta', role: 'Developer', status: 'Inactivate' },
-  { name: 'Joy', role: 'Sales Manager', status: 'Activate' },
-  { name: 'Jack', role: 'Developer', status: 'Inactivate' },
-  { name: 'Sia', role: 'Ux Designer', status: 'Activate' },
-  { name: 'Sam', role: 'Developer', status: 'Inactivate' },
-  { name: 'Sam', role: 'Developer', status: 'Inactivate' },
-];
 
 const settingsNav = [
   { name: 'Account Info' },
@@ -1569,136 +1457,93 @@ function UserRoles() {
 
   if (showCreate) return <CreateUserRoles onBack={() => setShowCreate(false)} />;
   return (
-    <div className="flex-1 px-2 sm:px-4 md:px-8 py-4 md:py-8 w-full">
-      <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-2 gap-4">
-        <div>
-          <div className="text-xl md:text-2xl font-bold">User Roles</div>
-          <div className="text-gray-500 text-sm">Reviewing the roles list</div>
-        </div>
+    <div className="p-5 md:p-7 max-w-[1500px]">
+      <PageHead
+        eyebrow="Administration"
+        title="Users"
+        sub="Manage platform users, roles and account status"
+        action={<PrimaryButton onClick={() => setShowCreate(true)}>+ Add User</PrimaryButton>}
+      />
+
+      <div className="flex flex-col md:flex-row md:items-center gap-3 mb-4">
         <div className="flex flex-wrap gap-2">
-          <div
-            className={`px-4 md:px-5 py-2 rounded-lg font-medium cursor-pointer transition-colors ${activeFilter === 'all'
-                ? 'bg-black text-white'
-                : 'bg-gray-100 text-black hover:bg-gray-200'
+          {[
+            { key: 'all', label: 'All', count: allUsers.length },
+            { key: 'active', label: 'Active', count: allUsers.filter((u) => u.status === 'active').length },
+            { key: 'disabled', label: 'Disabled', count: allUsers.filter((u) => u.status === 'disabled').length },
+          ].map((f) => (
+            <button
+              key={f.key}
+              onClick={() => handleFilterChange(f.key)}
+              className={`px-3 py-2 rounded-lg text-[11px] font-bold cursor-pointer transition-colors border ${
+                activeFilter === f.key
+                  ? 'bg-[#eaf0ff] text-[#024bff] border-[#c7d5ff]'
+                  : 'bg-white text-[#778092] border-[#e7ebf2] hover:bg-[#f6f8fb]'
               }`}
-            onClick={() => handleFilterChange('all')}
-          >
-            All ({allUsers.length})
-          </div>
-          <div
-            className={`px-4 md:px-5 py-2 rounded-lg font-medium cursor-pointer transition-colors ${activeFilter === 'active'
-                ? 'bg-black text-white'
-                : 'bg-gray-100 text-black hover:bg-gray-200'
-              }`}
-            onClick={() => handleFilterChange('active')}
-          >
-            Active ({allUsers.filter(u => u.status === 'active').length})
-          </div>
-          <div
-            className={`px-4 md:px-5 py-2 rounded-lg font-medium cursor-pointer transition-colors ${activeFilter === 'disabled'
-                ? 'bg-black text-white'
-                : 'bg-gray-100 text-black hover:bg-gray-200'
-              }`}
-            onClick={() => handleFilterChange('disabled')}
-          >
-            Disabled ({allUsers.filter(u => u.status === 'disabled').length})
-          </div>
-          <div
-            className="px-4 md:px-5 py-2 rounded-lg border border-black text-black font-medium cursor-pointer hover:bg-gray-50 transition-colors"
-            onClick={() => setShowCreate(true)}
-          >
-            Add +
-          </div>
+            >
+              {f.label} ({f.count})
+            </button>
+          ))}
+        </div>
+
+        <div className="relative flex-1 md:max-w-[330px]">
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#98a1b0]" />
+          <input
+            type="text"
+            placeholder="Search by name or email…"
+            className="w-full pl-8 pr-3 py-[9px] border border-[#e7ebf2] rounded-lg bg-[#f8f9fb] text-xs outline-none focus:border-[#c7d5ff]"
+            value={searchTerm}
+            onChange={(e) => handleSearch(e.target.value)}
+          />
         </div>
       </div>
-      <div className="bg-gray-100 rounded-lg px-2 md:px-4 py-2 flex items-center mb-2">
-        <input
-          type="text"
-          placeholder="Search by name or email..."
-          className="bg-gray-100 outline-none w-full text-sm md:text-base"
-          value={searchTerm}
-          onChange={(e) => handleSearch(e.target.value)}
-        />
-      </div>
+
       {loading ? (
-        <div className="flex justify-center items-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-        </div>
+        <LoadingRow label="Loading users…" />
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[600px] text-left text-sm md:text-base">
-            <thead>
-              <tr className="text-gray-500 border-b border-gray-200">
-                <th className="py-3">Name</th>
-                <th className="py-3">Role</th>
-                <th className="py-3">Status</th>
-                <th className="py-3">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {users.map((user, idx) => (
-                <tr key={user._id || idx} className="border-b border-gray-100 last:border-b-0 hover:bg-gray-50 transition cursor-pointer">
-                  <td className="py-6 flex items-center gap-3 min-w-[200px]">
-                    <img
-                      src="https://randomuser.me/api/portraits/men/32.jpg"
-                      alt={user.fullname}
-                      className="w-12 h-12 rounded-full object-cover border-2 border-gray-200"
-                    />
-                    <div className="flex flex-col">
-                      <div className="font-bold text-black text-base leading-tight">{user.fullname}</div>
-                      <div className="text-gray-500 text-sm leading-tight">{user.email}</div>
-                    </div>
-                  </td>
-                  <td className="py-6 text-left text-sm md:text-base font-normal min-w-[120px] capitalize">
-                    {user.type === 'accountmanager' ? 'Account Manager' : user.type}
-                  </td>
-                  <td className="py-6 text-left min-w-[100px]">
-                    {user.status === 'active' ? (
-                      <span className="text-green-600 font-semibold text-sm">Success</span>
-                    ) : (
-                      <span className="text-red-500 font-semibold text-sm">Disabled</span>
-                    )}
-                  </td>
-                  <td className="py-6 text-left min-w-[100px]">
-                    <div className="flex items-center gap-1 text-gray-500">
-                      <FaEdit
-                        className="cursor-pointer hover:text-blue-600 transition-colors"
-                        onClick={(e) => handleToggleClick(user, e)}
-                      />
-                      <span className="text-gray-300">/</span>
-                      <FaTrash
-                        className="cursor-pointer hover:text-red-600 transition-colors"
-                        onClick={(e) => handleDeleteClick(user, e)}
-                      />
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <TableCard
+          title={`Platform users (${totalUsers})`}
+          badge={<StatusPill tone="grey">All roles</StatusPill>}
+          columns={['User', 'Email', 'Role', 'Status', 'Action']}
+          rows={users.map((u) => [
+            <b key="n">{u.fullname || u.username || '—'}</b>,
+            u.email || '—',
+            <span key="r" className="capitalize">
+              {u.type === 'accountmanager' ? 'Account Manager' : u.type}
+            </span>,
+            <StatusPill key="s" tone={u.status === 'active' ? 'green' : 'red'}>
+              {u.status === 'active' ? 'Active' : 'Disabled'}
+            </StatusPill>,
+            <div key="a" className="flex items-center gap-2 text-[#8991a0]">
+              <FaEdit
+                title={u.status === 'active' ? 'Disable user' : 'Activate user'}
+                className="cursor-pointer hover:text-[#024bff] transition-colors"
+                onClick={(e) => handleToggleClick(u, e)}
+              />
+              <span className="text-[#e7ebf2]">/</span>
+              <FaTrash
+                title="Delete user"
+                className="cursor-pointer hover:text-[#d84c4c] transition-colors"
+                onClick={(e) => handleDeleteClick(u, e)}
+              />
+            </div>,
+          ])}
+          empty="No users match the current filter."
+        />
       )}
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex justify-center items-center gap-2 mt-6">
-          <div
-            onClick={() => handlePageChange(currentPage - 1)}
-            disabled={currentPage === 1}
-            className="px-3 py-2 rounded-lg border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-          >
+        <div className="flex justify-center items-center gap-2 mt-5">
+          <GhostButton onClick={() => currentPage > 1 && handlePageChange(currentPage - 1)}>
             Previous
-          </div>
-          <span className="px-3 py-2">
+          </GhostButton>
+          <span className="px-3 text-xs text-[#778092]">
             Page {currentPage} of {totalPages}
           </span>
-          <div
-            onClick={() => handlePageChange(currentPage + 1)}
-            disabled={currentPage === totalPages}
-            className="px-3 py-2 rounded-lg border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-          >
+          <GhostButton onClick={() => currentPage < totalPages && handlePageChange(currentPage + 1)}>
             Next
-          </div>
+          </GhostButton>
         </div>
       )}
 

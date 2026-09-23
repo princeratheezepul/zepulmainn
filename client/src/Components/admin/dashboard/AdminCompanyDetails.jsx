@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FaEdit, FaClock, FaUsers, FaBuilding } from 'react-icons/fa';
 import { useApi } from '../../../hooks/useApi';
 import { useAuth } from '../../../context/AuthContext';
+import { Card, PageHead, PrimaryButton, StatusPill, LoadingRow } from './AdminUI';
 
 const AdminCompanyDetails = () => {
   const { get } = useApi();
@@ -794,82 +795,79 @@ const AdminCompanyDetails = () => {
   }
 
   return (
-    <div className="bg-white min-h-screen p-6 w-full">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8 gap-4">
-        <div>
-          <div className="text-xs text-blue-600 font-semibold mb-2 tracking-wide">VIEW DETAILS</div>
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Company Data</h1>
-          </div>
-        </div>
-        <button 
-          onClick={() => setShowAddCompany(true)}
-          className="bg-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-blue-700 transition-all duration-200 cursor-pointer shadow-sm hover:shadow-md"
-        >
-          Add Company
-        </button>
-      </div>
+    <div className="p-5 md:p-7 max-w-[1500px]">
+      <PageHead
+        eyebrow="Administration"
+        title="Organizations"
+        sub="Manage employer organizations, their details and assigned managers"
+        action={<PrimaryButton onClick={() => setShowAddCompany(true)}>+ Add Company</PrimaryButton>}
+      />
 
-      {/* Company Cards Grid */}
       {loading ? (
-        <div className="text-center py-12">Loading companies...</div>
+        <LoadingRow label="Loading organizations…" />
       ) : error ? (
-        <div className="text-center text-red-500 py-12">{error}</div>
+        <Card className="p-[17px] text-xs text-[#d84c4c]">{error}</Card>
       ) : companies.length === 0 ? (
-        <div className="text-center text-gray-500 py-12">No companies found.</div>
+        <Card className="p-[17px] text-xs text-[#778092]">No organizations yet. Add your first company.</Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {companies.map((company) => (
-            <div key={company._id} className="bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-lg transition-all duration-200 p-6 relative group">
-              {/* Edit Icon */}
-              <button 
-                className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity"
-                onClick={() => {
-                  setSelectedCompany(company);
-                  setShowCompanyDetails(true);
-                }}
-              >
-                <FaEdit size={16} />
-              </button>
-
-              {/* Company Info */}
-              <div className="flex items-center gap-3 mb-5">
-                <div className="w-12 h-12 rounded-xl flex items-center justify-center border border-gray-100 overflow-hidden">
-                  {company.logo ? (
-                    <img src={company.logo} alt={company.name} className="w-full h-full object-cover rounded-xl" />
-                  ) : (
-                    <span className="text-lg font-bold text-blue-600">{company.name?.charAt(0)?.toUpperCase() || 'C'}</span>
-                  )}
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-[13px]">
+          {companies.map((company) => {
+            const assigned =
+              company.isAssigned || company.assignedManagers?.length || company.assignedTo?.length;
+            return (
+              <Card key={company._id} className="p-[17px] flex flex-col">
+                <div className="flex items-start justify-between gap-2">
+                  <StatusPill tone={assigned ? 'green' : 'amber'}>
+                    {assigned ? 'Assigned' : 'Unassigned'}
+                  </StatusPill>
+                  <button
+                    className="text-[#8991a0] hover:text-[#024bff] transition-colors cursor-pointer"
+                    title="View company details"
+                    onClick={() => {
+                      setSelectedCompany(company);
+                      setShowCompanyDetails(true);
+                    }}
+                  >
+                    <FaEdit size={13} />
+                  </button>
                 </div>
-                <div>
-                  <h3 className="font-semibold text-gray-900 text-sm">{company.name}</h3>
+
+                <div className="flex items-center gap-2.5 mt-3">
+                  <div className="w-9 h-9 rounded-lg border border-[#e7ebf2] flex items-center justify-center overflow-hidden shrink-0">
+                    {company.logo ? (
+                      <img src={company.logo} alt={company.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-sm font-extrabold text-[#024bff]">
+                        {company.name?.charAt(0)?.toUpperCase() || 'C'}
+                      </span>
+                    )}
+                  </div>
+                  <h3 className="text-sm font-bold">{company.name}</h3>
                 </div>
-              </div>
 
-              {/* Domain and Location */}
-              <div className="mb-5">
-                <p className="text-sm text-gray-500 font-medium">{company.domain ? company.domain : ''}{company.domain && company.location ? ' • ' : ''}{company.location ? company.location : ''}</p>
-              </div>
+                <div className="text-[10px] text-[#778092] leading-[1.8] mt-2 flex-1">
+                  {[company.domain, company.location].filter(Boolean).join(' · ') || 'No domain or location set'}
+                  <br />
+                  {company.employeeNumber ? `${company.employeeNumber} employees` : 'Size not specified'}
+                  <br />
+                  <span className="inline-flex items-center gap-1.5">
+                    <FaClock size={10} /> Added{' '}
+                    {company.createdAt ? new Date(company.createdAt).toLocaleDateString() : 'N/A'}
+                  </span>
+                </div>
 
-              {/* Posted Date */}
-              <div className="flex items-center gap-2 mb-5 text-sm text-gray-500">
-                <FaClock size={14} className="text-gray-400" />
-                <span>Posted {company.createdAt ? new Date(company.createdAt).toLocaleDateString() : 'N/A'}</span>
-              </div>
-
-              {/* Action Button */}
-              <button
-                className="w-full bg-white border-2 border-blue-500 text-blue-600 py-3 rounded-xl font-semibold hover:bg-blue-50 hover:border-blue-600 transition-all duration-200 cursor-pointer text-sm"
-                onClick={() => {
-                  setAssignManagerData({ companyId: company._id, companyName: company.name });
-                  setShowAssignManager(true);
-                }}
-              >
-                Assign Manager
-              </button>
-            </div>
-          ))}
+                <button
+                  className="mt-3 w-full border border-[#e7ebf2] rounded-lg py-2 text-[11px] font-bold text-[#024bff] hover:bg-[#f6f8fb] transition-colors cursor-pointer"
+                  onClick={() => {
+                    setAssignManagerData({ companyId: company._id, companyName: company.name });
+                    setShowAssignManager(true);
+                  }}
+                >
+                  Assign Manager
+                </button>
+              </Card>
+            );
+          })}
         </div>
       )}
     </div>
