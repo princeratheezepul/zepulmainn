@@ -15,7 +15,7 @@ const HIDE_FOOTER_PATHS = [
 // Route trees that should NOT display the marketing footer. These are internal
 // dashboard/workspace areas — the footer is marketing chrome and doesn't belong
 // there. Matches the prefix itself and anything nested under it.
-const HIDE_FOOTER_PREFIXES = ["/admin", "/recruiter", "/manager", "/accountmanager"];
+const HIDE_FOOTER_PREFIXES = ["/admin", "/recruiter", "/prorecruiter", "/manager", "/accountmanager"];
 
 const ConditionalFooter = () => {
   const { pathname } = useLocation();

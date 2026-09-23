@@ -18,7 +18,12 @@ import { Card, PageHead, PrimaryButton, GhostButton, LoadingRow } from '../../da
  * ProRecruiter dashboard — the shared screen's other consumer — looks. All the
  * create / edit / detail flows are the same components.
  */
-const ManagerJobs = () => {
+const ManagerJobs = ({
+  eyebrow = 'Requirements',
+  title = 'Jobs & Requirements',
+  sub = 'Create, publish and monitor Zepul-managed hiring requirements',
+  showCreateOptions = false,
+}) => {
   const navigate = useNavigate();
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -276,11 +281,33 @@ const ManagerJobs = () => {
   return (
     <div className="p-5 md:p-7 max-w-[1500px] relative">
       <PageHead
-        eyebrow="Requirements"
-        title="Jobs & Requirements"
-        sub="Create, publish and monitor Zepul-managed hiring requirements"
+        eyebrow={eyebrow}
+        title={title}
+        sub={sub}
         action={<PrimaryButton onClick={() => setCreateJobMode('choose')}>+ Create Job</PrimaryButton>}
       />
+
+      {showCreateOptions && (
+        <Card className="p-[17px] mb-4">
+          <b className="text-sm">Create a job</b>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-[13px] mt-3">
+            {[
+              { mode: 'voice', title: 'Talk to AI', sub: 'Describe the role conversationally.' },
+              { mode: 'chat', title: 'Chat with AI', sub: 'Build the JD through chat.' },
+              { mode: 'upload', title: 'Upload JD', sub: 'Upload an existing JD document.' },
+            ].map((o) => (
+              <Card
+                key={o.mode}
+                className="p-[17px] cursor-pointer hover:border-[#c7d5ff] transition-colors"
+                onClick={() => setCreateJobMode(o.mode)}
+              >
+                <b className="text-sm">{o.title}</b>
+                <p className="text-xs text-[#778092] mt-1.5">{o.sub}</p>
+              </Card>
+            ))}
+          </div>
+        </Card>
+      )}
 
       <div className="flex flex-wrap gap-2 mb-4">
         {[

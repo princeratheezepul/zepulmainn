@@ -10,25 +10,35 @@ import {
   statusTone,
 } from './useManagerPlatformData';
 
+/** A score only reads as failing when the job it belongs to sets a cut-off. */
+const belowCutoff = (resume, job) =>
+  job?.cvStrengthCutoff != null && resume.ats_score < job.cvStrengthCutoff;
+
 const stageCell = (done, pending = 'Not sent') => (
   <span className={done ? 'text-[#159b65] font-bold' : 'text-[#778092]'}>{done ? 'Completed' : pending}</span>
 );
 
-const ManagerCandidates = ({ platform }) => {
-  const { resumes, resumeStats, jobs, loading } = platform;
+const ManagerCandidates = ({
+  platform,
+  eyebrow = 'Execution',
+  title = 'Candidate Pipeline',
+  sub = 'Monitor candidates across automated evaluation',
+  // Scorecards view narrows the table to candidates an AI scorecard exists for.
+  scorecardsOnly = false,
+}) => {
+  const { resumes: allResumes, resumeStats, jobs, loading } = platform;
+  const resumes = scorecardsOnly ? allResumes.filter(hasScorecard) : allResumes;
 
-  const jobTitles = jobs.reduce((acc, job) => {
-    acc[job._id] = job.jobtitle;
+  // Each job carries its own CV cut-off, so a score is judged against the job it
+  // was submitted for rather than a single platform-wide threshold.
+  const jobsById = jobs.reduce((acc, job) => {
+    acc[job._id] = job;
     return acc;
   }, {});
 
   return (
     <>
-      <PageHead
-        eyebrow="Execution"
-        title="Candidate Pipeline"
-        sub="Monitor candidates across automated evaluation"
-      />
+      <PageHead eyebrow={eyebrow} title={title} sub={sub} />
 
       <MetricGrid
         items={[
@@ -52,9 +62,14 @@ const ManagerCandidates = ({ platform }) => {
           columns={['Candidate', 'Job', 'CV Strength', 'Coding', 'AI Interview', 'Scorecard', 'Status']}
           rows={resumes.map((r) => [
             <b key="n">{r.name || 'Unnamed candidate'}</b>,
-            jobTitles[r.jobId] || '—',
+            jobsById[r.jobId]?.jobtitle || r.jobId?.jobtitle || '—',
             hasCvStrength(r) ? (
-              <span key="c" className={r.ats_score >= 78 ? 'text-[#159b65] font-bold' : 'text-[#d84c4c] font-bold'}>
+              <span
+                key="c"
+                className={
+                  belowCutoff(r, jobsById[r.jobId]) ? 'text-[#d84c4c] font-bold' : 'text-[#159b65] font-bold'
+                }
+              >
                 {r.ats_score}
               </span>
             ) : (

@@ -62,7 +62,7 @@ export const PrimaryButton = ({ className = '', children, ...rest }) => (
 
 export const GhostButton = ({ className = '', children, ...rest }) => (
   <button
-    className={`bg-white text-[#1d2430] border border-[#e7ebf2] px-[14px] py-[9px] rounded-lg font-bold text-xs cursor-pointer hover:bg-[#f6f8fb] transition-colors ${className}`}
+    className={`bg-white text-[#1d2430] border border-[#e7ebf2] px-[14px] py-[9px] rounded-lg font-bold text-xs cursor-pointer hover:bg-[#f6f8fb] transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white ${className}`}
     {...rest}
   >
     {children}
