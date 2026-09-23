@@ -1,5 +1,5 @@
 import React from 'react';
-import { PageHead, MetricGrid, Section, TableCard, StatusPill, LoadingRow, JobGrid } from './AdminUI';
+import { PageHead, MetricGrid, Section, TableCard, StatusPill, LoadingRow, JobGrid } from '../../dashboard/DashboardUI';
 import { isJobOpen, isJobUrgent, sumField, jobCompanyName, relativeTime } from './useAdminPlatformData';
 
 const AdminPartners = ({ platform }) => {

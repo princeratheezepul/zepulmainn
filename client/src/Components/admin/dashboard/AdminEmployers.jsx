@@ -1,5 +1,5 @@
 import React from 'react';
-import { PageHead, MetricGrid, Section, TableCard, StatusPill, LoadingRow } from './AdminUI';
+import { PageHead, MetricGrid, Section, TableCard, StatusPill, LoadingRow } from '../../dashboard/DashboardUI';
 import { relativeTime } from './useAdminPlatformData';
 
 const AdminEmployers = ({ platform, onNavigate }) => {

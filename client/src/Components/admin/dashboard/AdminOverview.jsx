@@ -1,5 +1,5 @@
 import React from 'react';
-import { PageHead, MetricGrid, Section, InfoGrid, TableCard, StatusPill, LoadingRow, PrimaryButton } from './AdminUI';
+import { PageHead, MetricGrid, Section, InfoGrid, TableCard, StatusPill, LoadingRow, PrimaryButton } from '../../dashboard/DashboardUI';
 import { isJobOpen, isJobUrgent, sumField, formatDelta, jobCompanyName, relativeTime } from './useAdminPlatformData';
 
 const AdminOverview = ({ platform, onNavigate }) => {

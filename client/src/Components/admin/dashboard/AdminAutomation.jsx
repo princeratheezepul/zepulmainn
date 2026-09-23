@@ -1,5 +1,5 @@
 import React from 'react';
-import { PageHead, MetricGrid, Section, InfoGrid, Pipeline, LoadingRow } from './AdminUI';
+import { PageHead, MetricGrid, Section, InfoGrid, Pipeline, LoadingRow } from '../../dashboard/DashboardUI';
 import { sumField } from './useAdminPlatformData';
 
 const AdminAutomation = ({ platform }) => {

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { PageHead, MetricGrid, Section, TableCard, StatusPill, LoadingRow } from './AdminUI';
+import { PageHead, MetricGrid, Section, TableCard, StatusPill, LoadingRow } from '../../dashboard/DashboardUI';
 import { sumField } from './useAdminPlatformData';
 
 const AdminCandidatesPanel = ({ platform }) => {

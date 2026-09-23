@@ -27,6 +27,7 @@ import AdminAutomation from '../../Components/admin/dashboard/AdminAutomation.js
 import AdminFinance from '../../Components/admin/dashboard/AdminFinance.jsx';
 import AdminReports from '../../Components/admin/dashboard/AdminReports.jsx';
 import { useAdminPlatformData } from '../../Components/admin/dashboard/useAdminPlatformData';
+import { initialsOf } from '../../Components/dashboard/dashboardUtils';
 import {
   PageHead,
   PrimaryButton,
@@ -34,7 +35,7 @@ import {
   TableCard,
   StatusPill,
   LoadingRow,
-} from '../../Components/admin/dashboard/AdminUI.jsx';
+} from '../../Components/dashboard/DashboardUI.jsx';
 import JobCard from '../../Components/recruiter/dashboard/JobCard';
 import JobDetails from '../../Components/recruiter/dashboard/JobDetails';
 import CandidateList from '../../Components/recruiter/dashboard/CandidateList';
@@ -59,15 +60,6 @@ const NAV = [
   { name: 'Reports', icon: BarChart3 },
   { name: 'System Settings', icon: SettingsIcon, fullBleed: true },
 ];
-
-const initialsOf = (name) =>
-  (name || 'Zepul Admin')
-    .split(' ')
-    .filter(Boolean)
-    .map((word) => word[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase();
 
 const Admin = () => {
   const [active, setActive] = useState('Overview');
@@ -211,7 +203,7 @@ const Admin = () => {
               onClick={() => go('System Settings')}
               title="Account settings"
             >
-              {initialsOf(user?.fullname)}
+              {initialsOf(user?.fullname, 'Zepul Admin')}
             </div>
           </div>
         </header>

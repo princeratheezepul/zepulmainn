@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, PageHead, MetricGrid, Section } from './AdminUI';
+import { Card, PageHead, MetricGrid, Section } from '../../dashboard/DashboardUI';
 import { isJobOpen, sumField } from './useAdminPlatformData';
 
 const AdminReports = ({ platform, onNavigate }) => {

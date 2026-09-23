@@ -1,18 +1,45 @@
 import React, { useState, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
+import {
+  LayoutDashboard,
+  Briefcase,
+  Store,
+  UserCheck,
+  Users as UsersIcon,
+  BarChart3,
+  Wallet,
+  Settings as SettingsIcon,
+  Search,
+  Menu,
+} from 'lucide-react';
 import AddRecruiter from "../../Components/manager/AddRecruiter";
 import ManagerAccountSettings from '../../Components/manager/ManagerAccountSettings';
 import MarketplaceDashboard from '../../Components/manager/MarketplaceDashboard';
-import ManagerSidebar from '../../Components/manager/dashboard/ManagerSidebar';
+import ManagerOverview from '../../Components/manager/dashboard/ManagerOverview';
+import ManagerCandidates from '../../Components/manager/dashboard/ManagerCandidates';
+import ManagerMarketplace from '../../Components/manager/dashboard/ManagerMarketplace';
+import ManagerFinance from '../../Components/manager/dashboard/ManagerFinance';
+import { useManagerPlatformData, initialsOf } from '../../Components/manager/dashboard/useManagerPlatformData';
+import { Card, PageHead, PrimaryButton, GhostButton, StatusPill, LoadingRow } from '../../Components/dashboard/DashboardUI';
 import toast from 'react-hot-toast';
-import Jobs from '../../Components/recruiter/dashboard/Jobs';
+import ManagerJobs from '../../Components/manager/dashboard/ManagerJobs';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, ResponsiveContainer, ReferenceLine } from 'recharts';
 
 
 
 // Sections the sidebar can open. Mirrored in the URL as ?tab= so a refresh, or
 // returning from a job detail page, lands on the section the manager left.
-const MANAGER_TABS = ['Dashboard', 'Recruiter', 'Jobs', 'Profile'];
+const MANAGER_NAV = [
+  { name: 'Overview', icon: LayoutDashboard },
+  { name: 'Jobs', icon: Briefcase, fullBleed: true },
+  { name: 'Marketplace', icon: Store },
+  { name: 'Candidates', icon: UserCheck },
+  { name: 'Recruiters', icon: UsersIcon, fullBleed: true },
+  { name: 'Analytics', icon: BarChart3 },
+  { name: 'Finance', icon: Wallet },
+  { name: 'Profile', icon: SettingsIcon, fullBleed: true },
+];
+const MANAGER_TABS = MANAGER_NAV.map((n) => n.name);
 
 const stageLabels = [
   "Applications",
@@ -1237,15 +1264,18 @@ export default function ManagerDashboard() {
   const [searchParams, setSearchParams] = useSearchParams();
   const requestedTab = searchParams.get('tab');
   const [activeComponent, setActiveComponentState] = useState(
-    MANAGER_TABS.includes(requestedTab) ? requestedTab : 'Dashboard'
+    MANAGER_TABS.includes(requestedTab) ? requestedTab : 'Overview'
   );
 
-  // Dashboard is the default, so it stays as a bare /manager/dashboard URL.
+  // Overview is the default, so it stays as a bare /manager/dashboard URL.
   const setActiveComponent = (name) => {
     setActiveComponentState(name);
-    setSearchParams(name && name !== 'Dashboard' ? { tab: name } : {}, { replace: true });
+    setSearchParams(name && name !== 'Overview' ? { tab: name } : {}, { replace: true });
   };
-  const [isCollapsed, setIsCollapsed] = useState(true);
+  const [navOpen, setNavOpen] = useState(false);
+  const [jump, setJump] = useState('');
+  const navigate = useNavigate();
+  const platform = useManagerPlatformData();
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [detailRecruiterId, setDetailRecruiterId] = useState(null);
   const [recruiters, setRecruiters] = useState([]);
@@ -1275,14 +1305,9 @@ export default function ManagerDashboard() {
   const userInfo = JSON.parse(localStorage.getItem("userInfo"));
   const token = userInfo?.data?.accessToken;
 
-
-
-
-  function getStatusColor(status) {
-    if (status === "Active") return "text-green-600";
-    if (status === "Inactive") return "text-red-600";
-    return "text-gray-500";
-  }
+  // Sidebar shows the full name; the overview greets by first name only.
+  const managerName = userInfo?.data?.user?.fullname || userInfo?.data?.user?.username || 'Zepul Manager';
+  const managerFirstName = managerName.split(' ')[0];
 
   // MyRecruiters now receives recruiters as a prop
   function MyRecruiters({ selectedRecruiter, setSelectedRecruiter }) {
@@ -1439,90 +1464,79 @@ export default function ManagerDashboard() {
 
     if (recruitersLoading) {
       return (
-        <div className="p-6">
-          <div className="flex items-center justify-center h-64">
-            <div className="text-gray-500">Loading recruiters...</div>
-          </div>
+        <div className="p-5 md:p-7 max-w-[1500px]">
+          <LoadingRow label="Loading recruiters…" />
         </div>
       );
     }
 
     if (recruitersError) {
       return (
-        <div className="p-6">
-          <div className="flex items-center justify-center h-64">
-            <div className="text-red-500">Error: {recruitersError}</div>
-          </div>
+        <div className="p-5 md:p-7 max-w-[1500px]">
+          <Card className="p-[17px] text-xs text-[#d84c4c]">{recruitersError}</Card>
         </div>
       );
     }
 
     return (
-      <div className="p-6">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
-          <div>
-            <div className="text-xs text-blue-600 font-semibold tracking-wide mb-1">JOB DETAILS</div>
-            <div className="text-2xl font-bold text-gray-900">My Recruiters</div>
-          </div>
-          <div className="flex gap-2 mt-2 md:mt-0">
-           
-            <button 
-              className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-6 py-2 rounded-lg font-medium shadow-none cursor-pointer transition-colors" 
-              onClick={() => setShowAddRecruiter(true)}
-            >
-              + Add Recruiter
-            </button>
-          </div>
+      <div className="p-5 md:p-7 max-w-[1500px]">
+        <PageHead
+          eyebrow="My team"
+          title="Recruiters"
+          sub="The recruiters working your Zepul requirements"
+          action={<PrimaryButton onClick={() => setShowAddRecruiter(true)}>+ Add Recruiter</PrimaryButton>}
+        />
+
+        <div className="relative mb-4 md:max-w-[330px]">
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#98a1b0]" />
+          <input
+            type="text"
+            placeholder="Search by name or email…"
+            className="w-full pl-8 pr-3 py-[9px] border border-[#e7ebf2] rounded-lg bg-[#f8f9fb] text-xs outline-none focus:border-[#c7d5ff]"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
         </div>
-        
-        {/* Search Bar */}
-        <div className="mb-4">
-          <div className="flex items-center bg-gray-200 rounded-lg px-4 py-2 w-full max-w-2xl">
-            <svg className="w-5 h-5 text-gray-400 mr-2" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
-            <input 
-              type="text" 
-              placeholder="Search by name or email..." 
-              className="bg-transparent outline-none w-full text-gray-700 text-sm"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+
+        <Card className="p-0 overflow-hidden">
+          <div className="p-4 border-b border-[#e7ebf2] flex items-center justify-between gap-3">
+            <b className="text-sm">Recruiters ({recruiters.length})</b>
+            <StatusPill tone="grey">Assigned to your requirements</StatusPill>
           </div>
-        </div>
-        
-        {/* Table */}
-        <div className="overflow-x-auto">
-          <table className="min-w-full text-sm bg-white rounded-2xl border border-gray-200">
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[760px] border-collapse">
             <thead>
-              <tr className="text-gray-500 border-b">
-                <th className="py-3 px-4 font-medium text-left">Name</th>
-                <th className="py-3 px-4 text-sm font-medium text-left">Email ID</th>
-                <th className="py-3 px-4 font-medium text-left">Location</th>
-                <th className="py-3 px-4 text-sm font-medium text-center">Status</th>
-                <th className="py-3 px-4 font-medium text-left">Action</th>
+              <tr>
+                <th className="py-3 px-4 text-left border-b border-[#e7ebf2] text-[9px] uppercase font-bold text-[#8991a0] bg-[#fbfcfd]">Name</th>
+                <th className="py-3 px-4 text-left border-b border-[#e7ebf2] text-[9px] uppercase font-bold text-[#8991a0] bg-[#fbfcfd]">Email ID</th>
+                <th className="py-3 px-4 text-left border-b border-[#e7ebf2] text-[9px] uppercase font-bold text-[#8991a0] bg-[#fbfcfd]">Location</th>
+                <th className="py-3 px-4 text-left border-b border-[#e7ebf2] text-[9px] uppercase font-bold text-[#8991a0] bg-[#fbfcfd]">Status</th>
+                <th className="py-3 px-4 text-left border-b border-[#e7ebf2] text-[9px] uppercase font-bold text-[#8991a0] bg-[#fbfcfd]">Action</th>
               </tr>
             </thead>
             <tbody>
               {currentRecruiters.length === 0 ? (
                 <tr>
-                  <td colSpan="5" className="py-8 text-center text-gray-500">
-                    {recruiters.length === 0 ? "No recruiters found. Create your first recruiter!" : "No recruiters match your search."}
+                  <td colSpan="5" className="py-8 text-center text-[11px] text-[#778092]">
+                    {recruiters.length === 0 ? "No recruiters yet. Add your first recruiter." : "No recruiters match your search."}
                   </td>
                 </tr>
               ) : (
                 currentRecruiters.map((rec, idx) => (
                   <tr 
                     key={rec._id || idx} 
-                    className="border-b last:border-b-0 hover:bg-gray-50 cursor-pointer transition-colors"
+                    className="border-b border-[#e7ebf2] hover:bg-[#fbfcfd] cursor-pointer transition-colors"
                     onClick={() => handleRowClick(rec)}
                   >
-                    <td className="py-3 px-4 font-semibold text-gray-900">{rec.fullname || "N/A"}</td>
-                    <td className="py-3 px-4 text-sm font-medium text-gray-700">{rec.email}</td>
-                    <td className="py-3 px-4 font-semibold text-gray-900">{rec.location || "N/A"}</td>
-                    <td className={`py-3 px-4 text-center text-sm font-medium ${getStatusColor(rec.status || "Inactive")}`}>
-                      {rec.status || "Inactive"}
+                    <td className="py-3 px-4 text-[11px]"><b>{rec.fullname || "—"}</b></td>
+                    <td className="py-3 px-4 text-[11px]">{rec.email}</td>
+                    <td className="py-3 px-4 text-[11px]">{rec.location || "—"}</td>
+                    <td className="py-3 px-4 text-[11px]">
+                      <StatusPill tone={(rec.status || "Inactive") === "Active" ? "green" : "grey"}>
+                        {rec.status || "Inactive"}
+                      </StatusPill>
                     </td>
-                    <td className="py-3 px-4 flex gap-3 items-center" onClick={(e) => e.stopPropagation()}>
+                    <td className="py-3 px-4 text-[11px] flex gap-3 items-center" onClick={(e) => e.stopPropagation()}>
                       {/* Action icons: view and delete only */}
                       <button 
                         className="text-gray-900 hover:text-blue-600 cursor-pointer transition-colors"
@@ -1556,31 +1570,22 @@ export default function ManagerDashboard() {
                 ))
               )}
             </tbody>
-          </table>
-        </div>
+            </table>
+          </div>
+        </Card>
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex justify-center items-center mt-6 gap-2">
-            <button
-              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-              disabled={currentPage === 1}
-              className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-            >
+          <div className="flex justify-center items-center mt-5 gap-2">
+            <GhostButton onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}>
               Previous
-            </button>
-            
-            <span className="px-3 py-2 text-sm text-gray-700">
+            </GhostButton>
+            <span className="px-3 text-xs text-[#778092]">
               Page {currentPage} of {totalPages}
             </span>
-            
-            <button
-              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-              disabled={currentPage === totalPages}
-              className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-            >
+            <GhostButton onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}>
               Next
-            </button>
+            </GhostButton>
           </div>
         )}
 
@@ -1624,63 +1629,18 @@ export default function ManagerDashboard() {
     );
   }
 
-  return (
-    <div className="flex bg-gray-100 min-h-screen">
-      <ManagerSidebar 
-        activeComponent={activeComponent} 
-        setActiveComponent={setActiveComponent} 
-        isCollapsed={isCollapsed}
-        setIsCollapsed={setIsCollapsed} 
-      />
-      
-      <div
-        className={`dashboard-content ${
-          isCollapsed ? "" : "dashboard-content--expanded"
-        } flex-1 min-h-screen transition-all duration-300`}
-      >
-        {activeComponent === 'Profile' ? (
-          <div className="flex-1">
-            <ManagerAccountSettings />
-          </div>
-        ) : activeComponent === 'Recruiter' ? (
-          <div className="flex-1">
-            <MyRecruiters selectedRecruiter={selectedRecruiter} setSelectedRecruiter={setSelectedRecruiter} />
-          </div>
-        ) : activeComponent === 'Jobs' ? (
-          <div className="flex-1">
-            <Jobs />
-          </div>
-        ) : (
-          <main className="bg-white flex-1 p-4 md:p-6 pt-3 md:pt-4">
-            {activeComponent === 'Dashboard' && (
+  // The legacy analytics view (candidate pipeline by tag, scorecard review,
+  // recruiter performance, job-closed trend) keeps its own section rather than
+  // being dropped when the overview moved to the platform layout.
+  function AnalyticsSection() {
+    return (
               <div className="flex flex-col space-y-2 md:space-y-3">
-            {/* Header */}
-            <div className="bg-transparent">
-              <div className="flex items-start justify-between">
-                <div>
-                  <div className="text-xs text-blue-600 font-semibold tracking-wide mb-1">DASHBOARD</div>
-                  <div className="text-xl font-bold text-gray-900">Manager Overview</div>
-                </div>
-                <div className="flex items-center">
-                  {(userInfo?.data?.user?.accessToMPDashboard === true) && (
-                    <button 
-                      className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium shadow-lg transition-all duration-200"
-                      style={{
-                        boxShadow: '0 0 0 2px rgba(59, 130, 246, 0.3), 0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-                        textShadow: '0 0 8px rgba(147, 197, 253, 0.8)'
-                      }}
-                      onClick={() => {
-                        setShowMarketplaceDashboard(true);
-                      }}
-                    >
-                      Marketplace Dashboard
-                    </button>
-                  )}
-                </div>
-              </div>
-              <hr className="my-2 border-gray-200" />
-            </div>
-           
+            <PageHead
+              eyebrow="Analytics"
+              title="Execution analytics"
+              sub="Candidate pipeline by function, scorecard review load, recruiter performance and closure trend"
+            />
+
             {/* Top Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 mb-3">
               {/* Candidate Pipeline */}
@@ -1898,11 +1858,160 @@ export default function ManagerDashboard() {
               </div>
             </div>
               </div>
-            )}
-          </main>
-        )}
+    );
+  }
+
+  const activeSection = MANAGER_NAV.find((n) => n.name === activeComponent) || MANAGER_NAV[0];
+  const jumpQuery = jump.trim().toLowerCase();
+  const navMatches = jumpQuery ? MANAGER_NAV.filter((n) => n.name.toLowerCase().includes(jumpQuery)) : [];
+
+  const go = (name) => {
+    setActiveComponent(name);
+    setNavOpen(false);
+    setJump('');
+  };
+
+  const renderSection = () => {
+    switch (activeComponent) {
+      case 'Jobs':
+        return <ManagerJobs />;
+      case 'Marketplace':
+        return (
+          <ManagerMarketplace
+            platform={platform}
+            hasMarketplaceAccess={userInfo?.data?.user?.accessToMPDashboard === true}
+            onOpenMarketplace={() => setShowMarketplaceDashboard(true)}
+          />
+        );
+      case 'Candidates':
+        return <ManagerCandidates platform={platform} />;
+      case 'Recruiters':
+        return (
+          <MyRecruiters selectedRecruiter={selectedRecruiter} setSelectedRecruiter={setSelectedRecruiter} />
+        );
+      case 'Analytics':
+        return <AnalyticsSection />;
+      case 'Finance':
+        return <ManagerFinance platform={platform} />;
+      case 'Profile':
+        return <ManagerAccountSettings />;
+      default:
+        return (
+          <ManagerOverview
+            platform={platform}
+            managerName={managerFirstName}
+            onNavigate={go}
+            onOpenJob={(job) => navigate(`/manager/jobs/${job._id}`)}
+          />
+        );
+    }
+  };
+  return (
+    <div className="dashboard-shell-manager min-h-screen bg-[#f6f8fb] text-[#1d2430]">
+      {/* Sidebar */}
+      <aside
+        className={`fixed top-0 bottom-0 left-0 w-[245px] bg-[#0e1728] text-white px-[15px] py-[22px] z-30 overflow-y-auto transition-transform duration-200 ${
+          navOpen ? 'translate-x-0' : '-translate-x-full'
+        } lg:translate-x-0`}
+      >
+        <div
+          className="text-[25px] font-extrabold px-2.5 pb-[26px] cursor-pointer"
+          onClick={() => go('Overview')}
+        >
+          zepul<span className="text-[#9ab2ff]">™</span>
+        </div>
+
+        <div className="bg-[#182238] border border-[#293750] rounded-[10px] px-3 py-2.5 mb-[18px]">
+          <small className="block text-[#8794aa] text-[9px] uppercase tracking-wide">Signed in as</small>
+          <b className="text-xs">{managerName}</b>
+        </div>
+
+        <nav>
+          {MANAGER_NAV.map((item) => {
+            const Icon = item.icon;
+            return (
+              <button
+                key={item.name}
+                onClick={() => go(item.name)}
+                className={`flex items-center gap-2.5 w-full text-left px-3 py-2.5 rounded-lg my-[3px] text-xs cursor-pointer transition-colors ${
+                  activeComponent === item.name
+                    ? 'bg-[#202d45] text-white'
+                    : 'text-[#aab5c7] hover:bg-[#202d45] hover:text-white'
+                }`}
+              >
+                <Icon size={15} strokeWidth={2} />
+                {item.name}
+              </button>
+            );
+          })}
+        </nav>
+      </aside>
+
+      {navOpen && (
+        <div className="fixed inset-0 bg-black/40 z-20 lg:hidden" onClick={() => setNavOpen(false)} />
+      )}
+
+      <div className="lg:ml-[245px]">
+        {/* Top bar */}
+        <header className="h-[68px] bg-white border-b border-[#e7ebf2] flex items-center justify-between px-4 md:px-7 sticky top-0 z-10">
+          <div className="flex items-center gap-3">
+            <button
+              className="lg:hidden text-[#778092] cursor-pointer"
+              onClick={() => setNavOpen(true)}
+              aria-label="Open navigation"
+            >
+              <Menu size={20} />
+            </button>
+
+            <div className="relative hidden sm:block">
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#98a1b0]" />
+              <input
+                className="w-[260px] md:w-[330px] pl-8 pr-3 py-[9px] border border-[#e7ebf2] rounded-lg bg-[#f8f9fb] text-xs outline-none focus:border-[#c7d5ff]"
+                placeholder="Jump to a section…"
+                value={jump}
+                onChange={(e) => setJump(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && navMatches[0]) go(navMatches[0].name);
+                  if (e.key === 'Escape') setJump('');
+                }}
+              />
+              {navMatches.length > 0 && (
+                <div className="absolute left-0 top-[46px] w-[260px] md:w-[330px] bg-white border border-[#e7ebf2] rounded-lg shadow-[0_8px_25px_#0001] overflow-hidden">
+                  {navMatches.map((m) => (
+                    <button
+                      key={m.name}
+                      className="block w-full text-left px-3 py-2 text-xs hover:bg-[#f6f8fb] cursor-pointer"
+                      onClick={() => go(m.name)}
+                    >
+                      {m.name}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-[#778092] hidden sm:block">Zepul Manager</span>
+            <div
+              className="w-[34px] h-[34px] rounded-full bg-[#e5ebff] text-[#024bff] grid place-items-center font-extrabold text-[11px] cursor-pointer"
+              onClick={() => go('Profile')}
+              title="Profile & settings"
+            >
+              {initialsOf(managerName)}
+            </div>
+          </div>
+        </header>
+
+        <main>
+          {activeSection.fullBleed ? (
+            renderSection()
+          ) : (
+            <div className="p-5 md:p-7 max-w-[1500px]">{renderSection()}</div>
+          )}
+        </main>
       </div>
-      
+
       {showDetailModal && (
         <RecruiterDetailPage
           recruiterId={detailRecruiterId}
@@ -1912,4 +2021,4 @@ export default function ManagerDashboard() {
       )}
     </div>
   );
-} 
+}

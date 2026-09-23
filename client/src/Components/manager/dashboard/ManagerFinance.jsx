@@ -1,14 +1,14 @@
 import React from 'react';
 import FinanceSection from '../../dashboard/FinanceSection';
 
-const AdminFinance = ({ platform }) => (
+const ManagerFinance = ({ platform }) => (
   <FinanceSection
     jobs={platform.jobs}
     loading={platform.loading}
     eyebrow="Finance"
-    title="Platform Finance"
-    sub="Revenue, GST, TDS, partner payouts and outstanding balances"
+    title="Revenue & Partner Payouts"
+    sub="Track GST, TDS, net pay and partner share"
   />
 );
 
-export default AdminFinance;
+export default ManagerFinance;

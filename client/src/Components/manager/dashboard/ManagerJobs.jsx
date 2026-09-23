@@ -1,13 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import AdminJobCard from './AdminJobCard';
-import AdminJobDetails from './AdminJobDetails';
-import AdminCandidateList from './AdminCandidateList';
-import AdminCreateJob from './AdminCreateJob';
-import AdminJobSidebar from './AdminJobSidebar';
+import JobDetails from '../../recruiter/dashboard/JobDetails.jsx';
+import CandidateList from '../../recruiter/dashboard/CandidateList.jsx';
+import CreateJobManager from '../../recruiter/dashboard/CreateJobManager.jsx';
+import CreateJobOptions from '../../recruiter/dashboard/CreateJobOptions.jsx';
+import CreateJobFromJD from '../../recruiter/dashboard/CreateJobFromJD.jsx';
+import JobSidebar from '../../recruiter/dashboard/JobSidebar.jsx';
+import EditJobPanel from '../../recruiter/dashboard/EditJobPanel.jsx';
+import JobChatAgent from '../../../Pages/JobChatAgent.jsx';
+import DescribeJob from '../../../Pages/DescribeJob.jsx';
+import ManagerJobCard from './ManagerJobCard.jsx';
 import { Card, PageHead, PrimaryButton, GhostButton, LoadingRow } from '../../dashboard/DashboardUI';
 
-const AdminJobs = () => {
+/**
+ * The manager's requirements list. Forked from the shared recruiter Jobs screen so
+ * the manager console can carry the platform design without changing how the
+ * ProRecruiter dashboard — the shared screen's other consumer — looks. All the
+ * create / edit / detail flows are the same components.
+ */
+const ManagerJobs = () => {
   const navigate = useNavigate();
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -18,7 +29,10 @@ const AdminJobs = () => {
   const [activeFilter, setActiveFilter] = useState('all');
   const [selectedJob, setSelectedJob] = useState(null);
   const [showCandidateList, setShowCandidateList] = useState(false);
-  const [showCreateJob, setShowCreateJob] = useState(false);
+  // null = jobs list. 'choose' = pick a creation method, then one of
+  // 'manual' | 'chat' | 'voice' for the flow the user picked.
+  const [createJobMode, setCreateJobMode] = useState(null);
+  const [showEditJob, setShowEditJob] = useState(false);
 
   // Fetch jobs on component mount and when page/filter changes
   useEffect(() => {
@@ -28,12 +42,12 @@ const AdminJobs = () => {
 
   // Make fetchJobs available globally for other components
   useEffect(() => {
-    window.refreshAdminJobs = () => {
+    window.refreshJobs = () => {
       fetchJobs();
       fetchJobCounts();
     };
     return () => {
-      delete window.refreshAdminJobs;
+      delete window.refreshJobs;
     };
   }, [currentPage, activeFilter]);
 
@@ -45,14 +59,14 @@ const AdminJobs = () => {
         console.error('No authentication token found');
         return;
       }
-      const adminId = userInfo?.data?.user?._id;
-      if (!adminId) {
-        console.error('No adminId found in user info');
+      const managerId = userInfo?.data?.user?._id;
+      if (!managerId) {
+        console.error('No managerId found in user info');
         return;
       }
 
-      // Use the admin jobs endpoint
-      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/admin/get-jobs/${adminId}`, {
+      // Use the manager jobs endpoint
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/manager/get-jobs/${managerId}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${userInfo.data.accessToken}`,
@@ -114,14 +128,14 @@ const AdminJobs = () => {
         console.error('No authentication token found');
         return;
       }
-      const adminId = userInfo?.data?.user?._id;
-      if (!adminId) {
-        console.error('No adminId found in user info');
+      const managerId = userInfo?.data?.user?._id;
+      if (!managerId) {
+        console.error('No managerId found in user info');
         return;
       }
 
-      // Fetch all jobs to calculate counts (all jobs in database)
-      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/admin/get-jobs/${adminId}`, {
+      // Fetch all jobs to calculate counts
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/manager/get-jobs/${managerId}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${userInfo.data.accessToken}`,
@@ -172,20 +186,37 @@ const AdminJobs = () => {
   };
 
   const handleJobClick = (job) => {
-    navigate(`/admin/jobs/${job._id}`);
+    setSelectedJob(job);
+  };
+
+  // The applicants count on a card skips job details and opens that job's candidate list.
+  const handleShowJobCandidates = (job) => {
+    navigate(`/manager/jobs/${job._id || job.id}/candidates`);
   };
 
   const handleBack = () => {
     setSelectedJob(null);
     setShowCandidateList(false);
+    setShowEditJob(false);
   };
 
   const handleShowCandidates = () => {
     setShowCandidateList(true);
+    setShowEditJob(false);
   };
 
   const handleBackToJobDetails = () => {
     setShowCandidateList(false);
+    setShowEditJob(false);
+  };
+
+  const handleShowEditJob = () => {
+    setShowEditJob(true);
+    setShowCandidateList(false);
+  };
+
+  const handleBackFromEditJob = () => {
+    setShowEditJob(false);
   };
 
   const handleJobUpdated = (updatedJob) => {
@@ -197,10 +228,45 @@ const AdminJobs = () => {
     fetchJobCounts();
   };
 
-  if (showCreateJob) {
+  // Leaving any of the create-job flows drops back to the refreshed jobs list.
+  const closeCreateJob = () => {
+    setCreateJobMode(null);
+    fetchJobs();
+    fetchJobCounts();
+  };
+
+  if (createJobMode) {
     return (
       <div className="w-full min-h-screen bg-[#F7F8FA]">
-        <AdminCreateJob onBack={() => setShowCreateJob(false)} />
+        {createJobMode === 'choose' && (
+          <CreateJobOptions
+            onSelect={setCreateJobMode}
+            onBack={() => setCreateJobMode(null)}
+          />
+        )}
+        {createJobMode === 'manual' && (
+          <CreateJobManager
+            onBack={() => setCreateJobMode('choose')}
+            onCreated={closeCreateJob}
+          />
+        )}
+        {createJobMode === 'chat' && (
+          <div className="min-h-screen flex items-center justify-center p-4">
+            <JobChatAgent
+              onBack={() => setCreateJobMode('choose')}
+              onComplete={closeCreateJob}
+            />
+          </div>
+        )}
+        {createJobMode === 'voice' && (
+          <DescribeJob onBack={() => setCreateJobMode('choose')} onDone={closeCreateJob} />
+        )}
+        {createJobMode === 'upload' && (
+          <CreateJobFromJD
+            onBack={() => setCreateJobMode('choose')}
+            onCreated={closeCreateJob}
+          />
+        )}
       </div>
     );
   }
@@ -210,10 +276,10 @@ const AdminJobs = () => {
   return (
     <div className="p-5 md:p-7 max-w-[1500px] relative">
       <PageHead
-        eyebrow="Platform"
-        title="All Jobs"
-        sub="Every requirement raised across Zepul — by admins, managers and account managers"
-        action={<PrimaryButton onClick={() => setShowCreateJob(true)}>+ Create Job</PrimaryButton>}
+        eyebrow="Requirements"
+        title="Jobs & Requirements"
+        sub="Create, publish and monitor Zepul-managed hiring requirements"
+        action={<PrimaryButton onClick={() => setCreateJobMode('choose')}>+ Create Job</PrimaryButton>}
       />
 
       <div className="flex flex-wrap gap-2 mb-4">
@@ -238,22 +304,26 @@ const AdminJobs = () => {
       </div>
 
       {loading ? (
-        <LoadingRow label="Loading jobs…" />
+        <LoadingRow label="Loading requirements…" />
       ) : jobs.length === 0 ? (
         <Card className="p-[17px] text-xs text-[#778092]">
           {activeFilter === 'all'
-            ? 'No jobs found in the system. Create your first job.'
-            : `No ${activeFilter} jobs found.`}
+            ? 'No requirements yet. Create your first job.'
+            : `No ${activeFilter} requirements found.`}
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-[13px]">
           {jobs.map((job) => (
-            <AdminJobCard key={job._id || job.id} job={job} onClick={handleJobClick} />
+            <ManagerJobCard
+              key={job._id || job.id}
+              job={job}
+              onClick={handleJobClick}
+              onShowCandidates={handleShowJobCandidates}
+            />
           ))}
         </div>
       )}
 
-      {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex justify-center items-center gap-2 mt-5">
           <GhostButton onClick={() => currentPage > 1 && handlePageChange(currentPage - 1)}>
@@ -269,16 +339,25 @@ const AdminJobs = () => {
       )}
 
       {/* Sidebar for Job Details */}
-      <AdminJobSidebar open={!!selectedJob} onClose={handleBack}>
-        {selectedJob && !showCandidateList && (
-          <AdminJobDetails job={selectedJob} onBack={handleBack} onShowCandidates={handleShowCandidates} onJobUpdated={handleJobUpdated} />
+      <JobSidebar open={!!selectedJob} onClose={handleBack}>
+        {selectedJob && !showCandidateList && !showEditJob && (
+          <JobDetails
+            job={selectedJob}
+            onBack={handleBack}
+            onShowCandidates={handleShowCandidates}
+            onShowEditJob={handleShowEditJob}
+            onJobUpdated={handleJobUpdated}
+          />
         )}
         {selectedJob && showCandidateList && (
-          <AdminCandidateList job={selectedJob} onBack={handleBackToJobDetails} />
+          <CandidateList job={selectedJob} onBack={handleBackToJobDetails} />
         )}
-      </AdminJobSidebar>
+        {selectedJob && showEditJob && (
+          <EditJobPanel job={selectedJob} onBack={handleBackFromEditJob} onJobUpdated={handleJobUpdated} />
+        )}
+      </JobSidebar>
     </div>
   );
 };
 
-export default AdminJobs; 
+export default ManagerJobs;

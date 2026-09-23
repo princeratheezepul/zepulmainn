@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FaEdit, FaClock, FaUsers, FaBuilding } from 'react-icons/fa';
 import { useApi } from '../../../hooks/useApi';
 import { useAuth } from '../../../context/AuthContext';
-import { Card, PageHead, PrimaryButton, StatusPill, LoadingRow } from './AdminUI';
+import { Card, PageHead, PrimaryButton, StatusPill, LoadingRow } from '../../dashboard/DashboardUI';
 
 const AdminCompanyDetails = () => {
   const { get } = useApi();
