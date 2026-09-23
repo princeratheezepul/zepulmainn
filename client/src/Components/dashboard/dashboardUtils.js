@@ -80,3 +80,50 @@ export const initialsOf = (name, fallback = 'Zepul') =>
     .join('')
     .slice(0, 2)
     .toUpperCase();
+
+/* ---- Automated workflow pipeline -----------------------------------------
+ * Stage progress is not a single stored column: it is recorded across several
+ * resume fields, so each stage is derived from the evidence it leaves behind —
+ * an ATS score, a finished coding test, an evaluated interview, a transcript
+ * score, and finally a status that means a human has it.
+ */
+
+export const hasCvStrength = (r) => r?.ats_score != null;
+
+export const codingTestSent = (r) => Boolean(r?.oa?.scheduled || r?.oa?.assessmentId);
+
+export const hasCodingTest = (r) => ['completed', 'evaluated'].includes(r?.oa?.status);
+
+export const hasAiInterview = (r) =>
+  Boolean(r?.interviewEvaluation?.evaluatedAt || r?.interviewEvaluation?.evaluationResults?.length);
+
+export const hasScorecard = (r) => Number(r?.score || r?.totalscore || 0) > 0;
+
+export const atClientReview = (r) => ['shortlisted', 'offered', 'hired'].includes(r?.status);
+
+export const sharedOnward = (r) =>
+  ['submitted', 'shortlisted', 'offered', 'hired'].includes(r?.status);
+
+export const isSelected = (r) => ['offered', 'hired'].includes(r?.status);
+
+export const pipelineStages = (resumes) => [
+  { label: 'Resumes', value: resumes.length },
+  { label: 'CV Strength', value: resumes.filter(hasCvStrength).length },
+  { label: 'Coding Test', value: resumes.filter(hasCodingTest).length },
+  { label: 'AI Interview', value: resumes.filter(hasAiInterview).length },
+  { label: 'Scorecards', value: resumes.filter(hasScorecard).length },
+  { label: 'Client Review', value: resumes.filter(atClientReview).length },
+];
+
+const STATUS_TONE = {
+  hired: 'green',
+  offered: 'green',
+  shortlisted: 'green',
+  rejected: 'red',
+  screening: 'amber',
+  scheduled: 'amber',
+  submitted: 'grey',
+  applied: 'grey',
+};
+
+export const statusTone = (status) => STATUS_TONE[status] || 'grey';

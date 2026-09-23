@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import RecruiterJobCard from './RecruiterJobCard';
+import { Card, PageHead, GhostButton, LoadingRow } from '../../dashboard/DashboardUI';
 import JobSidebar from './JobSidebar';
 import JobDetailsView from './JobDetailsView';
 import { useNavigate } from 'react-router-dom';
@@ -154,95 +155,65 @@ const RecruiterJobs = () => {
   };
 
   return (
-    <div className="bg-white py-0 min-h-screen relative">
-      {/* Jobs List Header and Filters */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between pb-2 pt-2 border-b border-gray-200 mb-2 gap-2">
-        <div className="flex flex-col justify-center">
-          <div className="text-lg font-bold text-black mb-0">Jobs</div>
-          <p className="text-xs text-gray-500">Manage and track all your job posting here</p>
-        </div>
-        <div className="flex-1 flex justify-end">
-          <div className="flex gap-2 flex-wrap">
-            <div 
-              className={`rounded-lg px-3 py-1 mb-0 text-xs font-semibold border hover:shadow border-black cursor-pointer transition-colors ${
-                activeFilter === 'all' ? 'bg-black text-white' : 'bg-white text-black hover:bg-gray-100'
-              }`}
-              onClick={() => handleFilterChange('all')}
-            >
-              All Jobs ({filterCounts.all})
-            </div>
-            <div 
-              className={`rounded-lg px-3 py-1 text-xs font-semibold border hover:shadow border-black cursor-pointer transition-colors ${
-                activeFilter === 'opened' ? 'bg-black text-white' : 'bg-white text-black hover:bg-gray-100'
-              }`}
-              onClick={() => handleFilterChange('opened')}
-            >
-              Opened Jobs ({filterCounts.opened})
-            </div>
-            <div 
-              className={`rounded-lg px-3 py-1 text-xs font-semibold border hover:shadow border-black cursor-pointer transition-colors ${
-                activeFilter === 'urgent' ? 'bg-black text-white' : 'bg-white text-black hover:bg-gray-100'
-              }`}
-              onClick={() => handleFilterChange('urgent')}
-            >
-              Urgent ({filterCounts.urgent})
-            </div>
-            <div 
-              className={`rounded-lg px-3 py-1 text-xs font-semibold border hover:shadow border-black cursor-pointer transition-colors ${
-                activeFilter === 'closed' ? 'bg-black text-white' : 'bg-white text-black hover:bg-gray-100'
-              }`}
-              onClick={() => handleFilterChange('closed')}
-            >
-              Closed Jobs ({filterCounts.closed})
-            </div>
-          </div>
-        </div>
+    <div className="p-5 md:p-7 max-w-[1500px] relative">
+      <PageHead
+        eyebrow="Recruiter"
+        title="Assigned Jobs"
+        sub="You cannot create or manage jobs — upload candidates against the requirements assigned to you"
+      />
+
+      <div className="flex flex-wrap gap-2 mb-4">
+        {[
+          { key: 'all', label: 'All Jobs', count: filterCounts.all },
+          { key: 'opened', label: 'Open', count: filterCounts.opened },
+          { key: 'urgent', label: 'Urgent', count: filterCounts.urgent },
+          { key: 'closed', label: 'Closed', count: filterCounts.closed },
+        ].map((f) => (
+          <button
+            key={f.key}
+            onClick={() => handleFilterChange(f.key)}
+            className={`px-3 py-2 rounded-lg text-[11px] font-bold cursor-pointer transition-colors border ${
+              activeFilter === f.key
+                ? 'bg-[#eaf0ff] text-[#024bff] border-[#c7d5ff]'
+                : 'bg-white text-[#778092] border-[#e7ebf2] hover:bg-[#f6f8fb]'
+            }`}
+          >
+            {f.label} ({f.count})
+          </button>
+        ))}
       </div>
-      
+
       {loading ? (
-        <div className="flex justify-center items-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-        </div>
+        <LoadingRow label="Loading assigned jobs…" />
+      ) : jobs.length === 0 ? (
+        <Card className="p-[17px] text-xs text-[#778092]">
+          {activeFilter === 'all'
+            ? 'No jobs are assigned to you yet. Your manager assigns the requirements you work on.'
+            : `No ${activeFilter} jobs assigned to you.`}
+        </Card>
       ) : (
-        <>
-          <div>
-            {jobs.length === 0 ? (
-              <div className="text-center text-gray-500 py-8">
-                {activeFilter === 'all' ? 'No jobs found. Create your first job!' : `No ${activeFilter} jobs found.`}
-              </div>
-            ) : (
-              jobs.map((job) => (
-                <RecruiterJobCard key={job._id || job.id} job={job} onClick={handleJobClick} />
-              ))
-            )}
-          </div>
-          
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="flex justify-center items-center gap-2 mt-2">
-              <button
-                onClick={() => handlePageChange(currentPage - 1)}
-                disabled={currentPage === 1}
-                className="px-3 py-2 rounded-lg border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 cursor-pointer"
-              >
-                Previous
-              </button>
-              <span className="px-3 py-2">
-                Page {currentPage} of {totalPages}
-              </span>
-              <button
-                onClick={() => handlePageChange(currentPage + 1)}
-                disabled={currentPage === totalPages}
-                className="px-3 py-2 rounded-lg border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 cursor-pointer"
-              >
-                Next
-              </button>
-            </div>
-          )}
-        </>
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-[13px]">
+          {jobs.map((job) => (
+            <RecruiterJobCard key={job._id || job.id} job={job} onClick={handleJobClick} />
+          ))}
+        </div>
+      )}
+
+      {totalPages > 1 && (
+        <div className="flex justify-center items-center gap-2 mt-5">
+          <GhostButton onClick={() => currentPage > 1 && handlePageChange(currentPage - 1)}>
+            Previous
+          </GhostButton>
+          <span className="px-3 text-xs text-[#778092]">
+            Page {currentPage} of {totalPages}
+          </span>
+          <GhostButton onClick={() => currentPage < totalPages && handlePageChange(currentPage + 1)}>
+            Next
+          </GhostButton>
+        </div>
       )}
     </div>
   );
 };
 
-export default RecruiterJobs; 
+export default RecruiterJobs;

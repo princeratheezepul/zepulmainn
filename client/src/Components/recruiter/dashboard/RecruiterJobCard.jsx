@@ -1,154 +1,60 @@
 import React from 'react';
-import { Briefcase, MapPin, Calendar, Users } from 'lucide-react';
+import { Card, StatusPill, Chip } from '../../dashboard/DashboardUI';
 
 const RecruiterJobCard = ({ job, onClick }) => {
-  // Function to truncate description to 3 lines
-  const truncateDescription = (text, maxLines = 3) => {
-    if (!text) return '';
-    const lines = text.split('\n');
-    const truncatedLines = lines.slice(0, maxLines);
-    const result = truncatedLines.join('\n');
-    return result + (lines.length > maxLines ? '...' : '');
-  };
+  const deadlinePassed =
+    job.hiringDeadline && new Date(job.hiringDeadline) < new Date(new Date().setHours(0, 0, 0, 0));
 
-  // Function to get company display info
-  const getCompanyDisplay = () => {
-    if (job.company) {
-      // If job has company name, show it
-      return {
-        type: 'letter',
-        content: job.company.charAt(0)?.toUpperCase() || 'C',
-        name: job.company
-      };
-    } else if (job.companyId) {
-      // If company has a logo, show it, otherwise show first letter
-      return {
-        type: 'logo',
-        content: job.companyLogo || job.companyName?.charAt(0)?.toUpperCase() || 'C',
-        name: job.companyName || 'Company'
-      };
-    } else {
-      // Admin created job
-      return {
-        type: 'letter',
-        content: 'A',
-        name: 'Admin'
-      };
-    }
-  };
+  const status = (() => {
+    if (job.isClosed) return { text: 'Closed', tone: 'grey' };
+    if (deadlinePassed) return { text: 'Deadline passed', tone: 'red' };
+    if (job.priority?.includes('High')) return { text: 'Urgent', tone: 'amber' };
+    const days = Math.floor((Date.now() - new Date(job.createdAt)) / 86400000);
+    if (days <= 7) return { text: 'New', tone: 'green' };
+    return { text: 'Live', tone: 'green' };
+  })();
 
-  // Function to check if hiring deadline has passed
-  const isDeadlinePassed = () => {
-    if (job.hiringDeadline) {
-      const deadlineDate = new Date(job.hiringDeadline);
-      const today = new Date();
-      today.setHours(0, 0, 0, 0); // Reset time to start of day for accurate comparison
-      return deadlineDate < today;
-    }
-    return false;
-  };
-
-  // Function to determine job status badge
-  const getJobStatus = () => {
-    // Check if job is closed
-    if (job.isClosed) {
-      return { text: 'Close', className: 'bg-gray-200 text-gray-700' };
-    }
-    
-    // Check if hiring deadline has passed
-    if (job.hiringDeadline) {
-      const deadlineDate = new Date(job.hiringDeadline);
-      const today = new Date();
-      today.setHours(0, 0, 0, 0); // Reset time to start of day for accurate comparison
-      
-      if (deadlineDate < today) {
-        return { text: 'Close', className: 'bg-red-100 text-red-700' };
-      }
-    }
-    
-    // Check if priority is high (urgent)
-    if (job.priority && job.priority.includes('High')) {
-      return { text: 'Urgent', className: 'bg-yellow-100 text-yellow-700' };
-    }
-    
-    // Check if job was created within 7 days (new)
-    const createdAt = new Date(job.createdAt);
-    const now = new Date();
-    const daysDiff = Math.floor((now - createdAt) / (1000 * 60 * 60 * 24));
-    
-    if (daysDiff <= 7) {
-      return { text: 'New', className: 'bg-green-100 text-green-700' };
-    }
-    
-    return null; // No status badge
-  };
-
-  const companyInfo = getCompanyDisplay();
-  const jobStatus = getJobStatus();
+  const openings = job.openpositions || 1;
 
   return (
-    <div className="bg-white p-2 rounded-lg hover:shadow-sm border border-gray-100 mb-1 flex flex-col relative cursor-pointer" onClick={() => onClick && onClick(job)}>
-      <div className="absolute top-4 right-4">
-        {jobStatus && (
-          <span className={`text-xs font-semibold px-3 py-1 rounded-full ${jobStatus.className}`}>
-            {jobStatus.text}
-          </span>
+    <Card
+      className="p-[17px] cursor-pointer hover:border-[#c7d5ff] transition-colors flex flex-col"
+      onClick={() => onClick(job)}
+    >
+      <div className="flex items-start justify-between gap-2">
+        <StatusPill tone={status.tone}>{status.text}</StatusPill>
+        {job.cvStrengthCutoff != null && (
+          <span className="text-[#024bff] font-extrabold text-[11px]">CV &ge; {job.cvStrengthCutoff}</span>
         )}
       </div>
-      <div className="pr-16">
-        <div className="text-md font-bold text-gray-800">{job.jobtitle}</div>
-        <p className="text-gray-600 text-sm max-w-2xl whitespace-pre-line mb-0" style={{ 
-          display: '-webkit-box',
-          WebkitLineClamp: 2,
-          WebkitBoxOrient: 'vertical',
-          overflow: 'hidden'
-        }}>
-          {truncateDescription(job.description)}
-        </p>
+
+      <h3 className="text-sm font-bold mt-3 mb-1.5">{job.jobtitle}</h3>
+
+      <div className="text-[10px] text-[#778092] leading-[1.8]">
+        {job.company || 'Zepul'}
+        <br />
+        {[job.type, job.location].filter(Boolean).join(' · ') || 'Location not set'}
+        {job.experience ? ` · ${job.experience}+ yrs` : ''}
+        <br />
+        {openings} opening{openings !== 1 ? 's' : ''} · {job.totalApplication_number || 0} candidates
       </div>
-      <div className="flex justify-between items-end">
-        <div className="flex items-center flex-wrap gap-x-3 gap-y-1 text-sm text-gray-600">
-          <div className="flex items-center gap-2 text-xs">
-            {companyInfo.type === 'logo' && job.companyLogo ? (
-              <img src={job.companyLogo} alt={companyInfo.name} className="w-5 h-5" />
-            ) : (
-              <div className="w-5 h-5 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-semibold">
-                {companyInfo.content}
-              </div>
-            )}
-            <span className="font-medium text-gray-700">{companyInfo.name}</span>
-          </div>
-          <div className="flex text-xs items-center gap-1.5 border border-gray-200 rounded-md px-2 py-1">
-            <MapPin size={16} className="text-gray-400" />
-            <span>{job.type} - {job.location}</span>
-          </div>
-          <div className="flex text-xs items-center gap-1.5 border border-gray-200 rounded-md px-2 py-1">
-            <Briefcase size={16} className="text-gray-400" />
-            <span>{job.employmentType || 'Full-time'} • {job.openpositions || 1} opening{job.openpositions !== 1 ? 's' : ''}</span>
-          </div>
-          <div className="flex text-xs items-center gap-1.5 border border-gray-200 rounded-md px-2 py-1">
-            <Calendar size={16} className="text-gray-400" />
-            <span>Posted {job.createdAt ? new Date(job.createdAt).toLocaleDateString('en-US', { 
-              year: 'numeric', 
-              month: 'short', 
-              day: 'numeric' 
-            }) : 'N/A'}</span>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-2 text-xs text-gray-600 bg-gray-100 font-medium px-3 py-2 rounded-full">
-            <Users size={18} className="text-gray-500"/>
-            <span>{job.totalApplication_number || 0} Applicants Submitted</span>
-          </div>
-          {!job.isClosed && !isDeadlinePassed() && (
-            <div className="bg-blue-600 text-white px-3 py-2 rounded-full font-semibold hover:bg-blue-700 transition-colors text-xs">
-              Submit Resume
-            </div>
-          )}
-        </div>
+
+      <div className="flex-1">
+        <Chip>{job.employmentType || 'Full-time'}</Chip>
+        <Chip>{job.shortlisted_number || 0} shortlisted</Chip>
       </div>
-    </div>
+
+      <button
+        className="mt-3 w-full border border-[#e7ebf2] rounded-lg py-2 text-[11px] font-bold text-[#024bff] hover:bg-[#f6f8fb] transition-colors cursor-pointer"
+        onClick={(e) => {
+          e.stopPropagation();
+          onClick(job);
+        }}
+      >
+        Open job
+      </button>
+    </Card>
   );
 };
 
-export default RecruiterJobCard; 
+export default RecruiterJobCard;

@@ -9,6 +9,13 @@ export {
   relativeTime,
   greeting,
   initialsOf,
+  hasCvStrength,
+  hasCodingTest,
+  hasAiInterview,
+  hasScorecard,
+  atClientReview,
+  pipelineStages,
+  statusTone,
 } from '../../dashboard/dashboardUtils';
 
 const EMPTY = {
@@ -69,43 +76,3 @@ export const useManagerPlatformData = () => {
 
   return { ...data, loading, error, refresh: load };
 };
-
-/* ---- Pipeline derivation -------------------------------------------------
- * The automated workflow is recorded across several resume fields rather than a
- * single stage column, so each stage is derived from the evidence it leaves
- * behind: an ATS score, a finished coding test, an evaluated interview, a
- * transcript score, and finally a status that means the client has it.
- */
-
-export const hasCvStrength = (r) => r?.ats_score != null;
-
-export const hasCodingTest = (r) => ['completed', 'evaluated'].includes(r?.oa?.status);
-
-export const hasAiInterview = (r) =>
-  Boolean(r?.interviewEvaluation?.evaluatedAt || r?.interviewEvaluation?.evaluationResults?.length);
-
-export const hasScorecard = (r) => Number(r?.score || r?.totalscore || 0) > 0;
-
-export const atClientReview = (r) => ['shortlisted', 'offered', 'hired'].includes(r?.status);
-
-export const pipelineStages = (resumes) => [
-  { label: 'Resumes', value: resumes.length },
-  { label: 'CV Strength', value: resumes.filter(hasCvStrength).length },
-  { label: 'Coding Test', value: resumes.filter(hasCodingTest).length },
-  { label: 'AI Interview', value: resumes.filter(hasAiInterview).length },
-  { label: 'Scorecards', value: resumes.filter(hasScorecard).length },
-  { label: 'Client Review', value: resumes.filter(atClientReview).length },
-];
-
-const STATUS_TONE = {
-  hired: 'green',
-  offered: 'green',
-  shortlisted: 'green',
-  rejected: 'red',
-  screening: 'amber',
-  scheduled: 'amber',
-  submitted: 'grey',
-  applied: 'grey',
-};
-
-export const statusTone = (status) => STATUS_TONE[status] || 'grey';

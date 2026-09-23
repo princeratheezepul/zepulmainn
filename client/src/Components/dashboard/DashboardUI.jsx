@@ -53,7 +53,7 @@ export const Chip = ({ children }) => (
 
 export const PrimaryButton = ({ className = '', children, ...rest }) => (
   <button
-    className={`border-0 bg-[#024bff] text-white px-[14px] py-[9px] rounded-lg font-bold text-xs cursor-pointer hover:bg-[#0140dd] transition-colors ${className}`}
+    className={`border-0 bg-[#024bff] text-white px-[14px] py-[9px] rounded-lg font-bold text-xs cursor-pointer hover:bg-[#0140dd] transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-[#024bff] ${className}`}
     {...rest}
   >
     {children}
