@@ -11,6 +11,8 @@ import {
   searchWebJobsForCandidateQuery,
   handleWebhook,
 } from "../controllers/candidateInterview.controller.js";
+import { candidateSearchChat } from "../controllers/candidateSearchChat.controller.js";
+import { openAILimiter } from "../middleware/rateLimiters.js";
 
 const router = express.Router();
 
@@ -24,6 +26,9 @@ router.get("/candidate/:candidateId/web-jobs", getWebJobsForCandidate);
 // On-demand search once the candidate has completed their interview
 router.post("/candidate/:candidateId/search", searchJobsForCandidate);
 router.post("/candidate/:candidateId/search/web", searchWebJobsForCandidateQuery);
+// Conversational search. OpenAI-backed and unauthenticated like its siblings, so
+// it is throttled per IP to protect API spend.
+router.post("/candidate/:candidateId/search/chat", openAILimiter, candidateSearchChat);
 
 router.post("/", createSession);
 router.get("/:sessionId", getSession);

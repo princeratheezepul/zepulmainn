@@ -4,6 +4,7 @@ import "./ZepJobs.css";
 import { getApiUrl } from "../config/config";
 import InterviewPrepPanel from "../Components/InterviewPrepPanel";
 import CandidateProfilePanel from "../Components/candidate/CandidateProfilePanel";
+import JobSearchChatAgent from "../Components/candidate/JobSearchChatAgent";
 
 export default function CandidateDashboard() {
   const navigate = useNavigate();
@@ -29,7 +30,10 @@ export default function CandidateDashboard() {
   // On-demand search. Unlocked once the candidate has completed their interview —
   // before that the AI agent is the only way in, so we have a profile to match on.
   const [searchQuery, setSearchQuery] = useState("");
-  const [search, setSearch] = useState(null); // { query, jobs, webJobs }
+  // "type" is the keyword box; "chat" hands the same search to an agent that asks
+  // what the candidate wants in depth first.
+  const [searchMode, setSearchMode] = useState("type");
+  const [search, setSearch] = useState(null); // { query, brief, jobs, webJobs }
   const [searchLoading, setSearchLoading] = useState(false);
   const [searchWebLoading, setSearchWebLoading] = useState(false);
   const [searchError, setSearchError] = useState("");
@@ -143,9 +147,10 @@ export default function CandidateDashboard() {
 
   // Run both halves of a search at once: database matches land fast, the web pass
   // takes 10-25s and fills in behind its own spinner.
-  const runSearch = async (e) => {
-    e?.preventDefault?.();
-    const query = searchQuery.trim();
+  // `brief` is what the chat agent understood — carried alongside the query so the
+  // results can show it back. A typed search has no brief.
+  const startSearch = (rawQuery, brief = null) => {
+    const query = String(rawQuery || "").trim();
     if (!query || !candidate?._id) return;
 
     // Cancel whatever the previous search still had in flight. The web half runs
@@ -156,7 +161,7 @@ export default function CandidateDashboard() {
     searchAbortRef.current = controller;
 
     const id = ++searchIdRef.current;
-    setSearch({ query, jobs: [], webJobs: [] });
+    setSearch({ query, brief, jobs: [], webJobs: [] });
     setSearchError("");
     setSearchWebError("");
     setSearchLoading(true);
@@ -204,6 +209,19 @@ export default function CandidateDashboard() {
       .finally(() => {
         if (isCurrent()) setSearchWebLoading(false);
       });
+  };
+
+  const runSearch = (e) => {
+    e?.preventDefault?.();
+    startSearch(searchQuery);
+  };
+
+  // The agent has distilled the conversation into a search phrase — run it, and
+  // drop back to the keyword box so the results aren't buried under the chat.
+  const runAgentSearch = (brief) => {
+    setSearchMode("type");
+    setSearchQuery(brief.query);
+    startSearch(brief.query, brief);
   };
 
   const clearSearch = () => {
@@ -470,7 +488,27 @@ export default function CandidateDashboard() {
               </div>
             )}
 
-            {currentTab === "find" && hasInterviewed && (
+            {currentTab === "find" && hasInterviewed && searchMode === "chat" && (
+              <div className="search-panel" role="tabpanel" id="panel-find" aria-labelledby="tab-find">
+                <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+                  <label className="search-label mb-0">Search with the assistant</label>
+                  <button
+                    type="button"
+                    onClick={() => setSearchMode("type")}
+                    className="shrink-0 text-xs font-medium text-blue-600 hover:underline cursor-pointer"
+                  >
+                    Type a search instead
+                  </button>
+                </div>
+                <JobSearchChatAgent
+                  candidateId={candidate?._id}
+                  onSearch={runAgentSearch}
+                  onCancel={() => setSearchMode("type")}
+                />
+              </div>
+            )}
+
+            {currentTab === "find" && hasInterviewed && searchMode === "type" && (
               <form
                 className="search-panel"
                 role="tabpanel"
@@ -478,9 +516,21 @@ export default function CandidateDashboard() {
                 aria-labelledby="tab-find"
                 onSubmit={runSearch}
               >
-                <label className="search-label" htmlFor="job-search-input">
-                  Search for a role
-                </label>
+                <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+                  <label className="search-label mb-0" htmlFor="job-search-input">
+                    Search for a role
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setSearchMode("chat")}
+                    className="shrink-0 inline-flex items-center gap-1.5 text-xs font-semibold text-blue-600 hover:underline cursor-pointer"
+                  >
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+                    </svg>
+                    Not sure what to search? Ask the assistant
+                  </button>
+                </div>
                 <div className="flex flex-col sm:flex-row gap-2">
                   <input
                     id="job-search-input"
@@ -536,6 +586,51 @@ export default function CandidateDashboard() {
                 Back to recommendations
               </button>
             </div>
+
+            {/* What the assistant took from the conversation. Shown so the
+                candidate can see what was searched for and correct it. */}
+            {search.brief && (
+              <div className="mb-3 bg-blue-50 border border-blue-100 rounded-xl px-4 py-3">
+                <div className="flex items-start justify-between gap-3">
+                  <p className="text-sm text-blue-900">
+                    {search.brief.summary || "Here's what the assistant searched for."}
+                  </p>
+                  <button
+                    onClick={() => setSearchMode("chat")}
+                    className="shrink-0 text-xs font-medium text-blue-700 hover:underline cursor-pointer"
+                  >
+                    Refine
+                  </button>
+                </div>
+                {(() => {
+                  const chips = [
+                    search.brief.role,
+                    search.brief.experience,
+                    search.brief.workType,
+                    search.brief.employmentType,
+                    ...(search.brief.locations || []),
+                    ...(search.brief.skills || []),
+                  ].filter(Boolean);
+                  return chips.length > 0 ? (
+                    <div className="flex flex-wrap gap-1.5 mt-2">
+                      {chips.map((chip, i) => (
+                        <span
+                          key={`${chip}-${i}`}
+                          className="inline-block bg-white border border-blue-200 text-blue-800 text-[11px] font-medium px-2 py-0.5 rounded-full"
+                        >
+                          {chip}
+                        </span>
+                      ))}
+                    </div>
+                  ) : null;
+                })()}
+                {search.brief.notes?.length > 0 && (
+                  <p className="text-xs text-blue-800/80 mt-2">
+                    Also noted: {search.brief.notes.join(" · ")}
+                  </p>
+                )}
+              </div>
+            )}
 
             {searchLoading ? (
               <div className="bg-white border border-gray-200 rounded-xl p-8 flex items-center justify-center gap-3">
