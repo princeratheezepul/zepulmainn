@@ -507,7 +507,11 @@ export const createJobm = async (req, res) => {
         companyId,
         hiringDeadline,
         internalNotes,
-        resumeAnalysisPoints
+        resumeAnalysisPoints,
+        // Set when the job is created from the marketplace: it is published to
+        // ProRecruiters the moment it exists, rather than listed as a second step.
+        listToMarketplace,
+        commissionRate
     } = req.body;
     console.log("managerId:", managerId);
 
@@ -547,7 +551,16 @@ export const createJobm = async (req, res) => {
             hiringDeadline: hiringDeadline ? new Date(hiringDeadline) : null,
             internalNotes: internalNotes || "",
             resumeAnalysisPoints: Array.isArray(resumeAnalysisPoints) ? resumeAnalysisPoints : [],
-            assignedTo: recruiterId ? [recruiterId] : []
+            assignedTo: recruiterId ? [recruiterId] : [],
+            marketplace: listToMarketplace
+                ? {
+                    isListed: true,
+                    listedAt: new Date(),
+                    listedBy: managerId || null,
+                    commissionRate: Number.isFinite(Number(commissionRate)) ? Number(commissionRate) : null,
+                    pickedBy: [],
+                }
+                : undefined,
         });
 
         // Add the job to the manager's jobs array
@@ -590,11 +603,18 @@ export const getAllJobsm = async (req, res) => {
             return res.status(400).json({ message: 'Manager ID is required.' });
         }
 
-        const jobs = await Job.find({ managerId })
+        // A manager's jobs are the ones they created plus anything they picked up
+        // from the ProRecruiter marketplace — picked jobs are worked exactly like
+        // their own, so they belong in the same list.
+        const owner = await User.findById(managerId).select('pickedJobs');
+        const pickedIds = owner?.pickedJobs || [];
+
+        const jobs = await Job.find({
+            $or: [{ managerId }, ...(pickedIds.length ? [{ _id: { $in: pickedIds } }] : [])],
+        })
             .populate('adminId', 'fullname username')
             .populate('managerId', 'fullname username')
             .populate('assignedRecruiters', 'fullname email status');
-        console.log(jobs);
         return res.status(200).json({
             message: "Jobs fetched successfully.",
             jobs,

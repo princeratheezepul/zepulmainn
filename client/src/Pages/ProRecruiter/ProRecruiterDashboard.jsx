@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   LayoutDashboard,
   Briefcase,
+  Store,
   UserCheck,
   ClipboardCheck,
   Gavel,
   Users as UsersIcon,
-  BarChart3,
   Settings as SettingsIcon,
   Search,
   Menu,
@@ -18,9 +19,11 @@ import ManagerJobs from '../../Components/manager/dashboard/ManagerJobs';
 import ManagerCandidates from '../../Components/manager/dashboard/ManagerCandidates';
 import ProRecruiterOverview from '../../Components/prorecruiter/dashboard/ProRecruiterOverview';
 import ProRecruiterDecisions from '../../Components/prorecruiter/dashboard/ProRecruiterDecisions';
+import ProRecruiterMarketplace from '../../Components/prorecruiter/dashboard/ProRecruiterMarketplace';
 import { useManagerPlatformData } from '../../Components/manager/dashboard/useManagerPlatformData';
 import { Card, PageHead, PrimaryButton, GhostButton, StatusPill, LoadingRow } from '../../Components/dashboard/DashboardUI';
 import { initialsOf } from '../../Components/dashboard/dashboardUtils';
+import DashboardSidebar from '../../Components/dashboard/DashboardSidebar.jsx';
 import toast from 'react-hot-toast';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, ResponsiveContainer, ReferenceLine } from 'recharts';
 
@@ -28,77 +31,40 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Refe
  * Employer Manager console sections. `fullBleed` screens ship their own page
  * padding, so the shell hands them the content area untouched.
  */
+// Creating jobs from this console is limited to specific accounts; everyone
+// else works the requirements they pick up from the marketplace. Add an address
+// here to grant it — matching is case-insensitive.
+const JOB_CREATOR_EMAILS = [];
+
+const canCreateJobs = (email) =>
+  JOB_CREATOR_EMAILS.includes(String(email || '').trim().toLowerCase());
+
+const signedInEmail = () => {
+  try {
+    const info = JSON.parse(localStorage.getItem('userInfo'));
+    if (info?.data?.user?.email) return info.data.user.email;
+    return JSON.parse(localStorage.getItem('authUser'))?.email || '';
+  } catch {
+    return '';
+  }
+};
+
 const EM_NAV = [
   { name: 'Dashboard', icon: LayoutDashboard },
   { name: 'Jobs', icon: Briefcase, fullBleed: true },
+  { name: 'Marketplace', icon: Store },
   { name: 'Candidates', icon: UserCheck },
   { name: 'Scorecards', icon: ClipboardCheck },
   { name: 'Hiring Decisions', icon: Gavel },
   { name: 'Recruiter', icon: UsersIcon, fullBleed: true },
-  { name: 'Analytics', icon: BarChart3 },
   { name: 'Settings', icon: SettingsIcon, fullBleed: true },
 ];
 
 
 
-const stageLabels = [
-  "Applications",
-  "Submitted",
-  "Screened",
-  "Shortlisted",
-  "Offered",
-  "Hired",
-];
-
-const stageColors = [
-  "#0A1833", // Applications (dark blue)
-  "#0057FF", // Screened (blue)
-  "#FF8A00", // Interviewed (orange)
-  "#FFD233", // Shortlisted (yellow)
-  "#6B7892", // Offered (gray-blue)
-  "#f3f4f6",  // Hired (light gray)
-];
-
-// This will be replaced with dynamic data fetching
 
 
 
-const ArrowSegment = ({ value, color, isFirst, isLast, empty, index }) => {
-  let shapeClass = "middle";
-  if (isFirst) shapeClass = "first";
-  else if (isLast) shapeClass = "last";
-
-  // Responsive margins for different positions
-  let marginLeft = 0;
-  if (isFirst) {
-    marginLeft = 0; // Applications - no margin
-  } else if (index === 1) {
-    marginLeft = -12; // Screened - reduced overlap
-  } else if (index === 2) {
-    marginLeft = -24; // Interviewed - reduced overlap
-  } else if (index === 3) {
-    marginLeft = -36; // Shortlisted - reduced overlap
-  } else if (index === 4) {
-    marginLeft = -48; // Offered - reduced overlap
-  } else {
-    marginLeft = -60; // Hired - reduced overlap
-  }
-
-  return (
-    <div
-      className={`pipeline-segment ${shapeClass} ${empty ? 'empty' : ''} text-xs`}
-      style={{
-        background: empty ? undefined : color,
-        marginLeft: marginLeft,
-        minWidth: 'clamp(50px, 12vw, 80px)',
-        width: 'clamp(3rem, 12vw, 5rem)',
-        fontSize: 'clamp(10px, 2vw, 12px)'
-      }}
-    >
-      {value}
-    </div>
-  );
-};
 
 // Job Closed Trend Chart Component
 const JobClosedTrendChart = ({ selectedRecruiter }) => {
@@ -1047,222 +1013,27 @@ function RecruiterPerformance({ recruiter, onClose }) {
 }
 
 export default function ProRecruiterDashboard() {
-  // State for scorecard review data
-  const [scorecardData, setScorecardData] = useState({
-    totalResumes: 0,
-    reviewedResumes: 0,
-    pendingResumes: 0,
-    reviewedPercent: 0,
-    pendingPercent: 0
-  });
-  const [scorecardLoading, setScorecardLoading] = useState(true);
-  const [scorecardError, setScorecardError] = useState(null);
-
-  // State for candidate pipeline data
-  const [candidatePipelineData, setCandidatePipelineData] = useState([]);
-  const [pipelineLoading, setPipelineLoading] = useState(true);
-  const [pipelineError, setPipelineError] = useState(null);
-
   // State for selected recruiter
   const [selectedRecruiter, setSelectedRecruiter] = useState(null);
 
-  // State for recruiter performance summary data
-  const [recruiterPerformanceData, setRecruiterPerformanceData] = useState([]);
-  const [performanceLoading, setPerformanceLoading] = useState(true);
-  const [performanceError, setPerformanceError] = useState(null);
 
-  // Fetch scorecard data
-  React.useEffect(() => {
-    const userInfo = JSON.parse(localStorage.getItem("userInfo"));
-    const managerId = userInfo?.data?.user?._id;
-    const token = userInfo?.data?.accessToken;
 
-    if (!managerId || !token) {
-      setScorecardLoading(false);
-      return;
-    }
 
-    const fetchScorecardData = async () => {
-      try {
-        setScorecardLoading(true);
-        const response = await fetch(
-          `${import.meta.env.VITE_BACKEND_URL}/api/manager/resumes/manager/${managerId}`,
-          {
-            headers: { 'Authorization': `Bearer ${token}` }
-          }
-        );
+  // Mirrored in the URL as ?tab= so a refresh, or coming back from a job page,
+  // lands on the section the user left.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const requestedTab = searchParams.get('tab');
+  const [activeComponent, setActiveComponentState] = useState(
+    EM_NAV.some((n) => n.name === requestedTab) ? requestedTab : 'Dashboard'
+  );
 
-        if (!response.ok) {
-          throw new Error('Failed to fetch scorecard data');
-        }
-
-        const data = await response.json();
-        if (data.success) {
-          setScorecardData(data.data);
-        } else {
-          throw new Error(data.message || 'Failed to fetch scorecard data');
-        }
-      } catch (err) {
-        console.error('Error fetching scorecard data:', err);
-        setScorecardError(err.message);
-      } finally {
-        setScorecardLoading(false);
-      }
-    };
-
-    fetchScorecardData();
-  }, []);
-
-  // Fetch candidate pipeline data
-  React.useEffect(() => {
-    const userInfo = JSON.parse(localStorage.getItem("userInfo"));
-    const managerId = userInfo?.data?.user?._id;
-    const token = userInfo?.data?.accessToken;
-
-    if (!managerId || !token) {
-      setPipelineLoading(false);
-      return;
-    }
-
-    const fetchPipelineData = async () => {
-      try {
-        setPipelineLoading(true);
-        const response = await fetch(
-          `${import.meta.env.VITE_BACKEND_URL}/api/manager/resumes/manager/${managerId}`,
-          {
-            headers: { 'Authorization': `Bearer ${token}` }
-          }
-        );
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch pipeline data');
-        }
-
-        const data = await response.json();
-        if (data.success) {
-          // Process the resumes data to create pipeline
-          const processedData = processPipelineData(data.resumes || []);
-          setCandidatePipelineData(processedData);
-        } else {
-          throw new Error(data.message || 'Failed to fetch pipeline data');
-        }
-      } catch (err) {
-        console.error('Error fetching pipeline data:', err);
-        setPipelineError(err.message);
-      } finally {
-        setPipelineLoading(false);
-      }
-    };
-
-    fetchPipelineData();
-  }, []);
-
-  // Fetch recruiter performance summary data
-  React.useEffect(() => {
-    const userInfo = JSON.parse(localStorage.getItem("userInfo"));
-    const managerId = userInfo?.data?.user?._id;
-    const token = userInfo?.data?.accessToken;
-
-    if (!managerId || !token) {
-      setPerformanceLoading(false);
-      return;
-    }
-
-    const fetchRecruiterPerformanceData = async () => {
-      try {
-        setPerformanceLoading(true);
-        setPerformanceError(null);
-
-        const response = await fetch(
-          `${import.meta.env.VITE_BACKEND_URL}/api/recruiter/getrecruiter?creatorId=${managerId}&type=manager`,
-          {
-            headers: { 'Authorization': `Bearer ${token}` }
-          }
-        );
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch recruiter performance data');
-        }
-
-        const data = await response.json();
-        if (data.recruiters && Array.isArray(data.recruiters)) {
-          // Sort by creation date (most recent first) and take only the first 6
-          const sortedRecruiters = data.recruiters
-            .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-            .slice(0, 6)
-            .map(recruiter => ({
-              name: recruiter.fullname || 'Unknown',
-              hires: recruiter.totalHires || 0,
-              offers: recruiter.offersMade || 0,
-              accepted: recruiter.offersAccepted || 0,
-              tat: recruiter.avgTAT || 0
-            }));
-
-          setRecruiterPerformanceData(sortedRecruiters);
-        } else {
-          setRecruiterPerformanceData([]);
-        }
-      } catch (err) {
-        console.error('Error fetching recruiter performance data:', err);
-        setPerformanceError(err.message);
-        setRecruiterPerformanceData([]);
-      } finally {
-        setPerformanceLoading(false);
-      }
-    };
-
-    fetchRecruiterPerformanceData();
-  }, []);
-
-  // Function to process resume data into pipeline format
-  const processPipelineData = (resumes) => {
-    const tags = ['Engineering', 'Marketing', 'Sales', 'Customer Support', 'Finance', 'Other'];
-    // New order: Applications, Submitted, Screened, Shortlisted, Offered, Hired
-    const statuses = ['submitted', 'submitted', 'screening', 'shortlisted', 'offered', 'hired'];
-
-    return tags.map(tag => {
-      const tagResumes = resumes.filter(resume => resume.tag === tag);
-      const stages = statuses.map((status, index) => {
-        let count = 0;
-
-        if (index === 0) {
-          // Applications: count all resumes for this tag
-          count = tagResumes.length;
-        } else if (index === 1) {
-          // Submitted: count resumes with 'submitted' status
-          count = tagResumes.filter(resume => resume.status === 'submitted').length;
-        } else {
-          // Other stages: count by specific status
-          count = tagResumes.filter(resume => resume.status === status).length;
-        }
-
-        return count > 0 ? count : null;
-      });
-
-      return {
-        role: tag,
-        stages: stages
-      };
-    });
+  // Dashboard is the default, so it stays as a bare /prorecruiter/dashboard URL.
+  const setActiveComponent = (name) => {
+    setActiveComponentState(name);
+    setSearchParams(name && name !== 'Dashboard' ? { tab: name } : {}, { replace: true });
   };
-
-  // Use dynamic data for the scorecard review component
-  const reviewedPercent = scorecardData.reviewedPercent;
-  const pendingPercent = scorecardData.pendingPercent;
-
-  // SVG circle parameters
-  const size = 192; // px (w-48 h-48)
-  const stroke = 14;
-  const radius = 86 - stroke / 2; // 86 is half of 172 (inner circle), minus half stroke
-  const circumference = 2 * Math.PI * radius;
-  const reviewedLength = (circumference * reviewedPercent) / 100;
-  const pendingLength = (circumference * pendingPercent) / 100;
-  const gapLength = circumference * 0.08; // 8% gap at the bottom
-  const offsetReviewed = gapLength / 2;
-  const offsetPending = reviewedLength + gapLength / 2;
-
-  const [activeComponent, setActiveComponent] = useState('Dashboard');
   const [navOpen, setNavOpen] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(true);
   const [jump, setJump] = useState('');
   const platform = useManagerPlatformData();
   const [showDetailModal, setShowDetailModal] = useState(false);
@@ -1296,6 +1067,7 @@ export default function ProRecruiterDashboard() {
 
   const employerName =
     userInfo?.data?.user?.fullname || userInfo?.data?.user?.username || 'Employer Manager';
+  const mayCreateJobs = canCreateJobs(signedInEmail());
 
   // MyRecruiters now receives recruiters as a prop
   function MyRecruiters({ selectedRecruiter, setSelectedRecruiter }) {
@@ -1617,236 +1389,6 @@ export default function ProRecruiterDashboard() {
     );
   }
 
-  // The legacy analytics view (candidate pipeline by function, scorecard review,
-  // recruiter performance, job-closed trend) keeps its own section rather than
-  // being dropped when the dashboard moved to the platform layout.
-  function AnalyticsSection() {
-    return (
-              <div className="flex flex-col space-y-2 md:space-y-3">
-                <PageHead
-                  eyebrow="Analytics"
-                  title="Hiring analytics"
-                  sub="Candidate pipeline by function, scorecard review load, recruiter performance and closure trend"
-                />
-                {/* Top Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 mb-3">
-                  {/* Candidate Pipeline */}
-                  <div className="bg-[#F7F8FA] rounded-2xl shadow p-3 md:p-4 mb-3">
-                    <div className="font-semibold text-gray-900 mb-3 text-xs md:text-sm">Candidate Pipeline</div>
-                    {pipelineLoading ? (
-                      <div className="flex items-center justify-center h-32">
-                        <div className="text-gray-500">Loading pipeline data...</div>
-                      </div>
-                    ) : pipelineError ? (
-                      <div className="flex items-center justify-center h-32">
-                        <div className="text-red-500 text-center">
-                          <div className="text-sm">Error loading pipeline data</div>
-                          <div className="text-xs mt-1">{pipelineError}</div>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="w-full">
-                        <div className="overflow-x-auto">
-                          <table className="w-full min-w-[600px] table-fixed">
-                            <thead>
-                              <tr>
-                                <th className="w-20 sm:w-24 md:w-32 text-left text-xs text-gray-500 font-medium pb-2"></th>
-                                {stageLabels.map((label, idx) => {
-                                  let transformClass = '';
-                                  let widthClass = 'w-12 sm:w-16 md:w-20';
-
-                                  if (label === 'Screened') {
-                                    transformClass = 'transform -translate-x-2 sm:-translate-x-3 md:-translate-x-4';
-                                  } else if (label === 'Shortlisted') {
-                                    transformClass = 'transform -translate-x-6 sm:-translate-x-8 md:-translate-x-8';
-                                  } else if (label === 'Offered') {
-                                    transformClass = 'transform -translate-x-8 sm:-translate-x-12 md:-translate-x-12';
-                                  } else if (label === 'Hired') {
-                                    transformClass = 'transform -translate-x-10 sm:-translate-x-16 md:-translate-x-20';
-                                  }
-
-                                  return (
-                                    <th key={label} className={`${widthClass} text-xs text-gray-500 font-medium pb-2 text-left ${transformClass}`}>
-                                      {label}
-                                    </th>
-                                  );
-                                })}
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {candidatePipelineData.length === 0 ? (
-                                <tr>
-                                  <td colSpan="7" className="py-4 text-center text-gray-500">
-                                    No pipeline data available
-                                  </td>
-                                </tr>
-                              ) : (
-                                candidatePipelineData.map((item, idx) => (
-                                  <tr key={item.role} className="align-middle">
-                                    <td className="text-xs text-gray-700 font-medium py-1 pr-2">{item.role}</td>
-                                    {item.stages.map((val, i) => (
-                                      <td key={i} className="py-1 px-0.5">
-                                        <ArrowSegment
-                                          value={val !== null ? val : ""}
-                                          color={stageColors[i]}
-                                          isFirst={i === 0}
-                                          isLast={i === item.stages.length - 1}
-                                          empty={val === null}
-                                          index={i}
-                                        />
-                                      </td>
-                                    ))}
-                                  </tr>
-                                ))
-                              )}
-                            </tbody>
-                          </table>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                  {/* Pending Scorecard Review */}
-                  <div className="bg-[#F7F8FA] rounded-2xl shadow p-3 md:p-4 flex flex-col items-center w-full max-w-sm mx-auto">
-                    <div className="font-semibold text-gray-900 mb-3 text-sm md:text-base text-left w-full">Pending Scorecard Review</div>
-                    {scorecardLoading ? (
-                      <div className="flex items-center justify-center h-48">
-                        <div className="text-gray-500">Loading...</div>
-                      </div>
-                    ) : scorecardError ? (
-                      <div className="flex items-center justify-center h-48">
-                        <div className="text-red-500 text-center">
-                          <div className="text-sm">Error loading data</div>
-                          <div className="text-xs mt-1">{scorecardError}</div>
-                        </div>
-                      </div>
-                    ) : (
-                      <>
-                        <div className="relative flex items-center justify-center mb-4">
-                          <svg
-                            width={size * 0.8}
-                            height={size * 0.8}
-                            viewBox={`0 0 ${size} ${size}`}
-                            className="block"
-                          >
-                            {/* Background Circle */}
-                            <circle
-                              cx={size / 2}
-                              cy={size / 2}
-                              r={radius}
-                              fill="none"
-                              stroke="#E5E7EB"
-                              strokeWidth={stroke}
-                            />
-                            {/* Pending Arc (black) */}
-                            <circle
-                              cx={size / 2}
-                              cy={size / 2}
-                              r={radius}
-                              fill="none"
-                              stroke="#0A1833"
-                              strokeWidth={stroke}
-                              strokeDasharray={`${pendingLength} ${circumference - pendingLength}`}
-                              strokeDashoffset={-offsetPending}
-                              strokeLinecap="round"
-                              transform={`rotate(-90 ${size / 2} ${size / 2})`}
-                            />
-                            {/* Reviewed Arc (blue) */}
-                            <circle
-                              cx={size / 2}
-                              cy={size / 2}
-                              r={radius}
-                              fill="none"
-                              stroke="#2563EB"
-                              strokeWidth={stroke}
-                              strokeDasharray={`${reviewedLength} ${circumference - reviewedLength}`}
-                              strokeDashoffset={-offsetReviewed}
-                              strokeLinecap="round"
-                              transform={`rotate(-90 ${size / 2} ${size / 2})`}
-                            />
-                          </svg>
-                          <span className="absolute text-2xl font-bold text-gray-800">{pendingPercent}%</span>
-                        </div>
-                        <div className="w-full flex flex-col gap-2">
-                          <div className="flex flex-col gap-2">
-                            <div>
-                              <span className="text-gray-700 font-medium text-sm">Pending ({scorecardData.pendingResumes})</span>
-                              <div className="w-full h-2 bg-gray-200 rounded-full mt-1">
-                                <div
-                                  className="h-full bg-[#0A1833] rounded-full"
-                                  style={{ width: `${pendingPercent}%` }}
-                                ></div>
-                              </div>
-                            </div>
-                            <div>
-                              <span className="text-gray-700 font-medium text-sm">Reviewed ({scorecardData.reviewedResumes})</span>
-                              <div className="w-full h-2 bg-gray-200 rounded-full mt-1">
-                                <div
-                                  className="h-full bg-[#2563EB] rounded-full"
-                                  style={{ width: `${reviewedPercent}%` }}
-                                ></div>
-                              </div>
-                            </div>
-                          </div>
-                          <div className="text-center text-xs text-gray-500 mt-1">
-                            Total: {scorecardData.totalResumes}
-                          </div>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                </div>
-                {/* Recruiter Performance Summary */}
-                <div className="bg-[#F7F8FA] rounded-2xl shadow p-2 md:p-3">
-                  <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-2 gap-1">
-                    <div className="font-bold text-gray-900 text-sm md:text-base">Recruiter Performance Summary</div>
-                  </div>
-                  <div className="overflow-x-auto">
-                    {performanceLoading ? (
-                      <div className="flex items-center justify-center py-2">
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-                      </div>
-                    ) : performanceError ? (
-                      <div className="flex items-center justify-center py-2">
-                        <div className="text-center">
-                          <p className="text-red-500 mb-1 text-xs">Error loading performance data</p>
-                          <p className="text-xs text-gray-500">{performanceError}</p>
-                        </div>
-                      </div>
-                    ) : (
-                      <table className="min-w-full text-sm text-left">
-                        <thead>
-                          <tr className="text-gray-500 border-b">
-                            <th className="py-1 px-2 font-medium text-xs">Recruiter</th>
-                            <th className="py-1 px-2 font-medium text-xs">Total Hires</th>
-                            <th className="py-1 px-2 font-medium text-xs">Offers Made</th>
-                            <th className="py-1 px-2 font-medium text-xs">Avg TAT (Days)</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {recruiterPerformanceData.length === 0 ? (
-                            <tr>
-                              <td colSpan="4" className="py-2 text-center text-gray-500 text-xs">
-                                No recruiter performance data available
-                              </td>
-                            </tr>
-                          ) : (
-                            recruiterPerformanceData.map((rec, idx) => (
-                              <tr key={idx} className="border-b last:border-b-0">
-                                <td className="py-1 px-2 text-gray-900 text-xs">{rec.name}</td>
-                                <td className="py-1 px-2 text-xs">{rec.hires}</td>
-                                <td className="py-1 px-2 text-xs">{rec.offers}</td>
-                                <td className="py-1 px-2 text-xs">{rec.tat}</td>
-                              </tr>
-                            ))
-                          )}
-                        </tbody>
-                      </table>
-                    )}
-                  </div>
-                </div>
-              </div>
-    );
-  }
 
   const activeSection = EM_NAV.find((n) => n.name === activeComponent) || EM_NAV[0];
   const jumpQuery = jump.trim().toLowerCase();
@@ -1865,8 +1407,14 @@ export default function ProRecruiterDashboard() {
           <ManagerJobs
             eyebrow="Hiring"
             title="Jobs"
-            sub="You create the jobs and assign your recruiter"
-            showCreateOptions
+            sub={
+              mayCreateJobs
+                ? 'Jobs you created, plus requirements you picked from the marketplace'
+                : 'Requirements you picked up from the marketplace'
+            }
+            showCreateOptions={mayCreateJobs}
+            canCreateJob={mayCreateJobs}
+            backTo="/prorecruiter/dashboard?tab=Jobs"
           />
         );
       case 'Candidates':
@@ -1888,14 +1436,23 @@ export default function ProRecruiterDashboard() {
             scorecardsOnly
           />
         );
+      case 'Marketplace':
+        return (
+          <ProRecruiterMarketplace
+            // A pick lands in the jobs list, so both views need refreshing.
+            onPicked={() => {
+              platform.refresh();
+              if (typeof window.refreshJobs === 'function') window.refreshJobs();
+            }}
+            onOpenJobs={() => go('Jobs')}
+          />
+        );
       case 'Hiring Decisions':
         return <ProRecruiterDecisions platform={platform} />;
       case 'Recruiter':
         return (
           <MyRecruiters selectedRecruiter={selectedRecruiter} setSelectedRecruiter={setSelectedRecruiter} />
         );
-      case 'Analytics':
-        return <AnalyticsSection />;
       case 'Settings':
         return <ManagerAccountSettings />;
       default:
@@ -1905,53 +1462,27 @@ export default function ProRecruiterDashboard() {
             onNavigate={go}
             hasMarketplaceAccess={userInfo?.data?.user?.accessToMPDashboard === true}
             onOpenMarketplace={() => setShowMarketplaceDashboard(true)}
+            canCreateJob={mayCreateJobs}
           />
         );
     }
   };
   return (
     <div className="dashboard-shell-employer min-h-screen bg-[#f6f8fb] text-[#1d2430]">
-      {/* Sidebar */}
-      <aside
-        className={`fixed top-0 bottom-0 left-0 w-[245px] bg-[#0e1728] text-white px-[15px] py-[22px] z-30 overflow-y-auto transition-transform duration-200 ${
-          navOpen ? 'translate-x-0' : '-translate-x-full'
-        } lg:translate-x-0`}
-      >
-        <div className="text-[25px] font-extrabold px-2.5 pb-[26px] cursor-pointer" onClick={() => go('Dashboard')}>
-          zepul<span className="text-[#9ab2ff]">™</span>
-        </div>
+      <DashboardSidebar
+        items={EM_NAV}
+        active={activeComponent}
+        onSelect={go}
+        isCollapsed={isCollapsed}
+        setIsCollapsed={setIsCollapsed}
+        mobileOpen={navOpen}
+        setMobileOpen={setNavOpen}
+        userName={employerName}
+        roleLabel="Employer Manager"
+        onProfile={() => go('Settings')}
+      />
 
-        <div className="bg-[#182238] border border-[#293750] rounded-[10px] px-3 py-2.5 mb-[18px]">
-          <small className="block text-[#8794aa] text-[9px] uppercase tracking-wide">Signed in as</small>
-          <b className="text-xs">{employerName}</b>
-        </div>
-
-        <nav>
-          {EM_NAV.map((item) => {
-            const Icon = item.icon;
-            return (
-              <button
-                key={item.name}
-                onClick={() => go(item.name)}
-                className={`flex items-center gap-2.5 w-full text-left px-3 py-2.5 rounded-lg my-[3px] text-xs cursor-pointer transition-colors ${
-                  activeComponent === item.name
-                    ? 'bg-[#202d45] text-white'
-                    : 'text-[#aab5c7] hover:bg-[#202d45] hover:text-white'
-                }`}
-              >
-                <Icon size={15} strokeWidth={2} />
-                {item.name}
-              </button>
-            );
-          })}
-        </nav>
-      </aside>
-
-      {navOpen && (
-        <div className="fixed inset-0 bg-black/40 z-20 lg:hidden" onClick={() => setNavOpen(false)} />
-      )}
-
-      <div className="lg:ml-[245px]">
+      <div className={`transition-all duration-300 ${isCollapsed ? "lg:ml-20" : "lg:ml-52"}`}>
         {/* Top bar */}
         <header className="h-[68px] bg-white border-b border-[#e7ebf2] flex items-center justify-between px-4 md:px-7 sticky top-0 z-10">
           <div className="flex items-center gap-3">

@@ -1,8 +1,14 @@
 import React from 'react';
+import { Pencil } from 'lucide-react';
 import { Card, StatusPill, Chip } from '../../dashboard/DashboardUI';
 import { jobCompanyName } from '../../dashboard/dashboardUtils';
 
-const ManagerJobCard = ({ job, onClick, onShowCandidates }) => {
+/**
+ * Clicking the card opens the job's own page. Editing is a separate action on
+ * the card, because the edit panel is a side sheet — opening it on every click
+ * meant there was no way to simply go and read the job.
+ */
+const ManagerJobCard = ({ job, onClick, onEdit, onShowCandidates }) => {
   const deadlinePassed =
     job.hiringDeadline && new Date(job.hiringDeadline) < new Date(new Date().setHours(0, 0, 0, 0));
 
@@ -26,9 +32,25 @@ const ManagerJobCard = ({ job, onClick, onShowCandidates }) => {
     >
       <div className="flex items-start justify-between gap-2">
         <StatusPill tone={status.tone}>{status.text}</StatusPill>
-        {job.cvStrengthCutoff != null && (
-          <span className="text-[#024bff] font-extrabold text-[11px]">CV &ge; {job.cvStrengthCutoff}</span>
-        )}
+        <div className="flex items-center gap-2">
+          {job.cvStrengthCutoff != null && (
+            <span className="text-[#024bff] font-extrabold text-[11px]">CV &ge; {job.cvStrengthCutoff}</span>
+          )}
+          {onEdit && (
+            <button
+              type="button"
+              title="Edit job"
+              aria-label={`Edit ${job.jobtitle}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit(job);
+              }}
+              className="shrink-0 text-[#8991a0] hover:text-[#024bff] transition-colors cursor-pointer"
+            >
+              <Pencil size={13} />
+            </button>
+          )}
+        </div>
       </div>
 
       <h3 className="text-sm font-bold mt-3 mb-1.5">{job.jobtitle}</h3>

@@ -11,7 +11,7 @@ const ACCEPTED = '.pdf,.docx,.txt';
  * dropped into the normal create-job form so the manager can check the parse
  * before the job is actually created.
  */
-const CreateJobFromJD = ({ onBack, onCreated }) => {
+const CreateJobFromJD = ({ onBack, onCreated, extraPayload }) => {
   const [file, setFile] = useState(null);
   const [dragOver, setDragOver] = useState(false);
   const [isReading, setIsReading] = useState(false);
@@ -73,6 +73,7 @@ const CreateJobFromJD = ({ onBack, onCreated }) => {
         initialValues={parsed}
         onBack={() => setParsed(null)}
         onCreated={onCreated}
+        extraPayload={extraPayload}
       />
     );
   }

@@ -8,6 +8,12 @@ import { verifyJWT } from '../middleware/manager.auth.middleware.js';
 import { verifyJWT as verifyAdminJWT } from '../middleware/admin.auth.middleware.js';
 import { openAILimiter } from '../middleware/rateLimiters.js';
 import { anyAuth } from '../middleware/anyAuth.middleware.js';
+import {
+    getAvailableMarketplaceJobs,
+    pickMarketplaceJob,
+    releaseMarketplaceJob,
+    updateMarketplaceListing,
+} from "../controllers/marketplaceJob.controller.js";
 const router = Router();
 
 // Job description upload for the "Upload JD" creation flow. Memory storage —
@@ -75,6 +81,13 @@ router.route("/assign-recruiter/:jobId").post(verifyJWT, assignedJobm);
 router.route("/search-recruiters").get(searchRecruitersByManager);
 router.route("/update-password").put(verifyJWT, updatePassword);
 router.route("/marketplace-metrics").get(verifyJWT, getMarketplaceMetrics);
+
+// ProRecruiter marketplace: a manager publishes an ordinary job, any
+// ProRecruiter can pick it up and work it as their own.
+router.route("/marketplace/available").get(verifyJWT, getAvailableMarketplaceJobs);
+router.route("/marketplace/:jobId/pick").post(verifyJWT, pickMarketplaceJob);
+router.route("/marketplace/:jobId/release").post(verifyJWT, releaseMarketplaceJob);
+router.route("/marketplace/:jobId/listing").patch(verifyJWT, updateMarketplaceListing);
 router.route("/create-marketplace-company").post(verifyJWT, createMarketplaceCompany);
 router.route("/marketplace-companies").get(verifyJWT, getMarketplaceCompanies);
 router.route("/marketplace-company/:companyId").get(verifyJWT, getMarketplaceCompanyById);

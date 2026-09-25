@@ -23,6 +23,9 @@ const ManagerJobs = ({
   title = 'Jobs & Requirements',
   sub = 'Create, publish and monitor Zepul-managed hiring requirements',
   showCreateOptions = false,
+  backTo = '/manager/dashboard?tab=Jobs',
+  // Creating jobs is not available to every console this list is shown in.
+  canCreateJob = true,
 }) => {
   const navigate = useNavigate();
   const [jobs, setJobs] = useState([]);
@@ -190,7 +193,12 @@ const ManagerJobs = ({
     return jobCounts;
   };
 
+  // The card opens the job's own page; the edit control opens the side sheet.
   const handleJobClick = (job) => {
+    navigate(`/manager/jobs/${job._id || job.id}`, { state: { from: backTo } });
+  };
+
+  const handleJobEdit = (job) => {
     setSelectedJob(job);
   };
 
@@ -240,7 +248,7 @@ const ManagerJobs = ({
     fetchJobCounts();
   };
 
-  if (createJobMode) {
+  if (canCreateJob && createJobMode) {
     return (
       <div className="w-full min-h-screen bg-[#F7F8FA]">
         {createJobMode === 'choose' && (
@@ -284,10 +292,14 @@ const ManagerJobs = ({
         eyebrow={eyebrow}
         title={title}
         sub={sub}
-        action={<PrimaryButton onClick={() => setCreateJobMode('choose')}>+ Create Job</PrimaryButton>}
+        action={
+          canCreateJob ? (
+            <PrimaryButton onClick={() => setCreateJobMode('choose')}>+ Create Job</PrimaryButton>
+          ) : null
+        }
       />
 
-      {showCreateOptions && (
+      {canCreateJob && showCreateOptions && (
         <Card className="p-[17px] mb-4">
           <b className="text-sm">Create a job</b>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-[13px] mt-3">
@@ -334,9 +346,11 @@ const ManagerJobs = ({
         <LoadingRow label="Loading requirements…" />
       ) : jobs.length === 0 ? (
         <Card className="p-[17px] text-xs text-[#778092]">
-          {activeFilter === 'all'
-            ? 'No requirements yet. Create your first job.'
-            : `No ${activeFilter} requirements found.`}
+          {activeFilter !== 'all'
+            ? `No ${activeFilter} requirements found.`
+            : canCreateJob
+              ? 'No requirements yet. Create your first job.'
+              : 'No requirements yet. Pick one up from the Marketplace to get started.'}
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-[13px]">
@@ -345,6 +359,7 @@ const ManagerJobs = ({
               key={job._id || job.id}
               job={job}
               onClick={handleJobClick}
+              onEdit={handleJobEdit}
               onShowCandidates={handleShowJobCandidates}
             />
           ))}

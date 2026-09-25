@@ -137,6 +137,23 @@ const JobSchema = new mongoose.Schema(
       type: Boolean,
       default: false
     },
+    // Published by a Zepul manager to the ProRecruiter marketplace. A listed job
+    // is still an ordinary job owned by its manager — listing only makes it
+    // visible to ProRecruiters, who can pick it up and work it themselves.
+    marketplace: {
+      isListed: { type: Boolean, default: false },
+      listedAt: { type: Date, default: null },
+      listedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+      // Share of the placement fee offered to whoever fills the role.
+      commissionRate: { type: Number, default: null },
+      // A listing stays open after a pick, so more than one ProRecruiter can
+      // work the same requirement.
+      pickedBy: [{
+        userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+        pickedAt: { type: Date, default: Date.now },
+      }],
+    },
+
     mpSelectedCandidates:{
       type: Number,
       default: 0

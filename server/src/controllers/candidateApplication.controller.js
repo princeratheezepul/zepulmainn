@@ -94,9 +94,6 @@ export const applyToJob = async (req, res) => {
     if (!candidateId || !mongoose.Types.ObjectId.isValid(candidateId)) {
       return res.status(400).json({ message: "A valid candidateId is required" });
     }
-    if (!text || !text.trim()) {
-      return res.status(400).json({ message: "Resume text is required" });
-    }
 
     const job = await Job.findById(jobId);
     if (!job) return res.status(404).json({ message: "Job not found" });
@@ -104,6 +101,21 @@ export const applyToJob = async (req, res) => {
 
     const candidate = await Candidate.findById(candidateId).lean().catch(() => null);
     if (!candidate) return res.status(404).json({ message: "Candidate not found" });
+
+    // Applying with the resume already on the profile is the normal path — the
+    // candidate gave it to us at sign-up. Text in the request body overrides it,
+    // which is how "use a different resume for this one" works, and it does not
+    // touch the saved copy.
+    const resumeText = (typeof text === "string" && text.trim())
+      ? text.trim()
+      : String(candidate.resume?.text || "").trim();
+
+    if (!resumeText) {
+      return res.status(400).json({
+        message: "Add a resume to your profile, or upload one for this application.",
+        needsResume: true,
+      });
+    }
 
     // Prevent duplicate applications
     const already = await Resume.findOne({ jobId, candidateId });
@@ -126,8 +138,8 @@ export const applyToJob = async (req, res) => {
         experience: job.experience,
       };
       const [a, ats] = await Promise.all([
-        analyzeResume(text, jobForAI),
-        calculateATSScore(text, jobForAI),
+        analyzeResume(resumeText, jobForAI),
+        calculateATSScore(resumeText, jobForAI),
       ]);
       analysis = a || {};
       atsResult = ats || {};
@@ -152,7 +164,7 @@ export const applyToJob = async (req, res) => {
       name: analysis.name || name || candidate.fullName || candidate.email,
       email: analysis.email || email || candidate.email,
       phone: analysis.phone || phone || candidate.phoneNumber || "",
-      raw_text: text,
+      raw_text: resumeText,
       // Surface to the assigned recruiter/manager pipeline
       recruiterId: assignedRecruiter,
       managerId: job.managerId || null,

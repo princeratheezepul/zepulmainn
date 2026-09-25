@@ -6,7 +6,9 @@ import toast from 'react-hot-toast';
 // outcomes differently. Falls back to `onBack` when not supplied.
 // `initialValues` (optional) seeds the fields — used by the Upload JD flow to
 // drop the parsed posting in for review before it is created.
-export default function CreateJobManager({ onBack, onCreated, initialValues }) {
+// `extraPayload` is merged into the create request — the marketplace uses it to
+// publish the job to ProRecruiters in the same call that creates it.
+export default function CreateJobManager({ onBack, onCreated, initialValues, extraPayload }) {
   const seed = initialValues || {};
   const seedText = (value) => (value === undefined || value === null ? "" : String(value));
   const seedList = (value) => (Array.isArray(value) ? value : []);
@@ -144,7 +146,8 @@ export default function CreateJobManager({ onBack, onCreated, initialValues }) {
         hiringDeadline: hiringDeadline || null,
         internalNotes: internalNotes || "",
         resumeAnalysisPoints,
-        managerId // <-- Ensure managerId is included
+        managerId, // <-- Ensure managerId is included
+        ...(extraPayload || {}),
       };
       const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/manager/create-job`, {
         method: "POST",
@@ -160,7 +163,7 @@ export default function CreateJobManager({ onBack, onCreated, initialValues }) {
         if (typeof window.refreshJobs === 'function') {
           window.refreshJobs();
         }
-        (typeof onCreated === 'function' ? onCreated : onBack)();
+        (typeof onCreated === 'function' ? onCreated : onBack)(data?.job);
       } else {
         toast.error(data.message || "Failed to create job");
       }

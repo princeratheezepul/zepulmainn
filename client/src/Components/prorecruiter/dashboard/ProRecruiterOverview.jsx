@@ -10,7 +10,7 @@ import {
   pipelineStages,
 } from '../../manager/dashboard/useManagerPlatformData';
 
-const ProRecruiterOverview = ({ platform, onNavigate, hasMarketplaceAccess, onOpenMarketplace }) => {
+const ProRecruiterOverview = ({ platform, onNavigate, hasMarketplaceAccess, onOpenMarketplace, canCreateJob }) => {
   const { jobs, resumes, recruiters, loading } = platform;
 
   const openJobs = jobs.filter(isJobOpen);
@@ -39,7 +39,11 @@ const ProRecruiterOverview = ({ platform, onNavigate, hasMarketplaceAccess, onOp
             {hasMarketplaceAccess && (
               <GhostButton onClick={onOpenMarketplace}>Marketplace Dashboard</GhostButton>
             )}
-            <PrimaryButton onClick={() => onNavigate('Jobs')}>+ Create Job</PrimaryButton>
+            {canCreateJob ? (
+              <PrimaryButton onClick={() => onNavigate('Jobs')}>+ Create Job</PrimaryButton>
+            ) : (
+              <PrimaryButton onClick={() => onNavigate('Marketplace')}>Browse Marketplace</PrimaryButton>
+            )}
           </div>
         }
       />

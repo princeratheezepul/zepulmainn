@@ -28,6 +28,7 @@ import AdminFinance from '../../Components/admin/dashboard/AdminFinance.jsx';
 import AdminReports from '../../Components/admin/dashboard/AdminReports.jsx';
 import { useAdminPlatformData } from '../../Components/admin/dashboard/useAdminPlatformData';
 import { initialsOf } from '../../Components/dashboard/dashboardUtils';
+import DashboardSidebar from '../../Components/dashboard/DashboardSidebar.jsx';
 import {
   PageHead,
   PrimaryButton,
@@ -64,6 +65,7 @@ const NAV = [
 const Admin = () => {
   const [active, setActive] = useState('Overview');
   const [navOpen, setNavOpen] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(true);
   const [jump, setJump] = useState('');
   const { user } = useAuth();
   const platform = useAdminPlatformData();
@@ -116,47 +118,20 @@ const Admin = () => {
 
   return (
     <div className="dashboard-shell-admin min-h-screen bg-[#f6f8fb] text-[#1d2430]">
-      {/* Sidebar */}
-      <aside
-        className={`fixed top-0 bottom-0 left-0 w-[245px] bg-[#0e1728] text-white px-[15px] py-[22px] z-30 overflow-y-auto transition-transform duration-200 ${
-          navOpen ? 'translate-x-0' : '-translate-x-full'
-        } lg:translate-x-0`}
-      >
-        <div className="text-[25px] font-extrabold px-2.5 pb-[26px] cursor-pointer" onClick={() => go('Overview')}>
-          zepul<span className="text-[#9ab2ff]">™</span>
-        </div>
+      <DashboardSidebar
+        items={NAV}
+        active={active}
+        onSelect={go}
+        isCollapsed={isCollapsed}
+        setIsCollapsed={setIsCollapsed}
+        mobileOpen={navOpen}
+        setMobileOpen={setNavOpen}
+        userName={user?.fullname || 'Zepul Admin'}
+        roleLabel="Zepul Admin"
+        onProfile={() => go('System Settings')}
+      />
 
-        <div className="bg-[#182238] border border-[#293750] rounded-[10px] px-3 py-2.5 mb-[18px]">
-          <small className="block text-[#8794aa] text-[9px] uppercase tracking-wide">Signed in as</small>
-          <b className="text-xs">{user?.fullname || 'Zepul Admin'}</b>
-        </div>
-
-        <nav>
-          {NAV.map((item) => {
-            const Icon = item.icon;
-            return (
-              <button
-                key={item.name}
-                onClick={() => go(item.name)}
-                className={`flex items-center gap-2.5 w-full text-left px-3 py-2.5 rounded-lg my-[3px] text-xs cursor-pointer transition-colors ${
-                  active === item.name
-                    ? 'bg-[#202d45] text-white'
-                    : 'text-[#aab5c7] hover:bg-[#202d45] hover:text-white'
-                }`}
-              >
-                <Icon size={15} strokeWidth={2} />
-                {item.name}
-              </button>
-            );
-          })}
-        </nav>
-      </aside>
-
-      {navOpen && (
-        <div className="fixed inset-0 bg-black/40 z-20 lg:hidden" onClick={() => setNavOpen(false)} />
-      )}
-
-      <div className="lg:ml-[245px]">
+      <div className={`transition-all duration-300 ${isCollapsed ? "lg:ml-20" : "lg:ml-52"}`}>
         {/* Top bar */}
         <header className="h-[68px] bg-white border-b border-[#e7ebf2] flex items-center justify-between px-4 md:px-7 sticky top-0 z-10">
           <div className="flex items-center gap-3">

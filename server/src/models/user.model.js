@@ -92,6 +92,13 @@ const userSchema = new Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'MpJob',
     }],
+    // Jobs this ProRecruiter picked up from the marketplace. They belong to the
+    // manager who published them; this is what puts them in the picker's own
+    // jobs list alongside the ones they created.
+    pickedJobs: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Job',
+    }],
     mpCompanies: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'MpCompany',

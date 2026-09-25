@@ -58,6 +58,10 @@ const CandidateJobDetail = () => {
   const [submitting, setSubmitting] = useState(false);
   const [submitMsg, setSubmitMsg] = useState("");
   const [prepLoading, setPrepLoading] = useState(false);
+  // The resume saved on the profile at sign-up. When one exists, applying does
+  // not need a file at all — the server reads it from the profile.
+  const [savedResume, setSavedResume] = useState(null);
+  const [savedResumeLoading, setSavedResumeLoading] = useState(true);
 
   useEffect(() => {
     if (!candidate?._id) {
@@ -89,6 +93,28 @@ const CandidateJobDetail = () => {
     if (jobId && candidate?._id) load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [jobId]);
+
+  useEffect(() => {
+    if (!candidate?._id) return;
+    let active = true;
+    (async () => {
+      try {
+        const res = await fetch(getApiUrl(`/api/candidate/${candidate._id}/resume`), {
+          headers: { Authorization: `Bearer ${localStorage.getItem("candidateToken")}` },
+        });
+        const data = await res.json().catch(() => ({}));
+        if (active) setSavedResume(res.ok ? data.data?.resume || null : null);
+      } catch {
+        if (active) setSavedResume(null);
+      } finally {
+        if (active) setSavedResumeLoading(false);
+      }
+    })();
+    return () => {
+      active = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const extractTextFromPDF = async (file) => {
     const fileReader = new FileReader();
@@ -140,21 +166,9 @@ const CandidateJobDetail = () => {
           throw new Error("Could not read enough text from this resume. Try another file.");
         }
 
-        setSubmitMsg("Submitting your application…");
-        const res = await fetch(getApiUrl(`/api/candidate-application/job/${jobId}/apply`), {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ candidateId: candidate._id, text }),
-        });
-        const data = await res.json().catch(() => ({}));
-        if (!res.ok) throw new Error(data.message || "Failed to submit application");
-
-        setApplication(data.application);
-        setShowUpload(false);
-        toast.success(data.alreadyApplied ? "You already applied to this job" : "Application submitted!");
+        await submitApplication(text);
       } catch (err) {
         toast.error(err.message || "Failed to submit application");
-      } finally {
         setSubmitting(false);
         setSubmitMsg("");
       }
@@ -162,6 +176,31 @@ const CandidateJobDetail = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [jobId, candidate]
   );
+
+  // `text` omitted => the server applies with the resume on the candidate's
+  // profile. Passing text here does not replace that saved copy.
+  const submitApplication = async (text) => {
+    setSubmitting(true);
+    setSubmitMsg("Submitting your application…");
+    try {
+      const res = await fetch(getApiUrl(`/api/candidate-application/job/${jobId}/apply`), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ candidateId: candidate._id, ...(text ? { text } : {}) }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.message || "Failed to submit application");
+
+      setApplication(data.application);
+      setShowUpload(false);
+      toast.success(data.alreadyApplied ? "You already applied to this job" : "Application submitted!");
+    } catch (err) {
+      toast.error(err.message || "Failed to submit application");
+    } finally {
+      setSubmitting(false);
+      setSubmitMsg("");
+    }
+  };
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -290,17 +329,61 @@ const CandidateJobDetail = () => {
       ) : (
         <>
           <div className="text-lg font-bold text-gray-900 mb-1">Ready to apply?</div>
-          <p className="text-sm text-gray-500 mb-4">
-            Submit your resume and we'll keep you posted on your application status.
-          </p>
-          <button
-            onClick={() => setShowUpload(true)}
-            disabled={job.isClosed}
-            className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-lg transition-colors"
-          >
-            {job.isClosed ? "Applications Closed" : "Apply Now"}
-          </button>
-          <p className="mt-3 text-xs text-gray-400 text-center">PDF or DOCX · takes under a minute</p>
+          {savedResume ? (
+            <>
+              <p className="text-sm text-gray-500 mb-3">
+                We&rsquo;ll send the resume on your profile. No upload needed.
+              </p>
+              <div className="flex items-center gap-2 mb-4 text-xs text-gray-600 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
+                <FileText size={14} className="shrink-0 text-gray-400" />
+                <span className="truncate">{savedResume.fileName || "Your saved resume"}</span>
+              </div>
+              <button
+                onClick={() => submitApplication()}
+                disabled={job.isClosed || submitting}
+                className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-lg transition-colors flex items-center justify-center gap-2"
+              >
+                {submitting ? (
+                  <>
+                    <Loader2 size={16} className="animate-spin" />
+                    {submitMsg || "Submitting…"}
+                  </>
+                ) : job.isClosed ? (
+                  "Applications Closed"
+                ) : (
+                  "Apply with my resume"
+                )}
+              </button>
+              {!job.isClosed && (
+                <button
+                  onClick={() => setShowUpload(true)}
+                  disabled={submitting}
+                  className="mt-2 w-full border border-gray-300 hover:bg-gray-50 disabled:opacity-50 text-gray-800 font-semibold py-2.5 rounded-lg transition-colors text-sm cursor-pointer"
+                >
+                  Use a different resume
+                </button>
+              )}
+              <p className="mt-3 text-xs text-gray-400 text-center">
+                A different resume applies to this job only &mdash; your profile keeps the one above.
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="text-sm text-gray-500 mb-4">
+                {savedResumeLoading
+                  ? "Checking your profile…"
+                  : "Submit your resume and we'll keep you posted on your application status."}
+              </p>
+              <button
+                onClick={() => setShowUpload(true)}
+                disabled={job.isClosed || savedResumeLoading}
+                className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-lg transition-colors"
+              >
+                {job.isClosed ? "Applications Closed" : "Apply Now"}
+              </button>
+              <p className="mt-3 text-xs text-gray-400 text-center">PDF or DOCX · takes under a minute</p>
+            </>
+          )}
         </>
       )}
     </div>
