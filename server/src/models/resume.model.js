@@ -17,6 +17,17 @@ const ResumeSchema = new mongoose.Schema(
       ref: "User"
     },
 
+    // Who put this candidate forward. On a job published to the ProRecruiter
+    // marketplace the uploader is usually a Recruitment Partner rather than the
+    // manager who owns the job, and the owner needs to see which partner sent
+    // whom. The name is captured at submission so the row still reads correctly
+    // if that account is later renamed or removed.
+    submittedBy: {
+      userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
+      name: { type: String, default: "" },
+      role: { type: String, enum: ["manager", "partner", "recruiter", ""], default: "" },
+    },
+
     // Tag field for categorizing resumes
     tag: {
       type: String,

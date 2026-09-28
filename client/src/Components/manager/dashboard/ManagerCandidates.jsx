@@ -1,5 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Users } from 'lucide-react';
 import { PageHead, MetricGrid, Section, Pipeline, TableCard, StatusPill, LoadingRow } from '../../dashboard/DashboardUI';
+import MarketplacePicksDrawer from './MarketplacePicksDrawer';
+import { readAuth } from '../../dashboard/dashboardUtils';
 import {
   pipelineStages,
   hasCvStrength,
@@ -23,11 +27,13 @@ const ManagerCandidates = ({
   eyebrow = 'Execution',
   title = 'Candidate Pipeline',
   sub = 'Monitor candidates across automated evaluation',
-  // Scorecards view narrows the table to candidates an AI scorecard exists for.
-  scorecardsOnly = false,
+  backTo = '/manager/dashboard?tab=Candidates',
+  jobBasePath = '/manager/jobs',
 }) => {
-  const { resumes: allResumes, resumeStats, jobs, loading } = platform;
-  const resumes = scorecardsOnly ? allResumes.filter(hasScorecard) : allResumes;
+  const navigate = useNavigate();
+  const [picksFor, setPicksFor] = useState(null);
+  const { resumes, resumeStats, jobs, loading } = platform;
+  const viewerId = readAuth().userId;
 
   // Each job carries its own CV cut-off, so a score is judged against the job it
   // was submitted for rather than a single platform-wide threshold.
@@ -35,6 +41,40 @@ const ManagerCandidates = ({
     acc[job._id] = job;
     return acc;
   }, {});
+
+  // Who picked a listing is the publishing manager's to see, so the control only
+  // appears on listings this viewer owns.
+  const canSeePicks = (job) =>
+    Boolean(job?.marketplace?.isListed) &&
+    String(job?.managerId?._id || job?.managerId || '') === String(viewerId || '');
+
+  const jobCell = (job) => {
+    if (!job) return <span className="text-[#778092]">—</span>;
+    return (
+      <span className="inline-flex items-center gap-2">
+        <button
+          type="button"
+          title={`Open ${job.jobtitle}`}
+          onClick={() => navigate(`${jobBasePath}/${job._id}`, { state: { from: backTo } })}
+          className="text-left text-[#024bff] font-bold hover:underline cursor-pointer"
+        >
+          {job.jobtitle}
+        </button>
+        {canSeePicks(job) && (
+          <button
+            type="button"
+            title="See who picked this job"
+            aria-label={`See who picked ${job.jobtitle}`}
+            onClick={() => setPicksFor(job)}
+            className="shrink-0 inline-flex items-center gap-1 text-[10px] font-bold text-[#778092] hover:text-[#024bff] border border-[#e7ebf2] rounded px-1.5 py-0.5 transition-colors cursor-pointer"
+          >
+            <Users size={11} />
+            {job.marketplace?.pickedBy?.length || 0}
+          </button>
+        )}
+      </span>
+    );
+  };
 
   return (
     <>
@@ -50,7 +90,7 @@ const ManagerCandidates = ({
       />
 
       <Section>Live execution</Section>
-      <Pipeline stages={pipelineStages(resumes)} />
+      <Pipeline stages={pipelineStages(resumes, { exclude: ['cvStrength', 'scorecards', 'clientReview'] })} />
 
       <Section>Candidate pipeline</Section>
       {loading ? (
@@ -62,7 +102,7 @@ const ManagerCandidates = ({
           columns={['Candidate', 'Job', 'CV Strength', 'Coding', 'AI Interview', 'Scorecard', 'Status']}
           rows={resumes.map((r) => [
             <b key="n">{r.name || 'Unnamed candidate'}</b>,
-            jobsById[r.jobId]?.jobtitle || r.jobId?.jobtitle || '—',
+            jobCell(jobsById[r.jobId] || (typeof r.jobId === 'object' ? r.jobId : null)),
             hasCvStrength(r) ? (
               <span
                 key="c"
@@ -85,6 +125,8 @@ const ManagerCandidates = ({
           empty="No candidates have been submitted against your requirements yet."
         />
       )}
+
+      {picksFor && <MarketplacePicksDrawer job={picksFor} onClose={() => setPicksFor(null)} />}
     </>
   );
 };

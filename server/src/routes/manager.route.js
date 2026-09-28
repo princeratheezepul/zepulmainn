@@ -13,6 +13,8 @@ import {
     pickMarketplaceJob,
     releaseMarketplaceJob,
     updateMarketplaceListing,
+    getMarketplaceJobPicks,
+    getRecruitmentPartners,
 } from "../controllers/marketplaceJob.controller.js";
 const router = Router();
 
@@ -85,9 +87,11 @@ router.route("/marketplace-metrics").get(verifyJWT, getMarketplaceMetrics);
 // ProRecruiter marketplace: a manager publishes an ordinary job, any
 // ProRecruiter can pick it up and work it as their own.
 router.route("/marketplace/available").get(verifyJWT, getAvailableMarketplaceJobs);
+router.route("/marketplace/partners").get(verifyJWT, getRecruitmentPartners);
 router.route("/marketplace/:jobId/pick").post(verifyJWT, pickMarketplaceJob);
 router.route("/marketplace/:jobId/release").post(verifyJWT, releaseMarketplaceJob);
 router.route("/marketplace/:jobId/listing").patch(verifyJWT, updateMarketplaceListing);
+router.route("/marketplace/:jobId/picks").get(verifyJWT, getMarketplaceJobPicks);
 router.route("/create-marketplace-company").post(verifyJWT, createMarketplaceCompany);
 router.route("/marketplace-companies").get(verifyJWT, getMarketplaceCompanies);
 router.route("/marketplace-company/:companyId").get(verifyJWT, getMarketplaceCompanyById);

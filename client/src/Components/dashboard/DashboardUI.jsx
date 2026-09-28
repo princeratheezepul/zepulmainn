@@ -145,8 +145,17 @@ export const InfoGrid = ({ items }) => (
 );
 
 /** `stages` — [{ label, value }] */
+const PIPELINE_COLS = {
+  1: 'lg:grid-cols-1',
+  2: 'lg:grid-cols-2',
+  3: 'lg:grid-cols-3',
+  4: 'lg:grid-cols-4',
+  5: 'lg:grid-cols-5',
+  6: 'lg:grid-cols-6',
+};
+
 export const Pipeline = ({ stages }) => (
-  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+  <div className={`grid grid-cols-2 sm:grid-cols-3 gap-2 ${PIPELINE_COLS[stages.length] || 'lg:grid-cols-6'}`}>
     {stages.map((s) => (
       <div key={s.label} className="bg-[#fafbfd] border border-[#e7ebf2] rounded-[9px] p-3">
         <b className="text-[19px]">{s.value}</b>

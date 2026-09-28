@@ -403,7 +403,9 @@ export const getAccountManagerInfo = async (req, res) => {
 }
 export const getAllJobs = async (req, res) => {
   try {
-    const jobs = await Job.find()
+    // Employer Manager jobs are private to their creator and never appear in a
+    // cross-account listing like this one.
+    const jobs = await Job.find({ isEmployerPrivate: { $ne: true } })
       .populate('adminId', 'fullname username')
       .populate('managerId', 'fullname username')
       .populate('accountManagerId', 'fullname username');

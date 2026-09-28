@@ -3,7 +3,6 @@ import { useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
   Briefcase,
-  UploadCloud,
   UserCheck,
   BarChart3,
   Database,
@@ -13,7 +12,6 @@ import {
 } from 'lucide-react';
 import RecruiterOverview from '../Components/recruiter/dashboard/RecruiterOverview';
 import RecruiterCandidates from '../Components/recruiter/dashboard/RecruiterCandidates';
-import RecruiterUpload from '../Components/recruiter/dashboard/RecruiterUpload';
 import RecruiterJobs from '../Components/recruiter/dashboard/RecruiterJobs';
 import RecruiterAnalytics from '../Components/recruiter/dashboard/RecruiterAnalytics';
 import Settings from '../Components/recruiter/dashboard/Settings';
@@ -29,7 +27,6 @@ import DashboardSidebar from '../Components/dashboard/DashboardSidebar.jsx';
 const RECRUITER_NAV = [
   { name: 'Dashboard', icon: LayoutDashboard },
   { name: 'Assigned Jobs', icon: Briefcase, fullBleed: true },
-  { name: 'Upload Candidates', icon: UploadCloud, fullBleed: true },
   { name: 'Candidate Pipeline', icon: UserCheck },
   { name: 'Analytics', icon: BarChart3 },
   { name: 'ZepDB', icon: Database, fullBleed: true },
@@ -74,8 +71,6 @@ const RecruiterDashboard = () => {
     switch (activeComponent) {
       case 'Assigned Jobs':
         return <RecruiterJobs />;
-      case 'Upload Candidates':
-        return <RecruiterUpload platform={platform} />;
       case 'Candidate Pipeline':
         return <RecruiterCandidates platform={platform} />;
       case 'Analytics':

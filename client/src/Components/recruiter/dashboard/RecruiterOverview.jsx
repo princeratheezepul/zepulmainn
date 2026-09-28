@@ -31,7 +31,7 @@ const RecruiterOverview = ({ platform, onNavigate }) => {
         eyebrow="Recruiter"
         title="Candidate operations"
         sub="Upload resumes for assigned jobs and monitor the automated pipeline"
-        action={<PrimaryButton onClick={() => onNavigate('Upload Candidates')}>+ Upload Resumes</PrimaryButton>}
+        action={<PrimaryButton onClick={() => onNavigate('Assigned Jobs')}>View Assigned Jobs</PrimaryButton>}
       />
 
       {loading ? <LoadingRow label="Loading your work…" /> : <MetricGrid items={metrics} />}

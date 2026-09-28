@@ -106,14 +106,25 @@ export const sharedOnward = (r) =>
 
 export const isSelected = (r) => ['offered', 'hired'].includes(r?.status);
 
-export const pipelineStages = (resumes) => [
-  { label: 'Resumes', value: resumes.length },
-  { label: 'CV Strength', value: resumes.filter(hasCvStrength).length },
-  { label: 'Coding Test', value: resumes.filter(hasCodingTest).length },
-  { label: 'AI Interview', value: resumes.filter(hasAiInterview).length },
-  { label: 'Scorecards', value: resumes.filter(hasScorecard).length },
-  { label: 'Client Review', value: resumes.filter(atClientReview).length },
+/** Every stage the automated workflow reports, in order. */
+export const PIPELINE_STAGES = [
+  { key: 'resumes', label: 'Resumes', count: (r) => r.length },
+  { key: 'cvStrength', label: 'CV Strength', count: (r) => r.filter(hasCvStrength).length },
+  { key: 'codingTest', label: 'Coding Test', count: (r) => r.filter(hasCodingTest).length },
+  { key: 'aiInterview', label: 'AI Interview', count: (r) => r.filter(hasAiInterview).length },
+  { key: 'scorecards', label: 'Scorecards', count: (r) => r.filter(hasScorecard).length },
+  { key: 'clientReview', label: 'Client Review', count: (r) => r.filter(atClientReview).length },
 ];
+
+/**
+ * Stage counts for a set of resumes. `exclude` takes stage keys, so a console
+ * can show only the stages its users act on rather than the full workflow.
+ */
+export const pipelineStages = (resumes, { exclude = [] } = {}) =>
+  PIPELINE_STAGES.filter((s) => !exclude.includes(s.key)).map((s) => ({
+    label: s.label,
+    value: s.count(resumes),
+  }));
 
 const STATUS_TONE = {
   hired: 'green',
@@ -127,3 +138,38 @@ const STATUS_TONE = {
 };
 
 export const statusTone = (status) => STATUS_TONE[status] || 'grey';
+
+/* ---- Candidate-list stages ------------------------------------------------
+ * The pipeline stages the per-job candidate list filters by. Mirrors
+ * `server/src/utils/candidateStage.js` — change one, change both.
+ *
+ * Stage membership reads the evidence the workflow leaves behind, because
+ * `status` only records human decisions and says nothing about whether a coding
+ * test went out or an interview was evaluated.
+ */
+
+const OA_STARTED = ['invited', 'in_progress', 'completed', 'evaluated'];
+
+/** A coding test has been sent, whether or not it has been finished. */
+export const atCodingTest = (r) =>
+  Boolean(r?.oa?.scheduled || r?.oa?.assessmentId || OA_STARTED.includes(r?.oa?.status));
+
+/** An AI interview has been scheduled, or has already been evaluated. */
+export const atAiInterview = (r) =>
+  Boolean(
+    r?.interviewScheduled ||
+      r?.interviewEvaluation?.evaluatedAt ||
+      r?.interviewEvaluation?.evaluationResults?.length
+  );
+
+/** Put in front of the client and awaiting their decision. */
+export const withClient = (r) => r?.status === 'submitted';
+
+export const CANDIDATE_STAGES = [
+  { key: 'all', label: 'All', matches: () => true },
+  { key: 'codingTest', label: 'Coding Test', matches: atCodingTest },
+  { key: 'aiInterview', label: 'AI Interview', matches: atAiInterview },
+  { key: 'rejected', label: 'Rejected', matches: (r) => r?.status === 'rejected' },
+  { key: 'shortlisted', label: 'Shortlisted', matches: (r) => r?.status === 'shortlisted' },
+  { key: 'withClient', label: 'Process with client', matches: withClient },
+];

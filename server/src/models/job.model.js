@@ -137,6 +137,14 @@ const JobSchema = new mongoose.Schema(
       type: Boolean,
       default: false
     },
+    // Created by an Employer Manager, and therefore theirs alone — excluded from
+    // every cross-manager listing and from the marketplace. Platform admins still
+    // see it, as they see everything.
+    isEmployerPrivate: {
+      type: Boolean,
+      default: false,
+    },
+
     // Published by a Zepul manager to the ProRecruiter marketplace. A listed job
     // is still an ordinary job owned by its manager — listing only makes it
     // visible to ProRecruiters, who can pick it up and work it themselves.

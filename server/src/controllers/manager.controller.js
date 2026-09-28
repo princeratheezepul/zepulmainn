@@ -57,7 +57,7 @@ const sendWelcomeManagerEmail = async (toEmail, adminName) => {
 
 const registerUser = async (req, res) => {
     try {
-        const { fullname, email, password, adminId, isProRecruiter } = req.body;
+        const { fullname, email, password, adminId, isProRecruiter, isEmployerManager } = req.body;
 
         // Check if email already exists
         const existingEmail = await User.findOne({ email });
@@ -75,6 +75,13 @@ const registerUser = async (req, res) => {
         const userData = { username, fullname, email, password, adminId };
         if (isProRecruiter) {
             userData.isProRecruiter = true;
+            userData.firstPassSet = true;
+            userData.status = 'active';
+        }
+        // Employer Managers sign themselves up, so the account is usable straight
+        // away rather than waiting on an admin to set a password.
+        if (isEmployerManager) {
+            userData.isEmployerManager = true;
             userData.firstPassSet = true;
             userData.status = 'active';
         }
@@ -531,7 +538,14 @@ export const createJobm = async (req, res) => {
             }
         }
 
+        // An Employer Manager's jobs are theirs alone — private on creation, and
+        // never publishable to the marketplace however the request asks.
+        const creator = managerId ? await User.findById(managerId).select('isEmployerManager') : null;
+        const employerPrivate = Boolean(creator?.isEmployerManager);
+        const publishToMarketplace = Boolean(listToMarketplace) && !employerPrivate;
+
         const job = await Job.create({
+            isEmployerPrivate: employerPrivate,
             jobtitle,
             description,
             location,
@@ -552,7 +566,7 @@ export const createJobm = async (req, res) => {
             internalNotes: internalNotes || "",
             resumeAnalysisPoints: Array.isArray(resumeAnalysisPoints) ? resumeAnalysisPoints : [],
             assignedTo: recruiterId ? [recruiterId] : [],
-            marketplace: listToMarketplace
+            marketplace: publishToMarketplace
                 ? {
                     isListed: true,
                     listedAt: new Date(),
@@ -606,8 +620,10 @@ export const getAllJobsm = async (req, res) => {
         // A manager's jobs are the ones they created plus anything they picked up
         // from the ProRecruiter marketplace — picked jobs are worked exactly like
         // their own, so they belong in the same list.
-        const owner = await User.findById(managerId).select('pickedJobs');
-        const pickedIds = owner?.pickedJobs || [];
+        const owner = await User.findById(managerId).select('pickedJobs isEmployerManager');
+        // An Employer Manager only ever works their own requirements, so marketplace
+        // picks don't apply to them.
+        const pickedIds = owner?.isEmployerManager ? [] : owner?.pickedJobs || [];
 
         const jobs = await Job.find({
             $or: [{ managerId }, ...(pickedIds.length ? [{ _id: { $in: pickedIds } }] : [])],

@@ -1,4 +1,5 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import {
   Card,
@@ -12,6 +13,7 @@ import {
 import { API, readAuth } from '../../dashboard/dashboardUtils';
 import CreateJobManager from '../../recruiter/dashboard/CreateJobManager';
 import CreateJobFromJD from '../../recruiter/dashboard/CreateJobFromJD';
+import MarketplacePicksDrawer from './MarketplacePicksDrawer';
 import { isJobOpen, isJobUrgent, jobCompanyName } from './useManagerPlatformData';
 
 const isListed = (job) => Boolean(job?.marketplace?.isListed);
@@ -19,9 +21,16 @@ const pickCount = (job) => job?.marketplace?.pickedBy?.length || 0;
 
 const ManagerMarketplace = ({ platform, hasMarketplaceAccess, onOpenMarketplace }) => {
   const { marketplace, jobs, loading, refresh } = platform;
+  const navigate = useNavigate();
+
+  // Opening a job from here goes to its own page, and comes back to this tab.
+  const openJob = (job) =>
+    navigate(`/manager/jobs/${job._id}`, { state: { from: '/manager/dashboard?tab=Marketplace' } });
   // null = the marketplace itself; otherwise which creation flow is open.
   const [createMode, setCreateMode] = useState(null);
   const [busyJobId, setBusyJobId] = useState(null);
+  // The listing whose pickers are open, plus what we loaded for it.
+  const [picksFor, setPicksFor] = useState(null);
 
   const listed = jobs.filter(isListed);
   const publishable = jobs.filter((j) => isJobOpen(j) && !isListed(j));
@@ -48,6 +57,11 @@ const ManagerMarketplace = ({ platform, hasMarketplaceAccess, onOpenMarketplace 
     },
     [refresh]
   );
+
+  // Which listing's partners are on screen; the drawer loads them itself.
+  const openPicks = (job) => setPicksFor(job);
+
+  const closePicks = () => setPicksFor(null);
 
   // A job created here is published in the same request that creates it.
   const finishCreate = () => {
@@ -149,7 +163,11 @@ const ManagerMarketplace = ({ platform, hasMarketplaceAccess, onOpenMarketplace 
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-[13px]">
           {listed.map((job) => (
-            <Card key={job._id} className="p-[17px] flex flex-col">
+            <Card
+              key={job._id}
+              className="p-[17px] flex flex-col cursor-pointer hover:border-[#c7d5ff] transition-colors"
+              onClick={() => openJob(job)}
+            >
               <div className="flex items-start justify-between gap-2">
                 <StatusPill tone={isJobUrgent(job) ? 'amber' : 'green'}>
                   {isJobUrgent(job) ? 'Urgent' : 'Live'}
@@ -167,17 +185,31 @@ const ManagerMarketplace = ({ platform, hasMarketplaceAccess, onOpenMarketplace 
                 <br />
                 {job.openpositions || 0} openings · {job.totalApplication_number || 0} candidates
               </div>
-              <GhostButton
-                className="mt-3 w-full"
-                disabled={busyJobId === job._id}
-                onClick={() => setListing(job, false)}
-              >
-                {busyJobId === job._id ? 'Removing…' : 'Remove from marketplace'}
-              </GhostButton>
+              <div className="mt-3 flex flex-col gap-2">
+                <PrimaryButton
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    openPicks(job);
+                  }}
+                >
+                  {pickCount(job) ? `See who picked (${pickCount(job)})` : 'See who picked'}
+                </PrimaryButton>
+                <GhostButton
+                  disabled={busyJobId === job._id}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setListing(job, false);
+                  }}
+                >
+                  {busyJobId === job._id ? 'Removing…' : 'Remove from marketplace'}
+                </GhostButton>
+              </div>
             </Card>
           ))}
         </div>
       )}
+
+      {picksFor && <MarketplacePicksDrawer job={picksFor} onClose={closePicks} />}
 
       <Section>Publish an existing job</Section>
       {publishable.length === 0 ? (
@@ -187,10 +219,16 @@ const ManagerMarketplace = ({ platform, hasMarketplaceAccess, onOpenMarketplace 
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-[13px]">
           {publishable.slice(0, 9).map((job) => (
-            <Card key={job._id} className="p-[17px] flex flex-col">
-              <StatusPill tone={isJobUrgent(job) ? 'amber' : 'green'}>
-                {isJobUrgent(job) ? 'Urgent' : 'Live'}
-              </StatusPill>
+            <Card
+              key={job._id}
+              className="p-[17px] flex flex-col cursor-pointer hover:border-[#c7d5ff] transition-colors"
+              onClick={() => openJob(job)}
+            >
+              <div className="flex items-start">
+                <StatusPill tone={isJobUrgent(job) ? 'amber' : 'green'}>
+                  {isJobUrgent(job) ? 'Urgent' : 'Live'}
+                </StatusPill>
+              </div>
               <h3 className="text-sm font-bold mt-3 mb-1.5">{job.jobtitle}</h3>
               <div className="text-[10px] text-[#778092] leading-[1.8] flex-1">
                 {jobCompanyName(job)}
@@ -202,7 +240,10 @@ const ManagerMarketplace = ({ platform, hasMarketplaceAccess, onOpenMarketplace 
               <PrimaryButton
                 className="mt-3 w-full"
                 disabled={busyJobId === job._id}
-                onClick={() => setListing(job, true)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setListing(job, true);
+                }}
               >
                 {busyJobId === job._id ? 'Publishing…' : 'Publish to marketplace'}
               </PrimaryButton>

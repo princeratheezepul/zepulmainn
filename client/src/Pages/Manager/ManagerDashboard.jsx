@@ -4,6 +4,7 @@ import {
   LayoutDashboard,
   Briefcase,
   Store,
+  Handshake,
   UserCheck,
   Users as UsersIcon,
   Wallet,
@@ -17,6 +18,7 @@ import MarketplaceDashboard from '../../Components/manager/MarketplaceDashboard'
 import ManagerOverview from '../../Components/manager/dashboard/ManagerOverview';
 import ManagerCandidates from '../../Components/manager/dashboard/ManagerCandidates';
 import ManagerMarketplace from '../../Components/manager/dashboard/ManagerMarketplace';
+import ManagerPartners from '../../Components/manager/dashboard/ManagerPartners';
 import ManagerFinance from '../../Components/manager/dashboard/ManagerFinance';
 import { useManagerPlatformData, initialsOf } from '../../Components/manager/dashboard/useManagerPlatformData';
 import { Card, PageHead, PrimaryButton, GhostButton, StatusPill, LoadingRow } from '../../Components/dashboard/DashboardUI';
@@ -33,6 +35,7 @@ const MANAGER_NAV = [
   { name: 'Overview', icon: LayoutDashboard },
   { name: 'Jobs', icon: Briefcase, fullBleed: true },
   { name: 'Marketplace', icon: Store, fullBleed: true },
+  { name: 'Recruitment Partners', icon: Handshake },
   { name: 'Candidates', icon: UserCheck },
   { name: 'Recruiters', icon: UsersIcon, fullBleed: true },
   { name: 'Finance', icon: Wallet },
@@ -47,8 +50,26 @@ const MARKETPLACE_MANAGER_EMAILS = ['reenasumera@zepul.com'];
 const canSeeMarketplace = (email) =>
   MARKETPLACE_MANAGER_EMAILS.includes(String(email || '').trim().toLowerCase());
 
-const managerNavFor = (email) =>
-  canSeeMarketplace(email) ? MANAGER_NAV : MANAGER_NAV.filter((n) => n.name !== 'Marketplace');
+// The partner roster belongs to the same marketplace remit as the Marketplace
+// section, so the two are offered together.
+const MARKETPLACE_SECTIONS = ['Marketplace', 'Recruitment Partners'];
+
+const isEmployerManagerAccount = () => {
+  try {
+    const info = JSON.parse(localStorage.getItem('userInfo'));
+    if (typeof info?.data?.user?.isEmployerManager === 'boolean') return info.data.user.isEmployerManager;
+    return Boolean(JSON.parse(localStorage.getItem('authUser'))?.isEmployerManager);
+  } catch {
+    return false;
+  }
+};
+
+const managerNavFor = (email, employerManager = false) =>
+  employerManager
+    ? MANAGER_NAV.filter((n) => !MARKETPLACE_SECTIONS.includes(n.name))
+    : canSeeMarketplace(email)
+      ? MANAGER_NAV
+      : MANAGER_NAV.filter((n) => !MARKETPLACE_SECTIONS.includes(n.name));
 
 // The signed-in manager's email, from whichever store the login path wrote.
 const signedInEmail = () => {
@@ -1021,7 +1042,12 @@ export default function ManagerDashboard() {
   const [searchParams, setSearchParams] = useSearchParams();
   const requestedTab = searchParams.get('tab');
   const managerEmail = signedInEmail();
-  const navItems = managerNavFor(managerEmail);
+  // An Employer Manager never gets the marketplace, whatever their address, and
+  // their job pages live under their own path.
+  const employerManager = isEmployerManagerAccount();
+  const navItems = managerNavFor(managerEmail, employerManager);
+  const consoleBase = employerManager ? '/employermanager' : '/manager';
+  const roleLabel = employerManager ? 'Employer Manager' : 'Zepul Manager';
   const [activeComponent, setActiveComponentState] = useState(
     navItems.some((n) => n.name === requestedTab) ? requestedTab : 'Overview'
   );
@@ -1066,7 +1092,7 @@ export default function ManagerDashboard() {
   const token = userInfo?.data?.accessToken;
 
   // Sidebar shows the full name; the overview greets by first name only.
-  const managerName = userInfo?.data?.user?.fullname || userInfo?.data?.user?.username || 'Zepul Manager';
+  const managerName = userInfo?.data?.user?.fullname || userInfo?.data?.user?.username || roleLabel;
   const managerFirstName = managerName.split(' ')[0];
 
   // MyRecruiters now receives recruiters as a prop
@@ -1406,7 +1432,12 @@ export default function ManagerDashboard() {
   const renderSection = () => {
     switch (sectionName) {
       case 'Jobs':
-        return <ManagerJobs />;
+        return (
+          <ManagerJobs
+            backTo={`${consoleBase}/dashboard?tab=Jobs`}
+            jobBasePath={`${consoleBase}/jobs`}
+          />
+        );
       case 'Marketplace':
         return (
           <ManagerMarketplace
@@ -1415,8 +1446,16 @@ export default function ManagerDashboard() {
             onOpenMarketplace={() => setShowMarketplaceDashboard(true)}
           />
         );
+      case 'Recruitment Partners':
+        return <ManagerPartners />;
       case 'Candidates':
-        return <ManagerCandidates platform={platform} />;
+        return (
+          <ManagerCandidates
+            platform={platform}
+            backTo={`${consoleBase}/dashboard?tab=Candidates`}
+            jobBasePath={`${consoleBase}/jobs`}
+          />
+        );
       case 'Recruiters':
         return (
           <MyRecruiters selectedRecruiter={selectedRecruiter} setSelectedRecruiter={setSelectedRecruiter} />
@@ -1431,7 +1470,8 @@ export default function ManagerDashboard() {
             platform={platform}
             managerName={managerFirstName}
             onNavigate={go}
-            onOpenJob={(job) => navigate(`/manager/jobs/${job._id}`)}
+            onOpenJob={(job) => navigate(`${consoleBase}/jobs/${job._id}`)}
+            employerManager={employerManager}
           />
         );
     }
@@ -1447,7 +1487,7 @@ export default function ManagerDashboard() {
         mobileOpen={navOpen}
         setMobileOpen={setNavOpen}
         userName={managerName}
-        roleLabel="Zepul Manager"
+        roleLabel={roleLabel}
         onProfile={() => go('Profile')}
       />
 
@@ -1492,7 +1532,7 @@ export default function ManagerDashboard() {
           </div>
 
           <div className="flex items-center gap-3">
-            <span className="text-xs text-[#778092] hidden sm:block">Zepul Manager</span>
+            <span className="text-xs text-[#778092] hidden sm:block">{roleLabel}</span>
             <div
               className="w-[34px] h-[34px] rounded-full bg-[#e5ebff] text-[#024bff] grid place-items-center font-extrabold text-[11px] cursor-pointer"
               onClick={() => go('Profile')}

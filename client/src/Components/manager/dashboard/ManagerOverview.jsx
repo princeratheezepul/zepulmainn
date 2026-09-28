@@ -19,7 +19,7 @@ import {
   hasAiInterview,
 } from './useManagerPlatformData';
 
-const ManagerOverview = ({ platform, managerName, onNavigate, onOpenJob }) => {
+const ManagerOverview = ({ platform, managerName, onNavigate, onOpenJob, employerManager = false }) => {
   const { jobs, recruiters, resumes, resumeStats, marketplace, loading } = platform;
 
   const openJobs = jobs.filter(isJobOpen);
@@ -29,7 +29,11 @@ const ManagerOverview = ({ platform, managerName, onNavigate, onOpenJob }) => {
   const metrics = [
     { label: 'Active Clients', value: clients.size, delta: `${jobs.length} requirements` },
     { label: 'Active Jobs', value: openJobs.length, delta: `${jobs.length} total` },
-    { label: 'Jobs in Marketplace', value: marketplace.activeJobs, delta: `${marketplace.totalJobs} listed` },
+    // An Employer Manager's jobs never reach the marketplace, so the tile would
+    // always read zero; their own openings are the useful number instead.
+    employerManager
+      ? { label: 'Open Positions', value: sumField(openJobs, 'openpositions') }
+      : { label: 'Jobs in Marketplace', value: marketplace.activeJobs, delta: `${marketplace.totalJobs} listed` },
     { label: 'Positions Closed', value: closedJobs.length },
     { label: 'Candidates in Pipeline', value: resumes.length, delta: `${resumeStats.pendingResumes} awaiting review` },
     { label: 'Interviews', value: resumes.filter(hasAiInterview).length },
@@ -50,16 +54,20 @@ const ManagerOverview = ({ platform, managerName, onNavigate, onOpenJob }) => {
   return (
     <>
       <PageHead
-        eyebrow="Zepul control centre"
+        eyebrow={employerManager ? 'Your hiring' : 'Zepul control centre'}
         title={`${greeting()}, ${managerName}`}
-        sub="Manage Zepul-generated business, partners, clients and revenue"
+        sub={
+          employerManager
+            ? 'Your requirements, your recruiters, your pipeline'
+            : 'Manage Zepul-generated business, partners, clients and revenue'
+        }
         action={<PrimaryButton onClick={() => onNavigate('Jobs')}>+ Create Job</PrimaryButton>}
       />
 
       {loading ? <LoadingRow label="Loading your business…" /> : <MetricGrid items={metrics} />}
 
       <Section>Live execution</Section>
-      <Pipeline stages={pipelineStages(resumes)} />
+      <Pipeline stages={pipelineStages(resumes, { exclude: ['cvStrength', 'scorecards', 'clientReview'] })} />
 
       <Section>Requirements needing attention</Section>
       <JobGrid
@@ -87,16 +95,6 @@ const ManagerOverview = ({ platform, managerName, onNavigate, onOpenJob }) => {
               ? 'Every open requirement has candidates against it.'
               : 'No open requirements right now.'
         }
-      />
-
-      <Section>Sum of pipeline</Section>
-      <MetricGrid
-        items={[
-          { label: 'Applications', value: sumField(jobs, 'totalApplication_number') },
-          { label: 'Shortlisted', value: sumField(jobs, 'shortlisted_number') },
-          { label: 'Interviewed', value: sumField(jobs, 'interviewed_number') },
-          { label: 'Reviewed Resumes', value: resumeStats.reviewedResumes },
-        ]}
       />
     </>
   );

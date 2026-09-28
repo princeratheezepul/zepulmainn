@@ -75,6 +75,8 @@ import AccountManagerJobDetailPage from '../Pages/AccountManager/jobs/[jobid]';
 import UnifiedLogin from "../Pages/UnifiedLogin";
 import SignIn from '../Pages/SignIn';
 import ProRecruiterSignup from '../Pages/ProRecruiterSignup';
+import EmployerManagerLogin from '../Pages/EmployerManager/Login.jsx';
+import EmployerManagerSignup from '../Pages/EmployerManager/Signup.jsx';
 import CompanyOnboarding from '../Pages/CompanyOnboarding';
 import FirstJobRegistration from '../Pages/FirstJobRegistration';
 import AdminLogin from "../Pages/Admin/Login.jsx";
@@ -388,6 +390,46 @@ const Router = () => {
             <Route path="/prorecruiter/dashboard" element={
               <ProtectedRoute allowedRoles={['manager']}>
                 <ProRecruiterDashboard />
+              </ProtectedRoute>
+            } />
+
+            {/* Employer Manager — a manager whose jobs are private to them.
+                Same console as a manager, under its own path so the job pages
+                know which dashboard to return to. */}
+            <Route path="/employermanager/login" element={<EmployerManagerLogin />} />
+            <Route path="/employermanager/signup" element={<EmployerManagerSignup />} />
+            <Route path="/employermanager" element={
+              <ProtectedRoute allowedRoles={['manager']}>
+                <ManagerDashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="/employermanager/dashboard" element={
+              <ProtectedRoute allowedRoles={['manager']}>
+                <ManagerDashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="/employermanager/jobs/:jobid" element={
+              <ProtectedRoute allowedRoles={['manager']}>
+                <ManagerJobDetailPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/employermanager/jobs/:jobid/candidates" element={
+              <ProtectedRoute allowedRoles={['manager']}>
+                <ManagerJobDetailPage />
+              </ProtectedRoute>
+            } />
+
+            {/* A ProRecruiter opens jobs from their own dashboard, so the job
+                page lives under their path too — otherwise "Back to Jobs" has
+                nothing but navigation state to go on, which a refresh loses. */}
+            <Route path="/prorecruiter/jobs/:jobid" element={
+              <ProtectedRoute allowedRoles={['manager']}>
+                <ManagerJobDetailPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/prorecruiter/jobs/:jobid/candidates" element={
+              <ProtectedRoute allowedRoles={['manager']}>
+                <ManagerJobDetailPage />
               </ProtectedRoute>
             } />
 

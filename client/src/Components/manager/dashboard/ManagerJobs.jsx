@@ -24,8 +24,12 @@ const ManagerJobs = ({
   sub = 'Create, publish and monitor Zepul-managed hiring requirements',
   showCreateOptions = false,
   backTo = '/manager/dashboard?tab=Jobs',
+  // Where a job opens. Each console has its own, so the job page can tell which
+  // one it belongs to from the URL alone.
+  jobBasePath = '/manager/jobs',
   // Creating jobs is not available to every console this list is shown in.
   canCreateJob = true,
+  canEditJob = true,
 }) => {
   const navigate = useNavigate();
   const [jobs, setJobs] = useState([]);
@@ -195,7 +199,7 @@ const ManagerJobs = ({
 
   // The card opens the job's own page; the edit control opens the side sheet.
   const handleJobClick = (job) => {
-    navigate(`/manager/jobs/${job._id || job.id}`, { state: { from: backTo } });
+    navigate(`${jobBasePath}/${job._id || job.id}`, { state: { from: backTo } });
   };
 
   const handleJobEdit = (job) => {
@@ -204,7 +208,7 @@ const ManagerJobs = ({
 
   // The applicants count on a card skips job details and opens that job's candidate list.
   const handleShowJobCandidates = (job) => {
-    navigate(`/manager/jobs/${job._id || job.id}/candidates`);
+    navigate(`${jobBasePath}/${job._id || job.id}/candidates`);
   };
 
   const handleBack = () => {
@@ -359,7 +363,7 @@ const ManagerJobs = ({
               key={job._id || job.id}
               job={job}
               onClick={handleJobClick}
-              onEdit={handleJobEdit}
+              onEdit={canEditJob ? handleJobEdit : undefined}
               onShowCandidates={handleShowJobCandidates}
             />
           ))}

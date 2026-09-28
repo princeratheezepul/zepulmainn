@@ -6,15 +6,9 @@ import React, { useState, useEffect } from 'react';
 import { Users, MessageSquare, X, CheckCircle, XCircle, ArrowUpDown, ArrowDown, ArrowUp } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import ResumeDetailsView from './ResumeDetailsView';
+import { CANDIDATE_STAGES } from '../../dashboard/dashboardUtils';
 
-const STATUS_LABELS = {
-  all: 'All',
-  screening: 'In screen',
-  scheduled: 'Scheduled',
-  rejected: 'Rejected',
-  shortlisted: 'Shortlisted',
-  submitted: 'Submitted',
-};
+
 
 const STATUS_COLORS = {
   scheduled: 'bg-yellow-100 text-yellow-700',
@@ -163,17 +157,14 @@ const SavedResumes = ({ jobId, onBack, jobtitle }) => {
   };
 
   // Count for each status
-  const statusCounts = resumes.reduce(
-    (acc, r) => {
-      acc.all++;
-      if (r.status && acc[r.status] !== undefined) acc[r.status]++;
-      return acc;
-    },
-    { all: 0, screening: 0, scheduled: 0, rejected: 0, shortlisted: 0, submitted: 0 }
+  // Counts come off the full list so every tab shows its own total, not the
+  // total of whatever tab happens to be open.
+  const statusCounts = Object.fromEntries(
+    CANDIDATE_STAGES.map((s) => [s.key, resumes.filter(s.matches).length])
   );
 
-  // Filtered resumes
-  const filteredResumes = filter === 'all' ? resumes : resumes.filter(r => r.status === filter);
+  const activeStage = CANDIDATE_STAGES.find((s) => s.key === filter) || CANDIDATE_STAGES[0];
+  const filteredResumes = resumes.filter(activeStage.matches);
 
   // Same value the SCORE cell renders; null when the candidate has no score yet.
   const getScoreValue = (resume) => {
@@ -288,6 +279,15 @@ const SavedResumes = ({ jobId, onBack, jobtitle }) => {
     );
   }
 
+  // Partner attribution only matters on a marketplace listing; on an ordinary
+  // job every candidate came from the same place and the column is noise.
+  const partnerName = (resume) => {
+    const by = resume.submittedBy;
+    if (!by || by.role !== 'partner') return '';
+    return by.userId?.fullname || by.userId?.username || by.name || 'Recruitment partner';
+  };
+  const showSubmittedBy = visibleResumes.some((r) => partnerName(r));
+
   return (
     <div className="min-h-screen w-screen flex flex-col bg-gray-50 p-6 relative">
       {/* Sidebar overlay */}
@@ -344,7 +344,7 @@ const SavedResumes = ({ jobId, onBack, jobtitle }) => {
         
         {/* Filter Tabs */}
         <div className="flex gap-3 mb-6">
-          {Object.entries(STATUS_LABELS).map(([key, label]) => (
+          {CANDIDATE_STAGES.map(({ key, label }) => (
             <button
               key={key}
               className={`px-4 py-2 rounded-full text-sm font-medium transition-colors focus:outline-none ${
@@ -386,6 +386,9 @@ const SavedResumes = ({ jobId, onBack, jobtitle }) => {
                     )}
                   </button>
                 </th>
+                {showSubmittedBy && (
+                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">SUBMITTED BY</th>
+                )}
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">STATUS</th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">NOTES</th>
               </tr>
@@ -393,7 +396,7 @@ const SavedResumes = ({ jobId, onBack, jobtitle }) => {
             <tbody className="bg-white divide-y divide-gray-100">
               {visibleResumes.length === 0 ? (
                 <tr>
-                  <td colSpan="5" className="px-6 py-8 text-center text-gray-500">
+                  <td colSpan={showSubmittedBy ? 6 : 5} className="px-6 py-8 text-center text-gray-500">
                     No candidates found for this filter.
                   </td>
                 </tr>
@@ -423,6 +426,18 @@ const SavedResumes = ({ jobId, onBack, jobtitle }) => {
                         {resume.overallScore || resume.ats_score ? `${resume.overallScore || resume.ats_score}%` : 'N/A'}
                       </div>
                     </td>
+                    {showSubmittedBy && (
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {partnerName(resume) ? (
+                          <span className="inline-flex items-center gap-1.5 text-sm text-gray-900">
+                            <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                            {partnerName(resume)}
+                          </span>
+                        ) : (
+                          <span className="text-sm text-gray-400">You</span>
+                        )}
+                      </td>
+                    )}
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full ${STATUS_COLORS[resume.status] || 'bg-gray-100 text-gray-700'}`}>
                         {resume.status ? capitalizeFirstLetter(resume.status) : 'Submitted'}

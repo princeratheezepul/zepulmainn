@@ -4,12 +4,14 @@ import mongoose from "mongoose";
 import { generateTextWithRetry } from "./bulkUpload.controller.js";
 import { Job } from "../models/job.model.js";
 import Recruiter from "../models/recruiter.model.js";
+import { User } from "../models/user.model.js";
 import nodemailer from "nodemailer";
 import { determineResumeTag } from "../utils/tagHelper.js";
 import { analyzeResume, calculateATSScore } from "./bulkUpload.controller.js";
 import { generateAssessmentForResume, sendAssessmentEmail } from "./assessment.controller.js";
 import { sendWhatsAppMessage } from "../utils/whatsapp.js";
 import { canAccessResume } from "../utils/resourceAccess.js";
+import { STAGE_QUERIES } from "../utils/candidateStage.js";
 import { screenCvStrength, cutoffRejectionFields } from "../utils/cvStrength.js";
 
 // Fire-and-forget: generate the coding assessment for a newly-saved resume, then notify the candidate.
@@ -113,6 +115,17 @@ export const saveResumeWithJob = async (req, res) => {
     // Add the appropriate ID field based on user role
     if (userRole === 'manager') {
       resumeObject.managerId = userId;
+
+      // A manager uploading against someone else's job got there by picking it
+      // up from the marketplace, which makes them a Recruitment Partner on this
+      // submission rather than the job's owner.
+      const uploader = await User.findById(userId).select('fullname username').catch(() => null);
+      const isPartner = job.managerId && String(job.managerId) !== String(userId);
+      resumeObject.submittedBy = {
+        userId,
+        name: uploader?.fullname || uploader?.username || '',
+        role: isPartner ? 'partner' : 'manager',
+      };
     } else {
       // For recruiters, add recruiterId and also fetch their managerId
       resumeObject.recruiterId = userId;
@@ -120,6 +133,11 @@ export const saveResumeWithJob = async (req, res) => {
       // Fetch recruiter details to get their managerId
       try {
         const recruiter = await Recruiter.findById(userId);
+        resumeObject.submittedBy = {
+          userId,
+          name: recruiter?.fullname || '',
+          role: 'recruiter',
+        };
         if (recruiter && recruiter.managerId) {
           resumeObject.managerId = recruiter.managerId;
           console.log("Added managerId from recruiter:", recruiter.managerId);
@@ -238,9 +256,15 @@ export const getResumesByJob = async (req, res) => {
 
     let query = { jobId };
 
-    // If user is a manager, only show resumes they uploaded
     if (userRole === 'manager') {
-      query.managerId = userId;
+      // The manager who owns the job sees every candidate submitted against it —
+      // on a marketplace listing that includes the ones Recruitment Partners sent.
+      // Any other manager is a partner here, and sees only their own submissions.
+      const job = await Job.findById(jobId).select('managerId marketplace');
+      const ownsJob = job?.managerId && String(job.managerId) === String(userId);
+      if (!ownsJob) {
+        query.$or = [{ 'submittedBy.userId': userId }, { managerId: userId }];
+      }
     }
     // If user is a recruiter, only show resumes they uploaded
     else if (userRole === 'recruiter') {
@@ -248,7 +272,16 @@ export const getResumesByJob = async (req, res) => {
     }
     // If no role specified, show all resumes for the job (for backward compatibility)
 
-    const resumes = await Resume.find(query).populate('jobId').populate('resumeDataId');
+    // Optional pipeline-stage filter. Callers read the array straight off the
+    // body, so the response shape stays a plain array.
+    const stage = String(req.query.stage || '').trim();
+    if (STAGE_QUERIES[stage]) Object.assign(query, STAGE_QUERIES[stage]);
+
+    const resumes = await Resume.find(query)
+      .populate('jobId')
+      .populate('resumeDataId')
+      .populate('submittedBy.userId', 'fullname username email');
+
     res.status(200).json(resumes);
   } catch (err) {
     console.error("Error fetching resumes for job:", err);

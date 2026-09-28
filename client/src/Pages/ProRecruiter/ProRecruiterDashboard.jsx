@@ -5,7 +5,6 @@ import {
   Briefcase,
   Store,
   UserCheck,
-  ClipboardCheck,
   Gavel,
   Users as UsersIcon,
   Settings as SettingsIcon,
@@ -28,7 +27,7 @@ import toast from 'react-hot-toast';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, ResponsiveContainer, ReferenceLine } from 'recharts';
 
 /**
- * Employer Manager console sections. `fullBleed` screens ship their own page
+ * Recruitment Partner console sections. `fullBleed` screens ship their own page
  * padding, so the shell hands them the content area untouched.
  */
 // Creating jobs from this console is limited to specific accounts; everyone
@@ -49,12 +48,11 @@ const signedInEmail = () => {
   }
 };
 
-const EM_NAV = [
+const PARTNER_NAV = [
   { name: 'Dashboard', icon: LayoutDashboard },
   { name: 'Jobs', icon: Briefcase, fullBleed: true },
   { name: 'Marketplace', icon: Store },
   { name: 'Candidates', icon: UserCheck },
-  { name: 'Scorecards', icon: ClipboardCheck },
   { name: 'Hiring Decisions', icon: Gavel },
   { name: 'Recruiter', icon: UsersIcon, fullBleed: true },
   { name: 'Settings', icon: SettingsIcon, fullBleed: true },
@@ -1024,7 +1022,7 @@ export default function ProRecruiterDashboard() {
   const [searchParams, setSearchParams] = useSearchParams();
   const requestedTab = searchParams.get('tab');
   const [activeComponent, setActiveComponentState] = useState(
-    EM_NAV.some((n) => n.name === requestedTab) ? requestedTab : 'Dashboard'
+    PARTNER_NAV.some((n) => n.name === requestedTab) ? requestedTab : 'Dashboard'
   );
 
   // Dashboard is the default, so it stays as a bare /prorecruiter/dashboard URL.
@@ -1065,8 +1063,8 @@ export default function ProRecruiterDashboard() {
   const userInfo = JSON.parse(localStorage.getItem("userInfo"));
   const token = userInfo?.data?.accessToken;
 
-  const employerName =
-    userInfo?.data?.user?.fullname || userInfo?.data?.user?.username || 'Employer Manager';
+  const partnerName =
+    userInfo?.data?.user?.fullname || userInfo?.data?.user?.username || 'Recruitment Partner';
   const mayCreateJobs = canCreateJobs(signedInEmail());
 
   // MyRecruiters now receives recruiters as a prop
@@ -1390,9 +1388,9 @@ export default function ProRecruiterDashboard() {
   }
 
 
-  const activeSection = EM_NAV.find((n) => n.name === activeComponent) || EM_NAV[0];
+  const activeSection = PARTNER_NAV.find((n) => n.name === activeComponent) || PARTNER_NAV[0];
   const jumpQuery = jump.trim().toLowerCase();
-  const navMatches = jumpQuery ? EM_NAV.filter((n) => n.name.toLowerCase().includes(jumpQuery)) : [];
+  const navMatches = jumpQuery ? PARTNER_NAV.filter((n) => n.name.toLowerCase().includes(jumpQuery)) : [];
 
   const go = (name) => {
     setActiveComponent(name);
@@ -1414,7 +1412,9 @@ export default function ProRecruiterDashboard() {
             }
             showCreateOptions={mayCreateJobs}
             canCreateJob={mayCreateJobs}
+            canEditJob={false}
             backTo="/prorecruiter/dashboard?tab=Jobs"
+            jobBasePath="/prorecruiter/jobs"
           />
         );
       case 'Candidates':
@@ -1424,16 +1424,8 @@ export default function ProRecruiterDashboard() {
             eyebrow="Decision support"
             title="Candidates"
             sub="Candidates uploaded by your recruiter"
-          />
-        );
-      case 'Scorecards':
-        return (
-          <ManagerCandidates
-            platform={platform}
-            eyebrow="Decision support"
-            title="Scorecards"
-            sub="Review decision-ready scorecards"
-            scorecardsOnly
+            backTo="/prorecruiter/dashboard?tab=Candidates"
+            jobBasePath="/prorecruiter/jobs"
           />
         );
       case 'Marketplace':
@@ -1470,15 +1462,15 @@ export default function ProRecruiterDashboard() {
   return (
     <div className="dashboard-shell-employer min-h-screen bg-[#f6f8fb] text-[#1d2430]">
       <DashboardSidebar
-        items={EM_NAV}
+        items={PARTNER_NAV}
         active={activeComponent}
         onSelect={go}
         isCollapsed={isCollapsed}
         setIsCollapsed={setIsCollapsed}
         mobileOpen={navOpen}
         setMobileOpen={setNavOpen}
-        userName={employerName}
-        roleLabel="Employer Manager"
+        userName={partnerName}
+        roleLabel="Recruitment Partner"
         onProfile={() => go('Settings')}
       />
 
@@ -1523,13 +1515,13 @@ export default function ProRecruiterDashboard() {
           </div>
 
           <div className="flex items-center gap-3">
-            <span className="text-xs text-[#778092] hidden sm:block">Employer Manager</span>
+            <span className="text-xs text-[#778092] hidden sm:block">Recruitment Partner</span>
             <div
               className="w-[34px] h-[34px] rounded-full bg-[#e5ebff] text-[#024bff] grid place-items-center font-extrabold text-[11px] cursor-pointer"
               onClick={() => go('Settings')}
               title="Settings"
             >
-              {initialsOf(employerName)}
+              {initialsOf(partnerName)}
             </div>
           </div>
         </header>

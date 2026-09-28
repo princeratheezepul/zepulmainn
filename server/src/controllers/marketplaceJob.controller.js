@@ -15,6 +15,7 @@
 import mongoose from "mongoose";
 import { Job } from "../models/job.model.js";
 import { User } from "../models/user.model.js";
+import Resume from "../models/resume.model.js";
 
 const POPULATE = [
   { path: "managerId", select: "fullname username email" },
@@ -39,7 +40,9 @@ const pickedIdsFor = (jobs, userId) =>
 export const getAvailableMarketplaceJobs = async (req, res) => {
   try {
     const userId = req.user._id;
-    const jobs = await Job.find({ "marketplace.isListed": true }).populate(POPULATE).sort({ "marketplace.listedAt": -1 });
+    const jobs = await Job.find({ "marketplace.isListed": true, isEmployerPrivate: { $ne: true } })
+      .populate(POPULATE)
+      .sort({ "marketplace.listedAt": -1 });
 
     const open = jobs.filter(isOpen);
     const picked = pickedIdsFor(open, userId);
@@ -146,6 +149,12 @@ export const updateMarketplaceListing = async (req, res) => {
     if (String(job.managerId) !== String(userId)) {
       return res.status(403).json({ message: "This isn't your job to list.", success: false });
     }
+    if (job.isEmployerPrivate) {
+      return res.status(403).json({
+        message: "Employer Manager jobs are private and can't be published to the marketplace.",
+        success: false,
+      });
+    }
 
     job.marketplace = job.marketplace || {};
     if (typeof isListed === "boolean") {
@@ -163,5 +172,136 @@ export const updateMarketplaceListing = async (req, res) => {
   } catch (error) {
     console.error("updateMarketplaceListing error:", error);
     return res.status(500).json({ message: "Error updating the listing.", success: false });
+  }
+};
+
+// ─── GET /api/manager/marketplace/:jobId/picks ──────────────────────────────
+// Who has picked a listing up. Only the manager who owns the job can see this —
+// it is their requirement, and the answer names other people's accounts.
+export const getMarketplaceJobPicks = async (req, res) => {
+  try {
+    const { jobId } = req.params;
+    const userId = req.user._id;
+
+    if (!mongoose.Types.ObjectId.isValid(jobId)) {
+      return res.status(400).json({ message: "Invalid job id", success: false });
+    }
+
+    const job = await Job.findById(jobId)
+      .populate("marketplace.pickedBy.userId", "fullname username email companys isProRecruiter")
+      .populate("assignedRecruiters", "fullname email");
+
+    if (!job) return res.status(404).json({ message: "Job not found.", success: false });
+    if (String(job.managerId) !== String(userId)) {
+      return res.status(403).json({ message: "This isn't your listing.", success: false });
+    }
+
+    // A pick whose account has since been removed leaves a dangling reference;
+    // drop those rather than rendering a blank row.
+    const picks = (job.marketplace?.pickedBy || [])
+      .filter((p) => p.userId)
+      .map((p) => ({
+        id: p.userId._id,
+        name: p.userId.fullname || p.userId.username || "Unnamed partner",
+        email: p.userId.email || "",
+        isProRecruiter: Boolean(p.userId.isProRecruiter),
+        pickedAt: p.pickedAt,
+      }))
+      .sort((a, b) => new Date(b.pickedAt) - new Date(a.pickedAt));
+
+    return res.status(200).json({
+      success: true,
+      job: {
+        id: job._id,
+        jobtitle: job.jobtitle,
+        company: job.company,
+        listedAt: job.marketplace?.listedAt || null,
+        totalApplications: job.totalApplication_number || 0,
+        shortlisted: job.shortlisted_number || 0,
+      },
+      picks,
+    });
+  } catch (error) {
+    console.error("getMarketplaceJobPicks error:", error);
+    return res.status(500).json({ message: "Error loading who picked this job.", success: false });
+  }
+};
+
+// ─── GET /api/manager/marketplace/partners ──────────────────────────────────
+// Every Recruitment Partner on the platform, with what they have actually done:
+// listings picked up, candidates submitted, and how those candidates fared.
+//
+// This names other people's accounts, so it is limited to managers who run the
+// marketplace — either flagged for the marketplace dashboard, or publishing
+// listings of their own.
+export const getRecruitmentPartners = async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    const [me, ownsAListing] = await Promise.all([
+      User.findById(userId).select("accessToMPDashboard"),
+      Job.exists({ managerId: userId, "marketplace.isListed": true }),
+    ]);
+    if (!me?.accessToMPDashboard && !ownsAListing) {
+      return res.status(403).json({ message: "Marketplace access required.", success: false });
+    }
+
+    const partners = await User.find({ type: "manager", isProRecruiter: true })
+      .select("fullname username email createdAt companys")
+      .sort({ createdAt: -1 });
+
+    if (partners.length === 0) {
+      return res.status(200).json({ success: true, partners: [] });
+    }
+    const partnerIds = partners.map((p) => p._id);
+
+    // Picks per partner, counted from the listings rather than per partner, so
+    // this stays three queries however many partners there are.
+    const listings = await Job.find({ "marketplace.isListed": true, isEmployerPrivate: { $ne: true } })
+      .select("marketplace.pickedBy");
+    const picksBy = new Map();
+    for (const job of listings) {
+      for (const pick of job.marketplace?.pickedBy || []) {
+        const key = String(pick.userId);
+        picksBy.set(key, (picksBy.get(key) || 0) + 1);
+      }
+    }
+
+    const submissions = await Resume.aggregate([
+      { $match: { "submittedBy.userId": { $in: partnerIds }, "submittedBy.role": "partner" } },
+      {
+        $group: {
+          _id: "$submittedBy.userId",
+          submitted: { $sum: 1 },
+          shortlisted: { $sum: { $cond: [{ $eq: ["$status", "shortlisted"] }, 1, 0] } },
+          selected: { $sum: { $cond: [{ $in: ["$status", ["offered", "hired"]] }, 1, 0] } },
+          rejected: { $sum: { $cond: [{ $eq: ["$status", "rejected"] }, 1, 0] } },
+          lastSubmittedAt: { $max: "$createdAt" },
+        },
+      },
+    ]);
+    const statsBy = new Map(submissions.map((s) => [String(s._id), s]));
+
+    return res.status(200).json({
+      success: true,
+      partners: partners.map((p) => {
+        const stats = statsBy.get(String(p._id)) || {};
+        return {
+          id: p._id,
+          name: p.fullname || p.username || "Unnamed partner",
+          email: p.email || "",
+          joinedAt: p.createdAt,
+          jobsPicked: picksBy.get(String(p._id)) || 0,
+          candidatesSubmitted: stats.submitted || 0,
+          shortlisted: stats.shortlisted || 0,
+          selected: stats.selected || 0,
+          rejected: stats.rejected || 0,
+          lastSubmittedAt: stats.lastSubmittedAt || null,
+        };
+      }),
+    });
+  } catch (error) {
+    console.error("getRecruitmentPartners error:", error);
+    return res.status(500).json({ message: "Error loading recruitment partners.", success: false });
   }
 };

@@ -15,6 +15,14 @@ const   ManagerJobDetailPage = () => {
   // The candidate list lives at /manager/jobs/:jobid/candidates so it can be
   // linked to directly (e.g. from the applicants count on a job card).
   const showSavedResumes = /\/candidates\/?$/.test(location.pathname);
+
+  // This page is mounted under both consoles. Everything it links to is built
+  // from whichever one the URL says we are in, rather than from navigation
+  // state, which a refresh or an intermediate hop would drop.
+  const consoleBase = ['/prorecruiter', '/employermanager'].find((base) =>
+    location.pathname.startsWith(base)
+  ) || '/manager';
+  const backToJobs = `${consoleBase}/dashboard?tab=Jobs`;
   const [showEditModal, setShowEditModal] = useState(false);
   const [editSaving, setEditSaving] = useState(false);
   const [editForm, setEditForm] = useState(null);
@@ -205,7 +213,7 @@ const   ManagerJobDetailPage = () => {
   }
 
   if (showSavedResumes) {
-    return <SavedResumes onBack={() => navigate(`/manager/jobs/${jobId}`)} jobId={jobId} jobtitle={job.jobtitle} />;
+    return <SavedResumes onBack={() => navigate(`${consoleBase}/jobs/${jobId}`)} jobId={jobId} jobtitle={job.jobtitle} />;
   }
 
   return (
@@ -215,7 +223,7 @@ const   ManagerJobDetailPage = () => {
           {/* Back Button */}
           <div className="bg-gray-50 w-full px-4 md:px-0 pt-6 pb-2">
             <button
-              onClick={() => navigate(location.state?.from || '/manager/dashboard?tab=Jobs')}
+              onClick={() => navigate(location.state?.from || backToJobs)}
               className="text-blue-600 hover:text-blue-800 font-medium text-sm flex items-center gap-2 mb-4"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -234,7 +242,7 @@ const   ManagerJobDetailPage = () => {
               <div className="flex flex-col gap-3">
                 <button 
                   className="bg-black hover:bg-gray-800 text-white font-semibold px-5 py-2 rounded-lg text-sm cursor-pointer flex items-center gap-2"
-                  onClick={() => navigate(`/manager/jobs/${jobId}/candidates`)}
+                  onClick={() => navigate(`${consoleBase}/jobs/${jobId}/candidates`)}
                 >
                   <Users size={18} className="text-white" />
                   {resumeCount} Candidate List

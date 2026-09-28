@@ -1,13 +1,11 @@
 import React from 'react';
-import { PageHead, MetricGrid, Section, Pipeline, LoadingRow, PrimaryButton, GhostButton } from '../../dashboard/DashboardUI';
+import { PageHead, MetricGrid, LoadingRow, PrimaryButton, GhostButton } from '../../dashboard/DashboardUI';
 import {
   isJobOpen,
   sumField,
   hasCodingTest,
   hasAiInterview,
   hasScorecard,
-  atClientReview,
-  pipelineStages,
 } from '../../manager/dashboard/useManagerPlatformData';
 
 const ProRecruiterOverview = ({ platform, onNavigate, hasMarketplaceAccess, onOpenMarketplace, canCreateJob }) => {
@@ -31,7 +29,7 @@ const ProRecruiterOverview = ({ platform, onNavigate, hasMarketplaceAccess, onOp
   return (
     <>
       <PageHead
-        eyebrow="Employer"
+        eyebrow="Recruitment partner"
         title="Hiring dashboard"
         sub={`Zep Pro Recruiter · ${recruiters.length} recruiter${recruiters.length === 1 ? '' : 's'} on your licence`}
         action={
@@ -49,19 +47,6 @@ const ProRecruiterOverview = ({ platform, onNavigate, hasMarketplaceAccess, onOp
       />
 
       {loading ? <LoadingRow label="Loading your hiring…" /> : <MetricGrid items={metrics} />}
-
-      <Section>Candidate flow</Section>
-      <Pipeline stages={pipelineStages(resumes)} />
-
-      <Section>Awaiting your decision</Section>
-      <MetricGrid
-        items={[
-          { label: 'Scorecards to review', value: resumes.filter((r) => hasScorecard(r) && !atClientReview(r)).length },
-          { label: 'Shortlisted', value: shortlisted },
-          { label: 'Rejected', value: resumes.filter((r) => r.status === 'rejected').length },
-          { label: 'Openings', value: sumField(jobs, 'openpositions') },
-        ]}
-      />
     </>
   );
 };

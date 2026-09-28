@@ -117,6 +117,15 @@ const userSchema = new Schema({
         type: Boolean,
         default: false
     },
+    // An Employer Manager works only their own requirements: the jobs they create
+    // are private to them, never surfaced to other managers, account managers or
+    // the ProRecruiter marketplace. Everything else behaves like a manager, which
+    // is why this is a flag rather than a separate account type.
+    isEmployerManager: {
+        type: Boolean,
+        default: false,
+    },
+
     isProRecruiter: {
         type: Boolean,
         default: false
