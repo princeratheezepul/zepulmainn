@@ -70,7 +70,7 @@ const LandingNav = () => {
                     <Link to="/zeprecruit" className="lp-nl">Zep Recruit</Link>
                     <Link to="/prorecruitor" className="lp-nl">Zep Pro Recruiter</Link>
                     <Link to="/zepJobs" className="lp-nl">Zep Jobs</Link>
-                    <Link to="/pricing" className="lp-nl">Pricing</Link>
+                    <Link to="/zep-pro-recruiter-pricing" className="lp-nl">Pricing</Link>
                     <Link to="/about" className="lp-nl">About</Link>
                 </div>
 
@@ -98,7 +98,7 @@ const LandingNav = () => {
                         <Link to="/zeprecruit" className="lp-sidebar-link" onClick={closeSidebar}>Zep Recruit</Link>
                         <Link to="/prorecruitor" className="lp-sidebar-link" onClick={closeSidebar}>Zep Pro Recruiter</Link>
                         <Link to="/zepJobs" className="lp-sidebar-link" onClick={closeSidebar}>Zep Jobs</Link>
-                        <Link to="/pricing" className="lp-sidebar-link" onClick={closeSidebar}>Pricing</Link>
+                        <Link to="/zep-pro-recruiter-pricing" className="lp-sidebar-link" onClick={closeSidebar}>Pricing</Link>
                         <Link to="/about" className="lp-sidebar-link" onClick={closeSidebar}>About</Link>
                     </div>
 

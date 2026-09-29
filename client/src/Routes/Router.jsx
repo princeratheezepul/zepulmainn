@@ -98,6 +98,7 @@ import CandidateAppliedJobs from "../Pages/CandidateAppliedJobs";
 
 
 const Home = lazy(() => import("../Pages/Home"));
+const HomeLanding = lazy(() => import("../Pages/HomeLanding"));
 const LandingPage = lazy(() => import("../Pages/LandingPage"));
 const Companies = lazy(() => import("../Pages/Companies"));
 const Recruitement = lazy(() => import("../Pages/Recruitement"));
@@ -127,6 +128,7 @@ const About = lazy(() => import("../Pages/About"));
 const ContactPage = lazy(() => import("../Pages/ContactPage"));
 const ZepJobs = lazy(() => import("../Pages/ZepJobs"));
 const Pricing = lazy(() => import("../Pages/Pricing"));
+const ZepProRecruiterPricing = lazy(() => import("../Pages/ZepProRecruiterPricing"));
 
 const Router = () => {
   return (
@@ -158,7 +160,9 @@ const Router = () => {
           />
           <Routes>
             {/* Standalone Landing Page — has its own Nav & Footer */}
-            <Route path="/" element={<LandingPage />} />
+            <Route path="/" element={<HomeLanding />} />
+            {/* Previous landing page, kept reachable while the new one beds in */}
+            <Route path="/old-landing" element={<LandingPage />} />
             {/* Standalone ZepJobs Page */}
             <Route path="/zepJobs" element={<ZepJobs />} />
             {/* Standalone ZepConsult Page */}
@@ -174,6 +178,9 @@ const Router = () => {
 
             {/* Standalone ProRecruiter Page */}
             <Route path="/prorecruitor" element={<ProRecruitor />} />
+
+            {/* Standalone Zep Pro Recruiter pricing page */}
+            <Route path="/zep-pro-recruiter-pricing" element={<ZepProRecruiterPricing />} />
 
             {/* Public routes with Header and Footer */}
             <Route path="/old-home" element={<PublicLayout />}>

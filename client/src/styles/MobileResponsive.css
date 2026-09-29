@@ -84,7 +84,10 @@
   .home-img {
     width: 100% !important;
   }
-  h1 {
+  /* App-wide mobile clamp on h1. The home landing ("/") sets its own fluid
+     heading scale, so it opts out — this rule's !important would otherwise
+     beat any selector it could use. */
+  h1:not(.zs-root h1) {
     font-size: 25px !important;
   }
   .cards {
