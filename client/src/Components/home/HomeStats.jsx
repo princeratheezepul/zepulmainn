@@ -3,6 +3,7 @@ import React, { useEffect, useRef } from 'react';
 const STATS = [
     { to: 100, suffix: '%', initial: '100%', label: 'Autonomous AI hiring execution' },
     { to: 800, suffix: 'M+', initial: '800M+', label: 'Global talent profiles' },
+    { to: 60, suffix: '%', initial: '60%', label: 'Faster hiring cycles' },
 ];
 
 const HomeStats = () => {
@@ -59,11 +60,6 @@ const HomeStats = () => {
                     <div className="lbl">{s.label}</div>
                 </div>
             ))}
-            <div className="stat">
-                {/* TODO: replace with a real figure, e.g. average days from requirement to closure */}
-                <div className="num tbd">XX days</div>
-                <div className="lbl">From requirement to closure</div>
-            </div>
         </section>
     );
 };
