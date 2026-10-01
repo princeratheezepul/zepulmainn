@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 
 const LINKS = [
@@ -11,9 +11,32 @@ const LINKS = [
 
 const HomeNav = () => {
     const [open, setOpen] = useState(false);
+    const navRef = useRef(null);
+
+    // The nav is pinned to the viewport, so it needs a surface of its own as
+    // soon as the hero starts sliding underneath it. Toggled via a class
+    // rather than state so a scroll never re-renders the tree.
+    useEffect(() => {
+        const nav = navRef.current;
+        if (!nav) return;
+        let ticking = false;
+
+        const onScroll = () => {
+            if (ticking) return;
+            ticking = true;
+            requestAnimationFrame(() => {
+                nav.classList.toggle('scrolled', window.scrollY > 20);
+                ticking = false;
+            });
+        };
+
+        onScroll();
+        window.addEventListener('scroll', onScroll, { passive: true });
+        return () => window.removeEventListener('scroll', onScroll);
+    }, []);
 
     return (
-        <header className="znav">
+        <header className="znav" ref={navRef}>
             <Link className="brand" to="/" aria-label="Zepul home" onClick={() => setOpen(false)}>
                 <svg viewBox="-42 -56 84 112" width="20" height="26" aria-hidden="true">
                     <g fill="none" strokeWidth="7">

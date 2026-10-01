@@ -37,7 +37,7 @@ const ZepAboutPartners = () => {
         <div className="team-track-wrap reveal">
           <div className="team-track" id="teamTrack">
 
-            <div className="team-card">
+            <div className="team-card featured">
               <div className="team-card-avatar">
                 <img src="/srikanth.png" alt="Srikanth" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                 <div className="team-card-overlay"></div>
@@ -45,10 +45,10 @@ const ZepAboutPartners = () => {
               <div className="team-card-body">
                 <a
                   className="team-card-name"
-                  href="https://www.linkedin.com/in/srikanth-dhanwada-b9a94787/"
+                  href="https://www.linkedin.com/in/sri-dhanwada-b9a94787?utm_source=share_via&utm_content=profile&utm_medium=member_android"
                   target="_blank"
                   rel="noopener noreferrer"
-                >Srikanth Dhanwada</a>
+                >Sri Dhanwada</a>
                 <div className="team-card-role">Founder & CEO</div>
 
                 {/* <div className="team-card-socials">
@@ -58,7 +58,7 @@ const ZepAboutPartners = () => {
               </div>
             </div>
 
-            <div className="team-card featured">
+            <div className="team-card">
               <div className="team-card-avatar">
                 <img src="/tarun.png" alt="Tarun" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                 <div className="team-card-overlay"></div>

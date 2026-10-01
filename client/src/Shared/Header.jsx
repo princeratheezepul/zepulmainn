@@ -1,10 +1,30 @@
-import React, { Fragment } from "react";
+import React, { Fragment, useEffect, useRef, useState } from "react";
 import "../styles/Header.css";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { FaBars } from "react-icons/fa6";
 const Header = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const headerRef = useRef(null);
+  const [height, setHeight] = useState(null);
+
+  // The header is pinned, so it no longer takes up space in the flow — the
+  // spacer below stands in for it. Its height is measured rather than
+  // hardcoded because the logo and button reflow on narrow screens, which
+  // makes the header taller there.
+  useEffect(() => {
+    const el = headerRef.current;
+    if (!el) return;
+    const measure = () => setHeight(el.getBoundingClientRect().height);
+    measure();
+    if (typeof ResizeObserver === "undefined") {
+      window.addEventListener("resize", measure);
+      return () => window.removeEventListener("resize", measure);
+    }
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   const handleTryZepulClick = () => {
     navigate("/login");
@@ -13,9 +33,10 @@ const Header = () => {
   return (
     <Fragment>
       <div
-        className="container-fluid d-flex justify-content-between py-3"
+        ref={headerRef}
+        className="site-header container-fluid d-flex justify-content-between py-3"
         style={{
-          backgroundColor: location.pathname === "/about" ? "black" : "transparent",
+          backgroundColor: location.pathname === "/about" ? "black" : "#ffffff",
           transition: "background-color 0.3s ease"
         }}
       >
@@ -66,6 +87,7 @@ const Header = () => {
           </div>
         </div>
       </div>
+      <div className="site-header-spacer" style={height ? { height } : undefined} />
     </Fragment>
   );
 };

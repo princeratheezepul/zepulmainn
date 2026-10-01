@@ -99,10 +99,6 @@
   box-shadow: 0 4px 16px rgba(255, 255, 255, .25);
 }
 
-.lp-nav.hidden {
-  transform: translateY(-100%) !important;
-}
-
 .lp-logo {
   display: flex;
   align-items: center;

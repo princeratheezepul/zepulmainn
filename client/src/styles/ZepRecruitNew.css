@@ -48,10 +48,6 @@
   box-shadow: 0 1px 8px rgba(0, 0, 0, .04);
 }
 
-.zep-recruit-page .nav.hidden {
-  transform: translateY(-100%) !important;
-}
-
 .zep-recruit-page .logo {
   display: flex;
   align-items: center;

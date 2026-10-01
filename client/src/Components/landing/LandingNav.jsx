@@ -12,33 +12,23 @@ const LandingNav = () => {
     const ctaTarget = isZepJobs ? '/candidate/dashboard' : '/login';
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
+    // The nav stays pinned at all times. It only swaps to its solid surface
+    // once the page has scrolled under it.
     useEffect(() => {
         const nav = navRef.current;
         if (!nav) return;
-        let lastY = 0;
         let ticking = false;
-        const THRESHOLD = 8;
 
         function onScroll() {
             if (ticking) return;
             ticking = true;
             requestAnimationFrame(() => {
-                const y = window.scrollY;
-                if (y > 20) {
-                    nav.classList.add('scrolled');
-                } else {
-                    nav.classList.remove('scrolled');
-                }
-                if (y > lastY + THRESHOLD && y > 120) {
-                    nav.classList.add('hidden');
-                } else if (y < lastY - THRESHOLD) {
-                    nav.classList.remove('hidden');
-                }
-                lastY = y;
+                nav.classList.toggle('scrolled', window.scrollY > 20);
                 ticking = false;
             });
         }
 
+        onScroll();
         window.addEventListener('scroll', onScroll, { passive: true });
         return () => window.removeEventListener('scroll', onScroll);
     }, []);

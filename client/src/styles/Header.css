@@ -1,3 +1,27 @@
+/* The site header is pinned to the viewport on every page that renders it, so
+   it never scrolls away. Being out of flow, it needs .site-header-spacer below
+   to hold its place; Header.jsx measures the header and sets that height. */
+.site-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1030;
+  border-bottom: 1px solid rgba(227, 229, 238, 0.6);
+}
+
+/* Fallback height for the first paint, before the measurement lands. The
+   observer corrects this once the logo image has loaded and settled. */
+.site-header-spacer {
+  height: 73px;
+}
+
+@media (max-width: 768px) {
+  .site-header-spacer {
+    height: 93px;
+  }
+}
+
 .sign-in-button {
   border-radius: 8px;
   outline: none;

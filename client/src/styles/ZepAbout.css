@@ -53,10 +53,6 @@
   background: rgba(255, 255, 255, .9);
 }
 
-.zep-about-page .nav.hidden {
-  transform: translateY(-100%) !important;
-}
-
 .zep-about-page .logo {
   display: flex;
   align-items: center;
@@ -611,6 +607,25 @@
   color: #7A7E92;
   line-height: 1.5;
   margin: 0;
+}
+
+/* Heading for the copy column. Picks up the serif of the section title so the
+   two columns read as one piece, at a size that stays subordinate to it. */
+.zep-about-page .os-content-head {
+  font-family: 'Lora', serif;
+  font-size: 26px;
+  font-weight: 400;
+  color: var(--ink);
+  line-height: 1.25;
+  letter-spacing: -0.5px;
+  margin: 0 0 2px;
+}
+
+/* The short standalone lines that pivot the argument. Needs to out-specify the
+   `p` rule above, hence the element in the selector. */
+.zep-about-page .os-section-content p.os-content-emph {
+  color: var(--ink);
+  font-weight: 500;
 }
 
 @media (max-width: 1100px) {

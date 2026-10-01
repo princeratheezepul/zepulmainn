@@ -4,10 +4,10 @@ import '../styles/AboutTeam.css';
 const AboutTeam = () => {
     const teamMembers = [
         {
-            name: 'Srikanth Dhanwada',
+            name: 'Sri Dhanwada',
             role: 'Founder & CEO',
             image: '/srikanth.png',
-            linkedin: 'https://www.linkedin.com/in/srikanth-dhanwada-b9a94787'
+            linkedin: 'https://www.linkedin.com/in/sri-dhanwada-b9a94787?utm_source=share_via&utm_content=profile&utm_medium=member_android'
         },
         {
             name: 'Tarun Ghulati',

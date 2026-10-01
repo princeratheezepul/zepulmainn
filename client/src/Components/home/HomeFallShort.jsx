@@ -56,10 +56,6 @@ const GAPS = [
     },
 ];
 
-const NOTE_INTERVAL = 1400;   // gap between notifications
-const HOLD_FULL = 3200;       // pause once the inbox is full
-const RESTART_GAP = 900;      // pause before the loop starts over
-
 const prefersReducedMotion = () => {
     try {
         return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -75,9 +71,8 @@ const HomeFallShort = () => {
     const noteEls = useRef([]);
 
     const [revealed, setRevealed] = useState(false);
-    // How many notifications are on screen, and which legend row is highlighted.
-    const [shown, setShown] = useState(0);
-    const [active, setActive] = useState(-1);
+    // The inbox pops in as a whole rather than one notification at a time.
+    const [inboxIn, setInboxIn] = useState(false);
     // 0 = idle, 1 = question, 2 = answer, 3 = answer + CTA. Stages are cumulative.
     const [missStage, setMissStage] = useState(0);
 
@@ -100,50 +95,30 @@ const HomeFallShort = () => {
         return () => io.disconnect();
     }, []);
 
-    /* ---- notification inbox loop ---- */
+    /* ---- notification inbox: every card pops in together ---- */
     useEffect(() => {
         const el = notesRef.current;
         if (!el) return;
 
-        if (prefersReducedMotion()) {
-            setShown(GAPS.length);
+        if (prefersReducedMotion() || !('IntersectionObserver' in window)) {
+            setInboxIn(true);
             return;
         }
 
+        // A short beat after the inbox lands in view, so the pop reads as an
+        // arrival rather than something already on screen.
         let timer;
-        let i = 0;
-        const step = () => {
-            if (i < GAPS.length) {
-                setShown(i + 1);
-                setActive(i);
-                i += 1;
-                timer = setTimeout(step, NOTE_INTERVAL);
-            } else {
-                timer = setTimeout(() => {
-                    setShown(0);
-                    setActive(-1);
-                    i = 0;
-                    timer = setTimeout(step, RESTART_GAP);
-                }, HOLD_FULL);
-            }
-        };
-
-        let io;
-        if ('IntersectionObserver' in window) {
-            io = new IntersectionObserver(entries => {
-                entries.forEach(entry => {
-                    if (!entry.isIntersecting) return;
-                    io.disconnect();
-                    timer = setTimeout(step, 500);
-                });
-            }, { threshold: 0.3 });
-            io.observe(el);
-        } else {
-            timer = setTimeout(step, 500);
-        }
+        const io = new IntersectionObserver(entries => {
+            entries.forEach(entry => {
+                if (!entry.isIntersecting) return;
+                io.disconnect();
+                timer = setTimeout(() => setInboxIn(true), 320);
+            });
+        }, { threshold: 0.3 });
+        io.observe(el);
 
         return () => {
-            if (io) io.disconnect();
+            io.disconnect();
             clearTimeout(timer);
         };
     }, []);
@@ -234,11 +209,7 @@ const HomeFallShort = () => {
                     </p>
                     <ol className="legend">
                         {GAPS.map((g, i) => (
-                            <li
-                                key={g.n}
-                                className={i === active ? 'on' : undefined}
-                                onMouseEnter={() => pulseNote(i)}
-                            >
+                            <li key={g.n} onMouseEnter={() => pulseNote(i)}>
                                 <b>{g.n}</b>
                                 <span><strong>{g.title}</strong>{g.desc}</span>
                             </li>
@@ -251,7 +222,7 @@ const HomeFallShort = () => {
                     <div className="notes" ref={notesRef}>
                         {GAPS.map((g, i) => (
                             <div
-                                className={`note${i < shown ? ' zshow' : ''}`}
+                                className={`note${inboxIn ? ' zshow' : ''}`}
                                 key={g.n}
                                 ref={el => { noteEls.current[i] = el; }}
                             >

@@ -255,12 +255,14 @@
 }
 
 .dpiit-subtitle {
-  font-size: 0.6rem;
+  /* Kept in step with .cert-subtitle / .cert-number so the two certification
+     blocks read at the same size. */
+  font-size: 0.7rem;
   color: rgba(0, 0, 0, 0.6);
 }
 
 .dpiit-cert-number {
-  font-size: 0.6rem;
+  font-size: 0.7rem;
   color: rgba(0, 0, 0, 0.6);
 }
 
@@ -468,10 +470,10 @@
   }
 
   .dpiit-subtitle {
-    font-size: 0.4rem;
+    font-size: 0.45rem;
   }
 
   .dpiit-cert-number {
-    font-size: 0.4rem;
+    font-size: 0.45rem;
   }
 }

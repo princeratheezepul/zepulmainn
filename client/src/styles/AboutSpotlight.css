@@ -5,6 +5,14 @@
     font-family: 'DM Sans', sans-serif;
     position: relative;
     /* For positioning navigation if needed */
+    /* The app is wrapped in a `.wrapper.d-flex.flex-column` (Layout.jsx), so
+       this is a flex item. With width:auto it sizes to fit-content, and
+       fit-content can never fall below min-content — which Swiper's inline
+       per-slide widths push way past a phone viewport. The section rendered
+       ~1200px wide on a 390px screen and the slides sat off to the right.
+       An explicit width breaks that circular measurement. */
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .spotlight-title {

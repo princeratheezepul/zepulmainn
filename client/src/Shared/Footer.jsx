@@ -118,8 +118,8 @@ const Footer = () => {
         <div className="footer-bottom-right">
           <div className="certification-item">
             <div className="cert-title">MSME / UDYAM</div>
-            <div className="cert-subtitle">Recognized Startup</div>
-            <div className="cert-number">Certificate # DIPP123320</div>
+            <div className="cert-subtitle">Recognized Company Certificate</div>
+            <div className="cert-number"># UDYAM-TS-02-0210277</div>
           </div>
 
           <div className="logo-group dpiit-group">

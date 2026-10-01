@@ -23,11 +23,21 @@ const ZepAboutOSSection = () => {
             <section className="os-section reveal">
                 <h2 className="os-section-title">The operating system for<br />modern talent acquisition.</h2>
                 <div className="os-section-content">
-                    <p>When we built Zepul™, we didn't think of it as just another recruiting tool. We saw it as an operating system for modern talent acquisition.</p>
-                    <p>The idea was simple why should hiring be spread across so many disconnected tools and processes? So we built a full-stack AI platform that handles everything end-to-end: sourcing, evaluation, hiring, and even onboarding all in one place.</p>
-                    <p>What happens inside is where it gets powerful. Our AI agents understand the requisition , goes out and discovers talent across multiple channels, analyzes and matches profiles instantly, runs intelligent interviews, and then gives you structured, decision-ready insights. Every step is connected, so you're not guessing you're seeing what's working in real time through market intelligence and performance dashboards.</p>
-                    <p>And we also know every company works differently. Some teams want to use the platform themselves, while others prefer to outsource hiring completely. We support both. But either way, the outcome we focus on is the same— consistently high-quality hires.</p>
-                    <p>At the end of the day, this is how we think hiring should work: driven by insight, and built for real impact.</p>
+                    <h3 className="os-content-head">Reimagining How Talent Acquisition Works</h3>
+                    <p>We built Zepul around a simple belief: hiring should be intelligent, connected and autonomous.</p>
+                    <p>Recruitment today is still fragmented across sourcing platforms, databases, assessments, interview tools, ATS systems and spreadsheets. Recruiters spend significant time coordinating these systems and moving candidates through processes that should be able to run themselves.</p>
+                    <p className="os-content-emph">Zepul changes that.</p>
+                    <p>Zepul is an agentic AI-powered Talent Acquisition Operating System designed to execute the hiring workflow end to end.</p>
+                    <p>Our AI agents don't simply assist recruiters or recommend the next step. They understand the requirement, plan the workflow and autonomously execute it — from talent discovery and engagement through screening, assessments, interviews and evaluation — without human intervention.</p>
+                    <p>At the centre of Zepul are two autonomous AI agents: Zeus and Thea.</p>
+                    <p>Zeus works with employers and recruitment teams, autonomously executing the hiring workflow from a defined requirement to a decision-ready shortlist.</p>
+                    <p>Thea works with talent as an AI career partner, understanding aspirations, discovering relevant opportunities, preparing candidates and helping them apply.</p>
+                    <p>Together, they create a connected talent ecosystem where autonomous AI agents can engage, evaluate and move the hiring process forward at scale.</p>
+                    <p>Human expertise remains where it matters most: the final hiring decision.</p>
+                    <p>Zepul takes care of the execution. Recruiters and hiring leaders retain the judgment, context and accountability that define great hiring.</p>
+                    <p>This is not another point solution added to the recruitment stack.</p>
+                    <p>It is an intelligent operating system built to make the entire hiring workflow autonomous.</p>
+                    <p className="os-content-emph">AI that executes. People who decide.</p>
                 </div>
             </section>
         </div>
