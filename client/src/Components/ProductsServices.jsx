@@ -18,7 +18,7 @@ const ProductsServices = () => {
             title: "Zep Pro Recruiter",
             description:
                 "Built for every recruiter. Boost productivity, hire quality talent, move fast.",
-            path: "/prorecruitor"
+            path: "/zeus"
         },
         {
             iconType: "laptop",

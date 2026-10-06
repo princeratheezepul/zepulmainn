@@ -91,7 +91,7 @@ export default function RecruitmentPlatform() {
             <div className="md:p-6 py-2 px-4 pt-0">
               <button
                 style={{ borderRadius: "6px" }}
-                onClick={() => navigate("/prorecruitor")}
+                onClick={() => navigate("/zeus")}
                 className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 md:w-[10rem] w-full text-sm transition-colors duration-200 shadow-sm"
               >
                 Try Zepul

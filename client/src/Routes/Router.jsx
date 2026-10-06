@@ -127,8 +127,9 @@ const ZepConsult = lazy(() => import("../Pages/ZepConsult"));
 const About = lazy(() => import("../Pages/About"));
 const ContactPage = lazy(() => import("../Pages/ContactPage"));
 const ZepJobs = lazy(() => import("../Pages/ZepJobs"));
-const Pricing = lazy(() => import("../Pages/Pricing"));
+const Pricing = lazy(() => import("../Pages/ZeusPricing"));
 const ZepProRecruiterPricing = lazy(() => import("../Pages/ZepProRecruiterPricing"));
+const Thea = lazy(() => import("../Pages/Thea"));
 
 const Router = () => {
   return (
@@ -176,11 +177,16 @@ const Router = () => {
             {/* Standalone ZepRecruit Page */}
             <Route path="/zeprecruit" element={<ZepRecruit />} />
 
-            {/* Standalone ProRecruiter Page */}
-            <Route path="/prorecruitor" element={<ProRecruitor />} />
+            {/* Standalone Zeus (AI hiring partner) page */}
+            <Route path="/zeus" element={<ProRecruitor />} />
+            {/* Old address of the Zeus page, kept so existing links still work */}
+            <Route path="/prorecruitor" element={<Navigate to="/zeus" replace />} />
 
             {/* Standalone Zep Pro Recruiter pricing page */}
             <Route path="/zep-pro-recruiter-pricing" element={<ZepProRecruiterPricing />} />
+
+            {/* Standalone Thea (AI career partner) page */}
+            <Route path="/thea" element={<Thea />} />
 
             {/* Public routes with Header and Footer */}
             <Route path="/old-home" element={<PublicLayout />}>

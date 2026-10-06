@@ -2,10 +2,10 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 
 const LINKS = [
+    { to: '/zeus', label: 'Zeus - AI Hiring Partner' },
+    { to: '/thea', label: 'Thea - AI Career Partner' },
     { to: '/zeprecruit', label: 'Zep Recruit' },
-    { to: '/prorecruitor', label: 'Zep Pro Recruiter' },
-    { to: '/zepJobs', label: 'Zep Jobs' },
-    { to: '/zep-pro-recruiter-pricing', label: 'Pricing' },
+    { to: '/pricing', label: 'Pricing' },
     { to: '/about', label: 'About' },
 ];
 
@@ -38,13 +38,7 @@ const HomeNav = () => {
     return (
         <header className="znav" ref={navRef}>
             <Link className="brand" to="/" aria-label="Zepul home" onClick={() => setOpen(false)}>
-                <svg viewBox="-42 -56 84 112" width="20" height="26" aria-hidden="true">
-                    <g fill="none" strokeWidth="7">
-                        <path d="M-13.5,-13.3 L-37.5,-37 A46,46 0 0,1 37.5,-37 L0,0" stroke="currentColor" />
-                        <path d="M0,0 L-37.5,37 A46,46 0 0,0 37.5,37 L13.5,13.3" stroke="#0A4DFF" />
-                    </g>
-                </svg>
-                ZEPUL<sup>™</sup>
+                <img src="/assets/logo.png" alt="Zepul" />
             </Link>
 
             <ul className={`links${open ? ' open' : ''}`} id="z1-links">

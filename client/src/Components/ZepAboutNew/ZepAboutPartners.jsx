@@ -39,7 +39,7 @@ const ZepAboutPartners = () => {
 
             <div className="team-card featured">
               <div className="team-card-avatar">
-                <img src="/srikanth.png" alt="Srikanth" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                <img src="/sri-dhanwada.png" alt="Sri Dhanwada" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                 <div className="team-card-overlay"></div>
               </div>
               <div className="team-card-body">
@@ -60,7 +60,7 @@ const ZepAboutPartners = () => {
 
             <div className="team-card">
               <div className="team-card-avatar">
-                <img src="/tarun.png" alt="Tarun" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                <img src="/tarun-office.png" alt="Tarun" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top' }} />
                 <div className="team-card-overlay"></div>
                 {/* <div className="team-card-tag">Leadership</div> */}
               </div>
@@ -82,7 +82,7 @@ const ZepAboutPartners = () => {
 
             <div className="team-card">
               <div className="team-card-avatar">
-                <img src="/reena.png" alt="Reena" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                <img src="/reena-office.png" alt="Reena" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 15%' }} />
                 <div className="team-card-overlay"></div>
               </div>
               <div className="team-card-body">

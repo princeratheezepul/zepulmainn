@@ -40,10 +40,10 @@ const Footer = () => {
         {/* Middle Section - Navigation Links */}
         <div className="footer-middle">
           <div className="footer-links-column">
-            <Link to="/ZepRecruit" className="footer-link">Zep Recruit</Link>
-            <Link to="/prorecruitor" className="footer-link">Zep Pro Recruiter</Link>
-            <Link to="/zepJobs" className="footer-link">Zep Jobs</Link>
-            <Link to="/zepConsult" className="footer-link">Zep Consult</Link>
+            <Link to="/zeus" className="footer-link">Zeus - AI Hiring Partner</Link>
+            <Link to="/thea" className="footer-link">Thea - AI Career Partner</Link>
+            <Link to="/zeprecruit" className="footer-link">Zep Recruit</Link>
+            <Link to="/pricing" className="footer-link">Pricing</Link>
             <Link to="/about" className="footer-link">About</Link>
           </div>
           <div className="footer-links-column">

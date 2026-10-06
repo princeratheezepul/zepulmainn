@@ -13,6 +13,31 @@ const AboutSpotlight = () => {
 
     const articles = [
         {
+            title: "Zepul’s Srikanth Dhanwada and Tarun Ghulati at the House of Commons, Palace of Westminster",
+            description: "Zepul’s Founder/CEO Srikanth Dhanwada and Co-founder Tarun Ghulati at the House of Commons, Palace of Westminster, for an evening marking the enduring relationship between India and the United Kingdom.",
+            link: "https://www.linkedin.com/feed/update/urn:li:activity:7504050871673122816",
+            image: "/assets/spotlight_house_of_commons.jpg"
+        },
+        {
+            title: "Competitive Advantage in the AI Era: why Talent Intelligence matters",
+            description: "Our CEO, Srikanth Dhanwada, shares why Talent Intelligence is becoming a critical competitive advantage for organisations navigating the AI era — now published in London Business Matters, Issue 207.",
+            link: "https://www.linkedin.com/feed/update/urn:li:activity:7503706233254653952",
+            image: "/assets/spotlight_talent_intelligence.jpg"
+        },
+        {
+            title: "Showcasing Zepul and Thea to the UK Business School Delegation at T-Hub",
+            description: "A great experience being part of the UK Business School Delegation – Startup Interactions hosted by T-Hub, showcasing ZepJobs and Thea, our AI career partner for students and job seekers. Discover. Prepare. Apply.",
+            link: "https://lnkd.in/p/dk4ucvkC",
+            image: "/assets/spotlight_thub_uk_delegation.jpg"
+        },
+        {
+            title: "Special guest at the inaugural India–UK Higher Education Forum in London",
+            description: "Delighted to join His Excellency Kumaran Periasamy, High Commissioner of India in London, at the inaugural India–UK Higher Education Forum, celebrating O.P. Jindal Global University’s success in the QS Global MBA Rankings.",
+            link: "https://www.linkedin.com/feed/update/urn:li:activity:7509824230306328576",
+            image: "/assets/spotlight_india_uk_higher_ed.jpg",
+            imagePosition: "center 25%"
+        },
+        {
             title: "A truly memorable evening at the UK House of Lords graciously hosted by Lord Uday Nagaraju.",
             description: "A truly memorable evening at the UK House of Lords graciously hosted by my dear friend Lord Uday Nagaraju. He inspired confidence among the business leaders who had travelled from various states across India to explore opportunities in the UK and understand the areas of support available to them.",
             link: "https://www.linkedin.com/posts/tarunghulati_a-truly-memorable-evening-at-the-uk-house-ugcPost-7470492508708560896-NAdI?utm_source=share&utm_medium=member_desktop&rcm=ACoAABJ4leYBclPh-DfkZKrFw7Q-Je-L9Duz7zQ",
@@ -182,6 +207,7 @@ const AboutSpotlight = () => {
                                         src={article.image}
                                         alt={article.title}
                                         className="spotlight-image"
+                                        style={article.imagePosition ? { objectPosition: article.imagePosition } : undefined}
                                         onError={(e) => {
                                             e.target.onerror = null;
                                             e.target.src = "https://placehold.co/600x400?text=Spotlight+Image";

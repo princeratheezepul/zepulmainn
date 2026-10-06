@@ -57,10 +57,10 @@ const LandingNav = () => {
                 </div>
 
                 <div className="lp-nav-links desktop-only">
+                    <Link to="/zeus" className="lp-nl">Zeus - AI Hiring Partner</Link>
+                    <Link to="/thea" className="lp-nl">Thea - AI Career Partner</Link>
                     <Link to="/zeprecruit" className="lp-nl">Zep Recruit</Link>
-                    <Link to="/prorecruitor" className="lp-nl">Zep Pro Recruiter</Link>
-                    <Link to="/zepJobs" className="lp-nl">Zep Jobs</Link>
-                    <Link to="/zep-pro-recruiter-pricing" className="lp-nl">Pricing</Link>
+                    <Link to="/pricing" className="lp-nl">Pricing</Link>
                     <Link to="/about" className="lp-nl">About</Link>
                 </div>
 
@@ -85,10 +85,10 @@ const LandingNav = () => {
             <div className={`lp-sidebar ${isSidebarOpen ? 'open' : ''}`}>
                 <div className="lp-sidebar-content">
                     <div className="lp-sidebar-links">
+                        <Link to="/zeus" className="lp-sidebar-link" onClick={closeSidebar}>Zeus - AI Hiring Partner</Link>
+                        <Link to="/thea" className="lp-sidebar-link" onClick={closeSidebar}>Thea - AI Career Partner</Link>
                         <Link to="/zeprecruit" className="lp-sidebar-link" onClick={closeSidebar}>Zep Recruit</Link>
-                        <Link to="/prorecruitor" className="lp-sidebar-link" onClick={closeSidebar}>Zep Pro Recruiter</Link>
-                        <Link to="/zepJobs" className="lp-sidebar-link" onClick={closeSidebar}>Zep Jobs</Link>
-                        <Link to="/zep-pro-recruiter-pricing" className="lp-sidebar-link" onClick={closeSidebar}>Pricing</Link>
+                        <Link to="/pricing" className="lp-sidebar-link" onClick={closeSidebar}>Pricing</Link>
                         <Link to="/about" className="lp-sidebar-link" onClick={closeSidebar}>About</Link>
                     </div>
 

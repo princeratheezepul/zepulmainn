@@ -7,17 +7,16 @@ const OPTIONS = [
         who: 'YOU',
         whoTitle: 'Your team',
         whoText: 'operates the platform',
-        num: '01 — Platform license',
-        name: 'Zep Pro Recruiter',
-        sub: 'Agentic AI hiring platform',
+        num: '01 — DIY',
+        name: 'Zeus - AI Hiring Partner',
         rows: [
-            ['How it works', 'License the AI hiring operating system for your team'],
-            ['Who operates', 'Your team, with the AI executing every step'],
-            ['Best for', 'Employers and recruitment agencies'],
-            ['You get', 'Hiring that scales without scaling headcount'],
+            ['How it works', 'License Zeus, your autonomous AI hiring partner'],
+            ['Who operates', 'Your team sets the hiring goals, Zeus autonomously executes the workflow'],
+            ['Best for', 'In-house talent teams and recruitment agencies'],
+            ['You get', 'Autonomous hiring without recruiter or infrastructure overhead'],
         ],
-        cta: 'Explore Zep Pro Recruiter →',
-        ctaTo: '/prorecruitor',
+        cta: 'Explore Zeus →',
+        ctaTo: '/zeus',
         ctaClass: 'cta p',
     },
     {
@@ -30,8 +29,8 @@ const OPTIONS = [
         sub: 'AI-managed hiring services',
         rows: [
             ['How it works', 'Outsource your hiring to Zepul'],
-            ['Who operates', 'Zepul, on the same AI platform'],
-            ['Best for', 'Employers who want hiring done for them'],
+            ['Who operates', 'Zepul, powered by Zeus'],
+            ['Best for', "GCCs & IT Services & Consulting companies"],
             ['You get', 'Hires delivered — you make the final call'],
         ],
         cta: 'Talk to our team →',
@@ -198,7 +197,7 @@ const HomeBusiness = () => {
                 <div className="zcard">
                     <p className="n swap">{d.num}</p>
                     <h3 className="swap">{d.name}</h3>
-                    <p className="s swap">{d.sub}</p>
+                    {d.sub && <p className="s swap">{d.sub}</p>}
                     <ul className="swap">
                         {d.rows.map(([label, value]) => (
                             <li key={label}><span>{label}</span>{value}</li>

@@ -84,10 +84,11 @@
   .home-img {
     width: 100% !important;
   }
-  /* App-wide mobile clamp on h1. The home landing ("/") sets its own fluid
-     heading scale, so it opts out — this rule's !important would otherwise
-     beat any selector it could use. */
-  h1:not(.zs-root h1) {
+  /* App-wide mobile clamp on h1. The home ("/"), Zeus ("/zeus") and Thea
+     ("/thea") landing pages share their own fluid hero heading size, so they
+     opt out — this rule's !important would otherwise beat any selector they
+     could use. */
+  h1:not(.zs-root h1):not(.zp-page h1):not(.th-page h1) {
     font-size: 25px !important;
   }
   .cards {

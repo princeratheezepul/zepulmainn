@@ -4,7 +4,6 @@ import ZepAboutHero from '../Components/ZepAboutNew/ZepAboutHero';
 import ZepAboutOSSection from '../Components/ZepAboutNew/ZepAboutOSSection';
 import ZepAboutPartners from '../Components/ZepAboutNew/ZepAboutPartners';
 import ZepAboutValues from '../Components/ZepAboutNew/ZepAboutValues';
-import ZepAboutFAQ from '../Components/ZepAboutNew/ZepAboutFAQ';
 import ZepAboutBeyondCTA from '../Components/ZepAboutNew/ZepAboutBeyondCTA';
 import ZepAboutFooter from '../Components/ZepAboutNew/ZepAboutFooter';
 import '../styles/LandingPage.css';
@@ -19,7 +18,6 @@ const About = () => {
             <ZepAboutOSSection />
             <ZepAboutPartners />
             {/* <ZepAboutValues /> */}
-            <ZepAboutFAQ />
             <AboutSpotlight />
             {/* <ZepAboutBeyondCTA /> */}
             {/* <ZepAboutFooter /> */}

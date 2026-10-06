@@ -2534,3 +2534,54 @@
     margin-bottom: 0 !important;
   }
 }
+/* ── HERO ORBIT ON SMALL SCREENS ──
+   The desktop orbit is too wide for a phone, and shrinking it with scale()
+   makes the stat cards unreadable. Below 991px the orbit is drawn smaller
+   in a 300px band at the top and the four stat cards sit under it in a
+   2×2 grid at full size. */
+@media (max-width: 991px) {
+  .zep-recruit-page .zr-orbit {
+    transform: none !important;
+    width: 100% !important;
+    max-width: 440px;
+    height: auto !important;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    padding-top: 300px;
+  }
+
+  .zep-recruit-page .zr-orbit-ring,
+  .zep-recruit-page .zr-orb,
+  .zep-recruit-page .zr-dot {
+    top: 150px;
+  }
+
+  .zep-recruit-page .zr-orbit-ring-outer { width: 280px; height: 280px; }
+  .zep-recruit-page .zr-orbit-ring-mid { width: 216px; height: 216px; }
+  .zep-recruit-page .zr-orbit-ring-inner { width: 128px; height: 128px; }
+
+  .zep-recruit-page .zr-dot-a { animation: zrDotAm 9s linear 1.2s infinite; }
+  .zep-recruit-page .zr-dot-b { animation: zrDotBm 14s linear 1.4s infinite; }
+  .zep-recruit-page .zr-dot-c { animation: zrDotAm 12s linear 1.6s infinite reverse; }
+
+  .zep-recruit-page .zr-float {
+    display: block !important;
+    position: relative;
+    top: auto;
+    right: auto;
+    bottom: auto;
+    left: auto;
+    animation: zrFloatIn .7s ease 1.2s forwards;
+  }
+}
+
+@keyframes zrDotAm {
+  0% { opacity: .8; transform: rotate(0deg) translateX(140px) rotate(0deg); }
+  100% { opacity: .8; transform: rotate(360deg) translateX(140px) rotate(-360deg); }
+}
+
+@keyframes zrDotBm {
+  0% { opacity: .4; transform: rotate(120deg) translateX(108px) rotate(-120deg); }
+  100% { opacity: .4; transform: rotate(480deg) translateX(108px) rotate(-480deg); }
+}
