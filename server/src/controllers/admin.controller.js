@@ -10,6 +10,7 @@ import { AccountManager } from '../models/accountmanager.model.js';
 import bcrypt from 'bcryptjs';
 import Scorecard from '../models/scorecard.model.js';
 import { generateResetToken, isResetTokenValid } from '../utils/resetTokenHelper.js';
+import { findCrossPartnerRecruiters, CROSS_PARTNER_MESSAGE } from '../utils/licensePartner.js';
 const generateAccessAndRefreshToken = async (userId) => {
     try {
         const admin = await Admin.findById(userId);
@@ -721,6 +722,10 @@ export const assignRecruitersByAdmin=async(req,res)=>{
             if (!job) {
                 return res.status(404).json({ message: "Job not found", success: false });
             }
+
+            if ((await findCrossPartnerRecruiters(job, [recruiterId])).length) {
+                return res.status(403).json({ message: CROSS_PARTNER_MESSAGE, success: false });
+            }
     
             if (!Array.isArray(job.assignedTo)) job.assignedTo = [];
     
@@ -1342,6 +1347,11 @@ export const assignRecruitersToJobByAdminDashboard = async (req, res) => {
     try {
         const { jobId } = req.params;
         const { recruiterIds } = req.body;
+
+        const target = await Job.findById(jobId).select('licensePartnerId');
+        if (target && (await findCrossPartnerRecruiters(target, recruiterIds)).length) {
+            return res.status(403).json({ message: CROSS_PARTNER_MESSAGE, success: false });
+        }
 
         const job = await Job.findByIdAndUpdate(
             jobId,

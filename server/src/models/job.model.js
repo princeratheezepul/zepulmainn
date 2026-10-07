@@ -144,6 +144,14 @@ const JobSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    // Created by a License Partner (manager User), and therefore worked only by
+    // that partner's recruiters and hidden from Zepul's listings and the
+    // marketplace. Null for Zepul's own jobs.
+    licensePartnerId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null,
+    },
 
     // Published by a Zepul manager to the ProRecruiter marketplace. A listed job
     // is still an ordinary job owned by its manager — listing only makes it

@@ -13,7 +13,7 @@ export { default as CompanyOverview } from './CompanyOverview';
 export { default as JobCard } from './JobCard';
 export { default as JobEditForm } from './JobEditForm';
 export { default as JobDetailsSection } from './JobDetailsSection';
-export { default as LicensedPartnersSection } from './LicensedPartnersSection';
+export { default as RecruitmentPartnersSection } from './RecruitmentPartnersSection';
 export { default as PartnerCard } from './PartnerCard';
 export { default as CandidateListPage } from './CandidateListPage';
 export { default as CandidateListHeader } from './CandidateListHeader';

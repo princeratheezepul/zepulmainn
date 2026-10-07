@@ -94,8 +94,8 @@ const mpJobSchema = new mongoose.Schema({
         ref: 'MpCompany'
     }],
     
-    // License Partners
-    licensePartners: [{
+    // Recruitment Partners
+    recruitmentPartners: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'MpUser'
     }],

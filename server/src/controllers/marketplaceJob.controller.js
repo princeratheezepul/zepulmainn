@@ -16,6 +16,10 @@ import mongoose from "mongoose";
 import { Job } from "../models/job.model.js";
 import { User } from "../models/user.model.js";
 import Resume from "../models/resume.model.js";
+import { NOT_LICENSE_PARTNER } from "../utils/licensePartner.js";
+
+// License Partners work only their own jobs, so Zepul's marketplace is closed to them.
+const LICENSE_PARTNER_DENIED = { message: "The marketplace isn't available to License Partners.", success: false };
 
 const POPULATE = [
   { path: "managerId", select: "fullname username email" },
@@ -39,8 +43,9 @@ const pickedIdsFor = (jobs, userId) =>
 // UI can show "Picked" instead of offering it again.
 export const getAvailableMarketplaceJobs = async (req, res) => {
   try {
+    if (req.user.isLicensePartner) return res.status(403).json(LICENSE_PARTNER_DENIED);
     const userId = req.user._id;
-    const jobs = await Job.find({ "marketplace.isListed": true, isEmployerPrivate: { $ne: true } })
+    const jobs = await Job.find({ "marketplace.isListed": true, isEmployerPrivate: { $ne: true }, ...NOT_LICENSE_PARTNER })
       .populate(POPULATE)
       .sort({ "marketplace.listedAt": -1 });
 
@@ -65,6 +70,7 @@ export const getAvailableMarketplaceJobs = async (req, res) => {
 // ─── POST /api/manager/marketplace/:jobId/pick ──────────────────────────────
 export const pickMarketplaceJob = async (req, res) => {
   try {
+    if (req.user.isLicensePartner) return res.status(403).json(LICENSE_PARTNER_DENIED);
     const { jobId } = req.params;
     const userId = req.user._id;
 
@@ -152,6 +158,12 @@ export const updateMarketplaceListing = async (req, res) => {
     if (job.isEmployerPrivate) {
       return res.status(403).json({
         message: "Employer Manager jobs are private and can't be published to the marketplace.",
+        success: false,
+      });
+    }
+    if (job.licensePartnerId) {
+      return res.status(403).json({
+        message: "License Partner jobs are private and can't be published to the marketplace.",
         success: false,
       });
     }
@@ -257,7 +269,7 @@ export const getRecruitmentPartners = async (req, res) => {
 
     // Picks per partner, counted from the listings rather than per partner, so
     // this stays three queries however many partners there are.
-    const listings = await Job.find({ "marketplace.isListed": true, isEmployerPrivate: { $ne: true } })
+    const listings = await Job.find({ "marketplace.isListed": true, isEmployerPrivate: { $ne: true }, ...NOT_LICENSE_PARTNER })
       .select("marketplace.pickedBy");
     const picksBy = new Map();
     for (const job of listings) {

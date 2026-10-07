@@ -8,6 +8,7 @@ import { User } from '../models/user.model.js';
 import { Admin } from "../models/admin.model.js";
 import ServerConfig from "../config/ServerConfig.js";
 import { generateResetToken, isResetTokenValid } from "../utils/resetTokenHelper.js";
+import { NOT_LICENSE_PARTNER } from "../utils/licensePartner.js";
 const JWT_SECRET = process.env.ACCESS_TOKEN_SECRET || process.env.JWT_SECRET;
 if (!JWT_SECRET) {
   throw new Error('FATAL: ACCESS_TOKEN_SECRET (or JWT_SECRET) is not set. Refusing to start with an insecure default.');
@@ -357,7 +358,8 @@ export const getRecruiterById = async (req, res) => {
 export const updateRecruiterDetails = async (req, res) => {
   try {
     const { id } = req.params;
-    const updateFields = req.body;
+    // Which License Partner a recruiter belongs to is fixed at creation.
+    const { licensePartnerId, ...updateFields } = req.body;
     const recruiter = await Recruiter.findByIdAndUpdate(id, updateFields, { new: true });
     if (!recruiter) {
       return res.status(404).json({ message: 'Recruiter not found' });
@@ -476,7 +478,9 @@ export const toggleRecruiterStatus = async (req, res) => {
 
 export const getAllRecruiters = async (req, res) => {
   try {
-    const recruiters = await Recruiter.find()
+    // License Partner recruiters work only their partner's jobs, so they are
+    // left out of this Zepul-wide pool.
+    const recruiters = await Recruiter.find(NOT_LICENSE_PARTNER)
       .select("-password -refreshToken -resetPasswordToken -resetPasswordExpires")
       .limit(500);
 
@@ -845,7 +849,9 @@ export const createRecruiterByAdmin = async (req, res) => {
 
 export const createRecruiterByManager = async (req, res) => {
   try {
-    const { fullname, email, password, dateOfBirth, gender, phone, onboardedBy, managerId, isProRecruiter } = req.body;
+    const { fullname, email, password, dateOfBirth, gender, phone, onboardedBy, isProRecruiter } = req.body;
+    // A License Partner can only create recruiters for itself.
+    const managerId = req.user?.isLicensePartner ? req.user._id : req.body.managerId;
     
     // Check if user with this email already exists
     const existingUser = await User.findOne({ email });
@@ -901,6 +907,8 @@ export const createRecruiterByManager = async (req, res) => {
       managerId,
       userId: user._id,
       isCreatedByProRecruiter: isProRecruiter === true,
+      // Recruiters created by a License Partner belong to that partner's pool.
+      licensePartnerId: req.user?.isLicensePartner ? req.user._id : null,
     });
 
     // Generate a cryptographically random set-password token. Store only its hash.

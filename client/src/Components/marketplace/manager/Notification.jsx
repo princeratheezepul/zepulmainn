@@ -21,7 +21,7 @@ const NotificationPage = ({ onClose, onNavigateToProfile, onLogout }) => {
   const notificationItems = [
     {
       id: "newJobPicked",
-      title: "New Job Picked by Licensed Partner",
+      title: "New Job Picked by Recruitment Partner",
       description: "Get News about product and feature updates.",
     },
     {

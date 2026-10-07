@@ -11,6 +11,7 @@ import {
   Settings as SettingsIcon,
   Search,
   Menu,
+  Building2,
 } from 'lucide-react';
 import AddRecruiter from "../../Components/manager/AddRecruiter";
 import ManagerAccountSettings from '../../Components/manager/ManagerAccountSettings';
@@ -19,6 +20,7 @@ import ManagerOverview from '../../Components/manager/dashboard/ManagerOverview'
 import ManagerCandidates from '../../Components/manager/dashboard/ManagerCandidates';
 import ManagerMarketplace from '../../Components/manager/dashboard/ManagerMarketplace';
 import ManagerPartners from '../../Components/manager/dashboard/ManagerPartners';
+import ManagerLicensePartners from '../../Components/manager/dashboard/ManagerLicensePartners';
 import ManagerFinance from '../../Components/manager/dashboard/ManagerFinance';
 import { useManagerPlatformData, initialsOf } from '../../Components/manager/dashboard/useManagerPlatformData';
 import { Card, PageHead, PrimaryButton, GhostButton, StatusPill, LoadingRow } from '../../Components/dashboard/DashboardUI';
@@ -36,6 +38,7 @@ const MANAGER_NAV = [
   { name: 'Jobs', icon: Briefcase, fullBleed: true },
   { name: 'Marketplace', icon: Store, fullBleed: true },
   { name: 'Recruitment Partners', icon: Handshake },
+  { name: 'License Partners', icon: Building2 },
   { name: 'Candidates', icon: UserCheck },
   { name: 'Recruiters', icon: UsersIcon, fullBleed: true },
   { name: 'Finance', icon: Wallet },
@@ -54,22 +57,37 @@ const canSeeMarketplace = (email) =>
 // section, so the two are offered together.
 const MARKETPLACE_SECTIONS = ['Marketplace', 'Recruitment Partners'];
 
-const isEmployerManagerAccount = () => {
+// Only these managers create License Partners. Like the marketplace list this
+// only hides the section; the License Partner endpoints enforce it.
+const LICENSE_PARTNER_ADMIN_EMAILS = ['reenasumera@zepul.com'];
+
+const canManageLicensePartners = (email) =>
+  LICENSE_PARTNER_ADMIN_EMAILS.includes(String(email || '').trim().toLowerCase());
+
+// A boolean flag on the signed-in manager, from whichever store the login path wrote.
+const accountFlag = (flag) => {
   try {
     const info = JSON.parse(localStorage.getItem('userInfo'));
-    if (typeof info?.data?.user?.isEmployerManager === 'boolean') return info.data.user.isEmployerManager;
-    return Boolean(JSON.parse(localStorage.getItem('authUser'))?.isEmployerManager);
+    if (typeof info?.data?.user?.[flag] === 'boolean') return info.data.user[flag];
+    return Boolean(JSON.parse(localStorage.getItem('authUser'))?.[flag]);
   } catch {
     return false;
   }
 };
 
-const managerNavFor = (email, employerManager = false) =>
-  employerManager
-    ? MANAGER_NAV.filter((n) => !MARKETPLACE_SECTIONS.includes(n.name))
-    : canSeeMarketplace(email)
-      ? MANAGER_NAV
-      : MANAGER_NAV.filter((n) => !MARKETPLACE_SECTIONS.includes(n.name));
+const isEmployerManagerAccount = () => accountFlag('isEmployerManager');
+
+// A License Partner works only its own jobs and recruiters, so it gets the
+// manager dashboard without the marketplace or Zepul's finances.
+const isLicensePartnerAccount = () => accountFlag('isLicensePartner');
+
+const managerNavFor = (email, employerManager = false, licensePartner = false) => {
+  const hidden = [];
+  if (employerManager || licensePartner || !canSeeMarketplace(email)) hidden.push(...MARKETPLACE_SECTIONS);
+  if (licensePartner) hidden.push('Finance');
+  if (licensePartner || !canManageLicensePartners(email)) hidden.push('License Partners');
+  return MANAGER_NAV.filter((n) => !hidden.includes(n.name));
+};
 
 // The signed-in manager's email, from whichever store the login path wrote.
 const signedInEmail = () => {
@@ -1045,9 +1063,10 @@ export default function ManagerDashboard() {
   // An Employer Manager never gets the marketplace, whatever their address, and
   // their job pages live under their own path.
   const employerManager = isEmployerManagerAccount();
-  const navItems = managerNavFor(managerEmail, employerManager);
+  const licensePartner = isLicensePartnerAccount();
+  const navItems = managerNavFor(managerEmail, employerManager, licensePartner);
   const consoleBase = employerManager ? '/employermanager' : '/manager';
-  const roleLabel = employerManager ? 'Employer Manager' : 'Zepul Manager';
+  const roleLabel = licensePartner ? 'License Partner' : employerManager ? 'Employer Manager' : 'Zepul Manager';
   const [activeComponent, setActiveComponentState] = useState(
     navItems.some((n) => n.name === requestedTab) ? requestedTab : 'Overview'
   );
@@ -1448,6 +1467,8 @@ export default function ManagerDashboard() {
         );
       case 'Recruitment Partners':
         return <ManagerPartners />;
+      case 'License Partners':
+        return <ManagerLicensePartners />;
       case 'Candidates':
         return (
           <ManagerCandidates
@@ -1471,7 +1492,7 @@ export default function ManagerDashboard() {
             managerName={managerFirstName}
             onNavigate={go}
             onOpenJob={(job) => navigate(`${consoleBase}/jobs/${job._id}`)}
-            employerManager={employerManager}
+            employerManager={employerManager || licensePartner}
           />
         );
     }

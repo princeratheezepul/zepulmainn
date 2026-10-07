@@ -4,7 +4,6 @@ import {
   LayoutDashboard,
   Briefcase,
   UserCheck,
-  BarChart3,
   Database,
   Settings as SettingsIcon,
   Search,
@@ -13,7 +12,6 @@ import {
 import RecruiterOverview from '../Components/recruiter/dashboard/RecruiterOverview';
 import RecruiterCandidates from '../Components/recruiter/dashboard/RecruiterCandidates';
 import RecruiterJobs from '../Components/recruiter/dashboard/RecruiterJobs';
-import RecruiterAnalytics from '../Components/recruiter/dashboard/RecruiterAnalytics';
 import Settings from '../Components/recruiter/dashboard/Settings';
 import ZepDB from '../Components/recruiter/dashboard/ZepDB';
 import { useRecruiterPlatformData } from '../Components/recruiter/dashboard/useRecruiterPlatformData';
@@ -28,7 +26,6 @@ const RECRUITER_NAV = [
   { name: 'Dashboard', icon: LayoutDashboard },
   { name: 'Assigned Jobs', icon: Briefcase, fullBleed: true },
   { name: 'Candidate Pipeline', icon: UserCheck },
-  { name: 'Analytics', icon: BarChart3 },
   { name: 'ZepDB', icon: Database, fullBleed: true },
   { name: 'Profile', icon: SettingsIcon, fullBleed: true },
 ];
@@ -47,6 +44,10 @@ const RecruiterDashboard = () => {
   const [jump, setJump] = useState('');
   const location = useLocation();
   const platform = useRecruiterPlatformData();
+  // License Partner recruiters don't get ZepDB, Zepul's own talent pool.
+  const navItems = readAuth().user?.licensePartnerId
+    ? RECRUITER_NAV.filter((n) => n.name !== 'ZepDB')
+    : RECRUITER_NAV;
 
   const recruiterName = readAuth().user?.fullname || 'Zepul Recruiter';
 
@@ -54,7 +55,7 @@ const RecruiterDashboard = () => {
     const requested = location.state?.activeComponent;
     if (!requested) return;
     const resolved = LEGACY_TAB_ALIASES[requested] || requested;
-    if (RECRUITER_NAV.some((n) => n.name === resolved)) setActiveComponent(resolved);
+    if (navItems.some((n) => n.name === resolved)) setActiveComponent(resolved);
   }, [location.state]);
 
   const go = (name) => {
@@ -63,18 +64,16 @@ const RecruiterDashboard = () => {
     setJump('');
   };
 
-  const section = RECRUITER_NAV.find((n) => n.name === activeComponent) || RECRUITER_NAV[0];
+  const section = navItems.find((n) => n.name === activeComponent) || navItems[0];
   const query = jump.trim().toLowerCase();
-  const matches = query ? RECRUITER_NAV.filter((n) => n.name.toLowerCase().includes(query)) : [];
+  const matches = query ? navItems.filter((n) => n.name.toLowerCase().includes(query)) : [];
 
   const renderSection = () => {
-    switch (activeComponent) {
+    switch (section.name) {
       case 'Assigned Jobs':
         return <RecruiterJobs />;
       case 'Candidate Pipeline':
         return <RecruiterCandidates platform={platform} />;
-      case 'Analytics':
-        return <RecruiterAnalytics />;
       case 'ZepDB':
         return <ZepDB />;
       case 'Profile':
@@ -87,7 +86,7 @@ const RecruiterDashboard = () => {
   return (
     <div className="dashboard-shell-recruiter min-h-screen bg-[#f6f8fb] text-[#1d2430]">
       <DashboardSidebar
-        items={RECRUITER_NAV}
+        items={navItems}
         active={activeComponent}
         onSelect={go}
         isCollapsed={isCollapsed}

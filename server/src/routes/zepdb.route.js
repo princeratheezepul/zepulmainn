@@ -8,6 +8,14 @@ const router = express.Router();
 // Apply recruiter authentication middleware to all routes
 router.use(verifyRecruiterJWT);
 
+// ZepDB is Zepul's own talent pool; License Partner recruiters don't get it.
+router.use((req, res, next) => {
+    if (req.user?.licensePartnerId) {
+        return res.status(403).json({ message: "ZepDB isn't available to License Partner recruiters." });
+    }
+    next();
+});
+
 // Process ZepDB query (hits OpenAI — rate limited per user)
 router.post("/query", openAILimiter, processZepDBQuery);
 

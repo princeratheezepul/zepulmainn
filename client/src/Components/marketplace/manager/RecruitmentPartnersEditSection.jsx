@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { Users, Plus, X, User } from 'lucide-react';
 
-const LicensePartnersSection = ({ jobId, licensePartners = [], onUpdate }) => {
-  const [partners, setPartners] = useState(licensePartners);
+const RecruitmentPartnersEditSection = ({ jobId, recruitmentPartners = [], onUpdate }) => {
+  const [partners, setPartners] = useState(recruitmentPartners);
   const [showAddForm, setShowAddForm] = useState(false);
   const [newPartnerEmail, setNewPartnerEmail] = useState('');
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    setPartners(licensePartners);
-  }, [licensePartners]);
+    setPartners(recruitmentPartners);
+  }, [recruitmentPartners]);
 
   const handleAddPartner = async () => {
     if (!newPartnerEmail.trim()) return;
@@ -75,7 +75,7 @@ const LicensePartnersSection = ({ jobId, licensePartners = [], onUpdate }) => {
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
           <Users className="w-5 h-5" />
-          License Partners
+          Recruitment Partners
         </h3>
         <button
           onClick={() => setShowAddForm(true)}
@@ -122,7 +122,7 @@ const LicensePartnersSection = ({ jobId, licensePartners = [], onUpdate }) => {
         {partners.length === 0 ? (
           <div className="text-center py-8 text-gray-500">
             <User className="w-12 h-12 mx-auto mb-2 text-gray-300" />
-            <p>No license partners added yet</p>
+            <p>No recruitment partners added yet</p>
             <p className="text-sm">Add partners to collaborate on this job</p>
           </div>
         ) : (
@@ -157,4 +157,4 @@ const LicensePartnersSection = ({ jobId, licensePartners = [], onUpdate }) => {
   );
 };
 
-export default LicensePartnersSection;
+export default RecruitmentPartnersEditSection;

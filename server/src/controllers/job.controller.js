@@ -40,6 +40,8 @@ export const createJob = async (req, res) => {
             jobData.accountManagerId = req.user._id;
         } else if (req.user.type === 'manager') {
             jobData.managerId = req.user._id;
+            // A License Partner's jobs stay inside its own pool.
+            if (req.user.isLicensePartner) jobData.licensePartnerId = req.user._id;
         } else {
             jobData.adminId = req.user._id;
         }

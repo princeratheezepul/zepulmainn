@@ -1611,10 +1611,10 @@ export const pickJob = async (req, res) => {
     user.pickedJobs.push(jobObjectId);
     await user.save();
 
-    // Add user to job's licensePartners
+    // Add user to job's recruitmentPartners
     const userObjectId = new mongoose.Types.ObjectId(userId);
-    if (!job.licensePartners.includes(userObjectId)) {
-      job.licensePartners.push(userObjectId);
+    if (!job.recruitmentPartners.includes(userObjectId)) {
+      job.recruitmentPartners.push(userObjectId);
 
       // Add to pickHistory for statistics
       job.pickHistory.push({
@@ -1625,7 +1625,7 @@ export const pickJob = async (req, res) => {
       // Increment pickedNumber for the job
       job.pickedNumber = (job.pickedNumber || 0) + 1;
       await job.save();
-      console.log("User added to job's licensePartners and pickedNumber incremented");
+      console.log("User added to job's recruitmentPartners and pickedNumber incremented");
     }
 
     // Increment pickedNumber for the company (first company in mpCompanies array)
@@ -1961,18 +1961,18 @@ export const withdrawJob = async (req, res) => {
     user.pickedJobs.splice(jobIndex, 1);
     await user.save();
 
-    // Remove user from job's licensePartners
+    // Remove user from job's recruitmentPartners
     const job = await MpJob.findById(jobId);
     if (job) {
       const userObjectId = new mongoose.Types.ObjectId(userId);
-      job.licensePartners = job.licensePartners.filter(partnerId =>
+      job.recruitmentPartners = job.recruitmentPartners.filter(partnerId =>
         partnerId.toString() !== userId
       );
 
       // Decrement pickedNumber for the job
       job.pickedNumber = Math.max((job.pickedNumber || 0) - 1, 0);
       await job.save();
-      console.log("User removed from job's licensePartners and pickedNumber decremented");
+      console.log("User removed from job's recruitmentPartners and pickedNumber decremented");
     }
 
     // Decrement pickedNumber for the company (first company in mpCompanies array)

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { LicensedPartnersSection, JobDetailsSection, CandidateListPage } from './index';
+import { RecruitmentPartnersSection, JobDetailsSection, CandidateListPage } from './index';
 
 const JobEditForm = ({ job, onClose, onSave }) => {
   const [showCandidateList, setShowCandidateList] = useState(false);
@@ -118,8 +118,8 @@ const JobEditForm = ({ job, onClose, onSave }) => {
         {/* Job Details Section */}
         <JobDetailsSection jobData={jobData} />
 
-        {/* Licensed Partners Section */}
-        <LicensedPartnersSection 
+        {/* Recruitment Partners Section */}
+        <RecruitmentPartnersSection 
           jobData={jobData}
           onViewCandidates={handleViewCandidates} 
         />

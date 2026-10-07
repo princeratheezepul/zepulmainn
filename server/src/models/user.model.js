@@ -130,6 +130,20 @@ const userSchema = new Schema({
         type: Boolean,
         default: false
     },
+
+    // A License Partner runs its own hiring alongside Zepul's: it creates its own
+    // jobs and recruiters, which never mix with Zepul's (see utils/licensePartner.js).
+    // Like the Employer Manager this is a flag on a manager account, so login and
+    // the dashboard are the same.
+    isLicensePartner: {
+        type: Boolean,
+        default: false,
+    },
+    // The Zepul manager who created this License Partner account.
+    licensePartnerCreatedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+    },
 }, { timestamps: true });
 
 userSchema.pre("save",

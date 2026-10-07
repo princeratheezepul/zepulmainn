@@ -124,6 +124,14 @@ const recruiterSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  // The License Partner (manager User) this recruiter belongs to. Such a
+  // recruiter works only that partner's jobs and has no ZepDB access. Null for
+  // Zepul's own recruiters.
+  licensePartnerId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    default: null,
+  },
 }, { timestamps: true });
 
 export default mongoose.model('Recruiter', recruiterSchema);

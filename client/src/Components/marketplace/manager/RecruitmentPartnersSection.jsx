@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import PartnerCard from "./Partner_Card"
 
-const LicensedPartnersSection = ({ jobData, onViewCandidates }) => {
+const RecruitmentPartnersSection = ({ jobData, onViewCandidates }) => {
   const [partners, setPartners] = useState([]);
 
   useEffect(() => {
-    if (jobData && jobData.licensePartners) {
-      // Transform the populated licensePartners data
-      const partners = jobData.licensePartners.map(partner => ({
+    if (jobData && jobData.recruitmentPartners) {
+      // Transform the populated recruitmentPartners data
+      const partners = jobData.recruitmentPartners.map(partner => ({
         id: partner._id,
         name: partner.fullName || partner.email,
         email: partner.email,
@@ -28,11 +28,11 @@ const LicensedPartnersSection = ({ jobData, onViewCandidates }) => {
 
   return (
     <div className="bg-gray-50 p-6">
-      <h2 className="text-xl font-bold text-gray-900 mb-6">Licensed Partners</h2>
+      <h2 className="text-xl font-bold text-gray-900 mb-6">Recruitment Partners</h2>
 
       {partners.length === 0 ? (
         <div className="text-center py-8">
-          <div className="text-gray-500 mb-2">No license partners found</div>
+          <div className="text-gray-500 mb-2">No recruitment partners found</div>
           <div className="text-sm text-gray-400">Partners will appear here when they pick this job</div>
         </div>
       ) : (
@@ -46,4 +46,4 @@ const LicensedPartnersSection = ({ jobData, onViewCandidates }) => {
   )
 }
 
-export default LicensedPartnersSection
+export default RecruitmentPartnersSection

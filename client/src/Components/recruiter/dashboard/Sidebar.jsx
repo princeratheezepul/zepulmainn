@@ -116,10 +116,11 @@ const Sidebar = ({ activeComponent, setActiveComponent, isCollapsed, setIsCollap
   const userName = userInfo?.data?.user?.fullname || userInfo?.data?.user?.username || "User";
   const userInitial = userName.charAt(0).toUpperCase();
 
+  // License Partner recruiters don't get ZepDB, Zepul's own talent pool.
   const navItems = [
     { name: "Dashboard", icon: <LayoutGrid size={20} /> },
     { name: "Jobs", icon: <Briefcase size={20} /> },
-    { name: "ZepDB", icon: <Database size={20} /> },
+    ...(userInfo?.data?.user?.licensePartnerId ? [] : [{ name: "ZepDB", icon: <Database size={20} /> }]),
   ];
 
   const handleMouseEnter = (itemName, event) => {

@@ -69,7 +69,7 @@ export default function PaymentOverview() {
             <div className="px-3 py-3 bg-white border hover:shadow-md rounded-lg">
               <div className="text-lg font-medium text-gray-500">Total Payouts</div>
               <div className="text-2xl font-bold mt-1">₹0</div>
-              <p className="text-xs text-black-400 mt-2 mb-0">Paid to License Partners</p>
+              <p className="text-xs text-black-400 mt-2 mb-0">Paid to Recruitment Partners</p>
             </div>
 
             {/* Revenue */}

@@ -27,6 +27,8 @@ const RecruiterJobDetailPage = () => {
 
   const userInfo = JSON.parse(localStorage.getItem('userInfo'));
   const isCreatedByProRecruiter = userInfo?.data?.user?.isCreatedByProRecruiter || false;
+  // License Partner recruiters don't get ZepDB, Zepul's own talent pool.
+  const canUseZepDB = !userInfo?.data?.user?.licensePartnerId;
 
   // Handle sidebar navigation
   const handleSidebarNavigation = (component) => {
@@ -174,7 +176,7 @@ const RecruiterJobDetailPage = () => {
               jobDetails={job}
             />
           </div>
-          {isCreatedByProRecruiter && (
+          {isCreatedByProRecruiter && canUseZepDB && (
             <div className="w-[420px] flex-shrink-0 h-screen overflow-y-auto border-l border-gray-200 p-4">
               <ZepDBJobMatch
                 jobId={jobId}
@@ -231,14 +233,16 @@ const RecruiterJobDetailPage = () => {
                 </div>
                 <div className="flex gap-3">
                   {/* Remove 'View Applications' button. Candidate List button below triggers SavedResumes. */}
-                  <div
-                    className="flex items-center gap-2 border border-blue-600 text-blue-600 hover:bg-blue-50 font-semibold px-3 py-2 rounded-full text-sm cursor-pointer hover:shadow-md"
-                    onClick={() => setShowZepDBBulkSubmit(true)}
-                    title="Pick matching ZepDB candidates and submit them to this job"
-                  >
-                    <Database size={16} />
-                    Upload Resume from ZepDB
-                  </div>
+                  {canUseZepDB && (
+                    <div
+                      className="flex items-center gap-2 border border-blue-600 text-blue-600 hover:bg-blue-50 font-semibold px-3 py-2 rounded-full text-sm cursor-pointer hover:shadow-md"
+                      onClick={() => setShowZepDBBulkSubmit(true)}
+                      title="Pick matching ZepDB candidates and submit them to this job"
+                    >
+                      <Database size={16} />
+                      Upload Resume from ZepDB
+                    </div>
+                  )}
                   <div className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-3 py-2 rounded-full text-sm cursor-pointer hover:shadow-md" onClick={() => setShowResumeUpload(true)}>Submit Resume</div>
                 </div>
               </div>

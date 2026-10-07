@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Save, Briefcase, MapPin, Calendar, DollarSign, Users } from 'lucide-react';
-import LicensePartnersSection from './LicensePartnersSection';
+import RecruitmentPartnersEditSection from './RecruitmentPartnersEditSection';
 
 const JobEditOverlay = ({ isOpen, onClose, job, onSave }) => {
   const [formData, setFormData] = useState({
@@ -16,7 +16,7 @@ const JobEditOverlay = ({ isOpen, onClose, job, onSave }) => {
     responsibilities: '',
     qualifications: ''
   });
-  const [licensePartners, setLicensePartners] = useState([]);
+  const [recruitmentPartners, setRecruitmentPartners] = useState([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -34,7 +34,7 @@ const JobEditOverlay = ({ isOpen, onClose, job, onSave }) => {
         responsibilities: job.responsibilities ? job.responsibilities.join(', ') : '',
         qualifications: job.qualifications ? job.qualifications.join(', ') : ''
       });
-      setLicensePartners(job.licensePartners || []);
+      setRecruitmentPartners(job.recruitmentPartners || []);
     }
   }, [job, isOpen]);
 
@@ -54,7 +54,7 @@ const JobEditOverlay = ({ isOpen, onClose, job, onSave }) => {
         skills: formData.skills.split(',').map(s => s.trim()).filter(s => s),
         responsibilities: formData.responsibilities.split(',').map(s => s.trim()).filter(s => s),
         qualifications: formData.qualifications.split(',').map(s => s.trim()).filter(s => s),
-        licensePartners
+        recruitmentPartners
       };
       
       await onSave(updatedJob);
@@ -157,7 +157,7 @@ const JobEditOverlay = ({ isOpen, onClose, job, onSave }) => {
             {/* Job Editing Section Title */}
             <div className="border-b border-gray-200 pb-4">
               <h3 className="text-lg font-semibold text-gray-900">Job Details</h3>
-              <p className="text-sm text-gray-600 mt-1">Edit the job information and manage license partners</p>
+              <p className="text-sm text-gray-600 mt-1">Edit the job information and manage recruitment partners</p>
             </div>
 
             {/* Basic Information */}
@@ -328,12 +328,12 @@ const JobEditOverlay = ({ isOpen, onClose, job, onSave }) => {
               />
             </div>
 
-            {/* License Partners Section */}
+            {/* Recruitment Partners Section */}
             <div className="border-t border-gray-200 pt-6">
-              <LicensePartnersSection
+              <RecruitmentPartnersEditSection
                 jobId={job?.id}
-                licensePartners={licensePartners}
-                onUpdate={setLicensePartners}
+                recruitmentPartners={recruitmentPartners}
+                onUpdate={setRecruitmentPartners}
               />
             </div>
           </div>

@@ -1,4 +1,4 @@
-import { loginUser, logoutUser, registerUser, forgotpassword, resetpassword, changeEmail, changeEmailRequest, createJobm, getAllJobsm, updateJobm, assignedJobm, getManagerInfo, updatePassword, getManagerProfile, updateManagerProfile, createManagerByAdmin, validateSetPassword, setPassword, searchRecruitersByManager, refreshAccessToken, getMarketplaceMetrics, createMarketplaceCompany, getMarketplaceCompanies, getMarketplaceCompanyById, createMarketplaceJob, getMarketplaceJobsByCompany, getMarketplaceJobRoles, getMarketplaceJobById, getMarketplaceUserById, getManagerMarketplaceCandidates, getManagerMarketplaceResume, getAllMarketplaceJobs, createProRecruiterCompany } from '../controllers/manager.controller.js';
+import { loginUser, logoutUser, registerUser, forgotpassword, resetpassword, changeEmail, changeEmailRequest, createJobm, getAllJobsm, updateJobm, assignedJobm, getManagerInfo, updatePassword, getManagerProfile, updateManagerProfile, createManagerByAdmin, validateSetPassword, setPassword, searchRecruitersByManager, refreshAccessToken, getMarketplaceMetrics, createMarketplaceCompany, getMarketplaceCompanies, getMarketplaceCompanyById, createMarketplaceJob, getMarketplaceJobsByCompany, getMarketplaceJobRoles, getMarketplaceJobById, getMarketplaceUserById, getManagerMarketplaceCandidates, getManagerMarketplaceResume, getAllMarketplaceJobs, createProRecruiterCompany, createLicensePartner, getLicensePartners } from '../controllers/manager.controller.js';
 import { jobChat } from '../controllers/jobChat.controller.js';
 import { createJobFromJD } from '../controllers/jobFromJD.controller.js';
 
@@ -82,6 +82,11 @@ router.route("/job/:jobId").put(verifyJWT, updateJobm);
 router.route("/assign-recruiter/:jobId").post(verifyJWT, assignedJobm);
 router.route("/search-recruiters").get(searchRecruitersByManager);
 router.route("/update-password").put(verifyJWT, updatePassword);
+
+// License Partners: created and listed only by the Zepul managers allowed to
+// (checked in the controller).
+router.route("/license-partners").get(verifyJWT, getLicensePartners);
+router.route("/license-partners").post(verifyJWT, createLicensePartner);
 router.route("/marketplace-metrics").get(verifyJWT, getMarketplaceMetrics);
 
 // ProRecruiter marketplace: a manager publishes an ordinary job, any

@@ -12,6 +12,8 @@ import Resume from '../models/resume.model.js';
 import { MpUser } from '../models/mpuser.model.js';
 import mongoose from 'mongoose';
 import { generateResetToken, isResetTokenValid } from '../utils/resetTokenHelper.js';
+import crypto from 'crypto';
+import { canManageLicensePartners, findCrossPartnerRecruiters, managerSharesPool, CROSS_PARTNER_MESSAGE } from '../utils/licensePartner.js';
 
 const EMAIL_CHANGE_JWT_SECRET = process.env.ACCESS_TOKEN_SECRET || process.env.JWT_SECRET;
 if (!EMAIL_CHANGE_JWT_SECRET) {
@@ -540,12 +542,23 @@ export const createJobm = async (req, res) => {
 
         // An Employer Manager's jobs are theirs alone — private on creation, and
         // never publishable to the marketplace however the request asks.
-        const creator = managerId ? await User.findById(managerId).select('isEmployerManager') : null;
+        const creator = managerId ? await User.findById(managerId).select('isEmployerManager isLicensePartner') : null;
         const employerPrivate = Boolean(creator?.isEmployerManager);
-        const publishToMarketplace = Boolean(listToMarketplace) && !employerPrivate;
+        // A License Partner's jobs belong to its own pool: worked only by its
+        // recruiters, and never published to the marketplace.
+        const licensePartnerId = creator?.isLicensePartner ? creator._id : null;
+        const publishToMarketplace = Boolean(listToMarketplace) && !employerPrivate && !licensePartnerId;
+
+        if (recruiterId) {
+            const crossPartner = await findCrossPartnerRecruiters({ licensePartnerId }, [recruiterId]);
+            if (crossPartner.length) {
+                return res.status(403).json({ message: CROSS_PARTNER_MESSAGE, success: false });
+            }
+        }
 
         const job = await Job.create({
             isEmployerPrivate: employerPrivate,
+            licensePartnerId,
             jobtitle,
             description,
             location,
@@ -620,10 +633,17 @@ export const getAllJobsm = async (req, res) => {
         // A manager's jobs are the ones they created plus anything they picked up
         // from the ProRecruiter marketplace — picked jobs are worked exactly like
         // their own, so they belong in the same list.
-        const owner = await User.findById(managerId).select('pickedJobs isEmployerManager');
-        // An Employer Manager only ever works their own requirements, so marketplace
-        // picks don't apply to them.
-        const pickedIds = owner?.isEmployerManager ? [] : owner?.pickedJobs || [];
+        const owner = await User.findById(managerId).select('pickedJobs isEmployerManager isLicensePartner');
+        // Employer Managers and License Partners only ever work their own
+        // requirements, so marketplace picks don't apply to them.
+        const pickedIds = owner?.isEmployerManager || owner?.isLicensePartner ? [] : owner?.pickedJobs || [];
+
+        // A License Partner's jobs are visible only to that partner, and a
+        // License Partner can't read anyone else's list.
+        const isSelf = String(req.user?._id) === String(managerId);
+        if (!isSelf && (owner?.isLicensePartner || req.user?.isLicensePartner)) {
+            return res.status(403).json({ message: "Access denied.", success: false });
+        }
 
         const jobs = await Job.find({
             $or: [{ managerId }, ...(pickedIds.length ? [{ _id: { $in: pickedIds } }] : [])],
@@ -653,6 +673,18 @@ export const updateJobm = async (req, res) => {
         const job = await Job.findById(jobId);
         if (!job) {
             return res.status(404).json({ message: "Job not found", success: false });
+        }
+
+        // License Partner jobs and Zepul jobs are managed, and staffed, only from
+        // their own side.
+        if (!managerSharesPool(req.user, job)) {
+            return res.status(403).json({ message: "Access denied.", success: false });
+        }
+        if (assignedRecruiters !== undefined) {
+            const crossPartner = await findCrossPartnerRecruiters(job, assignedRecruiters);
+            if (crossPartner.length) {
+                return res.status(403).json({ message: CROSS_PARTNER_MESSAGE, success: false });
+            }
         }
 
         // Get the previous assigned recruiters to compare with new ones
@@ -724,6 +756,14 @@ export const assignedJobm = async (req, res) => {
         const job = await Job.findById(jobId);
         if (!job) {
             return res.status(404).json({ message: "Job not found", success: false });
+        }
+
+        if (!managerSharesPool(req.user, job)) {
+            return res.status(403).json({ message: "Access denied.", success: false });
+        }
+        const crossPartner = await findCrossPartnerRecruiters(job, [recruiterId]);
+        if (crossPartner.length) {
+            return res.status(403).json({ message: CROSS_PARTNER_MESSAGE, success: false });
         }
 
         if (!Array.isArray(job.assignedTo)) job.assignedTo = [];
@@ -1025,6 +1065,125 @@ const setPassword = async (req, res) => {
         }
     } catch (error) {
         console.error('Error setting password:', error);
+        return res.status(500).json({ message: "Internal Server Error" });
+    }
+};
+
+// ─── License Partners ───────────────────────────────────────────────────────
+// Only the Zepul managers in LICENSE_PARTNER_ADMIN_EMAILS create License
+// Partner accounts. The partner gets a set-password link, exactly like a
+// manager created by an admin, and then signs in through the normal manager login.
+export const createLicensePartner = async (req, res) => {
+    try {
+        if (!canManageLicensePartners(req.user)) {
+            return res.status(403).json({ message: "You are not allowed to create License Partners." });
+        }
+
+        const fullname = String(req.body?.fullname || '').trim();
+        const email = String(req.body?.email || '').trim().toLowerCase();
+        // Stored as a number, so keep only the digits of whatever was typed.
+        const phone = String(req.body?.phone || '').replace(/\D/g, '') || undefined;
+        if (!fullname || !email) {
+            return res.status(400).json({ message: "Name and email are required." });
+        }
+
+        const [existingUser, existingRecruiter] = await Promise.all([
+            User.findOne({ email }),
+            Recruiter.findOne({ email }),
+        ]);
+        if (existingUser || existingRecruiter) {
+            return res.status(400).json({ message: "An account with this email already exists." });
+        }
+
+        const baseUsername = fullname.replace(/\s+/g, '').toLowerCase();
+        let username = baseUsername;
+        while (await User.exists({ username })) {
+            username = `${baseUsername}${Math.floor(1000 + Math.random() * 9000)}`;
+        }
+
+        // The partner chooses their own password from the emailed link; this one
+        // only satisfies the schema and is never shared.
+        const user = await User.create({
+            username,
+            fullname,
+            email,
+            password: crypto.randomBytes(24).toString('hex'),
+            type: 'manager',
+            phone,
+            isLicensePartner: true,
+            licensePartnerCreatedBy: req.user._id,
+            firstPassSet: false,
+        });
+
+        const { plainToken, tokenHash, expiresAt } = generateResetToken(7 * 24 * 60 * 60 * 1000);
+        user.resetPasswordToken = tokenHash;
+        user.resetPasswordExpires = expiresAt;
+        await user.save({ validateBeforeSave: false });
+
+        const setPasswordUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/manager/set_password/${user._id}/${plainToken}`;
+
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: process.env.EMAIL_USER,
+                pass: process.env.EMAIL_PASS
+            }
+        });
+        transporter.sendMail({
+            from: process.env.EMAIL_USER,
+            to: email,
+            subject: 'Set Your Password - License Partner Account Created',
+            html: `
+        <h2>Welcome ${fullname}!</h2>
+        <p>Your License Partner account on Zepul has been created by <strong>${req.user.fullname || req.user.username}</strong>.</p>
+        <p>Please click the link below to set your password:</p>
+        <a href="${setPasswordUrl}" style="background-color: #4CAF50; color: white; padding: 14px 20px; text-decoration: none; border-radius: 4px; display: inline-block;">Set Password</a>
+        <p>This link will expire in 7 days.</p>
+        <p>If you didn't request this account, please ignore this email.</p>
+      `
+        }, (error) => {
+            // Don't fail the request if email fails, just log it
+            if (error) console.log('License Partner email error:', error);
+        });
+
+        const createdUser = await User.findById(user._id).select("-password -refreshToken -resetPasswordToken -resetPasswordExpires");
+        return res.status(201).json({
+            message: "License Partner created. A set-password link has been sent to their email.",
+            data: createdUser
+        });
+    } catch (error) {
+        console.error("createLicensePartner error:", error);
+        return res.status(500).json({ message: "Internal Server Error" });
+    }
+};
+
+export const getLicensePartners = async (req, res) => {
+    try {
+        if (!canManageLicensePartners(req.user)) {
+            return res.status(403).json({ message: "You are not allowed to view License Partners." });
+        }
+
+        const partners = await User.find({ type: 'manager', isLicensePartner: true })
+            .select('fullname email phone status firstPassSet createdAt')
+            .sort({ createdAt: -1 })
+            .lean();
+
+        const ids = partners.map((p) => p._id);
+        const [jobCounts, recruiterCounts] = await Promise.all([
+            Job.aggregate([{ $match: { licensePartnerId: { $in: ids } } }, { $group: { _id: '$licensePartnerId', count: { $sum: 1 } } }]),
+            Recruiter.aggregate([{ $match: { licensePartnerId: { $in: ids } } }, { $group: { _id: '$licensePartnerId', count: { $sum: 1 } } }]),
+        ]);
+        const countOf = (rows, id) => rows.find((r) => String(r._id) === String(id))?.count || 0;
+
+        return res.status(200).json({
+            partners: partners.map((p) => ({
+                ...p,
+                jobs: countOf(jobCounts, p._id),
+                recruiters: countOf(recruiterCounts, p._id),
+            })),
+        });
+    } catch (error) {
+        console.error("getLicensePartners error:", error);
         return res.status(500).json({ message: "Internal Server Error" });
     }
 };
@@ -1669,7 +1828,7 @@ export const getMarketplaceJobById = async (req, res) => {
         // Find the job
         const job = await MpJob.findById(jobId)
             .populate('mpCompanies', 'companyName logo')
-            .populate('licensePartners', 'fullName email location bio createdAt')
+            .populate('recruitmentPartners', 'fullName email location bio createdAt')
             .populate('candidateList', 'candidateName email phone');
 
         if (!job) {
@@ -1729,13 +1888,13 @@ export const getMarketplaceUserById = async (req, res) => {
 
         // Check if this user has picked any jobs from manager's companies
         const userJobs = await MpJob.find({
-            licensePartners: userId,
+            recruitmentPartners: userId,
             mpCompanies: { $in: managerCompanyIds }
         });
 
         if (userJobs.length === 0) {
             return res.status(403).json({
-                message: "Access denied. This user is not a license partner for any of your company's jobs.",
+                message: "Access denied. This user is not a recruitment partner for any of your company's jobs.",
                 success: false
             });
         }
