@@ -88,6 +88,13 @@ const ResumeDataSchema = new mongoose.Schema(
             default: ''
         },
 
+        // Headline and about text of a sourced profile; it often carries the
+        // evidence (quota, closing, stack) that its job entries leave out.
+        summary: {
+            type: String,
+            default: ''
+        },
+
         // Candidate sourced by a License Partner's recruiter. Null for Zepul's
         // own pool; partner-sourced candidates are never shown outside the partner.
         licensePartnerId: {

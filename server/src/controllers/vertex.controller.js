@@ -1,9 +1,11 @@
 import ResumeData from "../models/resumeData.model.js";
 import Resume from "../models/resume.model.js";
 import { Job } from "../models/job.model.js";
+import { zepDBAnalysisFor } from "./zepdb.controller.js";
 import {
     VERTEX_SOURCE_LIMIT,
     VERTEX_MIN_RELEVANCE,
+    VERTEX_MIN_SCORE,
     VERTEX_LOOKUP_BUDGET,
     SEARCH_CREDITS,
     LOOKUP_CREDITS,
@@ -12,7 +14,7 @@ import {
     searchProfiles,
     lookupProfile,
     profileToResumeData,
-    criteriaForJob,
+    searchTiersForJob,
     jdTextForJob,
     relevanceScore,
     scorable,
@@ -65,23 +67,31 @@ export const sourceCandidatesForJob = async (req, res) => {
         const job = await Job.findById(req.params.jobId).lean();
         if (!job) return res.status(404).json({ success: false, message: "Job not found" });
 
-        const criteria = criteriaForJob(job);
         const jd = jdTextForJob(job);
-        let { profiles, creditsUsed } = await searchProfiles(criteria, jd);
-        // A narrow location can match nobody; an empty search is not charged, so
-        // widen to the JD alone rather than report an empty ZepDB.
-        if (!profiles.length && criteria.location) {
-            ({ profiles, creditsUsed } = await searchProfiles({ current_title: criteria.current_title }, jd));
+        // Strictest filters first; an empty search is not charged, so loosen
+        // step by step rather than report an empty ZepDB.
+        let profiles = [];
+        let creditsUsed = 0;
+        for (const criteria of searchTiersForJob(job)) {
+            ({ profiles, creditsUsed } = await searchProfiles(criteria, jd));
+            if (profiles.length) break;
         }
 
-        // Profiles sourced before are already stored, so they cost nothing to reuse.
+        // Profiles sourced before are already stored, so they cost nothing to
+        // reuse; ones already submitted to this job don't take a slot again.
         const urls = profiles.map((p) => p.linkedin_url).filter(Boolean);
-        const stored = urls.length ? await ResumeData.find({ linkedinUrl: { $in: urls }, licensePartnerId }) : [];
-        const storedUrls = new Set(stored.map((d) => d.linkedinUrl));
-        const pool = stored.map((doc) => ({ doc, score: relevanceScore(scorable(doc), job), open: false }));
+        const storedAll = urls.length ? await ResumeData.find({ linkedinUrl: { $in: urls }, licensePartnerId }) : [];
+        const submitted = storedAll.length
+            ? await Resume.find({ jobId: job._id, resumeDataId: { $in: storedAll.map((d) => d._id) } }).select("resumeDataId").lean()
+            : [];
+        const submittedIds = new Set(submitted.map((r) => String(r.resumeDataId)));
+        const storedUrls = new Set(storedAll.map((d) => d.linkedinUrl));
+        const pool = storedAll
+            .filter((doc) => !submittedIds.has(String(doc._id)))
+            .map((doc) => ({ doc, score: relevanceScore(scorable(doc), job), open: false }));
 
-        // Lookups cost a credit each, so rank the rest of the page by title and
-        // look up only the best few rather than the whole page.
+        // Lookups cost a credit each, so rank the rest of the page by title,
+        // employer and location and look up only the best few.
         const toLookUp = profiles
             .filter((p) => !p.linkedin_url || !storedUrls.has(p.linkedin_url))
             .map((hit) => ({ hit, pre: hitScore(hit, job) }))
@@ -98,30 +108,39 @@ export const sourceCandidatesForJob = async (req, res) => {
             if (!r.profile) continue;
             const body = profileToResumeData(r.profile, r.hit);
             if (!body.name) continue;
-            pool.push({ body, score: relevanceScore(scorable(body), job), open: r.profile.open_to_job_opportunities === true });
+            // Saved even if not picked: the lookup is paid for, so a later search reuses it free.
+            const doc = await ResumeData.create({ ...body, licensePartnerId });
+            pool.push({ doc, score: relevanceScore(scorable(doc), job), open: r.profile.open_to_job_opportunities === true });
         }
 
-        // Candidates above the relevance cutoff come first, best fit first, with
-        // job-seekers nudged ahead; weaker ones only fill spots nobody better took.
+        // Shortlist on job-fit relevance, job-seekers nudged ahead...
         const rank = (c) => (c.score >= VERTEX_MIN_RELEVANCE ? 1000 : 0) + c.score + (c.open ? 10 : 0);
         pool.sort((a, b) => rank(b) - rank(a));
-        const scores = new Map();
-        const found = [];
-        for (const c of pool.slice(0, VERTEX_SOURCE_LIMIT)) {
-            const doc = c.doc || await ResumeData.create({ ...c.body, licensePartnerId });
-            scores.set(String(doc._id), c.score);
-            found.push(doc);
-        }
+        const shortlist = pool.slice(0, VERTEX_SOURCE_LIMIT + VERTEX_LOOKUP_BUDGET);
 
-        const submitted = await Resume.find({ jobId: job._id, resumeDataId: { $in: found.map((d) => d._id) } })
-            .select("resumeDataId").lean();
-        const submittedIds = new Set(submitted.map((r) => String(r.resumeDataId)));
+        // ...then score the shortlist the way the scorecard will (no sourcing
+        // credits) and hand back the highest CV scores, VERTEX_MIN_SCORE+ first.
+        // The analyses are cached, so submitting shows the same score.
+        await Promise.all(shortlist.map(async (c) => {
+            try {
+                const analysis = await zepDBAnalysisFor(c.doc, job, { relevance: c.score });
+                c.ats = Number(analysis.ats_score) || 0;
+            } catch (e) {
+                console.error("Sourcing pre-score failed:", e.message);
+                c.ats = c.score; // fall back to local relevance
+            }
+        }));
+        const atsRank = (c) => (c.ats >= VERTEX_MIN_SCORE ? 1000 : 0) + c.ats + c.score / 100;
+        shortlist.sort((a, b) => atsRank(b) - atsRank(a));
+        const picked = shortlist.slice(0, VERTEX_SOURCE_LIMIT);
+        const found = picked.map((c) => c.doc);
+        const scores = new Map(picked.map((c) => [String(c.doc._id), c.ats]));
 
         res.status(200).json({
             success: true,
             data: {
                 job: { title: job.jobtitle, id: job._id },
-                candidates: found.map((d) => toCandidate(d, submittedIds.has(String(d._id)) ? { resumeId: null } : null, scores.get(String(d._id)))),
+                candidates: found.map((d) => toCandidate(d, null, scores.get(String(d._id)))),
                 creditsUsed,
             },
         });

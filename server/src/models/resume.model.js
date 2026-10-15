@@ -86,6 +86,16 @@ const ResumeSchema = new mongoose.Schema(
     },
     overallScore: Number,
 
+    // Per-skill AI evidence scores (0-100) for the job's required skills.
+    // Set for ZepDB submissions, whose profiles are too brief for text matching.
+    skillScores: [
+      {
+        _id: false,
+        skill: String,
+        score: Number
+      }
+    ],
+
     // AI Summary
     aiSummary: {
       technicalExperience: String,

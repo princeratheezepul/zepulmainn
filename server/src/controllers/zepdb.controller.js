@@ -432,7 +432,7 @@ export const scoreCandidateForJob = async (req, res) => {
     const managerId = isManager ? req.id : (recruiter?.managerId || null);
     const tag = determineResumeTag(job.jobtitle, job.description);
 
-    const analysis = await generateZepDBAnalysis(candidate, job);
+    const analysis = await zepDBAnalysisFor(candidate, job);
 
     const savedResume = await Resume.create({
       jobId: job._id,
@@ -445,6 +445,8 @@ export const scoreCandidateForJob = async (req, res) => {
       title: candidate.role,
       skills: candidate.skills?.points || [],
       experience: `${candidate.experienceYears} years`,
+      ...(candidate.summary ? { about: candidate.summary } : {}),
+      skillScores: analysis.skillScores,
       ats_score: analysis.ats_score,
       overallScore: analysis.ats_score,
       aiSummary: analysis.aiSummary,
@@ -526,6 +528,27 @@ export const scoreCandidateForJob = async (req, res) => {
   }
 };
 
+// Sourcing scores candidates to pick the best ones; keep those analyses so the
+// scorecard shown on submit is the same one the pick was based on.
+const ANALYSIS_TTL_MS = 6 * 60 * 60 * 1000;
+const analysisCache = new Map();
+
+export const zepDBAnalysisFor = async (candidate, job, { relevance } = {}) => {
+  const key = `${candidate._id}:${job._id}`;
+  const hit = analysisCache.get(key);
+  if (hit && hit.expires > Date.now()) return hit.analysis;
+
+  const analysis = await generateZepDBAnalysis(candidate, job);
+  // Sourced profiles are brief, so the model under-scores them; blend in the
+  // job-fit relevance (titles, skills, experience) as a floor, never a cut.
+  if (candidate.source === 'vertex' && Number.isFinite(relevance)) {
+    const blended = Math.round((Number(analysis.ats_score) + relevance) / 2);
+    analysis.ats_score = Math.min(95, Math.max(Number(analysis.ats_score) || 0, blended));
+  }
+  analysisCache.set(key, { analysis, expires: Date.now() + ANALYSIS_TTL_MS });
+  return analysis;
+};
+
 // Generates a comprehensive AI analysis from structured ResumeData against a job
 const generateZepDBAnalysis = async (candidate, job) => {
   if (!openai) throw new Error("OpenAI API is not configured. Please set OPENAI_API.");
@@ -534,6 +557,9 @@ const generateZepDBAnalysis = async (candidate, job) => {
     name: candidate.name,
     role: candidate.role,
     experienceYears: candidate.experienceYears,
+    // Older sourced profiles kept their headline/about only in searchableText.
+    ...((candidate.summary || candidate.source === 'vertex')
+      ? { profileSummary: (candidate.summary || candidate.searchableText || '').slice(0, 1500) } : {}),
     skills: candidate.skills?.points || [],
     experience: (candidate.experience || []).map(e => ({
       title: e.title, company: e.company, duration: e.duration,
@@ -551,7 +577,7 @@ const generateZepDBAnalysis = async (candidate, job) => {
 JOB:
 Title: ${job.jobtitle}
 Description: ${(job.description || '').slice(0, 500)}
-Required Skills: ${(job.skills || []).join(', ')}
+${job.keyResponsibilities?.length ? `Responsibilities: ${job.keyResponsibilities.join('; ')}\n` : ''}Required Skills: ${(job.skills || []).join(', ')}
 Experience Required: ${job.experience || 'Not specified'}${job.intake?.experienceMax ? `-${job.intake.experienceMax}` : ''} years
 ${intakePromptContext(job)}
 
@@ -588,9 +614,13 @@ Return this exact JSON shape:
 
 Rules:
 - skillScores: Score each of the job's must-have skills first (max 6). Base score on evidence found in candidate data.
+- Evidence includes profileSummary, the skills list, and job titles/companies/tenure, not only bullet points. Sourced profiles often have short job entries: a skill clearly implied by a held role (e.g. "Account Executive" for 3 years implies full-cycle sales and closing; "Sales Development Representative" implies outbound prospecting) counts as moderate evidence (40-70). Reserve 0-15 for skills with no direct or role-implied evidence.
 - ats_score: Holistic score — skill match, experience depth, project relevance. Conservative: 80+ only for strong matches.
 - Weighting when an employer brief is given: must-have skills count most, then domain experience, then seniority fit, then nice-to-have skills. Missing a must-have should pull the score down clearly.
-- All text fields must contain meaningful content, not placeholders.`;
+- All text fields must contain meaningful content, not placeholders.${candidate.source === 'vertex' ? `
+- This candidate comes from a professional profile (LinkedIn-style), not a resume. Profiles are brief by nature: do NOT penalize missing bullet points, projects, achievements, metrics or formatting. Judge on title trajectory, employers, tenure, listed skills and profileSummary.
+- Calibration for profiles: current or recent title matching the role with experience in range → ats_score 70-85; add up to 10 more when skills/summary show the must-haves. Go below 60 only for a clear role mismatch, an experience gap, or a stated deal-breaker.
+- skillScores for profiles: a skill implied by a role they held for 1+ years scores 60-80; explicitly listed or described scores 80-95.` : ''}`;
 
   const completion = await openai.chat.completions.create({
     model: SCORECARD_MODEL,

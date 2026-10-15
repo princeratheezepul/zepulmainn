@@ -21,6 +21,8 @@ export const VERTEX_LOOKUP_BUDGET = Number(process.env.VERTEX_LOOKUP_BUDGET) || 
 const SEARCH_PAGE_SIZE = 100;
 // Minimum local relevance (0-100) a candidate needs against the JD to be preferred.
 export const VERTEX_MIN_RELEVANCE = Number(process.env.VERTEX_MIN_RELEVANCE) || 40;
+// CV score (0-100, as on the scorecard) a sourced candidate should reach to be handed back first.
+export const VERTEX_MIN_SCORE = Number(process.env.VERTEX_MIN_SCORE) || 70;
 // JD search costs 2 credits instead of 1 when it returns results.
 export const SEARCH_CREDITS = 2;
 export const LOOKUP_CREDITS = 1;
@@ -127,6 +129,7 @@ export const profileToResumeData = (profile, searchHit) => {
         achievements: { points: [] },
         projects: [],
         linkedinUrl: first(profile.linkedin_url, searchHit?.linkedin_url),
+        summary: [profile.headline, profile.summary].map(text).filter(Boolean).join("\n"),
         source: "vertex",
     };
 };
@@ -138,7 +141,7 @@ const WORK_MODE = /\b(remote|hybrid|on-?site|work from home|wfh|anywhere|pan ind
 export const placesFromLocation = (location) =>
     text(location)
         .replace(WORK_MODE, " ")
-        .split(/[-,/|()&+]/)
+        .split(/[-\u2013\u2014,/|()&+;]/)
         .map((p) => p.trim())
         .filter(Boolean);
 
@@ -193,6 +196,25 @@ const ALIASES = {
     "node.js": ["node", "nodejs"], "node": ["node.js", "nodejs"], "javascript": ["js"], "typescript": ["ts"],
     "postgresql": ["postgres"], "aws": ["amazon web services"], "gcp": ["google cloud"], "kubernetes": ["k8s"],
     "golang": ["go"], "ci cd": ["continuous integration"], "github": ["git"], "react": ["react.js", "reactjs"],
+    // Sales / GTM: LinkedIn profiles phrase these as titles and generic skills.
+    "full cycle sales": ["full cycle", "account executive", "closing", "quota"],
+    "outbound prospecting": ["prospecting", "outbound", "cold calling", "sales development", "business development", "sdr", "bdr"],
+    "new business closing": ["new business", "closing", "new logo", "hunter", "business development"],
+    "pipeline generation": ["pipeline", "lead generation", "demand generation", "prospecting"],
+    "crm management": ["crm", "salesforce", "hubspot", "customer relationship management"],
+    "relationship building": ["relationship management", "account management", "client relations", "customer relationship"],
+    "account management": ["account manager", "key accounts", "customer success"],
+};
+
+const WEAK_WORDS = new Set(["and", "of", "the", "for", "with", "in", "to", "management", "skills", "experience"]);
+
+// Multi-word skills ("New Business Closing") rarely appear verbatim; credit
+// them in proportion to how many of their meaningful words the profile has.
+const partialHit = (haystack, term) => {
+    const words = norm(term).split(" ").filter((w) => w.length > 2 && !WEAK_WORDS.has(w));
+    if (words.length < 2) return 0;
+    const ratio = words.filter((w) => hasOne(haystack, w)).length / words.length;
+    return ratio >= 0.5 ? ratio * 0.6 : 0;
 };
 
 const hasOne = (haystack, t) =>
@@ -215,9 +237,10 @@ export const relevanceScore = (c, job) => {
     const hay = norm([c.title, ...(c.skills || []), c.text].join(" "));
     const skillSet = new Set((c.skills || []).map(norm));
 
-    const hit = (s) => skillSet.has(s) || hasTerm(hay, s);
-    const mustRatio = must.length ? must.filter(hit).length / must.length : 0.6;
-    const niceRatio = nice.length ? nice.filter(hit).length / nice.length : 0;
+    const hit = (s) => (skillSet.has(s) || hasTerm(hay, s) ? 1 : partialHit(hay, s));
+    const sum = (list) => list.reduce((n, s) => n + hit(s), 0);
+    const mustRatio = must.length ? sum(must) / must.length : 0.6;
+    const niceRatio = nice.length ? sum(nice) / nice.length : 0;
 
     const jobWords = norm(job.jobtitle).split(" ").filter((w) => w && !STOP.has(w));
     const candTitle = norm(c.title);
@@ -238,22 +261,69 @@ export const relevanceScore = (c, job) => {
     return Math.round(Math.min(100, mustRatio * 55 + titleRatio * 25 + expRatio * 20 + niceRatio * 5));
 };
 
-/** Title-only relevance of a raw search hit, used to decide which profiles are worth a lookup. */
-export const hitScore = (hit, job) =>
-    relevanceScore({ title: hit.current_title || "", skills: [], text: "", years: null }, job);
+const companyMatches = (employer, list) => {
+    const e = norm(employer);
+    return !!e && (list || []).some((c) => {
+        const n = norm(c);
+        return n && n.split(" ").length <= 4 && (e === n || e.includes(n) || n.includes(e));
+    });
+};
+
+/**
+ * Relevance of a raw search hit (title, employer, location only), used to decide
+ * which profiles are worth a paid lookup. Excluded employers sink, target
+ * employers and in-area candidates rise.
+ */
+export const hitScore = (hit, job) => {
+    let score = relevanceScore({ title: hit.current_title || "", skills: [], text: "", years: null }, job);
+    const cond = job.intake?.conditional || {};
+    if (companyMatches(hit.current_employer, cond.excludedCompanies)) score -= 60;
+    if (companyMatches(hit.current_employer, cond.targetCompanies)) score += 15;
+    const places = placesFromLocation(job.location).map(norm).filter((p) => p.length > 2);
+    if (places.length && places.some((p) => norm(hit.location).includes(p))) score += 10;
+    return score;
+};
 
 /** Adapt a ResumeData document or a looked-up profile body for relevanceScore. */
 export const scorable = (body) => ({
     title: body.role || "",
     skills: body.skills?.points || [],
-    text: [body.searchableText, ...(body.experience || []).flatMap((e) => [e.title, ...(e.points || [])])].join(" "),
+    text: [body.summary, body.searchableText, ...(body.experience || []).flatMap((e) => [e.title, ...(e.points || [])])].join(" "),
     years: body.experienceYears,
 });
 
-/** Search filters derived from a job. */
-export const criteriaForJob = (job) => {
-    const criteria = { current_title: [job.jobtitle] };
-    const places = placesFromLocation(job.location);
-    if (places.length) criteria.location = places;
-    return criteria;
+const KM_PER_MILE = 1.609;
+
+/**
+ * Search filters derived from a job, strictest first. An empty search costs
+ * nothing, so the controller walks down the list until one returns profiles:
+ * title + location + experience + exclusions + key skills, then without the
+ * skill keywords, then without location.
+ */
+export const searchTiersForJob = (job) => {
+    const base = { current_title: [job.jobtitle] };
+
+    const min = Number(job.experience) || 0;
+    const max = Number(job.intake?.experienceMax) || 0;
+    if (min || max) base.years_experience = [`${min}-${max || min + 10}`];
+
+    const excluded = (job.intake?.conditional?.excludedCompanies || [])
+        .map(text).filter((c) => c && c.split(/\s+/).length <= 4);
+    if (excluded.length) base.current_employer = excluded.map((c) => `-${c}`);
+
+    const radiusKm = Number(job.intake?.workModel?.radiusKm);
+    const radius = radiusKm ? `::~${Math.max(10, Math.round(radiusKm / KM_PER_MILE))}mi` : "";
+    // Country codes and lone work-mode leftovers ("US") aren't places to search around.
+    const places = placesFromLocation(job.location).filter((p) => p.length > 3);
+    const withLocation = places.length ? { ...base, location: places.map((p) => `${p}${radius}`) } : base;
+
+    const nice = job.intake?.niceToHaveSkills || [];
+    const keywords = effectiveSkills(job).filter((s) => !nice.includes(s) && s.split(/\s+/).length <= 3).slice(0, 3);
+
+    const tiers = [];
+    if (keywords.length) tiers.push({ ...withLocation, keywords });
+    tiers.push(withLocation);
+    if (withLocation !== base) tiers.push(base);
+    tiers.push({ current_title: [job.jobtitle] });
+    return tiers;
 };

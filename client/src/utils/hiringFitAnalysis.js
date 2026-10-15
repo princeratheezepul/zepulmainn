@@ -138,8 +138,23 @@ export const analyzeSkillFit = (resumeData = {}, jobData = {}) => {
   const strongMatches = [];
   const missingSkills = [];
 
+  // AI per-skill evidence scores (ZepDB submissions): sourced profiles rarely
+  // spell a requirement out verbatim, so the model's judgement counts too.
+  const aiScores = new Map(
+    (Array.isArray(resumeData.skillScores) ? resumeData.skillScores : [])
+      .filter((s) => s && s.skill && typeof s.score === 'number')
+      .map((s) => [collapse(s.skill), s.score])
+  );
+  const aiScoreFor = (req) => {
+    const key = collapse(req);
+    if (aiScores.has(key)) return aiScores.get(key);
+    for (const [k, v] of aiScores) if (k.includes(key) || key.includes(k)) return v;
+    return null;
+  };
+
   required.forEach((req) => {
-    const evidence = findSkillEvidence(req, corpora);
+    const ai = aiScoreFor(req);
+    const evidence = findSkillEvidence(req, corpora) || (ai != null && ai >= 50 ? 'AI Assessment' : null);
     if (evidence) strongMatches.push({ requirement: req, evidence });
     else missingSkills.push({ requirement: req, status: 'Not Found' });
   });
