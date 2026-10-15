@@ -1,6 +1,7 @@
 import OpenAI from "openai";
 import Resume from "../models/resume.model.js";
 import { Job } from "../models/job.model.js";
+import { intakePromptContext } from "../utils/jobIntake.js";
 import { Meeting } from "../models/meeting.model.js";
 import crypto from 'crypto';
 import nodemailer from "nodemailer";
@@ -148,13 +149,15 @@ export const generateAssessmentForResume = async (resumeId) => {
 Generate 3 DISTINCT coding problems suitable for a ${job.jobtitle} role.
 
 Job Description: ${job.description || 'General software development position'}
-Required Skills: ${job.requiredSkills ? job.requiredSkills.join(", ") : 'Programming, Problem Solving'}
+Required Skills: ${job.skills?.length ? job.skills.join(", ") : 'Programming, Problem Solving'}
+${intakePromptContext(job)}
+${job.intake?.codingTest?.stack?.length ? `Employer's stack: ${job.intake.codingTest.stack.join(", ")} (use its domain themes, but write the problems strictly in JavaScript).` : ''}
 
 The problems should:
 1. Be algorithmic function challenges (NOT full web applications or APIs)
 2. Be relevant to the job role but solvable as pure functions
 3. Be strictly in **JavaScript**
-4. Vary in difficulty (Easy, Medium, Medium/Hard)
+4. ${job.intake?.codingTest?.difficulty ? `Target difficulty is ${job.intake.codingTest.difficulty} overall, with a small spread either side` : 'Vary in difficulty (Easy, Medium, Medium/Hard)'}
 
 Return ONLY a valid JSON array of objects in this EXACT format (no markdown, no code blocks):
 [
@@ -360,7 +363,8 @@ Assessment Structure:
 
 Job Title: ${job.jobtitle || 'Avaloq Developer'}
 Job Description: ${job.description || 'Banking software development'}
-Required Skills: ${job.requiredSkills ? job.requiredSkills.join(", ") : 'SQL, PL-SQL, Banking Domain, Java'}
+Required Skills: ${job.skills?.length ? job.skills.join(", ") : 'SQL, PL-SQL, Banking Domain, Java'}
+${intakePromptContext(job)}
 
 Question Distribution:
 1. 2-3 SQL coding questions (MUST include joins, aggregations, and one complex query)
@@ -902,15 +906,19 @@ const evaluateSubmission = async (resumeId, submissions, questions, assessmentFi
     // Round score
     totalScore = Math.round(totalScore);
 
+    // Pass mark comes from the job's intake brief (default 70).
+    const passJob = await Job.findById((await Resume.findById(resumeId).select('jobId').lean())?.jobId).select('intake.codingTest.cutoff').lean().catch(() => null);
+    const passMark = Number.isFinite(passJob?.intake?.codingTest?.cutoff) ? passJob.intake.codingTest.cutoff : 70;
+
     // Generate feedback
     let feedback = `Score: ${totalScore}/100. Passed ${totalPassedTests}/${totalTests} total test cases. \n` + feedbackParts.join('\n');
 
     const evaluation = {
       score: totalScore,
-      pass: totalScore >= 70,
+      pass: totalScore >= passMark,
       feedback,
       complexityAnalysis: "Multi-question assessment",
-      improvementSuggestions: totalScore < 70 ? "Review the unsolved problems." : "Good job!"
+      improvementSuggestions: totalScore < passMark ? "Review the unsolved problems." : "Good job!"
     };
 
     await Resume.findByIdAndUpdate(

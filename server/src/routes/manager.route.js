@@ -1,5 +1,8 @@
 import { loginUser, logoutUser, registerUser, forgotpassword, resetpassword, changeEmail, changeEmailRequest, createJobm, getAllJobsm, updateJobm, assignedJobm, getManagerInfo, updatePassword, getManagerProfile, updateManagerProfile, createManagerByAdmin, validateSetPassword, setPassword, searchRecruitersByManager, refreshAccessToken, getMarketplaceMetrics, createMarketplaceCompany, getMarketplaceCompanies, getMarketplaceCompanyById, createMarketplaceJob, getMarketplaceJobsByCompany, getMarketplaceJobRoles, getMarketplaceJobById, getMarketplaceUserById, getManagerMarketplaceCandidates, getManagerMarketplaceResume, getAllMarketplaceJobs, createProRecruiterCompany, createLicensePartner, getLicensePartners } from '../controllers/manager.controller.js';
 import { jobChat } from '../controllers/jobChat.controller.js';
+import { getSourcingEstimate, sourceCandidatesForJob } from '../controllers/vertex.controller.js';
+import { scoreCandidateForJob } from '../controllers/zepdb.controller.js';
+import { Job } from '../models/job.model.js';
 import { createJobFromJD } from '../controllers/jobFromJD.controller.js';
 
 import multer from 'multer';
@@ -70,6 +73,23 @@ router.route("/validate-set-password/:id/:token").get(validateSetPassword);
 router.route("/set-password/:id/:token").post(setPassword);
 
 router.route("/create-job").post(verifyJWT, createJobm);
+// ZepDB sourcing from a job's page: a manager may only source for their own job.
+const ownsJob = async (req, res, next) => {
+    try {
+        const job = await Job.findById(req.params.jobId).select('managerId').lean();
+        if (!job) return res.status(404).json({ success: false, message: 'Job not found' });
+        if (String(job.managerId) !== String(req.id)) {
+            return res.status(403).json({ success: false, message: 'You can only source candidates for your own jobs.' });
+        }
+        next();
+    } catch {
+        res.status(500).json({ success: false, message: 'Internal Server Error' });
+    }
+};
+router.get("/zepdb/sourcing/estimate", verifyJWT, getSourcingEstimate);
+router.post("/zepdb/sourcing/search/:jobId", verifyJWT, ownsJob, sourceCandidatesForJob);
+router.post("/zepdb/score-candidate/:jobId", verifyJWT, ownsJob, scoreCandidateForJob);
+
 router.route("/job-chat").post(verifyJWT, openAILimiter, jobChat);
 router.route("/job-from-jd").post(
     verifyJWT,

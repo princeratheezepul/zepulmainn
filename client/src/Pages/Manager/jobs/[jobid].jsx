@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { MapPin, Briefcase, Calendar, Users, IndianRupee, CalendarDays, Pencil, X } from 'lucide-react';
+import { MapPin, Briefcase, Calendar, Users, IndianRupee, CalendarDays, Pencil, X, Database } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import SavedResumes from '../../../Components/manager/dashboard/SavedResumes';
+import ZepDBBulkSubmit from '../../../Components/recruiter/dashboard/ZepDBBulkSubmit';
 import toast from 'react-hot-toast';
 
 const   ManagerJobDetailPage = () => {
@@ -23,6 +24,7 @@ const   ManagerJobDetailPage = () => {
     location.pathname.startsWith(base)
   ) || '/manager';
   const backToJobs = `${consoleBase}/dashboard?tab=Jobs`;
+  const [showZepDBBulkSubmit, setShowZepDBBulkSubmit] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editSaving, setEditSaving] = useState(false);
   const [editForm, setEditForm] = useState(null);
@@ -249,6 +251,13 @@ const   ManagerJobDetailPage = () => {
                   <svg xmlns='http://www.w3.org/2000/svg' className='inline ml-1' width='18' height='18' fill='none' viewBox='0 0 24 24' stroke='currentColor'>
                     <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M9 5l7 7-7 7' />
                   </svg>
+                </button>
+                <button
+                  className="border border-blue-600 text-blue-700 hover:bg-blue-50 font-semibold px-5 py-2 rounded-lg text-sm cursor-pointer flex items-center gap-2"
+                  onClick={() => setShowZepDBBulkSubmit(true)}
+                  title="Source matching candidates from ZepDB and submit them to this job"
+                >
+                  <Database size={16} /> Upload Resume from ZepDB
                 </button>
                 <button
                   className="border border-blue-600 text-blue-700 hover:bg-blue-50 font-semibold px-5 py-2 rounded-lg text-sm cursor-pointer flex items-center gap-2"
@@ -487,6 +496,24 @@ const   ManagerJobDetailPage = () => {
             </div>
           </div>
         </div>
+      )}
+      {showZepDBBulkSubmit && (
+        <ZepDBBulkSubmit
+          sourcing
+          apiBase="/api/manager/zepdb"
+          jobId={jobId}
+          jobTitle={job.jobtitle}
+          onClose={() => setShowZepDBBulkSubmit(false)}
+          onComplete={() => {
+            // Newly submitted candidates should show up in the count right away
+            fetchJob();
+            fetchResumeCount();
+          }}
+          onViewCandidates={() => {
+            setShowZepDBBulkSubmit(false);
+            navigate(`${consoleBase}/jobs/${jobId}/candidates`);
+          }}
+        />
       )}
     </div>
   );

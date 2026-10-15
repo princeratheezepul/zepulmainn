@@ -4,6 +4,7 @@ import {
     getSession,
     startSession,
     endSession,
+    saveTranscript,
     handleWebhook,
 } from "../controllers/jobDescriptionSession.controller.js";
 
@@ -15,6 +16,7 @@ router.post("/webhook/vapi", handleWebhook);
 router.post("/", createSession);
 router.get("/:sessionId", getSession);
 router.post("/:sessionId/start", startSession);
+router.post("/:sessionId/transcript", saveTranscript);
 router.post("/:sessionId/end", endSession);
 
 export default router;

@@ -142,6 +142,7 @@ export default function JobChatAgent({ onComplete, onBack }) {
                 cvStrengthCutoff: Number.isFinite(Number(jobData.cvStrengthCutoff))
                     ? Number(jobData.cvStrengthCutoff)
                     : null,
+                intake: jobData.intake && typeof jobData.intake === "object" ? jobData.intake : undefined,
                 keyResponsibilities: Array.isArray(jobData.keyResponsibilities) ? jobData.keyResponsibilities.map(String) : [],
                 preferredQualifications: Array.isArray(jobData.preferredQualifications) ? jobData.preferredQualifications.map(String) : [],
                 openpositions: Number(jobData.openpositions) || 1,

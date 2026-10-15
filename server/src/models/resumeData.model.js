@@ -77,6 +77,25 @@ const ResumeDataSchema = new mongoose.Schema(
             default: ''
         },
 
+        // Set for candidates sourced from outside the uploaded-resume pool.
+        linkedinUrl: {
+            type: String,
+            default: undefined
+        },
+
+        source: {
+            type: String,
+            default: ''
+        },
+
+        // Candidate sourced by a License Partner's recruiter. Null for Zepul's
+        // own pool; partner-sourced candidates are never shown outside the partner.
+        licensePartnerId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User',
+            default: null
+        },
+
         rawResume: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'ResumeDataRaw'
@@ -95,6 +114,7 @@ ResumeDataSchema.index({ searchableSkills: 1 });
 ResumeDataSchema.index({ experienceYears: 1 });
 ResumeDataSchema.index({ role: 1 });
 ResumeDataSchema.index({ name: 1 });
+ResumeDataSchema.index({ linkedinUrl: 1 }, { sparse: true });
 ResumeDataSchema.index({ createdAt: -1 });
 
 const ResumeData = mongoose.model('ResumeData', ResumeDataSchema);

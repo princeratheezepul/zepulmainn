@@ -50,6 +50,67 @@ const JobSchema = new mongoose.Schema(
       max: 100,
       default: null,
     },
+
+    // Zeus job intake brief: the structured fields captured by the AI intake
+    // (chat). Core fields that already exist on the job (title, skills,
+    // location, salary, ...) stay where they are; this holds the rest, plus
+    // where each value came from so defaults can be told apart from answers.
+    intake: {
+      seniority: { type: String, enum: ['Junior', 'Mid', 'Senior', 'Lead', 'Manager', 'Director', null], default: null },
+      experienceMax: { type: Number, default: null },
+      niceToHaveSkills: { type: [String], default: [] },
+      successAt12m: { type: [String], default: [] },
+      domain: {
+        level: { type: String, enum: ['Required', 'Preferred', 'Not needed'], default: 'Not needed' },
+        tags: { type: [String], default: [] },
+      },
+      workModel: {
+        hybridDays: { type: Number, min: 1, max: 5, default: null },
+        radiusKm: { type: Number, default: 40 },
+        relocation: { type: Boolean, default: false },
+      },
+      ctc: {
+        currency: { type: String, default: null },
+        stretch: { type: Number, default: null },
+        variablePct: { type: Number, min: 0, max: 100, default: null },
+      },
+      noticeMaxDays: { type: Number, min: 0, max: 180, default: 60 },
+      latestJoiningDate: { type: Date, default: null },
+      workAuth: {
+        sponsorship: { type: Boolean, default: false },
+        authorisedIn: { type: [String], default: [] },
+      },
+      contractMonths: { type: Number, default: null },
+      shortlistSize: { type: Number, min: 1, max: 20, default: 5 },
+      shortlistDue: { type: Date, default: null },
+      codingTest: {
+        required: { type: Boolean, default: false },
+        stack: { type: [String], default: [] },
+        difficulty: { type: String, enum: ['Easy', 'Medium', 'Hard'], default: 'Medium' },
+        durationMin: { type: Number, min: 20, max: 120, default: 45 },
+        cutoff: { type: Number, min: 0, max: 100, default: 70 },
+      },
+      interview: {
+        focus: { type: [String], default: [] },
+        mustAsk: { type: [String], default: [] },
+        dealBreakers: { type: String, default: '' },
+      },
+      conditional: {
+        confidential: { type: Boolean, default: false },
+        targetCompanies: { type: [String], default: [] },
+        excludedCompanies: { type: [String], default: [] },
+        certifications: { type: [String], default: [] },
+        languages: { type: [String], default: [] },
+        conditions: { type: String, default: '' },
+        timezoneOverlapHours: { type: Number, min: 0, max: 8, default: null },
+        timezone: { type: String, default: '' },
+        reportingTo: { type: String, default: '' },
+        teamSize: { type: Number, default: null },
+        whyJoin: { type: String, maxlength: 300, default: '' },
+      },
+      // field name -> 'employer' | 'extracted' | 'default'
+      provenance: { type: Map, of: String, default: {} },
+    },
     priority: {
       type: [String],
       enum: ['Low', 'Medium', 'High'],

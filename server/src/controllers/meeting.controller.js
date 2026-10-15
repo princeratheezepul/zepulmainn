@@ -2,6 +2,7 @@ import crypto from "crypto";
 import OpenAI from "openai";
 import { Meeting } from "../models/meeting.model.js";
 import { Job } from "../models/job.model.js";
+import { intakePromptContext } from "../utils/jobIntake.js";
 import Resume from "../models/resume.model.js";
 import Recruiter from "../models/recruiter.model.js";
 import Scorecard from "../models/scorecard.model.js";
@@ -379,6 +380,7 @@ export const getMeetingByToken = async (req, res) => {
         description: trimText(job?.description, 3000),
         location: job?.location,
         skills: job?.skills || [],
+        intakeContext: intakePromptContext(job),
       },
       resume: {
         name: resume?.name,
@@ -472,6 +474,7 @@ export const startMeeting = async (req, res) => {
           skills: meeting.jobId.skills || [],
           location: meeting.jobId.location,
           employmentType: meeting.jobId.employmentType,
+          intakeContext: intakePromptContext(meeting.jobId),
         }
         : null,
       resume: meeting.resumeId

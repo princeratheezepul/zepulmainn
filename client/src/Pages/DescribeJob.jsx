@@ -2,6 +2,20 @@ import React, { useEffect, useRef, useState } from "react";
 import Vapi from "@vapi-ai/web";
 import { getApiUrl } from "../config/config";
 
+// Inside the manager dashboard the session is carried by the token in
+// localStorage. Sending it lets the server turn the finished call into a job
+// for that manager; without it the call is only recorded, as before.
+function authHeaders() {
+    const headers = { "Content-Type": "application/json" };
+    try {
+        const token = JSON.parse(localStorage.getItem("userInfo"))?.data?.accessToken;
+        if (token) headers.Authorization = `Bearer ${token}`;
+    } catch {
+        // no stored token — anonymous session
+    }
+    return headers;
+}
+
 /**
  * Voice agent that walks the user through describing a role.
  *
@@ -18,10 +32,18 @@ const DescribeJob = ({ onBack, onDone }) => {
     const [isConnected, setIsConnected] = useState(false);
     const [isSpeaking, setIsSpeaking] = useState(false);
     const [isCompleted, setIsCompleted] = useState(false);
+    const [jobCreated, setJobCreated] = useState(false);
 
     const videoRef = useRef(null);
     const mediaStreamRef = useRef(null);
     const vapiRef = useRef(null);
+    // Conversation so far, kept here so a call that drops suddenly can still be
+    // turned into a job from what was said.
+    const transcriptRef = useRef([]);
+    const finalizedRef = useRef(false);
+    const userEndedRef = useRef(false);
+    const saveTimerRef = useRef(null);
+    const sessionIdRef = useRef(null);
 
     // Auto-create a session on mount
     useEffect(() => {
@@ -30,7 +52,8 @@ const DescribeJob = ({ onBack, onDone }) => {
                 setLoading(true);
                 const res = await fetch(getApiUrl(`/api/job-description-sessions`), {
                     method: "POST",
-                    headers: { "Content-Type": "application/json" },
+                    headers: authHeaders(),
+                    credentials: "include",
                     body: JSON.stringify({}),
                 });
                 if (!res.ok) {
@@ -39,6 +62,7 @@ const DescribeJob = ({ onBack, onDone }) => {
                 }
                 const data = await res.json();
                 setSessionId(data.sessionId);
+                sessionIdRef.current = data.sessionId;
             } catch (err) {
                 console.error(err);
                 setError(err.message || "Unable to initialize session");
@@ -79,6 +103,59 @@ const DescribeJob = ({ onBack, onDone }) => {
         };
     }, []);
 
+    const transcriptText = () => transcriptRef.current.join("\n");
+
+    // Push the transcript so far to the server shortly after each new line.
+    const scheduleTranscriptSave = () => {
+        if (saveTimerRef.current) return;
+        saveTimerRef.current = setTimeout(() => {
+            saveTimerRef.current = null;
+            const id = sessionIdRef.current;
+            if (!id || finalizedRef.current) return;
+            fetch(getApiUrl(`/api/job-description-sessions/${id}/transcript`), {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ transcript: transcriptText() }),
+                keepalive: true,
+            }).catch(() => {});
+        }, 3000);
+    };
+
+    // Close out the session once, sending our copy of the transcript. `partial`
+    // marks a call that stopped without the user ending it.
+    const finalizeSession = async ({ partial }) => {
+        const id = sessionIdRef.current;
+        if (!id || finalizedRef.current) return null;
+        finalizedRef.current = true;
+        if (saveTimerRef.current) {
+            clearTimeout(saveTimerRef.current);
+            saveTimerRef.current = null;
+        }
+        try {
+            const res = await fetch(getApiUrl(`/api/job-description-sessions/${id}/end`), {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ transcript: transcriptText(), partial }),
+                keepalive: true,
+            });
+            return res.ok ? await res.json().catch(() => null) : null;
+        } catch (err) {
+            console.error("Failed to notify backend of session end:", err);
+            return null;
+        }
+    };
+
+    // Tab closed or refreshed mid-call: still hand over what we have.
+    useEffect(() => {
+        const onUnload = () => {
+            if (vapiRef.current && !finalizedRef.current && transcriptRef.current.length) {
+                finalizeSession({ partial: true });
+            }
+        };
+        window.addEventListener("pagehide", onUnload);
+        return () => window.removeEventListener("pagehide", onUnload);
+    }, []);
+
     const startDescription = async () => {
         if (!sessionId || starting || isConnected) return;
         setError("");
@@ -110,11 +187,25 @@ const DescribeJob = ({ onBack, onDone }) => {
                 setIsConnected(true);
             });
 
-            vapi.on("call-end", () => {
+            vapi.on("message", (msg) => {
+                if (msg?.type === "transcript" && msg.transcriptType === "final" && msg.transcript) {
+                    transcriptRef.current.push(`${msg.role === "assistant" ? "Zeus" : "Employer"}: ${msg.transcript}`);
+                    scheduleTranscriptSave();
+                }
+            });
+
+            vapi.on("call-end", async () => {
                 setIsConnected(false);
                 setIsSpeaking(false);
                 if (mediaStreamRef.current) {
                     mediaStreamRef.current.getTracks().forEach((t) => t.stop());
+                }
+                // If the user didn't end it, the call stopped on its own:
+                // build the job from the conversation so far.
+                if (!userEndedRef.current && !finalizedRef.current && transcriptRef.current.length) {
+                    const endData = await finalizeSession({ partial: true });
+                    setJobCreated(Boolean(endData?.session?.jobId));
+                    setIsCompleted(true);
                 }
             });
 
@@ -127,6 +218,15 @@ const DescribeJob = ({ onBack, onDone }) => {
                     return;
                 }
                 console.error("Vapi error:", e);
+                if (!userEndedRef.current && transcriptRef.current.length && !finalizedRef.current) {
+                    finalizeSession({ partial: true }).then((endData) => {
+                        setJobCreated(Boolean(endData?.session?.jobId));
+                        setIsConnected(false);
+                        setIsSpeaking(false);
+                        setIsCompleted(true);
+                    });
+                    return;
+                }
                 if (isConnected) {
                     setError("An error occurred. Please try refreshing the page.");
                 }
@@ -143,6 +243,7 @@ const DescribeJob = ({ onBack, onDone }) => {
     const endDescription = async () => {
         if (!vapiRef.current) return;
 
+        userEndedRef.current = true;
         try {
             vapiRef.current.stop();
 
@@ -150,10 +251,8 @@ const DescribeJob = ({ onBack, onDone }) => {
                 mediaStreamRef.current.getTracks().forEach((t) => t.stop());
             }
 
-            await fetch(getApiUrl(`/api/job-description-sessions/${sessionId}/end`), {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-            }).catch((err) => console.error("Failed to notify backend of session end:", err));
+            const endData = await finalizeSession({ partial: false });
+            setJobCreated(Boolean(endData?.session?.jobId));
 
             setIsConnected(false);
             setIsSpeaking(false);
@@ -196,8 +295,9 @@ const DescribeJob = ({ onBack, onDone }) => {
                     <div style={{ fontSize: 56, marginBottom: 16 }}>✅</div>
                     <h2 style={styles.cardTitle}>Job Description Captured!</h2>
                     <p style={styles.cardSubtitle}>
-                        Your job description has been recorded and saved. The Zepul team will
-                        process your responses and structure the job posting.
+                        {jobCreated
+                            ? "Your job has been created from the conversation. You can review and edit it in your jobs."
+                            : "Your job description has been recorded. Your job will appear in your jobs shortly, once the conversation has been processed."}
                     </p>
                     {typeof onDone === "function" ? (
                         <button style={styles.btnPrimary} onClick={onDone}>

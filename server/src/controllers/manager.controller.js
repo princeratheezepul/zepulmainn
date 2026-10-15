@@ -1,4 +1,5 @@
 import { User } from '../models/user.model.js';
+import { sanitizeIntake, intakeProblems } from "../utils/jobIntake.js";
 import jwt from 'jsonwebtoken';
 import nodemailer from 'nodemailer'
 import bcrypt from 'bcryptjs';
@@ -507,6 +508,7 @@ export const createJobm = async (req, res) => {
         skills,
         experience,
         cvStrengthCutoff,
+        intake,
         keyResponsibilities,
         preferredQualifications,
         priority,
@@ -525,6 +527,12 @@ export const createJobm = async (req, res) => {
     console.log("managerId:", managerId);
 
     try {
+        const cleanIntake = sanitizeIntake(intake);
+        const { errors: intakeErrors, warnings: intakeWarnings } = intakeProblems({ experience, salary, cvStrengthCutoff, skills, intake: cleanIntake });
+        if (intakeErrors.length) {
+            return res.status(400).json({ message: intakeErrors.join(' '), success: false });
+        }
+
         // Resolve the company name. The AI job assistant references the manager's
         // company by ObjectId (sent as companyId, or jammed into the company
         // field), so look up the Company document and store its real name. The
@@ -569,6 +577,7 @@ export const createJobm = async (req, res) => {
             skills,
             experience,
             cvStrengthCutoff: normalizeCutoff(cvStrengthCutoff),
+            ...(cleanIntake ? { intake: cleanIntake } : {}),
             keyResponsibilities,
             preferredQualifications,
             priority,
@@ -609,6 +618,7 @@ export const createJobm = async (req, res) => {
         return res.status(201).json({
             message: "Job registered successfully.",
             job,
+            warnings: intakeWarnings,
             success: true
         });
     } catch (error) {

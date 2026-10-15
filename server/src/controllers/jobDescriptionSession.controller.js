@@ -2,6 +2,78 @@ import crypto from "crypto";
 import { JobDescriptionSession } from "../models/jobDescriptionSession.model.js";
 import { TestMeet } from "../models/testMeet.model.js";
 import { startWebCallForJobDescription } from "../services/vapi.service.js";
+import OpenAI from "openai";
+import jwt from "jsonwebtoken";
+import { Job } from "../models/job.model.js";
+import { User } from "../models/user.model.js";
+import { Company } from "../models/company.model.js";
+import { extractJobFromTranscript, intakeProblems } from "../utils/jobIntake.js";
+
+const openai = process.env.OPENAI_API ? new OpenAI({ apiKey: process.env.OPENAI_API }) : null;
+
+// The session routes are public, so identify a logged-in manager from the token
+// when one is sent. Anything else (bad token, non-manager) is just anonymous.
+const managerFromRequest = async (req) => {
+    try {
+        const token = req.cookies?.accessToken || req.header("Authorization")?.replace("Bearer ", "");
+        if (!token) return null;
+        const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+        const user = await User.findById(decoded._id).select("type isEmployerManager isLicensePartner companys");
+        return user && user.type === "manager" ? user : null;
+    } catch {
+        return null;
+    }
+};
+
+// Turn a finished voice session into a Job, once. Mirrors createJobm's
+// ownership rules. Never throws: a failed extraction leaves the transcript in
+// place for the team to process by hand, as before.
+const createJobFromSession = async (session) => {
+    if (session.jobId || !session.managerId || !session.transcript) return null;
+    // /end and the Vapi webhook can both finish a session; only one may create.
+    const claimed = await JobDescriptionSession.findOneAndUpdate(
+        { _id: session._id, jobId: null, "meta.jobClaimed": { $ne: true } },
+        { $set: { "meta.jobClaimed": true } }
+    );
+    if (!claimed) return null;
+    try {
+        const data = await extractJobFromTranscript(openai, session.transcript);
+        if (!data) {
+            console.warn("[JobDesc] No usable job in transcript for session", session.sessionId);
+            return null;
+        }
+        const { errors, warnings } = intakeProblems(data);
+        session.meta = { ...(session.meta || {}), jobClaimed: true, intakeWarnings: [...errors, ...warnings] };
+        session.markModified("meta");
+        // Impossible values (e.g. min > max) are dropped rather than saved wrong.
+        if (errors.length) {
+            if (data.salary.min > data.salary.max) data.salary = { min: 0, max: 0 };
+            if (data.intake?.experienceMax != null && data.experience > data.intake.experienceMax) data.intake.experienceMax = null;
+            if (data.intake?.ctc?.stretch != null && data.intake.ctc.stretch < data.salary.max) data.intake.ctc.stretch = null;
+        }
+
+        const manager = await User.findById(session.managerId).select("isEmployerManager isLicensePartner companys");
+        const companyDoc = manager?.companys?.[0] ? await Company.findById(manager.companys[0]) : null;
+        const job = await Job.create({
+            ...data,
+            isEmployerPrivate: Boolean(manager?.isEmployerManager),
+            licensePartnerId: manager?.isLicensePartner ? manager._id : null,
+            managerId: session.managerId,
+            company: companyDoc?.name || "Zepul Pro Company",
+            companyId: companyDoc?._id,
+            internalNotes: session.meta?.partial
+                ? "Generated via AI voice intake from a partial transcript (call ended early) — please review"
+                : "Generated via AI voice intake",
+        });
+        await User.findByIdAndUpdate(session.managerId, { $push: { jobs: job._id } });
+        session.jobId = job._id;
+        console.log("✅ [JobDesc] Job created from voice session:", job._id.toString());
+        return job;
+    } catch (err) {
+        console.error("[JobDesc] Failed to create job from session:", err.message);
+        return null;
+    }
+};
 
 const VAPI_API_KEY = process.env.VAPI_API_KEY;
 const VAPI_BASE_URL = process.env.VAPI_BASE_URL || "https://api.vapi.ai";
@@ -38,10 +110,12 @@ export const createSession = async (req, res) => {
     try {
         const sessionId = crypto.randomBytes(24).toString("hex");
         const recruiterId = req.id || req.body?.recruiterId || null;
+        const manager = await managerFromRequest(req);
 
         await JobDescriptionSession.create({
             sessionId,
-            recruiterId,
+            recruiterId: manager ? null : recruiterId,
+            managerId: manager?._id || null,
             status: "pending",
         });
 
@@ -131,7 +205,29 @@ export const startSession = async (req, res) => {
     }
 };
 
+// ─── POST /api/job-description-sessions/:sessionId/transcript ───────────────
+// The browser streams the transcript so far while the call runs, so a call that
+// dies suddenly still leaves something to build the job from.
+export const saveTranscript = async (req, res) => {
+    try {
+        const transcript = typeof req.body?.transcript === "string" ? req.body.transcript.slice(0, 200000) : "";
+        const session = await JobDescriptionSession.findOne({ sessionId: req.params.sessionId });
+        if (!session) return res.status(404).json({ message: "Session not found" });
+        if (session.jobId) return res.status(200).json({ saved: false });
+        if (transcript.length > (session.transcript?.length || 0)) {
+            session.transcript = transcript;
+            await session.save();
+        }
+        return res.status(200).json({ saved: true });
+    } catch (error) {
+        console.error("Error saving job description transcript:", error);
+        return res.status(500).json({ message: "Failed to save transcript" });
+    }
+};
+
 // ─── POST /api/job-description-sessions/:sessionId/end ──────────────────────
+// Body (optional): { transcript, partial } — the client's copy of the
+// conversation, used when the call ended abruptly and Vapi never delivered one.
 export const endSession = async (req, res) => {
     try {
         const { sessionId } = req.params;
@@ -141,7 +237,19 @@ export const endSession = async (req, res) => {
             return res.status(404).json({ message: "Session not found" });
         }
 
-        if (session.status !== "active") {
+        const clientTranscript = typeof req.body?.transcript === "string" ? req.body.transcript.slice(0, 200000) : "";
+        if (clientTranscript.length > (session.transcript?.length || 0)) {
+            session.transcript = clientTranscript;
+        }
+        if (req.body?.partial) {
+            session.meta = { ...(session.meta || {}), partial: true };
+            session.markModified("meta");
+        }
+
+        // A retry after an abrupt stop may arrive when the session is already
+        // completed but no job was made; let it through to try again.
+        const retryable = session.status === "completed" && !session.jobId && session.transcript;
+        if (session.status !== "active" && !retryable) {
             return res.status(400).json({
                 message: `Session is not active. Current status: ${session.status}`,
             });
@@ -157,6 +265,7 @@ export const endSession = async (req, res) => {
         }
 
         session.status = "completed";
+        await createJobFromSession(session);
         await session.save();
 
         // Save transcript as description in TestMeet
@@ -171,6 +280,7 @@ export const endSession = async (req, res) => {
                 id: session._id,
                 status: session.status,
                 transcriptLength: session.transcript?.length || 0,
+                jobId: session.jobId || null,
             },
         });
     } catch (error) {
@@ -306,6 +416,8 @@ export const handleWebhook = async (req, res) => {
                     "[JobDesc Webhook] Session completed. Transcript length:",
                     session.transcript?.length || 0
                 );
+
+                await createJobFromSession(session);
 
                 // Save transcript as description in TestMeet
                 if (session.transcript) {

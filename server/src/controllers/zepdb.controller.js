@@ -1,4 +1,6 @@
 import crypto from "crypto";
+import { intakePromptContext } from "../utils/jobIntake.js";
+import { poolIdFor } from "./vertex.controller.js";
 import ResumeData from "../models/resumeData.model.js";
 import Scorecard from "../models/scorecard.model.js";
 import Resume from "../models/resume.model.js";
@@ -172,6 +174,8 @@ const fallbackQueryParsing = (userQuery) => {
 const fetchCandidatesFromDB = async (filters) => {
   try {
     const conditions = [];
+    // Zepul's pool excludes candidates sourced for a License Partner.
+    const ownPool = { licensePartnerId: null };
 
     // 1. Role matching - regex on role field and searchableText
     if (filters.role) {
@@ -223,7 +227,7 @@ const fetchCandidatesFromDB = async (filters) => {
     }
 
     // Build final query
-    let query = {};
+    let query = { ...ownPool };
     if (conditions.length > 0) {
       query.$and = conditions;
     }
@@ -235,7 +239,7 @@ const fetchCandidatesFromDB = async (filters) => {
 
     // If no conditions at all, return recent resumes
     if (conditions.length === 0) {
-      const allResumes = await ResumeData.find({})
+      const allResumes = await ResumeData.find(ownPool)
         .sort({ createdAt: -1 })
         .limit(50)
         .lean();
@@ -254,7 +258,7 @@ const fetchCandidatesFromDB = async (filters) => {
     // If strict search returns 0 results, try a relaxed search (OR instead of AND for main conditions)
     if (candidates.length === 0 && conditions.length > 1) {
       console.log('Trying relaxed search (OR mode)...');
-      const relaxedQuery = { $or: conditions };
+      const relaxedQuery = { ...ownPool, $or: conditions };
       candidates = await ResumeData.find(relaxedQuery)
         .sort({ createdAt: -1 })
         .limit(50)
@@ -302,9 +306,12 @@ export const matchJobWithZepDB = async (req, res) => {
         ...(job.jobtitle ? job.jobtitle.split(/\s+/) : []),
         ...(job.keyResponsibilities || []).flatMap(r => r.split(/\s+/)).slice(0, 10),
       ].filter(w => w.length > 2 && !['the', 'and', 'for', 'with', 'that', 'this', 'from', 'are', 'will'].includes(w.toLowerCase())),
-      skills: (job.skills || []).map(s => s.toLowerCase().trim()),
+      // Hard-filter on must-haves only; nice-to-haves rank, they don't exclude.
+      skills: (job.skills || [])
+        .filter(s => !(job.intake?.niceToHaveSkills || []).includes(s))
+        .map(s => s.toLowerCase().trim()),
       minExperience: job.experience || 0,
-      maxExperience: 99,
+      maxExperience: job.intake?.experienceMax || 99,
       location: '',
     };
 
@@ -377,7 +384,9 @@ export const scoreCandidateForJob = async (req, res) => {
   try {
     const { jobId } = req.params;
     const { candidateId } = req.body;
-    const recruiterId = req.id;
+    // Managers submit under their own id; recruiters under theirs.
+    const isManager = req.role === 'manager';
+    const recruiterId = isManager ? null : req.id;
 
     // Duplicate check
     const existingResume = await Resume.findOne({
@@ -408,14 +417,19 @@ export const scoreCandidateForJob = async (req, res) => {
     const [candidate, job, recruiter] = await Promise.all([
       ResumeData.findById(candidateId).lean(),
       Job.findById(jobId).lean(),
-      Recruiter.findById(recruiterId).lean()
+      isManager ? null : Recruiter.findById(recruiterId).lean()
     ]);
 
     if (!candidate || !job) {
       return res.status(404).json({ success: false, message: "Candidate or job not found" });
     }
 
-    const managerId = recruiter?.managerId || null;
+    // Candidates belong to one pool: Zepul's, or a single License Partner's.
+    if (String(candidate.licensePartnerId || '') !== String(poolIdFor(req) || '')) {
+      return res.status(403).json({ success: false, message: "This candidate isn't available to you." });
+    }
+
+    const managerId = isManager ? req.id : (recruiter?.managerId || null);
     const tag = determineResumeTag(job.jobtitle, job.description);
 
     const analysis = await generateZepDBAnalysis(candidate, job);
@@ -424,6 +438,7 @@ export const scoreCandidateForJob = async (req, res) => {
       jobId: job._id,
       recruiterId,
       managerId,
+      ...(isManager ? { submittedBy: { userId: req.id, name: req.user?.fullname || req.user?.username || '', role: 'manager' } } : {}),
       tag,
       resumeDataId: candidate._id,
       name: candidate.name,
@@ -537,7 +552,8 @@ JOB:
 Title: ${job.jobtitle}
 Description: ${(job.description || '').slice(0, 500)}
 Required Skills: ${(job.skills || []).join(', ')}
-Experience Required: ${job.experience || 'Not specified'} years
+Experience Required: ${job.experience || 'Not specified'}${job.intake?.experienceMax ? `-${job.intake.experienceMax}` : ''} years
+${intakePromptContext(job)}
 
 CANDIDATE:
 ${candidateJson}
@@ -571,8 +587,9 @@ Return this exact JSON shape:
 }
 
 Rules:
-- skillScores: Score each of the job's required skills (max 6). Base score on evidence found in candidate data.
+- skillScores: Score each of the job's must-have skills first (max 6). Base score on evidence found in candidate data.
 - ats_score: Holistic score — skill match, experience depth, project relevance. Conservative: 80+ only for strong matches.
+- Weighting when an employer brief is given: must-have skills count most, then domain experience, then seniority fit, then nice-to-have skills. Missing a must-have should pull the score down clearly.
 - All text fields must contain meaningful content, not placeholders.`;
 
   const completion = await openai.chat.completions.create({
@@ -588,10 +605,10 @@ Rules:
 // Get ZepDB statistics
 export const getZepDBStats = async (req, res) => {
   try {
-    const totalCount = await ResumeData.countDocuments({});
+    const totalCount = await ResumeData.countDocuments({ licensePartnerId: null });
 
     const roleBreakdown = await ResumeData.aggregate([
-      { $match: { role: { $ne: '' } } },
+      { $match: { role: { $ne: '' }, licensePartnerId: null } },
       { $group: { _id: '$role', count: { $sum: 1 } } },
       { $sort: { count: -1 } },
       { $limit: 10 }
