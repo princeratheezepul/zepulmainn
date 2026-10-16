@@ -6,6 +6,8 @@ import {
     VERTEX_SOURCE_LIMIT,
     VERTEX_MIN_RELEVANCE,
     VERTEX_MIN_SCORE,
+    VERTEX_MIN_SKILL_MATCH,
+    VERTEX_LOOKUP_ROUNDS,
     VERTEX_LOOKUP_BUDGET,
     SEARCH_CREDITS,
     LOOKUP_CREDITS,
@@ -90,49 +92,62 @@ export const sourceCandidatesForJob = async (req, res) => {
             .filter((doc) => !submittedIds.has(String(doc._id)))
             .map((doc) => ({ doc, score: relevanceScore(scorable(doc), job), open: false }));
 
-        // Lookups cost a credit each, so rank the rest of the page by title,
-        // employer and location and look up only the best few.
-        const toLookUp = profiles
-            .filter((p) => !p.linkedin_url || !storedUrls.has(p.linkedin_url))
-            .map((hit) => ({ hit, pre: hitScore(hit, job) }))
-            .sort((a, b) => b.pre - a.pre)
-            .slice(0, VERTEX_LOOKUP_BUDGET);
-        const results = await Promise.all(
-            toLookUp.map(({ hit }) => lookupProfile(hit).then((r) => ({ hit, ...r })).catch((e) => {
-                console.error("Sourcing lookup failed:", e.message);
-                return null;
-            }))
-        );
-        for (const r of results.filter(Boolean)) {
-            creditsUsed += r.creditsUsed;
-            if (!r.profile) continue;
-            const body = profileToResumeData(r.profile, r.hit);
-            if (!body.name) continue;
-            // Saved even if not picked: the lookup is paid for, so a later search reuses it free.
-            const doc = await ResumeData.create({ ...body, licensePartnerId });
-            pool.push({ doc, score: relevanceScore(scorable(doc), job), open: r.profile.open_to_job_opportunities === true });
-        }
-
-        // Shortlist on job-fit relevance, job-seekers nudged ahead...
-        const rank = (c) => (c.score >= VERTEX_MIN_RELEVANCE ? 1000 : 0) + c.score + (c.open ? 10 : 0);
-        pool.sort((a, b) => rank(b) - rank(a));
-        const shortlist = pool.slice(0, VERTEX_SOURCE_LIMIT + VERTEX_LOOKUP_BUDGET);
-
-        // ...then score the shortlist the way the scorecard will (no sourcing
-        // credits) and hand back the highest CV scores, VERTEX_MIN_SCORE+ first.
-        // The analyses are cached, so submitting shows the same score.
-        await Promise.all(shortlist.map(async (c) => {
+        // Score a candidate the way the scorecard will (no sourcing credits).
+        // The analysis is cached, so submitting shows the same score.
+        const assess = async (c) => {
             try {
                 const analysis = await zepDBAnalysisFor(c.doc, job, { relevance: c.score });
                 c.ats = Number(analysis.ats_score) || 0;
+                const skills = Array.isArray(analysis.skillScores) ? analysis.skillScores : [];
+                c.skillMatch = skills.length ? skills.filter((s) => Number(s.score) >= 50).length / skills.length : 0;
             } catch (e) {
                 console.error("Sourcing pre-score failed:", e.message);
-                c.ats = c.score; // fall back to local relevance
+                c.ats = 0;
+                c.skillMatch = 0;
             }
-        }));
-        const atsRank = (c) => (c.ats >= VERTEX_MIN_SCORE ? 1000 : 0) + c.ats + c.score / 100;
-        shortlist.sort((a, b) => atsRank(b) - atsRank(a));
-        const picked = shortlist.slice(0, VERTEX_SOURCE_LIMIT);
+            c.qualified = c.ats > VERTEX_MIN_SCORE && c.skillMatch >= VERTEX_MIN_SKILL_MATCH;
+            return c;
+        };
+        const rank = (c) => (c.score >= VERTEX_MIN_RELEVANCE ? 1000 : 0) + c.score + (c.open ? 10 : 0);
+        const qualified = () => pool.filter((c) => c.qualified);
+
+        // Stored candidates are free, so try the most relevant of them first.
+        pool.sort((a, b) => rank(b) - rank(a));
+        await Promise.all(pool.slice(0, VERTEX_SOURCE_LIMIT + VERTEX_LOOKUP_BUDGET).map(assess));
+
+        // Lookups cost a credit each, so rank the rest of the page by title,
+        // employer and location and look them up a batch at a time, stopping as
+        // soon as enough candidates clear the bar.
+        const queue = profiles
+            .filter((p) => !p.linkedin_url || !storedUrls.has(p.linkedin_url))
+            .map((hit) => ({ hit, pre: hitScore(hit, job) }))
+            .sort((a, b) => b.pre - a.pre);
+        for (let round = 0; round < VERTEX_LOOKUP_ROUNDS && queue.length && qualified().length < VERTEX_SOURCE_LIMIT; round++) {
+            const batch = queue.splice(0, VERTEX_LOOKUP_BUDGET);
+            const results = await Promise.all(
+                batch.map(({ hit }) => lookupProfile(hit).then((r) => ({ hit, ...r })).catch((e) => {
+                    console.error("Sourcing lookup failed:", e.message);
+                    return null;
+                }))
+            );
+            const fresh = [];
+            for (const r of results.filter(Boolean)) {
+                creditsUsed += r.creditsUsed;
+                if (!r.profile) continue;
+                const body = profileToResumeData(r.profile, r.hit);
+                if (!body.name) continue;
+                // Saved even if not picked: the lookup is paid for, so a later search reuses it free.
+                const doc = await ResumeData.create({ ...body, licensePartnerId });
+                fresh.push({ doc, score: relevanceScore(scorable(doc), job), open: r.profile.open_to_job_opportunities === true });
+            }
+            pool.push(...fresh);
+            await Promise.all(fresh.map(assess));
+        }
+
+        // Only candidates over the bar are handed back, highest CV score first.
+        const picked = qualified()
+            .sort((a, b) => (b.ats + b.skillMatch * 10 + (b.open ? 2 : 0)) - (a.ats + a.skillMatch * 10 + (a.open ? 2 : 0)))
+            .slice(0, VERTEX_SOURCE_LIMIT);
         const found = picked.map((c) => c.doc);
         const scores = new Map(picked.map((c) => [String(c.doc._id), c.ats]));
 

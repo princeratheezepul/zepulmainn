@@ -21,13 +21,19 @@ export const VERTEX_LOOKUP_BUDGET = Number(process.env.VERTEX_LOOKUP_BUDGET) || 
 const SEARCH_PAGE_SIZE = 100;
 // Minimum local relevance (0-100) a candidate needs against the JD to be preferred.
 export const VERTEX_MIN_RELEVANCE = Number(process.env.VERTEX_MIN_RELEVANCE) || 40;
-// CV score (0-100, as on the scorecard) a sourced candidate should reach to be handed back first.
+// Quality bar a sourced candidate must clear to be handed back: CV score
+// above VERTEX_MIN_SCORE, and at least VERTEX_MIN_SKILL_MATCH of the required
+// skills with real evidence (AI skill score 50+).
 export const VERTEX_MIN_SCORE = Number(process.env.VERTEX_MIN_SCORE) || 70;
+export const VERTEX_MIN_SKILL_MATCH = Number(process.env.VERTEX_MIN_SKILL_MATCH) || 0.7;
+// When a batch of lookups doesn't yield enough candidates over the bar, look up
+// the next best batch from the same search page (no new search charge), up to this many batches.
+export const VERTEX_LOOKUP_ROUNDS = Number(process.env.VERTEX_LOOKUP_ROUNDS) || 2;
 // JD search costs 2 credits instead of 1 when it returns results.
 export const SEARCH_CREDITS = 2;
 export const LOOKUP_CREDITS = 1;
 
-export const maxSourcingCredits = () => SEARCH_CREDITS + VERTEX_LOOKUP_BUDGET * LOOKUP_CREDITS;
+export const maxSourcingCredits = () => SEARCH_CREDITS + VERTEX_LOOKUP_BUDGET * VERTEX_LOOKUP_ROUNDS * LOOKUP_CREDITS;
 
 const call = async (path, { method = "GET", body } = {}) => {
     const apiKey = process.env.VERTEX_API_KEY || process.env.DATAVERTEX_API_KEY;

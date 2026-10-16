@@ -237,7 +237,9 @@ export default function ZepDBBulkSubmit({ jobId, jobTitle, onClose, onComplete, 
           {phase === 'empty' && (
             <div className="flex flex-col items-center justify-center gap-3 py-12">
               <div className="text-4xl text-gray-300">🔍</div>
-              <div className="text-sm text-gray-600">No matching candidates found in ZepDB.</div>
+              <div className="text-sm text-gray-600">
+                {sourcing ? 'No candidates cleared the quality bar (CV score above 70 with a strong skill match).' : 'No matching candidates found in ZepDB.'}
+              </div>
               <button onClick={retry} className="text-blue-600 text-sm underline cursor-pointer">Try again</button>
             </div>
           )}
