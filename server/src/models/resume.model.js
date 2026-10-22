@@ -40,6 +40,7 @@ const ResumeSchema = new mongoose.Schema(
     title: String, // Professional title
     email: String,
     phone: String,
+    countryCode: String, // Digits only, e.g. '91'. Set when the candidate confirms their phone.
     experience: String, // Total years of experience
     location: String,
 
@@ -159,6 +160,14 @@ const ResumeSchema = new mongoose.Schema(
     isCandidateApplication: {
       type: Boolean,
       default: false
+    },
+
+    // Candidate's own go-ahead for this role. Recruiter-uploaded candidates are
+    // asked to confirm (and give a phone number) before the coding test is sent.
+    roleConfirmation: {
+      status: { type: String, enum: ['pending', 'accepted', 'declined', ''], default: '' },
+      sentAt: Date,
+      respondedAt: Date,
     },
 
     // Internal AI Assessment

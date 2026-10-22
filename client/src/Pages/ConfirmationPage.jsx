@@ -8,6 +8,9 @@ const ConfirmationPage = () => {
   const [data, setData] = useState(null);
   const [errorMsg, setErrorMsg] = useState('');
   const [submitResult, setSubmitResult] = useState(null);
+  const [countryCode, setCountryCode] = useState('91');
+  const [phone, setPhone] = useState('');
+  const [phoneError, setPhoneError] = useState('');
 
   useEffect(() => {
     const fetchDetails = async () => {
@@ -29,6 +32,8 @@ const ConfirmationPage = () => {
         }
 
         setData(json);
+        setCountryCode(json.candidate?.countryCode || '91');
+        setPhone((json.candidate?.phone || '').replace(/\D/g, ''));
         setState('ready');
       } catch {
         setErrorMsg('Failed to load confirmation details.');
@@ -39,16 +44,29 @@ const ConfirmationPage = () => {
   }, [token]);
 
   const handleResponse = async (response) => {
+    if (response === 'yes') {
+      const digits = phone.replace(/\D/g, '');
+      if (digits.length < 7 || digits.length > 15) {
+        setPhoneError('Please enter a valid phone number to proceed.');
+        return;
+      }
+    }
+    setPhoneError('');
     setState('submitting');
     try {
       const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/confirm/${token}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ response }),
+        body: JSON.stringify({ response, phone, countryCode }),
       });
       const json = await res.json();
 
       if (!res.ok) {
+        if (res.status === 400) {
+          setPhoneError(json.message || 'Please check your details.');
+          setState('ready');
+          return;
+        }
         setErrorMsg(json.message || 'Failed to submit response.');
         setState('error');
         return;
@@ -271,6 +289,33 @@ const ConfirmationPage = () => {
           <p className="text-gray-700 font-medium mb-6 text-lg">
             Would you like to proceed with the <strong>{job.title}</strong> opportunity?
           </p>
+          <div className="max-w-sm mx-auto mb-6 text-left">
+            <label htmlFor="confirm-phone" className="block text-sm font-medium text-gray-700 mb-1">
+              Phone number <span className="text-red-500">*</span>
+            </label>
+            <div className="flex gap-2">
+              <div className="flex items-center border border-gray-200 rounded-xl px-3 focus-within:border-blue-500">
+                <span className="text-gray-500">+</span>
+                <input
+                  aria-label="Country code"
+                  value={countryCode}
+                  onChange={(e) => setCountryCode(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                  className="w-10 py-2.5 outline-none text-gray-800"
+                  inputMode="numeric"
+                />
+              </div>
+              <input
+                id="confirm-phone"
+                type="tel"
+                value={phone}
+                onChange={(e) => { setPhone(e.target.value.replace(/[^\d\s-]/g, '')); setPhoneError(''); }}
+                placeholder="9876543210"
+                className="flex-1 min-w-0 border border-gray-200 rounded-xl px-3 py-2.5 outline-none text-gray-800 focus:border-blue-500"
+                inputMode="tel"
+              />
+            </div>
+            {phoneError && <p className="text-sm text-red-500 mt-1">{phoneError}</p>}
+          </div>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button
               onClick={() => handleResponse('yes')}

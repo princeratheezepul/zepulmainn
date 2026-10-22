@@ -13,10 +13,14 @@ import { sendWhatsAppMessage } from "../utils/whatsapp.js";
 import { canAccessResume } from "../utils/resourceAccess.js";
 import { STAGE_QUERIES } from "../utils/candidateStage.js";
 import { screenCvStrength, cutoffRejectionFields } from "../utils/cvStrength.js";
+import { sendShortlistEmail } from "../services/email.service.js";
+import CandidateConfirmation from "../models/candidateConfirmation.model.js";
+import crypto from "crypto";
 
 // Fire-and-forget: generate the coding assessment for a newly-saved resume, then notify the candidate.
 // WhatsApp is only sent if the email was successfully sent — the WhatsApp text references the email.
-const notifyCandidateOfCodingTest = async (resumeId) => {
+// Runs once the candidate has confirmed the role (see confirm.controller.js).
+export const notifyCandidateOfCodingTest = async (resumeId) => {
   try {
     const { resume, job, assessmentLink } = await generateAssessmentForResume(resumeId);
 
@@ -34,10 +38,53 @@ const notifyCandidateOfCodingTest = async (resumeId) => {
 
     if (resume.phone) {
       const message = `You have been selected for the coding round on the job: ${job.jobtitle}, the coding test mail has been sent to your email id: ${resume.email} please check it and submit the test asap`;
-      await sendWhatsAppMessage(resume.phone, message);
+      await sendWhatsAppMessage(resume.phone, message, resume.countryCode || '91');
     }
   } catch (err) {
     console.error(`[codingTestNotify] Failed for resume ${resumeId}:`, err.message);
+  }
+};
+
+// Fire-and-forget: ask the candidate to confirm they want to proceed with the role. The coding
+// test only goes out after they confirm on /confirm/:token and give a phone number.
+const requestRoleConfirmation = async (resume, job) => {
+  try {
+    if (!resume.email && !resume.phone) {
+      console.log(`[roleConfirmation] Skipping — no email or phone on resume ${resume._id}`);
+      return;
+    }
+
+    const token = crypto.randomBytes(32).toString("hex");
+    await CandidateConfirmation.create({
+      token,
+      candidateId: resume.resumeDataId || undefined,
+      jobId: job._id,
+      resumeId: resume._id,
+      nextStep: "codingTest",
+      expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+    });
+    await Resume.findByIdAndUpdate(resume._id, {
+      roleConfirmation: { status: "pending", sentAt: new Date() },
+    });
+
+    const confirmLink = `${process.env.FRONTEND_URL}/confirm/${token}`;
+
+    if (resume.email) {
+      await sendShortlistEmail({
+        to: resume.email,
+        candidateName: resume.name,
+        jobTitle: job.jobtitle,
+        company: job.company,
+        confirmLink,
+      }).catch((err) => console.error(`[roleConfirmation] Email failed for resume ${resume._id}:`, err.message));
+    }
+
+    if (resume.phone) {
+      const message = `Hi ${resume.name || "there"}, you have been selected for the role of *${job.jobtitle}*${job.company ? ` at *${job.company}*` : ""}. Please click the link below to confirm if you want to proceed:\n${confirmLink}\n\n(This link expires in 24 hours)`;
+      await sendWhatsAppMessage(resume.phone, message);
+    }
+  } catch (err) {
+    console.error(`[roleConfirmation] Failed for resume ${resume._id}:`, err.message);
   }
 };
 
@@ -181,9 +228,9 @@ export const saveResumeWithJob = async (req, res) => {
 
     res.status(201).json({ message: "Resume saved successfully", resume: saved });
 
-    // Fire-and-forget: AI assessment generation + email + WhatsApp. Runs after response so the
-    // recruiter UI doesn't wait on the ~30-90s AI question generation.
-    notifyCandidateOfCodingTest(saved._id);
+    // Fire-and-forget: ask the candidate to confirm the role. The coding test is sent from
+    // confirm.controller.js once they accept.
+    requestRoleConfirmation(saved, job);
   } catch (err) {
     console.error("Error saving resume:", err);
     res.status(500).json({ message: "Failed to save resume", error: err.message });
