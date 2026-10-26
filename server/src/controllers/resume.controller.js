@@ -13,6 +13,7 @@ import { sendWhatsAppMessage } from "../utils/whatsapp.js";
 import { canAccessResume } from "../utils/resourceAccess.js";
 import { STAGE_QUERIES } from "../utils/candidateStage.js";
 import { screenCvStrength, cutoffRejectionFields } from "../utils/cvStrength.js";
+import { latestInvitesByResume } from "../utils/interviewInvite.js";
 import { sendShortlistEmail } from "../services/email.service.js";
 import CandidateConfirmation from "../models/candidateConfirmation.model.js";
 import crypto from "crypto";
@@ -329,7 +330,11 @@ export const getResumesByJob = async (req, res) => {
       .populate('resumeDataId')
       .populate('submittedBy.userId', 'fullname username email');
 
-    res.status(200).json(resumes);
+    // Whether the AI interview has been sent, so the list can offer to send it.
+    const invites = await latestInvitesByResume(resumes.map((r) => r._id));
+    res.status(200).json(
+      resumes.map((r) => ({ ...r.toJSON(), interviewInvite: invites.get(String(r._id)) || null }))
+    );
   } catch (err) {
     console.error("Error fetching resumes for job:", err);
     res.status(500).json({ message: "Failed to retrieve resumes", error: err.message });

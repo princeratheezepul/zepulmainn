@@ -173,3 +173,46 @@ export const CANDIDATE_STAGES = [
   { key: 'shortlisted', label: 'Shortlisted', matches: (r) => r?.status === 'shortlisted' },
   { key: 'withClient', label: 'Process with client', matches: withClient },
 ];
+
+/* ---- Coding test -> AI interview hand-off ---------------------------------
+ * The AI interview is no longer sent when the coding test is submitted; the
+ * manager sends it from the candidate list once they have seen the result.
+ * These read what that list needs: the coding test outcome, and where the
+ * interview invite stands (`interviewInvite`, added by the resumes-by-job API).
+ *
+ * `oa.status` defaults to "invited" on every resume, so only `assessmentId`
+ * (set when a test is actually generated) shows that one was sent.
+ */
+
+const CODING_TEST_DONE = ['completed', 'evaluated'];
+
+/** The coding test that applies to this candidate: standard, or the Avaloq banking one. */
+export const codingTestOf = (r) =>
+  [r?.oa, r?.avaloqOa].find((t) => t?.assessmentId || CODING_TEST_DONE.includes(t?.status)) || null;
+
+export const codingTestDone = (r) => CODING_TEST_DONE.includes(codingTestOf(r)?.status);
+
+/** Coding test score 0-100, or null until it has been evaluated. */
+export const codingTestScore = (r) => {
+  const score = codingTestOf(r)?.evaluation?.score;
+  return typeof score === 'number' && Number.isFinite(score) ? score : null;
+};
+
+/**
+ * Where the candidate stands between the coding test and the interview:
+ * codingSent, codingDone (waiting on the manager to send the interview),
+ * interviewSent, interviewInProgress, interviewExpired, interviewDone — or null
+ * before any coding test has gone out.
+ */
+export const interviewStage = (r) => {
+  const invite = r?.interviewInvite?.status;
+  if (invite === 'completed' || r?.interviewEvaluation?.evaluationResults?.length) return 'interviewDone';
+  if (invite === 'active') return 'interviewInProgress';
+  if (invite === 'scheduled') return 'interviewSent';
+  if (codingTestDone(r)) return invite === 'expired' ? 'interviewExpired' : 'codingDone';
+  return codingTestOf(r) ? 'codingSent' : null;
+};
+
+/** The manager can send (or re-send) the interview from the list. */
+export const canSendInterview = (r) =>
+  r?.status !== 'rejected' && ['codingDone', 'interviewExpired'].includes(interviewStage(r));

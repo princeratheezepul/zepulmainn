@@ -96,6 +96,9 @@ const meetingSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// The candidate list looks up the latest invite per resume.
+meetingSchema.index({ resumeId: 1, createdAt: -1 });
+
 export const Meeting =
   mongoose.models.Meeting || mongoose.model("Meeting", meetingSchema);
 

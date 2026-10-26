@@ -2,6 +2,7 @@ import express from "express";
 import { saveResume, saveResumeWithJob, getUserResumes, getResumesByJob, searchResumesByJobRole, getResumeById, getResume, requestAnotherRound, submitToManager, updateResumeStatus, scheduleInterview, getResumesByRecruiter, getResumesByTag, updateResumeTag, getResumeStatsByRecruiter, getMonthlySubmissionData, getMonthlyShortlistData, saveInterviewEvaluation, getAverageScoreData, getResumesByManager } from "../controllers/resume.controller.js";
 import { verifyJWT } from "../middleware/manager.auth.middleware.js";
 import { getBlueprintDocument } from "../controllers/blueprintDocument.controller.js";
+import { sendInterviewToCandidate } from "../controllers/assessment.controller.js";
 
 const router = express.Router();
 
@@ -27,6 +28,7 @@ router.patch('/:resumeId', verifyJWT, updateResumeStatus);
 router.patch('/:resumeId/request-another-round', requestAnotherRound);
 router.patch('/:resumeId/submit-to-manager', submitToManager);
 router.post('/:resumeId/schedule-interview', scheduleInterview);
+router.post('/:resumeId/send-interview', verifyJWT, sendInterviewToCandidate);
 router.post('/:resumeId/save-interview-evaluation', verifyJWT, saveInterviewEvaluation);
 
 export default router; 

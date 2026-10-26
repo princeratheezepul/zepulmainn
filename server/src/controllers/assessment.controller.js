@@ -2,8 +2,10 @@ import OpenAI from "openai";
 import Resume from "../models/resume.model.js";
 import { Job } from "../models/job.model.js";
 import { intakePromptContext } from "../utils/jobIntake.js";
+import { codingTestDone, isLiveInvite, latestInvitesByResume, summarizeInvite } from "../utils/interviewInvite.js";
 import { Meeting } from "../models/meeting.model.js";
 import crypto from 'crypto';
+import mongoose from "mongoose";
 import nodemailer from "nodemailer";
 import { executeJava, executeCpp, executePython } from "../services/codeExecution.service.js";
 import { sendMeetingInviteEmail } from "../services/email.service.js";
@@ -604,77 +606,113 @@ export const getAssessment = async (req, res) => {
 };
 
 // @desc Submit assessment solution
-// Fire-and-forget: create a Meeting for an AI interview, send invite email + WhatsApp.
-// Mirrors notifyCandidateOfCodingTest in resume.controller.js but for the post-OA interview step.
-// WhatsApp is sent only if the email succeeds — the WhatsApp text refers to the email.
-const notifyCandidateOfInterview = async (resumeId) => {
+// Create the AI interview Meeting for a candidate and send the invite by email,
+// plus WhatsApp when we have a number. Called when the manager sends the
+// interview from the candidate list (sendInterviewToCandidate), not on
+// submission of the coding test. `resume` must have `jobId` populated.
+// Returns { ok: true, meeting } or { ok: false, status, message }.
+export const sendInterviewInvite = async (resume) => {
+  const job = resume.jobId;
+  if (!job?._id) {
+    return { ok: false, status: 404, message: "This candidate's job could not be found." };
+  }
+  if (!resume.email) {
+    return { ok: false, status: 422, message: "This candidate has no email address on file." };
+  }
+  // The Meeting model requires a recruiter.
+  if (!resume.recruiterId) {
+    return { ok: false, status: 422, message: "This candidate has no recruiter on record, so an interview can't be created for them." };
+  }
+
+  const now = Date.now();
+  const meeting = await Meeting.create({
+    jobId: job._id,
+    resumeId: resume._id,
+    recruiterId: resume.recruiterId,
+    candidateEmail: resume.email.toLowerCase(),
+    scheduledAt: new Date(now + INTERVIEW_LEAD_TIME_MS),
+    expiresAt: new Date(now + INTERVIEW_WINDOW_MS),
+    durationMinutes: INTERVIEW_DURATION_MINUTES,
+    token: crypto.randomBytes(24).toString('hex'),
+    status: 'scheduled',
+    vapiAssistantId: process.env.VAPI_ASSISTANT_ID || undefined,
+  });
+
+  const inviteLink = `${FRONTEND_URL.replace(/\/$/, "")}/meeting/${meeting.token}`;
+
   try {
-    const resume = await Resume.findById(resumeId).populate('jobId');
-    if (!resume) {
-      console.log(`[interviewNotify] Resume ${resumeId} not found`);
-      return;
-    }
-
-    const job = resume.jobId;
-    if (!job) {
-      console.log(`[interviewNotify] No job on resume ${resumeId}`);
-      return;
-    }
-
-    if (!resume.email) {
-      console.log(`[interviewNotify] Skipping — no email on resume ${resumeId}`);
-      return;
-    }
-
-    if (!resume.recruiterId) {
-      console.log(`[interviewNotify] Skipping — no recruiterId on resume ${resumeId} (Meeting model requires it)`);
-      return;
-    }
-
-    const now = Date.now();
-    const scheduledAt = new Date(now + INTERVIEW_LEAD_TIME_MS);
-    const expiresAt = new Date(now + INTERVIEW_WINDOW_MS);
-    const token = crypto.randomBytes(24).toString('hex');
-
-    const meeting = await Meeting.create({
-      jobId: job._id,
-      resumeId: resume._id,
-      recruiterId: resume.recruiterId,
-      candidateEmail: resume.email.toLowerCase(),
-      scheduledAt,
-      expiresAt,
-      durationMinutes: INTERVIEW_DURATION_MINUTES,
-      token,
-      status: 'scheduled',
-      vapiAssistantId: process.env.VAPI_ASSISTANT_ID || undefined,
+    await sendMeetingInviteEmail({
+      to: resume.email,
+      jobTitle: job.jobtitle,
+      companyName: job.company || "Zepul",
+      candidateName: resume.name || "",
+      durationMinutes: meeting.durationMinutes,
+      inviteLink,
+      mode: "Video Call (AI-led interview)",
+      locationLabel: "Meeting Link",
+      interviewerNames: "AI Interviewer",
+      windowText: "Take within 24 hours of receiving this invite",
     });
+  } catch (emailErr) {
+    console.error(`[interviewInvite] Email failed for resume ${resume._id}:`, emailErr.message);
+    // The candidate never got the link, so don't leave a meeting that makes the
+    // list say the interview was sent.
+    await Meeting.deleteOne({ _id: meeting._id });
+    return { ok: false, status: 502, message: "The interview invite email could not be sent. Please try again." };
+  }
 
-    const inviteLink = `${FRONTEND_URL.replace(/\/$/, "")}/meeting/${token}`;
+  // WhatsApp refers to the email, so it goes only once the email has.
+  if (resume.phone) {
+    const message = `You have completed your coding assessment for the job role: ${job.jobtitle}, your next round is interview. The interview invitation has been sent to your email id: ${resume.email} please check it and join the interview`;
+    await sendWhatsAppMessage(resume.phone, message, resume.countryCode || '91');
+  }
 
-    try {
-      await sendMeetingInviteEmail({
-        to: resume.email,
-        jobTitle: job.jobtitle,
-        companyName: job.company || "Zepul",
-        candidateName: resume.name || "",
-        durationMinutes: meeting.durationMinutes,
-        inviteLink,
-        mode: "Video Call (AI-led interview)",
-        locationLabel: "Meeting Link",
-        interviewerNames: "AI Interviewer",
-        windowText: "Take within 24 hours of receiving this invite",
+  return { ok: true, meeting };
+};
+
+// @desc The job's manager sends the AI interview to a candidate who has finished the coding test
+// @route POST /api/manager/resumes/:resumeId/send-interview
+export const sendInterviewToCandidate = async (req, res) => {
+  try {
+    const { resumeId } = req.params;
+    if (!mongoose.isValidObjectId(resumeId)) {
+      return res.status(400).json({ message: "Invalid candidate id." });
+    }
+
+    const resume = await Resume.findById(resumeId).populate('jobId');
+    if (!resume) return res.status(404).json({ message: "Candidate not found." });
+
+    // Only the manager who owns the job decides who is interviewed.
+    const job = resume.jobId;
+    if (!job?.managerId || String(job.managerId) !== String(req.id)) {
+      return res.status(403).json({ message: "You can only send interviews for your own jobs." });
+    }
+
+    if (resume.status === 'rejected') {
+      return res.status(400).json({ message: "This candidate has been rejected." });
+    }
+    if (!codingTestDone(resume)) {
+      return res.status(400).json({ message: "This candidate hasn't finished the coding test yet." });
+    }
+
+    const existing = (await latestInvitesByResume([resume._id])).get(String(resume._id));
+    if (isLiveInvite(existing)) {
+      return res.status(409).json({
+        message: "An interview has already been sent to this candidate.",
+        interviewInvite: existing,
       });
-    } catch (emailErr) {
-      console.error(`[interviewNotify] Email failed for resume ${resumeId}:`, emailErr.message);
-      return; // WhatsApp text claims the email was sent — don't lie if it wasn't
     }
 
-    if (resume.phone) {
-      const message = `You have completed your coding assessment for the job role: ${job.jobtitle}, your next round is interview. The interview invitation has been sent to your email id: ${resume.email} please check it and join the interview`;
-      await sendWhatsAppMessage(resume.phone, message);
-    }
-  } catch (err) {
-    console.error(`[interviewNotify] Failed for resume ${resumeId}:`, err.message);
+    const result = await sendInterviewInvite(resume);
+    if (!result.ok) return res.status(result.status).json({ message: result.message });
+
+    return res.status(201).json({
+      message: `Interview sent to ${resume.email}.`,
+      interviewInvite: summarizeInvite(result.meeting),
+    });
+  } catch (error) {
+    console.error("Error sending interview to candidate:", error);
+    return res.status(500).json({ message: "Failed to send the interview." });
   }
 };
 
@@ -711,11 +749,9 @@ export const submitAssessment = async (req, res) => {
     // Trigger AI Evaluation (Async)
     evaluateSubmission(resume._id, submissions, resume[assessmentField].questions, assessmentField);
 
+    // The AI interview is not sent from here: the manager sends it from the
+    // candidate list once they have seen the coding test result.
     res.status(200).json({ message: "Assessment submitted successfully" });
-
-    // Fire-and-forget: create AI interview meeting + send invite email + WhatsApp.
-    // Runs after the response so the candidate's submit UI doesn't wait on it.
-    notifyCandidateOfInterview(resume._id);
 
   } catch (error) {
     console.error("Error submitting assessment:", error);

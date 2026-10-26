@@ -3,10 +3,17 @@
  * Make message icon cursor-pointer.
  */
 import React, { useState, useEffect } from 'react';
-import { Users, MessageSquare, X, CheckCircle, XCircle, ArrowUpDown, ArrowDown, ArrowUp } from 'lucide-react';
+import { Users, MessageSquare, X, CheckCircle, XCircle, ArrowUpDown, ArrowDown, ArrowUp, Send } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import ResumeDetailsView from './ResumeDetailsView';
-import { CANDIDATE_STAGES } from '../../dashboard/dashboardUtils';
+import {
+  CANDIDATE_STAGES,
+  interviewStage,
+  canSendInterview,
+  codingTestOf,
+  codingTestDone,
+  codingTestScore,
+} from '../../dashboard/dashboardUtils';
 
 
 
@@ -17,6 +24,19 @@ const STATUS_COLORS = {
   shortlisted: 'bg-green-100 text-green-700',
   rejected: 'bg-red-100 text-red-700',
 };
+
+// Between the coding test and the interview the status says where the candidate
+// is, in place of the generic "Submitted". Shortlisting, rejecting and the like
+// are the manager's own decisions, so those still show as they are.
+const PIPELINE_BADGES = {
+  codingSent: { label: 'Coding test sent', color: 'bg-blue-100 text-blue-700' },
+  codingDone: { label: 'Coding test done', color: 'bg-amber-100 text-amber-700' },
+  interviewSent: { label: 'Interview sent', color: 'bg-indigo-100 text-indigo-700' },
+  interviewInProgress: { label: 'Interview in progress', color: 'bg-indigo-100 text-indigo-700' },
+  interviewExpired: { label: 'Interview expired', color: 'bg-orange-100 text-orange-700' },
+  interviewDone: { label: 'Interview done', color: 'bg-green-100 text-green-700' },
+};
+const DECIDED_STATUSES = ['shortlisted', 'rejected', 'offered', 'hired'];
 
 const SavedResumes = ({ jobId, onBack, jobtitle }) => {
   const [resumes, setResumes] = useState([]);
@@ -156,6 +176,42 @@ const SavedResumes = ({ jobId, onBack, jobtitle }) => {
     }
   };
 
+  // Send the AI interview to a candidate whose coding test is done. The server
+  // checks the candidate is ready and hasn't been sent one already.
+  const handleSendInterview = async (resume, e) => {
+    e.stopPropagation();
+    setActionLoading(prev => ({ ...prev, [resume._id]: true }));
+
+    try {
+      const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+      const token = userInfo?.data?.accessToken;
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/manager/resumes/${resume._id}/send-interview`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+      const data = await response.json().catch(() => ({}));
+
+      // 409: one was already sent (another tab, or an earlier click). The list
+      // was out of date, so bring the row up to date as well as saying so.
+      if (response.ok || response.status === 409) {
+        setResumes(prev => prev.map(r => (r._id === resume._id ? { ...r, interviewInvite: data.interviewInvite } : r)));
+      }
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to send interview');
+      }
+      toast.success(data.message || 'Interview sent');
+    } catch (err) {
+      console.error('Error sending interview:', err);
+      toast.error(err.message);
+    } finally {
+      setActionLoading(prev => ({ ...prev, [resume._id]: false }));
+    }
+  };
+
   // Count for each status
   // Counts come off the full list so every tab shows its own total, not the
   // total of whatever tab happens to be open.
@@ -252,6 +308,50 @@ const SavedResumes = ({ jobId, onBack, jobtitle }) => {
     const colors = ['bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-orange-500', 'bg-pink-500', 'bg-indigo-500'];
     const index = name.charCodeAt(0) % colors.length;
     return colors[index];
+  };
+
+  // Only the manager who owns the job sends its interviews. A partner viewing
+  // their own submissions on someone else's listing would just be refused, so the
+  // button is hidden when the list shows the job belongs to another manager.
+  const viewerId = (() => {
+    try {
+      return JSON.parse(localStorage.getItem('userInfo'))?.data?.user?._id;
+    } catch {
+      return undefined;
+    }
+  })();
+  const ownsJob = (resume) => {
+    const owner = resume.jobId?.managerId;
+    return !owner || !viewerId || String(owner) === String(viewerId);
+  };
+
+  const statusBadge = (resume) => {
+    const stage = interviewStage(resume);
+    if (stage && !DECIDED_STATUSES.includes(resume.status)) return PIPELINE_BADGES[stage];
+    return {
+      label: resume.status ? capitalizeFirstLetter(resume.status) : 'Submitted',
+      color: STATUS_COLORS[resume.status] || 'bg-gray-100 text-gray-700',
+    };
+  };
+
+  const codingScoreCell = (resume) => {
+    const score = codingTestScore(resume);
+    if (score !== null) {
+      const passed = codingTestOf(resume)?.evaluation?.pass;
+      return (
+        <div>
+          <div className="text-sm font-semibold text-gray-900">{score}%</div>
+          {typeof passed === 'boolean' && (
+            <div className={`text-xs font-medium ${passed ? 'text-green-600' : 'text-red-600'}`}>
+              {passed ? 'Passed' : 'Below pass mark'}
+            </div>
+          )}
+        </div>
+      );
+    }
+    if (codingTestDone(resume)) return <span className="text-sm text-gray-400">Score pending</span>;
+    if (codingTestOf(resume)) return <span className="text-sm text-gray-400">Not taken yet</span>;
+    return <span className="text-sm font-semibold text-gray-900">N/A</span>;
   };
 
   // Format date
@@ -376,7 +476,7 @@ const SavedResumes = ({ jobId, onBack, jobtitle }) => {
                     title={scoreSort === 'desc' ? 'Sorted high to low — click for low to high' : scoreSort === 'asc' ? 'Sorted low to high — click to reset' : 'Click to sort by score, high to low'}
                     className={`inline-flex items-center gap-1 uppercase tracking-wider font-medium cursor-pointer hover:text-gray-900 transition-colors focus:outline-none ${scoreSort ? 'text-gray-900' : ''}`}
                   >
-                    SCORE
+                    CV STRENGTH
                     {scoreSort === 'desc' ? (
                       <ArrowDown size={14} />
                     ) : scoreSort === 'asc' ? (
@@ -386,6 +486,7 @@ const SavedResumes = ({ jobId, onBack, jobtitle }) => {
                     )}
                   </button>
                 </th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CODING TEST</th>
                 {showSubmittedBy && (
                   <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">SUBMITTED BY</th>
                 )}
@@ -396,7 +497,7 @@ const SavedResumes = ({ jobId, onBack, jobtitle }) => {
             <tbody className="bg-white divide-y divide-gray-100">
               {visibleResumes.length === 0 ? (
                 <tr>
-                  <td colSpan={showSubmittedBy ? 6 : 5} className="px-6 py-8 text-center text-gray-500">
+                  <td colSpan={showSubmittedBy ? 7 : 6} className="px-6 py-8 text-center text-gray-500">
                     No candidates found for this filter.
                   </td>
                 </tr>
@@ -426,6 +527,7 @@ const SavedResumes = ({ jobId, onBack, jobtitle }) => {
                         {resume.overallScore || resume.ats_score ? `${resume.overallScore || resume.ats_score}%` : 'N/A'}
                       </div>
                     </td>
+                    <td className="px-6 py-4 whitespace-nowrap">{codingScoreCell(resume)}</td>
                     {showSubmittedBy && (
                       <td className="px-6 py-4 whitespace-nowrap">
                         {partnerName(resume) ? (
@@ -439,9 +541,24 @@ const SavedResumes = ({ jobId, onBack, jobtitle }) => {
                       </td>
                     )}
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full ${STATUS_COLORS[resume.status] || 'bg-gray-100 text-gray-700'}`}>
-                        {resume.status ? capitalizeFirstLetter(resume.status) : 'Submitted'}
-                      </span>
+                      <div className="flex flex-col items-start gap-2">
+                        <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full ${statusBadge(resume).color}`}>
+                          {statusBadge(resume).label}
+                        </span>
+                        {canSendInterview(resume) && ownsJob(resume) && (
+                          <button
+                            type="button"
+                            onClick={(e) => handleSendInterview(resume, e)}
+                            disabled={actionLoading[resume._id]}
+                            className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-full transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+                          >
+                            <Send size={12} />
+                            {actionLoading[resume._id]
+                              ? 'Sending...'
+                              : interviewStage(resume) === 'interviewExpired' ? 'Send again' : 'Send interview'}
+                          </button>
+                        )}
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <button
