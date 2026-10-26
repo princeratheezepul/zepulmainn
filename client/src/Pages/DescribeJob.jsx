@@ -1,6 +1,11 @@
 import React, { useEffect, useRef, useState } from "react";
 import Vapi from "@vapi-ai/web";
+import toast from "react-hot-toast";
 import { getApiUrl } from "../config/config";
+
+// How long to wait for the server to build the job before giving up on the
+// loader. The job is still created if this passes; we just stop waiting for it.
+const END_TIMEOUT_MS = 90000;
 
 // Inside the manager dashboard the session is carried by the token in
 // localStorage. Sending it lets the server turn the finished call into a job
@@ -33,6 +38,8 @@ const DescribeJob = ({ onBack, onDone }) => {
     const [isSpeaking, setIsSpeaking] = useState(false);
     const [isCompleted, setIsCompleted] = useState(false);
     const [jobCreated, setJobCreated] = useState(false);
+    // The call has ended and the server is turning the conversation into a job.
+    const [processing, setProcessing] = useState(false);
 
     const videoRef = useRef(null);
     const mediaStreamRef = useRef(null);
@@ -44,6 +51,18 @@ const DescribeJob = ({ onBack, onDone }) => {
     const userEndedRef = useRef(false);
     const saveTimerRef = useRef(null);
     const sessionIdRef = useRef(null);
+    const mountedRef = useRef(true);
+    // The Vapi handlers outlive the render that created them, so they read the
+    // latest onDone from here rather than from their own closure.
+    const onDoneRef = useRef(onDone);
+    onDoneRef.current = onDone;
+
+    useEffect(() => {
+        mountedRef.current = true;
+        return () => {
+            mountedRef.current = false;
+        };
+    }, []);
 
     // Auto-create a session on mount
     useEffect(() => {
@@ -131,18 +150,48 @@ const DescribeJob = ({ onBack, onDone }) => {
             clearTimeout(saveTimerRef.current);
             saveTimerRef.current = null;
         }
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), END_TIMEOUT_MS);
         try {
             const res = await fetch(getApiUrl(`/api/job-description-sessions/${id}/end`), {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ transcript: transcriptText(), partial }),
                 keepalive: true,
+                signal: controller.signal,
             });
             return res.ok ? await res.json().catch(() => null) : null;
         } catch (err) {
             console.error("Failed to notify backend of session end:", err);
             return null;
+        } finally {
+            clearTimeout(timer);
         }
+    };
+
+    // End the session and wait while the server builds the job from the
+    // conversation, which takes a few seconds. Once the job exists, hand back to
+    // the host screen (the jobs list); otherwise fall through to the completed
+    // card, which says the job will appear once it has been processed.
+    const completeSession = async ({ partial }) => {
+        // Already ending (e.g. End clicked twice): the first call owns the result.
+        if (finalizedRef.current) return;
+        setProcessing(true);
+        const endData = await finalizeSession({ partial });
+        if (!mountedRef.current) return;
+
+        const created = Boolean(endData?.session?.jobId);
+        setJobCreated(created);
+        setIsConnected(false);
+        setIsSpeaking(false);
+
+        if (created && typeof onDoneRef.current === "function") {
+            toast.success("Job created from your conversation");
+            onDoneRef.current();
+            return;
+        }
+        setProcessing(false);
+        setIsCompleted(true);
     };
 
     // Tab closed or refreshed mid-call: still hand over what we have.
@@ -203,9 +252,7 @@ const DescribeJob = ({ onBack, onDone }) => {
                 // If the user didn't end it, the call stopped on its own:
                 // build the job from the conversation so far.
                 if (!userEndedRef.current && !finalizedRef.current && transcriptRef.current.length) {
-                    const endData = await finalizeSession({ partial: true });
-                    setJobCreated(Boolean(endData?.session?.jobId));
-                    setIsCompleted(true);
+                    await completeSession({ partial: true });
                 }
             });
 
@@ -219,12 +266,7 @@ const DescribeJob = ({ onBack, onDone }) => {
                 }
                 console.error("Vapi error:", e);
                 if (!userEndedRef.current && transcriptRef.current.length && !finalizedRef.current) {
-                    finalizeSession({ partial: true }).then((endData) => {
-                        setJobCreated(Boolean(endData?.session?.jobId));
-                        setIsConnected(false);
-                        setIsSpeaking(false);
-                        setIsCompleted(true);
-                    });
+                    completeSession({ partial: true });
                     return;
                 }
                 if (isConnected) {
@@ -241,28 +283,19 @@ const DescribeJob = ({ onBack, onDone }) => {
     };
 
     const endDescription = async () => {
-        if (!vapiRef.current) return;
+        if (!vapiRef.current || processing) return;
 
         userEndedRef.current = true;
         try {
             vapiRef.current.stop();
-
             if (mediaStreamRef.current) {
                 mediaStreamRef.current.getTracks().forEach((t) => t.stop());
             }
-
-            const endData = await finalizeSession({ partial: false });
-            setJobCreated(Boolean(endData?.session?.jobId));
-
-            setIsConnected(false);
-            setIsSpeaking(false);
-            setIsCompleted(true);
         } catch (err) {
-            console.error("Error ending description:", err);
-            setIsConnected(false);
-            setIsSpeaking(false);
-            setIsCompleted(true);
+            console.error("Error stopping the call:", err);
         }
+
+        await completeSession({ partial: false });
     };
 
     // ── Loading ────────────────────────────────────────────────────────────────
@@ -282,6 +315,22 @@ const DescribeJob = ({ onBack, onDone }) => {
                     <div style={{ fontSize: 48, marginBottom: 12 }}>⚠️</div>
                     <h2 style={styles.cardTitle}>Session Unavailable</h2>
                     <p style={styles.cardSubtitle}>{error}</p>
+                </div>
+            </div>
+        );
+    }
+
+    // ── Processing ─────────────────────────────────────────────────────────────
+    if (processing) {
+        return (
+            <div style={styles.center}>
+                <div style={styles.card} role="status" aria-live="polite">
+                    <div style={{ ...styles.spinner, margin: "0 auto 24px" }} />
+                    <h2 style={styles.cardTitle}>Creating your job…</h2>
+                    <p style={{ ...styles.cardSubtitle, margin: 0 }}>
+                        Zeus is turning your conversation into a job posting. This may take a few
+                        moments — please keep this window open.
+                    </p>
                 </div>
             </div>
         );

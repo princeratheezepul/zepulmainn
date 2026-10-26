@@ -1,4 +1,7 @@
 import { Job } from "../models/job.model.js";
+import { sanitizeIntake, intakeProblems, normalizeCutoff } from "../utils/jobIntake.js";
+
+const JOB_TYPES = ['remote', 'onsite', 'hybrid'];
 
 export const createJob = async (req, res) => {
     console.log(req.body);
@@ -92,14 +95,15 @@ export const getAllJobs = async (req, res) => {
 
 export const updateJob = async (req, res) => {
     try {
-        const { jobtitle, description, location, salary, openpositions, skills, experience, companyId, internalNotes, keyResponsibilities, preferredQualifications, employmentType, hiringDeadline, priority } = req.body;
+        const { jobtitle, description, location, type, salary, openpositions, skills, experience, cvStrengthCutoff, intake, resumeAnalysisPoints, companyId, internalNotes, keyResponsibilities, preferredQualifications, employmentType, hiringDeadline, priority } = req.body;
         const jobId = req.params.id;
 
         const updateData = {
             jobtitle,
             description,
             location,
-            salary,
+            // salary is a {min, max} object; a scalar here would overwrite it.
+            salary: salary && typeof salary === 'object' && !Array.isArray(salary) ? salary : undefined,
             openpositions,
             skills,
             experience,
@@ -112,6 +116,26 @@ export const updateJob = async (req, res) => {
         if (employmentType !== undefined) updateData.employmentType = employmentType;
         if (hiringDeadline !== undefined) updateData.hiringDeadline = hiringDeadline ? new Date(hiringDeadline) : null;
         if (priority !== undefined) updateData.priority = priority;
+        if (type) {
+            if (!JOB_TYPES.includes(type)) {
+                return res.status(400).json({ message: "Work model must be remote, onsite or hybrid.", success: false });
+            }
+            updateData.type = type;
+        }
+        if (cvStrengthCutoff !== undefined) updateData.cvStrengthCutoff = normalizeCutoff(cvStrengthCutoff);
+        if (Array.isArray(resumeAnalysisPoints)) updateData.resumeAnalysisPoints = resumeAnalysisPoints;
+
+        // The Zeus intake brief is replaced as a whole, so the caller sends all of it.
+        let warnings = [];
+        const cleanIntake = intake !== undefined ? sanitizeIntake(intake) : null;
+        if (cleanIntake) {
+            const problems = intakeProblems({ experience, salary, cvStrengthCutoff, skills, intake: cleanIntake });
+            if (problems.errors.length) {
+                return res.status(400).json({ message: problems.errors.join(' '), success: false });
+            }
+            warnings = problems.warnings;
+            updateData.intake = cleanIntake;
+        }
 
         const job = await Job.findByIdAndUpdate(jobId, updateData, { new: true });
 
@@ -125,6 +149,7 @@ export const updateJob = async (req, res) => {
         return res.status(200).json({
             message: "Job updated successfully.",
             job,
+            warnings,
             success: true
         });
     } catch (error) {

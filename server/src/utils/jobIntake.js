@@ -1,6 +1,16 @@
 // Zeus job intake: shared helpers for the chat and voice agents and for every
 // stage that reads the intake brief stored on a Job.
 
+// CV strength cutoff is an optional 0-100 match score. Anything blank, absent
+// or non-numeric is stored as null ("no cutoff") rather than 0, which would
+// otherwise read as a real threshold. Out-of-range values are clamped.
+export const normalizeCutoff = (value) => {
+    if (value === undefined || value === null || value === "") return null;
+    const num = Number(value);
+    if (!Number.isFinite(num)) return null;
+    return Math.min(100, Math.max(0, Math.round(num)));
+};
+
 // Clamp the Zeus intake brief to the model's enums and ranges so a bad AI
 // extraction can't fail job creation. Returns null when nothing usable arrived.
 export const sanitizeIntake = (raw) => {
