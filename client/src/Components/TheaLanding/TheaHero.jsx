@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import usePrefersReducedMotion from "../ZepProRecruiterLanding/usePrefersReducedMotion";
 
 const VIDEO_BASE = "/assets/thea";
@@ -27,7 +28,7 @@ const Bubble = ({ who, state }) => (
   </div>
 );
 
-const TheaHero = ({ onOpenPrep }) => {
+const TheaHero = () => {
   const reduce = usePrefersReducedMotion();
   const videoRef = useRef(null);
   const [bubbles, setBubbles] = useState({ u: EMPTY_BUBBLE, t: EMPTY_BUBBLE });
@@ -128,8 +129,8 @@ const TheaHero = ({ onOpenPrep }) => {
           </p>
           <p className="th-sub2">Fewer listings. Sharper matches. No guesswork.</p>
           <div className="th-ctas">
-            <a className="th-btn th-p" href="#th-start">Talk to Thea →</a>
-            <a className="th-btn th-g" href="#th-start" onClick={onOpenPrep}>Get a free prep document</a>
+            <Link className="th-btn th-p" to="/candidate/dashboard">Talk to Thea →</Link>
+            <Link className="th-btn th-g" to="/candidate/dashboard">Get a free prep document</Link>
           </div>
           <span className="th-free">FREE FOR JOB SEEKERS AND STUDENTS</span>
         </div>

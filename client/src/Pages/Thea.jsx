@@ -9,20 +9,18 @@ import "../styles/LandingPage.css";
 import "../styles/TheaLanding.css";
 
 const Thea = () => {
-  // 0 = Talk to Thea, 1 = Prep document. "Get a free prep document" links
-  // scroll to the workspace and switch it to the prep tab.
+  // 0 = Talk to Thea, 1 = Prep document.
   const [tab, setTab] = useState(0);
-  const openPrep = () => setTab(1);
 
   return (
     <Fragment>
       <LandingNav />
       <main className="th-page">
-        <TheaHero onOpenPrep={openPrep} />
+        <TheaHero />
         <TheaHow />
         <TheaWhy />
         <TheaStart tab={tab} onTab={setTab} />
-        <TheaClose onOpenPrep={openPrep} />
+        <TheaClose />
       </main>
     </Fragment>
   );
