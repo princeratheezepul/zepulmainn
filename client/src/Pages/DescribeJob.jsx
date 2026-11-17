@@ -187,7 +187,7 @@ const DescribeJob = ({ onBack, onDone }) => {
 
         if (created && typeof onDoneRef.current === "function") {
             toast.success("Job created from your conversation");
-            onDoneRef.current();
+            onDoneRef.current({ _id: endData.session.jobId });
             return;
         }
         setProcessing(false);

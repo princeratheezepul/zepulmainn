@@ -329,6 +329,9 @@ const EditJobFields = ({ form, setForm }) => {
       </Section>
 
       <Section title="AI interview">
+        <Field label="Interview Duration" hint="minutes, 5 to 45. Every candidate on this job gets this long, and the interview ends when it's up">
+          <input name="interviewDuration" value={form.interviewDuration} onChange={change} type="number" min="5" max="45" step="1" className={inputCls} />
+        </Field>
         <Field label="Focus Areas" hint="3 to 5 things to probe">
           <TagInput value={form.interviewFocus} onChange={setField('interviewFocus')} max={5} placeholder="Add a focus area..." />
         </Field>

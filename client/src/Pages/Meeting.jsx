@@ -178,10 +178,11 @@ const Meeting = () => {
     }
   }, [timeRemaining, isConnected, gracePeriodActive]);
 
-  // Grace period countdown (2 minutes after main time expires)
+  // When time is up the interview ends: each job sets its length (max 45
+  // minutes) and no candidate gets extra time beyond it.
   useEffect(() => {
     if (gracePeriodActive && isConnected) {
-      let graceTimeRemaining = 2 * 60 * 1000; // 2 minutes grace period
+      let graceTimeRemaining = 0;
 
       gracePeriodRef.current = setInterval(() => {
         graceTimeRemaining -= 1000;
@@ -272,7 +273,7 @@ const Meeting = () => {
         setIsConnected(true);
         setInterviewStartTime(new Date());
         // Start timer
-        const durationMs = (meeting?.durationMinutes || 40) * 60 * 1000;
+        const durationMs = Math.min(45, Number(meeting?.durationMinutes) || 10) * 60 * 1000;
         setTimeRemaining(durationMs);
         // Proctoring: the meeting is now 'active' server-side, so frames will be accepted.
         startProctoring();
@@ -321,7 +322,10 @@ const Meeting = () => {
         }
       });
 
-      vapi.start(joinConfig.assistantId);
+      // Hard stop on the call itself at the interview's length, so it can't run
+      // past it even if this page is closed or its timer is held up.
+      const maxDurationSeconds = Math.min(45, Math.max(1, Number(meeting?.durationMinutes) || 10)) * 60;
+      vapi.start(joinConfig.assistantId, { maxDurationSeconds });
     } catch (err) {
       console.error(err);
       setError(err.message || "Unable to start interview");
@@ -577,7 +581,7 @@ const Meeting = () => {
                     </div>
                     {gracePeriodActive ? (
                       <p className="mb-0 small">
-                        <strong>The scheduled interview time has ended.</strong> You have 2 minutes to wrap up your current response. The interview will end automatically after this grace period.
+                        <strong>The interview time has ended.</strong> The interview is ending now. Thank you!
                       </p>
                     ) : timeWarning === "1min" ? (
                       <p className="mb-0 small text-warning mt-2">
@@ -589,7 +593,7 @@ const Meeting = () => {
                       </p>
                     ) : timeWarning === "2min" ? (
                       <p className="mb-0 small text-warning mt-2">
-                        <strong>⚠️ 2 minutes remaining!</strong> The interview will enter a grace period after the time expires.
+                        <strong>⚠️ 2 minutes remaining!</strong> The interview ends automatically when time is up.
                       </p>
                     ) : timeWarning === "5min" ? (
                       <p className="mb-0 small text-warning mt-2">

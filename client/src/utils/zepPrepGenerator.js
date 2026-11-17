@@ -629,3 +629,22 @@ export const generateBlueprintPDF = async (blueprint) => {
     throw err;
   }
 };
+
+// The blueprint as a standalone HTML document (no print script), for emailing
+// to the candidate as an attachment they can open, print or save as PDF.
+export const buildBlueprintDocumentHtml = (blueprint) => {
+  if (!blueprint || !blueprint.content) throw new Error("No blueprint content to render");
+  const title = `ZepPrep Blueprint - ${blueprint.meta?.role || "Candidate"}`;
+  return `<!DOCTYPE html>
+<html>
+  <head>
+    <title>${esc(title)}</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>${ZEPPREP_CSS}</style>
+  </head>
+  <body>
+    ${buildBlueprintBody(blueprint)}
+  </body>
+</html>`;
+};

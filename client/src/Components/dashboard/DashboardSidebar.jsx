@@ -24,6 +24,9 @@ const DashboardSidebar = ({
   userName = "",
   roleLabel = "",
   onProfile,
+  // Optional colour tokens ({ panel, panel2, line, text, muted, accent, onAccent,
+  // track, dark }). Without them the rail keeps its default light look.
+  theme = null,
 }) => {
   const [hovered, setHovered] = useState(null);
   const [tooltipAt, setTooltipAt] = useState({ x: 0, y: 0 });
@@ -37,6 +40,9 @@ const DashboardSidebar = ({
   }, [isCollapsed]);
 
   const initial = (userName || "U").charAt(0).toUpperCase();
+  const t = theme;
+  const railStyle = t ? { background: t.panel, borderColor: t.line, color: t.text } : undefined;
+  const logoStyle = t?.dark ? { filter: "invert(1) hue-rotate(180deg)" } : undefined;
 
   const showTooltip = (name, event) => {
     if (!isCollapsed) return; // labels are visible when expanded
@@ -59,10 +65,19 @@ const DashboardSidebar = ({
             onMouseLeave={() => setHovered(null)}
             title={item.name}
             className={`flex items-center w-full px-3 py-2.5 text-sm rounded-lg transition-colors duration-200 cursor-pointer ${
-              isActive
-                ? "bg-blue-600 text-white font-medium"
-                : "text-gray-700 font-medium hover:bg-gray-100"
+              t
+                ? `font-medium ${isActive ? "" : "zds-item"}`
+                : isActive
+                  ? "bg-blue-600 text-white font-medium"
+                  : "text-gray-700 font-medium hover:bg-gray-100"
             } ${collapsed ? "justify-center" : ""}`}
+            style={
+              t
+                ? isActive
+                  ? { background: t.accent, color: t.onAccent }
+                  : { color: t.muted, "--zds-hover": t.track, "--zds-hover-text": t.text }
+                : undefined
+            }
           >
             <span className="shrink-0">
               <Icon size={20} strokeWidth={2} />
@@ -79,6 +94,7 @@ const DashboardSidebar = ({
       className={`flex items-center px-3 py-3 border-t border-gray-100 ${
         collapsed ? "justify-center" : ""
       }`}
+      style={t ? { borderColor: t.line } : undefined}
     >
       <button
         type="button"
@@ -87,6 +103,7 @@ const DashboardSidebar = ({
         onMouseLeave={() => setHovered(null)}
         title={userName || "Profile"}
         className="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-semibold cursor-pointer select-none shrink-0"
+        style={t ? { background: t.accent, color: t.onAccent } : undefined}
       >
         {initial}
       </button>
@@ -99,7 +116,11 @@ const DashboardSidebar = ({
           <span className="block text-sm font-semibold truncate max-w-[120px]" title={userName}>
             {userName || "Profile"}
           </span>
-          {roleLabel && <span className="block text-xs text-gray-500 truncate">{roleLabel}</span>}
+          {roleLabel && (
+            <span className="block text-xs text-gray-500 truncate" style={t ? { color: t.muted } : undefined}>
+              {roleLabel}
+            </span>
+          )}
         </button>
       )}
     </div>
@@ -112,12 +133,14 @@ const DashboardSidebar = ({
         className={`bg-white h-screen fixed top-0 left-0 z-20 hidden lg:flex flex-col justify-between transition-all duration-300 border-r border-gray-200 ease-in-out ${
           isCollapsed ? "w-20 items-center" : "w-52"
         }`}
+        style={railStyle}
       >
         <div className="flex items-center justify-between px-4 py-2 relative w-full">
           <img
             src={isCollapsed ? "/assets/logo-mark.png" : "/assets/logo.png"}
             alt="Zepul"
             className={isCollapsed ? "w-8 h-8 object-contain" : "h-10 w-28 object-contain"}
+            style={logoStyle}
           />
           <button
             type="button"
@@ -126,9 +149,11 @@ const DashboardSidebar = ({
             title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
             aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
             className="absolute -right-3 top-1/2 transform -translate-y-1/2 p-1 rounded-full bg-gray-100 hover:bg-gray-200 border shadow-sm cursor-pointer z-10"
+            {...(t ? { style: { borderRadius: 25, background: t.panel2, borderColor: t.line, color: t.muted } } : {})}
           >
             <ChevronLeft
               size={14}
+              style={t ? { color: t.muted } : undefined}
               className={`text-gray-600 transition-transform duration-300 ${
                 isCollapsed ? "rotate-180" : ""
               }`}
@@ -151,14 +176,16 @@ const DashboardSidebar = ({
         className={`bg-white h-screen fixed top-0 left-0 z-40 w-52 flex lg:hidden flex-col justify-between border-r border-gray-200 transition-transform duration-200 ${
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         }`}
+        style={railStyle}
       >
         <div className="flex items-center justify-between px-4 py-2 w-full">
-          <img src="/assets/logo.png" alt="Zepul" className="h-10 w-28 object-contain" />
+          <img src="/assets/logo.png" alt="Zepul" className="h-10 w-28 object-contain" style={logoStyle} />
           <button
             type="button"
             onClick={() => setMobileOpen(false)}
             aria-label="Close navigation"
             className="text-gray-500 hover:text-gray-800 cursor-pointer"
+            style={t ? { color: t.muted } : undefined}
           >
             <X size={18} />
           </button>
@@ -166,6 +193,10 @@ const DashboardSidebar = ({
         {navList(false)}
         {profileRow(false)}
       </div>
+
+      {t && (
+        <style>{`.zds-item:hover{background:var(--zds-hover);color:var(--zds-hover-text)!important}`}</style>
+      )}
 
       {/* Tooltip for the collapsed rail */}
       {hovered && isCollapsed && (

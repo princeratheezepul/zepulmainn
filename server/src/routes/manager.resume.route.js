@@ -3,11 +3,15 @@ import { saveResume, saveResumeWithJob, getUserResumes, getResumesByJob, searchR
 import { verifyJWT } from "../middleware/manager.auth.middleware.js";
 import { getBlueprintDocument } from "../controllers/blueprintDocument.controller.js";
 import { sendInterviewToCandidate } from "../controllers/assessment.controller.js";
+import { outreachCandidates, revealPhone, emailBlueprint } from "../controllers/jobPipeline.controller.js";
 
 const router = express.Router();
 
 // More specific routes first
 router.get("/:resumeId/blueprint", verifyJWT, getBlueprintDocument);
+router.post("/:resumeId/blueprint/email", verifyJWT, emailBlueprint);
+router.post("/:resumeId/reveal-phone", verifyJWT, revealPhone);
+router.post("/job/:jobId/outreach", verifyJWT, outreachCandidates);
 router.post("/save/:jobId", verifyJWT, saveResumeWithJob);
 router.post("/save", verifyJWT, saveResume);
 router.get("/recruiter", verifyJWT, getResumesByRecruiter);

@@ -10,6 +10,7 @@ import EditJobPanel from '../../recruiter/dashboard/EditJobPanel.jsx';
 import JobChatAgent from '../../../Pages/JobChatAgent.jsx';
 import DescribeJob from '../../../Pages/DescribeJob.jsx';
 import ManagerJobCard from './ManagerJobCard.jsx';
+import ManagerJobsBoard from './ManagerJobsBoard.jsx';
 import { Card, PageHead, PrimaryButton, GhostButton, LoadingRow } from '../../dashboard/DashboardUI';
 
 /**
@@ -30,6 +31,16 @@ const ManagerJobs = ({
   // Creating jobs is not available to every console this list is shown in.
   canCreateJob = true,
   canEditJob = true,
+  // Open straight into a create flow ('choose' | 'chat' | ...) — used when the
+  // overview's "brief Zeus" action sends the manager here.
+  initialCreateMode = null,
+  initialChatMessage = '',
+  // The manager console passes its loaded jobs/candidates and gets the console
+  // board; consoles that don't (ProRecruiter) keep the list below.
+  platform = null,
+  // Leaving the create options. Set when the create flow was opened from
+  // somewhere else (the overview), so Back returns there, not to this list.
+  onCancelCreate = null,
 }) => {
   const navigate = useNavigate();
   const [jobs, setJobs] = useState([]);
@@ -43,7 +54,7 @@ const ManagerJobs = ({
   const [showCandidateList, setShowCandidateList] = useState(false);
   // null = jobs list. 'choose' = pick a creation method, then one of
   // 'manual' | 'chat' | 'voice' for the flow the user picked.
-  const [createJobMode, setCreateJobMode] = useState(null);
+  const [createJobMode, setCreateJobMode] = useState(canCreateJob ? initialCreateMode : null);
   const [showEditJob, setShowEditJob] = useState(false);
 
   // Fetch jobs on component mount and when page/filter changes
@@ -246,10 +257,18 @@ const ManagerJobs = ({
   };
 
   // Leaving any of the create-job flows drops back to the refreshed jobs list.
-  const closeCreateJob = () => {
+  // On the manager console a new job opens its own page instead, which offers
+  // to start sourcing for it.
+  const closeCreateJob = (createdJob) => {
+    const via = createJobMode;
     setCreateJobMode(null);
     fetchJobs();
     fetchJobCounts();
+    platform?.refresh?.();
+    const id = createdJob?._id || createdJob?.id;
+    if (platform && id) {
+      navigate(`${jobBasePath}/${id}`, { state: { from: backTo, justCreated: via || 'manual' } });
+    }
   };
 
   if (canCreateJob && createJobMode) {
@@ -258,7 +277,7 @@ const ManagerJobs = ({
         {createJobMode === 'choose' && (
           <CreateJobOptions
             onSelect={setCreateJobMode}
-            onBack={() => setCreateJobMode(null)}
+            onBack={() => (onCancelCreate ? onCancelCreate() : setCreateJobMode(null))}
           />
         )}
         {createJobMode === 'manual' && (
@@ -272,6 +291,7 @@ const ManagerJobs = ({
             <JobChatAgent
               onBack={() => setCreateJobMode('choose')}
               onComplete={closeCreateJob}
+              initialMessage={initialChatMessage}
             />
           </div>
         )}
@@ -285,6 +305,17 @@ const ManagerJobs = ({
           />
         )}
       </div>
+    );
+  }
+
+  if (platform) {
+    return (
+      <ManagerJobsBoard
+        platform={platform}
+        canCreateJob={canCreateJob}
+        onCreate={() => setCreateJobMode('choose')}
+        onOpenJob={handleJobClick}
+      />
     );
   }
 

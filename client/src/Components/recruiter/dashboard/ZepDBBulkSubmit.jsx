@@ -30,10 +30,12 @@ const statusStyles = {
  * submits every match not already in the job straight to its candidate list
  * (scorecard + resume record) — no picking step.
  */
-export default function ZepDBBulkSubmit({ jobId, jobTitle, onClose, onComplete, onViewCandidates, sourcing = false, apiBase = '/api/zepdb' }) {
+export default function ZepDBBulkSubmit({ jobId, jobTitle, onClose, onComplete, onViewCandidates, viewLabel = 'View Candidate List', sourcing = false, apiBase = '/api/zepdb', autoStart = false }) {
+  // `autoStart` skips the credit confirmation: the caller has already shown the
+  // cost and the manager let the countdown run (or pressed Start now).
   // `sourcing` recruiters pull fresh candidates, which costs credits, so they
   // confirm the cost before anything is searched.
-  const [phase, setPhase] = useState(sourcing ? 'confirm' : 'searching'); // confirm | searching | submitting | done | empty | error
+  const [phase, setPhase] = useState(sourcing && !autoStart ? 'confirm' : 'searching'); // confirm | searching | submitting | done | empty | error
   const [estimate, setEstimate] = useState(null);
   const [candidates, setCandidates] = useState([]);
   const [statuses, setStatuses] = useState({});    // { candidateId: pending|submitting|submitted|existing|error }
@@ -62,7 +64,7 @@ export default function ZepDBBulkSubmit({ jobId, jobTitle, onClose, onComplete, 
 
     try {
       const res = await fetch(
-        `${import.meta.env.VITE_BACKEND_URL}${apiBase}/${sourcing ? 'sourcing/search' : 'match-job'}/${jobId}`,
+        `${import.meta.env.VITE_BACKEND_URL}${apiBase}/${sourcing ? 'sourcing/search' : 'match-job'}/${jobId}${autoStart ? '?auto=1' : ''}`,
         { method: 'POST', headers: authHeaders() }
       );
       const data = await res.json();
@@ -152,7 +154,7 @@ export default function ZepDBBulkSubmit({ jobId, jobTitle, onClose, onComplete, 
   useEffect(() => {
     if (searchedRef.current) return;
     searchedRef.current = true;
-    if (sourcing) loadEstimate();
+    if (sourcing && !autoStart) loadEstimate();
     else search();
   }, []);
 
@@ -348,7 +350,7 @@ export default function ZepDBBulkSubmit({ jobId, jobTitle, onClose, onComplete, 
               onClick={onViewCandidates}
               className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-5 py-2 rounded-lg transition-colors cursor-pointer"
             >
-              <Users size={16} /> View Candidate List
+              <Users size={16} /> {viewLabel}
             </button>
           )}
           <button

@@ -40,9 +40,11 @@ async function callJobChat({ mode, history }) {
  * dashboard's Create Job), pass `onComplete` to handle the finish yourself and
  * `onBack` to show a back control.
  */
-export default function JobChatAgent({ onComplete, onBack }) {
+export default function JobChatAgent({ onComplete, onBack, initialMessage = "" }) {
     const [messages, setMessages] = useState([]);
-    const [input, setInput] = useState("");
+    // Text the manager already typed elsewhere (e.g. the control centre) is
+    // waiting in the box so they can send it as their first answer.
+    const [input, setInput] = useState(initialMessage);
     const [isTyping, setIsTyping] = useState(true);
     const [isFinished, setIsFinished] = useState(false);
     const [showPricing, setShowPricing] = useState(false);
@@ -169,12 +171,13 @@ export default function JobChatAgent({ onComplete, onBack }) {
                 const errData = await res.json().catch(() => ({}));
                 throw new Error(errData.message || `Server error ${res.status}`);
             }
+            const created = await res.json().catch(() => ({}));
 
             // Embedded (dashboard) callers handle the finish themselves; the
             // onboarding flow falls through to plan selection.
             if (typeof onComplete === "function") {
                 setMessages((prev) => [...prev, { sender: "bot", text: "✅ Your job has been created and published successfully! Taking you back to your jobs…" }]);
-                setTimeout(() => onComplete(), 2000);
+                setTimeout(() => onComplete(created?.job), 2000);
             } else {
                 setMessages((prev) => [...prev, { sender: "bot", text: "✅ Your job has been created and published successfully! Loading your plan options..." }]);
                 setTimeout(() => setShowPricing(true), 2000);

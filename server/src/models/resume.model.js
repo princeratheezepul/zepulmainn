@@ -384,7 +384,10 @@ const ResumeSchema = new mongoose.Schema(
     // don't re-hit the model. Never contains hiring verdicts or numeric scores.
     prepDocument: {
       generatedAt: { type: Date, default: null },
-      content: { type: mongoose.Schema.Types.Mixed, default: null }
+      content: { type: mongoose.Schema.Types.Mixed, default: null },
+      // Set when the prep brief is emailed to the candidate.
+      emailedAt: { type: Date, default: null },
+      emailedTo: { type: String, default: '' },
     },
 
     // Candidate Success Blueprint — the richer post-evaluation ZepPrep, built once
@@ -393,7 +396,10 @@ const ResumeSchema = new mongoose.Schema(
     // downloadable. Like prepDocument, it carries no scores, ratings or verdicts.
     blueprintDocument: {
       generatedAt: { type: Date, default: null },
-      content: { type: mongoose.Schema.Types.Mixed, default: null }
+      content: { type: mongoose.Schema.Types.Mixed, default: null },
+      // Set when the prep brief is emailed to the candidate.
+      emailedAt: { type: Date, default: null },
+      emailedTo: { type: String, default: '' },
     },
   },
   { timestamps: true }

@@ -7,10 +7,8 @@ import {
   Handshake,
   UserCheck,
   Users as UsersIcon,
-  Wallet,
   Settings as SettingsIcon,
   Search,
-  Menu,
   Building2,
 } from 'lucide-react';
 import AddRecruiter from "../../Components/manager/AddRecruiter";
@@ -21,86 +19,17 @@ import ManagerCandidates from '../../Components/manager/dashboard/ManagerCandida
 import ManagerMarketplace from '../../Components/manager/dashboard/ManagerMarketplace';
 import ManagerPartners from '../../Components/manager/dashboard/ManagerPartners';
 import ManagerLicensePartners from '../../Components/manager/dashboard/ManagerLicensePartners';
-import ManagerFinance from '../../Components/manager/dashboard/ManagerFinance';
-import { useManagerPlatformData, initialsOf } from '../../Components/manager/dashboard/useManagerPlatformData';
+import { useManagerPlatformData } from '../../Components/manager/dashboard/useManagerPlatformData';
 import { Card, PageHead, PrimaryButton, GhostButton, StatusPill, LoadingRow } from '../../Components/dashboard/DashboardUI';
-import DashboardSidebar from '../../Components/dashboard/DashboardSidebar.jsx';
+import ManagerNav from '../../Components/manager/dashboard/ManagerNav';
+import { isJobOpen } from '../../Components/dashboard/dashboardUtils';
+import { useControlCentreTheme, shellProps } from '../../Components/manager/dashboard/controlCentreTheme';
+import '../../Components/manager/dashboard/ControlCentreTheme.css';
 import toast from 'react-hot-toast';
 import ManagerJobs from '../../Components/manager/dashboard/ManagerJobs';
+import JobAssignRecruiters from '../../Components/manager/job/JobAssignRecruiters';
+import { managerNavFor, signedInEmail, isEmployerManagerAccount, isLicensePartnerAccount } from '../../Components/manager/dashboard/managerConsole';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, ResponsiveContainer, ReferenceLine } from 'recharts';
-
-
-
-// Sections the sidebar can open. Mirrored in the URL as ?tab= so a refresh, or
-// returning from a job detail page, lands on the section the manager left.
-const MANAGER_NAV = [
-  { name: 'Overview', icon: LayoutDashboard },
-  { name: 'Jobs', icon: Briefcase, fullBleed: true },
-  { name: 'Marketplace', icon: Store, fullBleed: true },
-  { name: 'Recruitment Partners', icon: Handshake },
-  { name: 'License Partners', icon: Building2 },
-  { name: 'Candidates', icon: UserCheck },
-  { name: 'Recruiters', icon: UsersIcon, fullBleed: true },
-  { name: 'Finance', icon: Wallet },
-  { name: 'Profile', icon: SettingsIcon, fullBleed: true },
-];
-
-// The marketplace is run by specific managers rather than every manager on the
-// platform, so the section is only offered to them. This hides it — it is not
-// access control, which belongs on the marketplace endpoints themselves.
-const MARKETPLACE_MANAGER_EMAILS = ['reenasumera@zepul.com'];
-
-const canSeeMarketplace = (email) =>
-  MARKETPLACE_MANAGER_EMAILS.includes(String(email || '').trim().toLowerCase());
-
-// The partner roster belongs to the same marketplace remit as the Marketplace
-// section, so the two are offered together.
-const MARKETPLACE_SECTIONS = ['Marketplace', 'Recruitment Partners'];
-
-// Only these managers create License Partners. Like the marketplace list this
-// only hides the section; the License Partner endpoints enforce it.
-const LICENSE_PARTNER_ADMIN_EMAILS = ['reenasumera@zepul.com'];
-
-const canManageLicensePartners = (email) =>
-  LICENSE_PARTNER_ADMIN_EMAILS.includes(String(email || '').trim().toLowerCase());
-
-// A boolean flag on the signed-in manager, from whichever store the login path wrote.
-const accountFlag = (flag) => {
-  try {
-    const info = JSON.parse(localStorage.getItem('userInfo'));
-    if (typeof info?.data?.user?.[flag] === 'boolean') return info.data.user[flag];
-    return Boolean(JSON.parse(localStorage.getItem('authUser'))?.[flag]);
-  } catch {
-    return false;
-  }
-};
-
-const isEmployerManagerAccount = () => accountFlag('isEmployerManager');
-
-// A License Partner works only its own jobs and recruiters, so it gets the
-// manager dashboard without the marketplace or Zepul's finances.
-const isLicensePartnerAccount = () => accountFlag('isLicensePartner');
-
-const managerNavFor = (email, employerManager = false, licensePartner = false) => {
-  const hidden = [];
-  if (employerManager || licensePartner || !canSeeMarketplace(email)) hidden.push(...MARKETPLACE_SECTIONS);
-  if (licensePartner) hidden.push('Finance');
-  if (licensePartner || !canManageLicensePartners(email)) hidden.push('License Partners');
-  return MANAGER_NAV.filter((n) => !hidden.includes(n.name));
-};
-
-// The signed-in manager's email, from whichever store the login path wrote.
-const signedInEmail = () => {
-  try {
-    const info = JSON.parse(localStorage.getItem('userInfo'));
-    if (info?.data?.user?.email) return info.data.user.email;
-    return JSON.parse(localStorage.getItem('authUser'))?.email || '';
-  } catch {
-    return '';
-  }
-};
-
-
 
 
 
@@ -1076,9 +1005,10 @@ export default function ManagerDashboard() {
     setActiveComponentState(name);
     setSearchParams(name && name !== 'Overview' ? { tab: name } : {}, { replace: true });
   };
-  const [navOpen, setNavOpen] = useState(false);
-  const [isCollapsed, setIsCollapsed] = useState(true);
-  const [jump, setJump] = useState('');
+  // Set when the overview's "brief Zeus" action opens Jobs straight into the chat.
+  const [zeusBrief, setZeusBrief] = useState(null);
+  // One theme for the whole console: overview, sidebar, top bar and sections.
+  const [themeName, theme, setThemeName] = useControlCentreTheme();
   const navigate = useNavigate();
   const platform = useManagerPlatformData();
   const [showDetailModal, setShowDetailModal] = useState(false);
@@ -1428,9 +1358,11 @@ export default function ManagerDashboard() {
   // Show Marketplace Dashboard if enabled
   if (showMarketplaceDashboard) {
     return (
-      <MarketplaceDashboard 
-        onBack={() => setShowMarketplaceDashboard(false)} 
-      />
+      <div {...shellProps(theme)}>
+        <MarketplaceDashboard
+          onBack={() => setShowMarketplaceDashboard(false)}
+        />
+      </div>
     );
   }
 
@@ -1439,13 +1371,10 @@ export default function ManagerDashboard() {
   // stale ?tab=, a bookmark from another account — lands on the overview.
   const sectionName = navItems.some((n) => n.name === activeComponent) ? activeComponent : 'Overview';
   const activeSection = navItems.find((n) => n.name === sectionName) || navItems[0];
-  const jumpQuery = jump.trim().toLowerCase();
-  const navMatches = jumpQuery ? navItems.filter((n) => n.name.toLowerCase().includes(jumpQuery)) : [];
 
   const go = (name) => {
+    setZeusBrief(null);
     setActiveComponent(name);
-    setNavOpen(false);
-    setJump('');
   };
 
   const renderSection = () => {
@@ -1455,6 +1384,11 @@ export default function ManagerDashboard() {
           <ManagerJobs
             backTo={`${consoleBase}/dashboard?tab=Jobs`}
             jobBasePath={`${consoleBase}/jobs`}
+            platform={platform}
+            // The button opens the create options; a typed brief goes straight to the chat.
+            initialCreateMode={zeusBrief ? (zeusBrief.text ? 'chat' : 'choose') : null}
+            initialChatMessage={zeusBrief?.text || ''}
+            onCancelCreate={zeusBrief ? () => go('Overview') : null}
           />
         );
       case 'Marketplace':
@@ -1481,8 +1415,13 @@ export default function ManagerDashboard() {
         return (
           <MyRecruiters selectedRecruiter={selectedRecruiter} setSelectedRecruiter={setSelectedRecruiter} />
         );
-      case 'Finance':
-        return <ManagerFinance platform={platform} />;
+      case 'Team':
+        return (
+          <JobAssignRecruiters
+            t={theme}
+            onOpenJob={(id) => navigate(`${consoleBase}/jobs/${id}`, { state: { from: `${consoleBase}/dashboard?tab=Team` } })}
+          />
+        );
       case 'Profile':
         return <ManagerAccountSettings />;
       default:
@@ -1491,84 +1430,41 @@ export default function ManagerDashboard() {
             platform={platform}
             managerName={managerFirstName}
             onNavigate={go}
-            onOpenJob={(job) => navigate(`${consoleBase}/jobs/${job._id}`)}
+            consoleBase={consoleBase}
             employerManager={employerManager || licensePartner}
+            onBriefZeus={(text = '') => {
+              setActiveComponent('Jobs');
+              setZeusBrief({ text });
+            }}
           />
         );
     }
   };
   return (
-    <div className="dashboard-shell-manager min-h-screen bg-[#f6f8fb] text-[#1d2430]">
-      <DashboardSidebar
-        items={navItems}
+    <div {...shellProps(theme, 'dashboard-shell-manager min-h-screen')}>
+      <ManagerNav
+        t={theme}
+        items={navItems.filter((n) => !n.hidden).map((n) => ({
+          name: n.name,
+          label: n.label,
+          badge: n.name === 'Jobs' ? platform.jobs.filter(isJobOpen).length || null : null,
+        }))}
         active={sectionName}
         onSelect={go}
-        isCollapsed={isCollapsed}
-        setIsCollapsed={setIsCollapsed}
-        mobileOpen={navOpen}
-        setMobileOpen={setNavOpen}
         userName={managerName}
         roleLabel={roleLabel}
-        onProfile={() => go('Profile')}
+        themeName={themeName}
+        onTheme={setThemeName}
+        resumes={platform.resumes}
+        consoleBase={consoleBase}
       />
 
-      <div className={`transition-all duration-300 ${isCollapsed ? "lg:ml-20" : "lg:ml-52"}`}>
-        {/* Top bar */}
-        <header className="h-[68px] bg-white border-b border-[#e7ebf2] flex items-center justify-between px-4 md:px-7 sticky top-0 z-10">
-          <div className="flex items-center gap-3">
-            <button
-              className="lg:hidden text-[#778092] cursor-pointer"
-              onClick={() => setNavOpen(true)}
-              aria-label="Open navigation"
-            >
-              <Menu size={20} />
-            </button>
-
-            <div className="relative hidden sm:block">
-              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#98a1b0]" />
-              <input
-                className="w-[260px] md:w-[330px] pl-8 pr-3 py-[9px] border border-[#e7ebf2] rounded-lg bg-[#f8f9fb] text-xs outline-none focus:border-[#c7d5ff]"
-                placeholder="Jump to a section…"
-                value={jump}
-                onChange={(e) => setJump(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && navMatches[0]) go(navMatches[0].name);
-                  if (e.key === 'Escape') setJump('');
-                }}
-              />
-              {navMatches.length > 0 && (
-                <div className="absolute left-0 top-[46px] w-[260px] md:w-[330px] bg-white border border-[#e7ebf2] rounded-lg shadow-[0_8px_25px_#0001] overflow-hidden">
-                  {navMatches.map((m) => (
-                    <button
-                      key={m.name}
-                      className="block w-full text-left px-3 py-2 text-xs hover:bg-[#f6f8fb] cursor-pointer"
-                      onClick={() => go(m.name)}
-                    >
-                      {m.name}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <span className="text-xs text-[#778092] hidden sm:block">{roleLabel}</span>
-            <div
-              className="w-[34px] h-[34px] rounded-full bg-[#e5ebff] text-[#024bff] grid place-items-center font-extrabold text-[11px] cursor-pointer"
-              onClick={() => go('Profile')}
-              title="Profile & settings"
-            >
-              {initialsOf(managerName)}
-            </div>
-          </div>
-        </header>
-
+      <div>
         <main>
           {activeSection.fullBleed ? (
             renderSection()
           ) : (
-            <div className="p-5 md:p-7 max-w-[1500px]">{renderSection()}</div>
+            <div className="p-5 md:p-7 max-w-[1500px] mx-auto">{renderSection()}</div>
           )}
         </main>
       </div>

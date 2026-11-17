@@ -42,15 +42,15 @@ router.get('/test-auth', verifyRecruiterJWT, testRecruiterAuth);
 // Profile routes (must come before /:id routes)
 router.get('/profile', verifyRecruiterJWT, getRecruiterProfile);
 router.put('/profile', verifyRecruiterJWT, updateRecruiterProfile);
+// Must also come before /:id, or PUT /change-password is handled as an update
+// to a recruiter whose id is "change-password".
+router.put('/change-password', verifyRecruiterJWT, changeRecruiterPassword);
 
 // Other protected routes
 router.get('/:id', verifyMultiJWT, getRecruiterById);
 router.put('/:id', verifyMultiJWT, updateRecruiterDetails);
 router.patch('/:id', verifyMultiJWT, updateRecruiterDetails);
 router.delete('/:id', verifyMultiJWT, deleteRecruiter);
-
-// Add password change route for recruiter
-router.put('/change-password', verifyRecruiterJWT, changeRecruiterPassword);
 
 // Update avgTAT route
 router.patch('/update-avg-tat', verifyMultiJWT, updateAvgTAT);

@@ -93,6 +93,9 @@ app.use(
 // Explicit OPTIONS handler for preflight requests
 // app.options('*', cors());
 
+// The prep brief is posted as a rendered HTML document, larger than the default 100kb.
+app.use(/^\/api\/manager\/resumes\/[^/]+\/blueprint\/email$/, express.json({ limit: "2mb" }));
+
 app.use(
   express.json({
     verify: (req, _res, buf) => {

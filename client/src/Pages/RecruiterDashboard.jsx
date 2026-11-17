@@ -1,163 +1,131 @@
-import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
-import {
-  LayoutDashboard,
-  Briefcase,
-  UserCheck,
-  Database,
-  Settings as SettingsIcon,
-  Search,
-  Menu,
-} from 'lucide-react';
-import RecruiterOverview from '../Components/recruiter/dashboard/RecruiterOverview';
-import RecruiterCandidates from '../Components/recruiter/dashboard/RecruiterCandidates';
-import RecruiterJobs from '../Components/recruiter/dashboard/RecruiterJobs';
-import Settings from '../Components/recruiter/dashboard/Settings';
+import React, { useCallback, useEffect, useMemo } from 'react';
+import { useLocation, useSearchParams } from 'react-router-dom';
 import ZepDB from '../Components/recruiter/dashboard/ZepDB';
 import { useRecruiterPlatformData } from '../Components/recruiter/dashboard/useRecruiterPlatformData';
-import { initialsOf, readAuth } from '../Components/dashboard/dashboardUtils';
-import DashboardSidebar from '../Components/dashboard/DashboardSidebar.jsx';
+import { readAuth, isJobOpen } from '../Components/dashboard/dashboardUtils';
+import { useControlCentreTheme, shellProps } from '../Components/manager/dashboard/controlCentreTheme';
+import '../Components/manager/dashboard/ControlCentreTheme.css';
+import '../Components/recruiter/console/RecruiterConsole.css';
+import RecNav from '../Components/recruiter/console/RecNav';
+import RecOverview from '../Components/recruiter/console/RecOverview';
+import RecAssignedJobs from '../Components/recruiter/console/RecAssignedJobs';
+import RecPipeline from '../Components/recruiter/console/RecPipeline';
+import RecProfile from '../Components/recruiter/console/RecProfile';
+import RecScorecard from '../Components/recruiter/console/RecScorecard';
+import { canPick } from '../Components/recruiter/console/recruiterModel';
 
 /**
- * Recruiter console sections. `fullBleed` screens ship their own page padding, so
- * the shell hands them the content area untouched.
+ * Recruiter console. Sections live in the URL (`?tab=` and `?job=`) so a
+ * refresh, or coming back from a candidate page, lands where the recruiter was.
  */
-const RECRUITER_NAV = [
-  { name: 'Dashboard', icon: LayoutDashboard },
-  { name: 'Assigned Jobs', icon: Briefcase, fullBleed: true },
-  { name: 'Candidate Pipeline', icon: UserCheck },
-  { name: 'ZepDB', icon: Database, fullBleed: true },
-  { name: 'Profile', icon: SettingsIcon, fullBleed: true },
-];
+const TABS = ['overview', 'jobs', 'pipeline', 'zepdb', 'profile'];
 
-// Other screens navigate here with state.activeComponent; keep the old tab names
-// working so those links still land somewhere sensible.
-const LEGACY_TAB_ALIASES = {
-  Jobs: 'Assigned Jobs',
-  Candidates: 'Candidate Pipeline',
+// Other screens navigate here with state.activeComponent using the old tab names.
+const LEGACY_TABS = {
+  Dashboard: 'overview',
+  Jobs: 'jobs',
+  'Assigned Jobs': 'jobs',
+  Candidates: 'pipeline',
+  'Candidate Pipeline': 'pipeline',
+  ZepDB: 'zepdb',
+  Profile: 'profile',
 };
 
 const RecruiterDashboard = () => {
-  const [activeComponent, setActiveComponent] = useState('Dashboard');
-  const [navOpen, setNavOpen] = useState(false);
-  const [isCollapsed, setIsCollapsed] = useState(true);
-  const [jump, setJump] = useState('');
   const location = useLocation();
+  const [params, setParams] = useSearchParams();
   const platform = useRecruiterPlatformData();
+  const [themeName, theme, setTheme] = useControlCentreTheme();
+  const { user } = readAuth();
   // License Partner recruiters don't get ZepDB, Zepul's own talent pool.
-  const navItems = readAuth().user?.licensePartnerId
-    ? RECRUITER_NAV.filter((n) => n.name !== 'ZepDB')
-    : RECRUITER_NAV;
+  const hasZepDB = !user?.licensePartnerId;
+  const userName = user?.fullname || user?.username || 'Recruiter';
 
-  const recruiterName = readAuth().user?.fullname || 'Zepul Recruiter';
+  const requested = params.get('tab');
+  const tab = TABS.includes(requested) && (requested !== 'zepdb' || hasZepDB) ? requested : 'overview';
+  const jobId = params.get('job') || '';
+  const candidateId = params.get('candidate') || '';
+
+  const go = useCallback((next, job) => {
+    const p = {};
+    if (next && next !== 'overview') p.tab = next;
+    if (job) p.job = String(job);
+    else if (jobId && (next === 'jobs' || next === 'pipeline')) p.job = jobId;
+    setParams(p);
+    window.scrollTo({ top: 0 });
+  }, [jobId, setParams]);
+
+  const selectJob = useCallback((id) => {
+    const p = Object.fromEntries(params.entries());
+    p.job = String(id);
+    setParams(p, { replace: true });
+  }, [params, setParams]);
+
+  // Opening a candidate keeps the tab and job, so Back lands where they were.
+  const openCandidate = useCallback((id) => {
+    const p = Object.fromEntries(params.entries());
+    p.candidate = String(id);
+    setParams(p);
+    window.scrollTo({ top: 0 });
+  }, [params, setParams]);
+  // From nav search: land on that candidate's job in the pipeline, scorecard open.
+  const openFromSearch = useCallback((r) => {
+    const job = r.jobId?._id || r.jobId;
+    setParams({ tab: 'pipeline', ...(job ? { job: String(job) } : {}), candidate: String(r._id) });
+    window.scrollTo({ top: 0 });
+  }, [setParams]);
+  const closeCandidate = useCallback(() => {
+    const p = Object.fromEntries(params.entries());
+    delete p.candidate;
+    setParams(p);
+  }, [params, setParams]);
 
   useEffect(() => {
-    const requested = location.state?.activeComponent;
-    if (!requested) return;
-    const resolved = LEGACY_TAB_ALIASES[requested] || requested;
-    if (navItems.some((n) => n.name === resolved)) setActiveComponent(resolved);
+    const legacy = LEGACY_TABS[location.state?.activeComponent];
+    if (legacy) go(legacy);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.state]);
 
-  const go = (name) => {
-    setActiveComponent(name);
-    setNavOpen(false);
-    setJump('');
-  };
+  const items = useMemo(() => {
+    const openJobs = platform.jobs.filter(isJobOpen).length;
+    const toPick = platform.resumes.filter(canPick).length;
+    return [
+      { key: 'overview', label: 'Overview' },
+      { key: 'jobs', label: 'Assigned jobs', badge: openJobs || null },
+      { key: 'pipeline', label: 'Candidate pipeline', badge: toPick || null },
+      ...(hasZepDB ? [{ key: 'zepdb', label: 'ZepDB' }] : []),
+      { key: 'profile', label: 'Profile' },
+    ];
+  }, [platform.jobs, platform.resumes, hasZepDB]);
 
-  const section = navItems.find((n) => n.name === activeComponent) || navItems[0];
-  const query = jump.trim().toLowerCase();
-  const matches = query ? navItems.filter((n) => n.name.toLowerCase().includes(query)) : [];
-
-  const renderSection = () => {
-    switch (section.name) {
-      case 'Assigned Jobs':
-        return <RecruiterJobs />;
-      case 'Candidate Pipeline':
-        return <RecruiterCandidates platform={platform} />;
-      case 'ZepDB':
+  const shell = shellProps(theme, 'rc');
+  const section = () => {
+    if (candidateId) {
+      return <RecScorecard t={theme} id={candidateId} platform={platform} onBack={closeCandidate} />;
+    }
+    switch (tab) {
+      case 'jobs':
+        return <RecAssignedJobs t={theme} platform={platform} selectedId={jobId} onSelectJob={selectJob} onGo={go} />;
+      case 'pipeline':
+        return <RecPipeline t={theme} platform={platform} selectedId={jobId} onSelectJob={selectJob} onOpenCandidate={openCandidate} />;
+      case 'zepdb':
         return <ZepDB />;
-      case 'Profile':
-        return <Settings />;
+      case 'profile':
+        return <RecProfile t={theme} themeName={themeName} onTheme={setTheme} platform={platform} />;
       default:
-        return <RecruiterOverview platform={platform} onNavigate={go} />;
+        return <RecOverview t={theme} platform={platform} userName={userName} onGo={go} />;
     }
   };
 
   return (
-    <div className="dashboard-shell-recruiter min-h-screen bg-[#f6f8fb] text-[#1d2430]">
-      <DashboardSidebar
-        items={navItems}
-        active={activeComponent}
-        onSelect={go}
-        isCollapsed={isCollapsed}
-        setIsCollapsed={setIsCollapsed}
-        mobileOpen={navOpen}
-        setMobileOpen={setNavOpen}
-        userName={recruiterName}
-        roleLabel="Employer Recruiter"
-        onProfile={() => go('Profile')}
-      />
-
-      <div className={`transition-all duration-300 ${isCollapsed ? "lg:ml-20" : "lg:ml-52"}`}>
-        {/* Top bar */}
-        <header className="h-[68px] bg-white border-b border-[#e7ebf2] flex items-center justify-between px-4 md:px-7 sticky top-0 z-10">
-          <div className="flex items-center gap-3">
-            <button
-              className="lg:hidden text-[#778092] cursor-pointer"
-              onClick={() => setNavOpen(true)}
-              aria-label="Open navigation"
-            >
-              <Menu size={20} />
-            </button>
-
-            <div className="relative hidden sm:block">
-              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#98a1b0]" />
-              <input
-                className="w-[260px] md:w-[330px] pl-8 pr-3 py-[9px] border border-[#e7ebf2] rounded-lg bg-[#f8f9fb] text-xs outline-none focus:border-[#c7d5ff]"
-                placeholder="Jump to a section…"
-                value={jump}
-                onChange={(e) => setJump(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && matches[0]) go(matches[0].name);
-                  if (e.key === 'Escape') setJump('');
-                }}
-              />
-              {matches.length > 0 && (
-                <div className="absolute left-0 top-[46px] w-[260px] md:w-[330px] bg-white border border-[#e7ebf2] rounded-lg shadow-[0_8px_25px_#0001] overflow-hidden">
-                  {matches.map((m) => (
-                    <button
-                      key={m.name}
-                      className="block w-full text-left px-3 py-2 text-xs hover:bg-[#f6f8fb] cursor-pointer"
-                      onClick={() => go(m.name)}
-                    >
-                      {m.name}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <span className="text-xs text-[#778092] hidden sm:block">Employer Recruiter</span>
-            <div
-              className="w-[34px] h-[34px] rounded-full bg-[#e5ebff] text-[#024bff] grid place-items-center font-extrabold text-[11px] cursor-pointer"
-              onClick={() => go('Profile')}
-              title="Profile & settings"
-            >
-              {initialsOf(recruiterName, 'Zepul Recruiter')}
-            </div>
-          </div>
-        </header>
-
-        <main>
-          {section.fullBleed ? (
-            renderSection()
-          ) : (
-            <div className="p-5 md:p-7 max-w-[1500px]">{renderSection()}</div>
-          )}
-        </main>
-      </div>
+    <div {...shell} style={{ ...shell.style, background: `${theme.glow}, ${theme.bg}` }}>
+      <RecNav t={theme} items={items} active={tab} onSelect={(k) => go(k)} userName={userName} resumes={platform.resumes} onOpenCandidate={openFromSearch} />
+      {platform.error && !platform.loading && (
+        <div role="alert" style={{ maxWidth: 1360, margin: '16px auto 0', padding: '0 24px' }}>
+          <div style={{ padding: '10px 14px', borderRadius: 10, background: theme.warnSoft, color: theme.warn, fontSize: 13.5 }}>{platform.error}</div>
+        </div>
+      )}
+      {section()}
     </div>
   );
 };

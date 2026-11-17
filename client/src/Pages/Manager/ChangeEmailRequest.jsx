@@ -10,7 +10,7 @@ const ChangeEmailRequest = () => {
     e.preventDefault();
 
     try {
-      const res = await fetch('http://localhost:5880/api/manager/change-email-request', {
+      const res = await fetch(`${import.meta.env.VITE_BACKEND_URL ?? ''}/api/manager/change-email-request`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ currentEmail, newEmail }),

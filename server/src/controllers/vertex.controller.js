@@ -63,6 +63,18 @@ export const getSourcingEstimate = async (req, res) => {
     });
 };
 
+/** A short human label for the filters a search used. */
+const describeSearch = (criteria, job) => {
+    if (!criteria) return job.jobtitle || "Search";
+    const places = (criteria.location || []).map((p) => String(p).split("::")[0]);
+    return [
+        criteria.current_title?.[0] || job.jobtitle,
+        criteria.keywords?.length ? criteria.keywords.join(", ") : null,
+        places.length ? places.join(", ") : null,
+        criteria.years_experience?.[0] ? `${criteria.years_experience[0]} yrs` : null,
+    ].filter(Boolean).join(" · ");
+};
+
 export const sourceCandidatesForJob = async (req, res) => {
     try {
         const licensePartnerId = poolIdFor(req);
@@ -74,8 +86,13 @@ export const sourceCandidatesForJob = async (req, res) => {
         // step by step rather than report an empty ZepDB.
         let profiles = [];
         let creditsUsed = 0;
-        for (const criteria of searchTiersForJob(job)) {
+        let usedCriteria = null;
+        let tierIndex = 0;
+        const tiers = searchTiersForJob(job);
+        for (const [i, criteria] of tiers.entries()) {
             ({ profiles, creditsUsed } = await searchProfiles(criteria, jd));
+            usedCriteria = criteria;
+            tierIndex = i;
             if (profiles.length) break;
         }
 
@@ -150,6 +167,23 @@ export const sourceCandidatesForJob = async (req, res) => {
             .slice(0, VERTEX_SOURCE_LIMIT);
         const found = picked.map((c) => c.doc);
         const scores = new Map(picked.map((c) => [String(c.doc._id), c.ats]));
+
+        // Keep a record of the search for the job's Sourcing & outreach page.
+        // Never fails the request: the candidates are what the caller needs.
+        await Job.updateOne({ _id: job._id }, {
+            $push: {
+                sourcingRuns: {
+                    at: new Date(),
+                    filters: describeSearch(usedCriteria, job),
+                    widened: tierIndex > 0,
+                    auto: req.query.auto === "1",
+                    found: profiles.length,
+                    strong: picked.length,
+                    partial: pool.filter((c) => c.ats != null && !c.qualified).length,
+                    creditsUsed,
+                },
+            },
+        }).catch((e) => console.error("Sourcing run not recorded:", e.message));
 
         res.status(200).json({
             success: true,

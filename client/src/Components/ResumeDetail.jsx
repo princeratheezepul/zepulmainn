@@ -2,8 +2,10 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { getAuthHeaders } from "../utils/authUtils";
 function ResumeDetail() {
-  const { resumeid: resumeId } = useParams();
-  const { jobid: jobId } = useParams();
+  // `/job/:jobid/:resumeid` and `/recruiter/:resumeId` spell the param differently.
+  const params = useParams();
+  const resumeId = params.resumeid || params.resumeId;
+  const { jobid: jobId } = params;
   const [resume, setResume] = useState(null);
   const [manualScore, setManualScore] = useState("");
   const [page, setPage] = useState(1);

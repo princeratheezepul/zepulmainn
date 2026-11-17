@@ -1,0 +1,94 @@
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&display=swap");
+
+/* Recruiter console. Colours come from inline theme tokens; this file holds
+   layout, breakpoints and motion. */
+
+.rc {
+  --rc-mono: "IBM Plex Mono", ui-monospace, monospace;
+  font-family: "DM Sans", "Helvetica Neue", sans-serif;
+  min-height: 100vh;
+  padding-bottom: 32px;
+  box-sizing: border-box;
+}
+.rc *, .rc *::before, .rc *::after { box-sizing: border-box; }
+.rc a { color: inherit; }
+.rc h1, .rc p, .rc ol { margin: 0; }
+.rc-mono { font-family: var(--rc-mono); }
+.rc-btn { cursor: pointer; border: 0; font: inherit; transition: opacity .15s ease, transform .15s ease; }
+.rc-btn:hover { opacity: .9; }
+.rc-btn:disabled { cursor: not-allowed; opacity: .6; }
+.rc button:focus-visible, .rc a:focus-visible, .rc input:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+.rc input:focus { outline: none; }
+
+/* Nav */
+.rc-nav {
+  position: sticky; top: 0; z-index: 30;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
+  padding: 12px 24px; backdrop-filter: blur(10px);
+}
+.rc-nav-items { display: flex; align-items: center; gap: 6px; }
+.rc-nav-item { height: 36px; padding: 0 14px; border-radius: 10px; display: inline-flex; align-items: center; gap: 8px; font-size: 14.5px; white-space: nowrap; background: transparent; }
+.rc-nav-end { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+.rc-search { position: relative; }
+.rc-search-box { display: flex; align-items: center; gap: 8px; height: 36px; width: 240px; padding: 0 12px; border-radius: 10px; font-size: 13.5px; }
+.rc-search-pop { position: absolute; right: 0; top: 42px; width: 320px; max-width: 86vw; border-radius: 12px; overflow: hidden; z-index: 40; box-shadow: 0 16px 40px rgba(0,0,0,.35); }
+
+.rc-main { max-width: 1360px; margin: 0 auto; padding: 26px 24px 0; }
+.rc-title { font-size: 34px; letter-spacing: -0.03em; font-weight: 700; margin-top: 8px !important; line-height: 1.1; }
+
+/* Overview */
+.rc-kpis { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px; margin-top: 22px; }
+.rc-two { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 18px; margin-top: 18px; align-items: start; }
+.rc-glance { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 360px) 110px; gap: 18px; align-items: center; padding: 12px 0; width: 100%; background: transparent; border: 0; border-top-width: 1px; border-top-style: solid; text-align: left; font: inherit; color: inherit; cursor: pointer; }
+.rc-todo { display: grid; grid-template-columns: 4px minmax(0, 1fr) auto; gap: 14px; align-items: center; padding: 14px 18px; width: 100%; background: transparent; border: 0; border-top-width: 1px; border-top-style: solid; text-align: left; font: inherit; color: inherit; cursor: pointer; }
+
+/* Assigned jobs */
+.rc-jobs { display: grid; grid-template-columns: 360px minmax(0, 1fr); gap: 18px; margin-top: 22px; align-items: start; }
+.rc-joblist { display: flex; flex-direction: column; gap: 12px; }
+.rc-facts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-top: 16px; }
+.rc-uprow { display: grid; grid-template-columns: minmax(0, 1fr) 160px 200px; gap: 12px; align-items: center; padding: 10px 14px; font-size: 13.5px; }
+.rc-drop { transition: background .15s ease, border-color .15s ease; cursor: pointer; }
+
+/* Pipeline */
+.rc-lanes-wrap { overflow-x: auto; margin-top: 18px; scroll-snap-type: x proximity; padding-bottom: 6px; }
+.rc-lanes { display: grid; grid-template-columns: repeat(6, minmax(210px, 1fr)); gap: 10px; min-width: 1290px; }
+.rc-lane { scroll-snap-align: start; min-height: 520px; }
+.rc-card { text-align: left; font: inherit; color: inherit; width: 100%; }
+
+/* Profile */
+.rc-profile { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; margin-top: 22px; align-items: start; }
+
+@keyframes rc-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes rc-pulse { 0%, 100% { opacity: .5; } 50% { opacity: 1; } }
+.rc-in { animation: rc-in .45s ease-out both; }
+.rc-skel { animation: rc-pulse 1.4s ease-in-out infinite; }
+
+@media (max-width: 1200px) {
+  .rc-kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 1000px) {
+  .rc-two, .rc-jobs, .rc-profile { grid-template-columns: minmax(0, 1fr); }
+  .rc-joblist { flex-direction: row; overflow-x: auto; scroll-snap-type: x proximity; padding-bottom: 4px; }
+  .rc-joblist > * { flex: 0 0 300px; scroll-snap-align: start; }
+  .rc-nav-items { order: 3; width: 100%; overflow-x: auto; padding-top: 4px; }
+}
+@media (max-width: 720px) {
+  .rc-nav { padding: 10px 14px; }
+  .rc-main { padding: 18px 14px 0; }
+  .rc-title { font-size: 27px; }
+  .rc-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .rc-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .rc-glance { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+  .rc-glance > :last-child { text-align: left !important; }
+  .rc-uprow { grid-template-columns: minmax(0, 1fr) 110px; }
+  .rc-uprow > :last-child { grid-column: 1 / -1; }
+  .rc-search-box { width: 150px; }
+  .rc-hide-sm { display: none !important; }
+  .rc-cta { margin-left: 0 !important; width: 100%; justify-content: center; }
+  .rc-lanes { grid-template-columns: repeat(6, 82vw); min-width: 0; }
+  .rc-lane { min-height: 280px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rc-in, .rc-skel { animation: none; }
+}

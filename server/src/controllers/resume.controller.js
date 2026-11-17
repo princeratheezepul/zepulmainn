@@ -1,4 +1,5 @@
 import Resume from "../models/resume.model.js";
+import ResumeData from "../models/resumeData.model.js";
 import { Admin } from "../models/admin.model.js";
 import mongoose from "mongoose";
 import { generateTextWithRetry } from "./bulkUpload.controller.js";
@@ -46,13 +47,22 @@ export const notifyCandidateOfCodingTest = async (resumeId) => {
   }
 };
 
-// Fire-and-forget: ask the candidate to confirm they want to proceed with the role. The coding
-// test only goes out after they confirm on /confirm/:token and give a phone number.
-const requestRoleConfirmation = async (resume, job) => {
+// Ask the candidate to confirm they want to proceed with the role. Sent when the
+// manager picks them in the job's Outreach step. The coding test (if the job
+// requires one) only goes out after they confirm on /confirm/:token.
+// Resolves to { sent, reason } and never throws.
+export const requestRoleConfirmation = async (resume, job) => {
   try {
-    if (!resume.email && !resume.phone) {
-      console.log(`[roleConfirmation] Skipping — no email or phone on resume ${resume._id}`);
-      return;
+    // ZepDB candidates keep their contact details on the ResumeData profile.
+    let { email, phone, countryCode } = resume;
+    if ((!email || !phone) && resume.resumeDataId) {
+      const profile = await ResumeData.findById(resume.resumeDataId).select("emailId phone countryCode").lean();
+      email = email || profile?.emailId || "";
+      phone = phone || profile?.phone || "";
+      countryCode = countryCode || profile?.countryCode;
+    }
+    if (!email && !phone) {
+      return { sent: false, reason: "No email or phone number on file" };
     }
 
     const token = crypto.randomBytes(32).toString("hex");
@@ -69,23 +79,30 @@ const requestRoleConfirmation = async (resume, job) => {
     });
 
     const confirmLink = `${process.env.FRONTEND_URL}/confirm/${token}`;
+    let delivered = false;
 
-    if (resume.email) {
+    if (email) {
       await sendShortlistEmail({
-        to: resume.email,
+        to: email,
         candidateName: resume.name,
         jobTitle: job.jobtitle,
         company: job.company,
         confirmLink,
-      }).catch((err) => console.error(`[roleConfirmation] Email failed for resume ${resume._id}:`, err.message));
+      })
+        .then(() => { delivered = true; })
+        .catch((err) => console.error(`[roleConfirmation] Email failed for resume ${resume._id}:`, err.message));
     }
 
-    if (resume.phone) {
+    if (phone) {
       const message = `Hi ${resume.name || "there"}, you have been selected for the role of *${job.jobtitle}*${job.company ? ` at *${job.company}*` : ""}. Please click the link below to confirm if you want to proceed:\n${confirmLink}\n\n(This link expires in 24 hours)`;
-      await sendWhatsAppMessage(resume.phone, message);
+      // Never throws; resolves to false when the message didn't go.
+      if (await sendWhatsAppMessage(phone, message, countryCode || "91")) delivered = true;
     }
+
+    return delivered ? { sent: true } : { sent: false, reason: "Email and WhatsApp both failed" };
   } catch (err) {
     console.error(`[roleConfirmation] Failed for resume ${resume._id}:`, err.message);
+    return { sent: false, reason: "Could not send the invite" };
   }
 };
 
@@ -227,11 +244,9 @@ export const saveResumeWithJob = async (req, res) => {
       });
     }
 
+    // Outreach is no longer automatic: the manager picks who to invite in the
+    // job's Outreach step (POST /api/manager/resumes/job/:jobId/outreach).
     res.status(201).json({ message: "Resume saved successfully", resume: saved });
-
-    // Fire-and-forget: ask the candidate to confirm the role. The coding test is sent from
-    // confirm.controller.js once they accept.
-    requestRoleConfirmation(saved, job);
   } catch (err) {
     console.error("Error saving resume:", err);
     res.status(500).json({ message: "Failed to save resume", error: err.message });
@@ -380,10 +395,14 @@ export const getResumesByRecruiter = async (req, res) => {
 
     const resumes = await Resume.find(query).populate('jobId').populate('resumeDataId');
 
+    // Where each AI interview invite stands, so the recruiter console can tell
+    // who still needs one.
+    const invites = await latestInvitesByResume(resumes.map((r) => r._id));
+
     // Return in the expected format for the frontend
     res.status(200).json({
       success: true,
-      data: resumes
+      data: resumes.map((r) => ({ ...r.toJSON(), interviewInvite: invites.get(String(r._id)) || null }))
     });
   } catch (err) {
     console.error("Error fetching resumes by user:", err);

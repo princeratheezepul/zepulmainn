@@ -128,21 +128,26 @@ export const submitConfirmationResponse = async (req, res) => {
       });
     }
 
+    const job = await Job.findById(confirmation.jobId).select('intake.codingTest.required').lean();
+    const codingTestRequired = Boolean(job?.intake?.codingTest?.required);
+
     if (confirmation.nextStep === 'codingTest' && confirmation.resumeId) {
       await Resume.findByIdAndUpdate(confirmation.resumeId, {
         'roleConfirmation.status': status,
         'roleConfirmation.respondedAt': confirmation.respondedAt,
         ...(response === 'yes' ? { phone, countryCode } : {}),
       });
-      // Fire-and-forget: AI question generation takes ~30-90s.
-      if (response === 'yes') notifyCandidateOfCodingTest(confirmation.resumeId);
+      // Fire-and-forget: AI question generation takes ~30-90s. Only for jobs
+      // that ask for a coding test; otherwise the manager sends the AI
+      // interview link next.
+      if (response === 'yes' && codingTestRequired) notifyCandidateOfCodingTest(confirmation.resumeId);
     }
 
     res.status(200).json({
       success: true,
       status: confirmation.status,
       message: response === 'yes'
-        ? confirmation.nextStep === 'codingTest'
+        ? confirmation.nextStep === 'codingTest' && codingTestRequired
           ? 'Great! Your interest has been confirmed. Your coding test link will arrive by email shortly.'
           : 'Great! Your interest has been confirmed. Our team will reach out to you shortly.'
         : 'Thank you for letting us know. We will keep your profile for future opportunities.',
