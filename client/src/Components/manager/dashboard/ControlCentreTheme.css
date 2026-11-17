@@ -1,0 +1,368 @@
+/*
+ * Dark remap for the manager console. Generated from the light utility classes
+ * the manager pages use. The pages keep their classes, and inside `.zcc-shell.zcc-dark` this sheet re-points those colours
+ * at the active theme. 
+ *
+ * Cascade: the `!important` remaps live in the `zcc-dark` layer, which
+ * index.css declares FIRST. For important declarations the earliest layer
+ * wins, so these beat Bootstrap's own `!important` utilities (.bg-white,
+ * .border, .text-black…) as well as Tailwind's. The plain element rules
+ * stay unlayered, which beats every layered normal declaration.
+ */
+
+.zcc-shell { min-height: 100vh; }
+.zcc-shell.zcc-dark { color: var(--zcc-text); }
+
+/* Native controls, tables, Bootstrap pieces */
+.zcc-shell.zcc-dark input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+.zcc-shell.zcc-dark select,
+.zcc-shell.zcc-dark textarea {
+  background-color: var(--zcc-panel2);
+  color: var(--zcc-text);
+  border-color: var(--zcc-line-strong);
+}
+.zcc-shell.zcc-dark input::placeholder, .zcc-shell.zcc-dark textarea::placeholder { color: var(--zcc-faint); }
+.zcc-shell.zcc-dark option { background: var(--zcc-panel); color: var(--zcc-text); }
+.zcc-shell.zcc-dark h1, .zcc-shell.zcc-dark h2, .zcc-shell.zcc-dark h3, .zcc-shell.zcc-dark h4, .zcc-shell.zcc-dark h5, .zcc-shell.zcc-dark h6, .zcc-shell.zcc-dark label { color: inherit; }
+.zcc-shell.zcc-dark th, .zcc-shell.zcc-dark td { border-color: var(--zcc-line) !important; }
+.zcc-shell.zcc-dark hr { border-color: var(--zcc-line); opacity: 1; }
+.zcc-shell.zcc-dark .table { --bs-table-bg: transparent; --bs-table-color: var(--zcc-text); --bs-table-border-color: var(--zcc-line); --bs-table-hover-bg: var(--zcc-track); --bs-table-striped-bg: var(--zcc-panel2); color: var(--zcc-text); }
+.zcc-shell.zcc-dark .card, .zcc-shell.zcc-dark .modal-content, .zcc-shell.zcc-dark .dropdown-menu, .zcc-shell.zcc-dark .list-group-item { background-color: var(--zcc-panel); color: var(--zcc-text); border-color: var(--zcc-line); }
+.zcc-shell.zcc-dark .form-control, .zcc-shell.zcc-dark .form-select { background-color: var(--zcc-panel2); color: var(--zcc-text); border-color: var(--zcc-line-strong); }
+.zcc-shell.zcc-dark .recharts-cartesian-grid line { stroke: var(--zcc-line); }
+.zcc-shell.zcc-dark .recharts-text { fill: var(--zcc-muted); }
+.zcc-shell.zcc-dark .recharts-tooltip-wrapper .recharts-default-tooltip { background: var(--zcc-panel) !important; border-color: var(--zcc-line) !important; }
+.zcc-shell.zcc-dark ::-webkit-scrollbar-thumb { background: var(--zcc-track); border-radius: 8px; }
+
+/* Utility remaps */
+@layer zcc-dark {
+.zcc-shell.zcc-dark [class~="border"] { border-color: var(--zcc-line-strong) !important; }
+.zcc-shell.zcc-dark [class~="bg-white"],
+.zcc-shell.zcc-dark [class~="bg-white/70"],
+.zcc-shell.zcc-dark [class~="bg-white/80"],
+.zcc-shell.zcc-dark [class~="bg-white/90"],
+.zcc-shell.zcc-dark [class~="bg-[#FFFFFF]"],
+.zcc-shell.zcc-dark [class~="bg-[#fff]"],
+.zcc-shell.zcc-dark [class~="bg-[#ffffff]"] { background-color: var(--zcc-panel) !important; }
+.zcc-shell.zcc-dark [class~="bg-gray-50"],
+.zcc-shell.zcc-dark [class~="bg-[#fbfcfd]"],
+.zcc-shell.zcc-dark [class~="bg-[#fafbfd]"],
+.zcc-shell.zcc-dark [class~="bg-[#f8f9fb]"],
+.zcc-shell.zcc-dark [class~="bg-[#F8FAFC]"],
+.zcc-shell.zcc-dark [class~="bg-[#FAFAFA]"],
+.zcc-shell.zcc-dark [class~="bg-slate-50"],
+.zcc-shell.zcc-dark [class~="bg-[#f6f8fb]"],
+.zcc-shell.zcc-dark [class~="bg-[#F7F8FA]"],
+.zcc-shell.zcc-dark [class~="bg-[#f0f2f5]"] { background-color: var(--zcc-panel2) !important; }
+.zcc-shell.zcc-dark [class~="bg-gray-100"],
+.zcc-shell.zcc-dark [class~="bg-gray-200"],
+.zcc-shell.zcc-dark [class~="bg-gray-300"],
+.zcc-shell.zcc-dark [class~="bg-slate-100"],
+.zcc-shell.zcc-dark [class~="bg-slate-200"] { background-color: var(--zcc-track) !important; }
+.zcc-shell.zcc-dark [class~="hover:bg-gray-50"]:hover,
+.zcc-shell.zcc-dark [class~="hover:bg-gray-100"]:hover,
+.zcc-shell.zcc-dark [class~="hover:bg-gray-200"]:hover,
+.zcc-shell.zcc-dark [class~="hover:bg-[#f6f8fb]"]:hover,
+.zcc-shell.zcc-dark [class~="hover:bg-[#fbfcfd]"]:hover,
+.zcc-shell.zcc-dark [class~="hover:bg-white"]:hover,
+.zcc-shell.zcc-dark [class~="hover:bg-slate-50"]:hover,
+.zcc-shell.zcc-dark [class~="hover:bg-slate-100"]:hover { background-color: var(--zcc-track) !important; }
+.zcc-shell.zcc-dark [class~="focus:bg-white"]:focus { background-color: var(--zcc-panel) !important; }
+.zcc-shell.zcc-dark [class~="bg-blue-50"],
+.zcc-shell.zcc-dark [class~="bg-blue-50/50"],
+.zcc-shell.zcc-dark [class~="bg-blue-50/40"] { background-color: rgba(79,134,255,0.10) !important; }
+.zcc-shell.zcc-dark [class~="bg-blue-100"],
+.zcc-shell.zcc-dark [class~="bg-blue-200"] { background-color: rgba(79,134,255,0.18) !important; }
+.zcc-shell.zcc-dark [class~="hover:bg-blue-50"]:hover,
+.zcc-shell.zcc-dark [class~="hover:bg-blue-50/40"]:hover,
+.zcc-shell.zcc-dark [class~="hover:bg-blue-100"]:hover { background-color: rgba(79,134,255,0.22) !important; }
+.zcc-shell.zcc-dark [class~="border-blue-100"],
+.zcc-shell.zcc-dark [class~="border-blue-200"],
+.zcc-shell.zcc-dark [class~="border-blue-300"] { border-color: rgba(79,134,255,0.35) !important; }
+.zcc-shell.zcc-dark [class~="bg-indigo-50"],
+.zcc-shell.zcc-dark [class~="bg-indigo-50/50"],
+.zcc-shell.zcc-dark [class~="bg-indigo-50/40"] { background-color: rgba(129,140,248,0.10) !important; }
+.zcc-shell.zcc-dark [class~="bg-indigo-100"],
+.zcc-shell.zcc-dark [class~="bg-indigo-200"] { background-color: rgba(129,140,248,0.18) !important; }
+.zcc-shell.zcc-dark [class~="hover:bg-indigo-50"]:hover,
+.zcc-shell.zcc-dark [class~="hover:bg-indigo-50/40"]:hover,
+.zcc-shell.zcc-dark [class~="hover:bg-indigo-100"]:hover { background-color: rgba(129,140,248,0.22) !important; }
+.zcc-shell.zcc-dark [class~="border-indigo-100"],
+.zcc-shell.zcc-dark [class~="border-indigo-200"],
+.zcc-shell.zcc-dark [class~="border-indigo-300"] { border-color: rgba(129,140,248,0.35) !important; }
+.zcc-shell.zcc-dark [class~="bg-sky-50"],
+.zcc-shell.zcc-dark [class~="bg-sky-50/50"],
+.zcc-shell.zcc-dark [class~="bg-sky-50/40"] { background-color: rgba(56,189,248,0.10) !important; }
+.zcc-shell.zcc-dark [class~="bg-sky-100"],
+.zcc-shell.zcc-dark [class~="bg-sky-200"] { background-color: rgba(56,189,248,0.18) !important; }
+.zcc-shell.zcc-dark [class~="hover:bg-sky-50"]:hover,
+.zcc-shell.zcc-dark [class~="hover:bg-sky-50/40"]:hover,
+.zcc-shell.zcc-dark [class~="hover:bg-sky-100"]:hover { background-color: rgba(56,189,248,0.22) !important; }
+.zcc-shell.zcc-dark [class~="border-sky-100"],
+.zcc-shell.zcc-dark [class~="border-sky-200"],
+.zcc-shell.zcc-dark [class~="border-sky-300"] { border-color: rgba(56,189,248,0.35) !important; }
+.zcc-shell.zcc-dark [class~="bg-cyan-50"],
+.zcc-shell.zcc-dark [class~="bg-cyan-50/50"],
+.zcc-shell.zcc-dark [class~="bg-cyan-50/40"] { background-color: rgba(34,211,238,0.10) !important; }
+.zcc-shell.zcc-dark [class~="bg-cyan-100"],
+.zcc-shell.zcc-dark [class~="bg-cyan-200"] { background-color: rgba(34,211,238,0.18) !important; }
+.zcc-shell.zcc-dark [class~="hover:bg-cyan-50"]:hover,
+.zcc-shell.zcc-dark [class~="hover:bg-cyan-50/40"]:hover,
+.zcc-shell.zcc-dark [class~="hover:bg-cyan-100"]:hover { background-color: rgba(34,211,238,0.22) !important; }
+.zcc-shell.zcc-dark [class~="border-cyan-100"],
+.zcc-shell.zcc-dark [class~="border-cyan-200"],
+.zcc-shell.zcc-dark [class~="border-cyan-300"] { border-color: rgba(34,211,238,0.35) !important; }
+.zcc-shell.zcc-dark [class~="bg-green-50"],
+.zcc-shell.zcc-dark [class~="bg-green-50/50"],
+.zcc-shell.zcc-dark [class~="bg-green-50/40"] { background-color: rgba(61,220,151,0.10) !important; }
+.zcc-shell.zcc-dark [class~="bg-green-100"],
+.zcc-shell.zcc-dark [class~="bg-green-200"] { background-color: rgba(61,220,151,0.18) !important; }
+.zcc-shell.zcc-dark [class~="hover:bg-green-50"]:hover,
+.zcc-shell.zcc-dark [class~="hover:bg-green-50/40"]:hover,
+.zcc-shell.zcc-dark [class~="hover:bg-green-100"]:hover { background-color: rgba(61,220,151,0.22) !important; }
+.zcc-shell.zcc-dark [class~="border-green-100"],
+.zcc-shell.zcc-dark [class~="border-green-200"],
+.zcc-shell.zcc-dark [class~="border-green-300"] { border-color: rgba(61,220,151,0.35) !important; }
+.zcc-shell.zcc-dark [class~="bg-emerald-50"],
+.zcc-shell.zcc-dark [class~="bg-emerald-50/50"],
+.zcc-shell.zcc-dark [class~="bg-emerald-50/40"] { background-color: rgba(52,211,153,0.10) !important; }
+.zcc-shell.zcc-dark [class~="bg-emerald-100"],
+.zcc-shell.zcc-dark [class~="bg-emerald-200"] { background-color: rgba(52,211,153,0.18) !important; }
+.zcc-shell.zcc-dark [class~="hover:bg-emerald-50"]:hover,
+.zcc-shell.zcc-dark [class~="hover:bg-emerald-50/40"]:hover,
+.zcc-shell.zcc-dark [class~="hover:bg-emerald-100"]:hover { background-color: rgba(52,211,153,0.22) !important; }
+.zcc-shell.zcc-dark [class~="border-emerald-100"],
+.zcc-shell.zcc-dark [class~="border-emerald-200"],
+.zcc-shell.zcc-dark [class~="border-emerald-300"] { border-color: rgba(52,211,153,0.35) !important; }
+.zcc-shell.zcc-dark [class~="bg-teal-50"],
+.zcc-shell.zcc-dark [class~="bg-teal-50/50"],
+.zcc-shell.zcc-dark [class~="bg-teal-50/40"] { background-color: rgba(45,212,191,0.10) !important; }
+.zcc-shell.zcc-dark [class~="bg-teal-100"],
+.zcc-shell.zcc-dark [class~="bg-teal-200"] { background-color: rgba(45,212,191,0.18) !important; }
+.zcc-shell.zcc-dark [class~="hover:bg-teal-50"]:hover,
+.zcc-shell.zcc-dark [class~="hover:bg-teal-50/40"]:hover,
+.zcc-shell.zcc-dark [class~="hover:bg-teal-100"]:hover { background-color: rgba(45,212,191,0.22) !important; }
+.zcc-shell.zcc-dark [class~="border-teal-100"],
+.zcc-shell.zcc-dark [class~="border-teal-200"],
+.zcc-shell.zcc-dark [class~="border-teal-300"] { border-color: rgba(45,212,191,0.35) !important; }
+.zcc-shell.zcc-dark [class~="bg-lime-50"],
+.zcc-shell.zcc-dark [class~="bg-lime-50/50"],
+.zcc-shell.zcc-dark [class~="bg-lime-50/40"] { background-color: rgba(163,230,53,0.10) !important; }
+.zcc-shell.zcc-dark [class~="bg-lime-100"],
+.zcc-shell.zcc-dark [class~="bg-lime-200"] { background-color: rgba(163,230,53,0.18) !important; }
+.zcc-shell.zcc-dark [class~="hover:bg-lime-50"]:hover,
+.zcc-shell.zcc-dark [class~="hover:bg-lime-50/40"]:hover,
+.zcc-shell.zcc-dark [class~="hover:bg-lime-100"]:hover { background-color: rgba(163,230,53,0.22) !important; }
+.zcc-shell.zcc-dark [class~="border-lime-100"],
+.zcc-shell.zcc-dark [class~="border-lime-200"],
+.zcc-shell.zcc-dark [class~="border-lime-300"] { border-color: rgba(163,230,53,0.35) !important; }
+.zcc-shell.zcc-dark [class~="bg-red-50"],
+.zcc-shell.zcc-dark [class~="bg-red-50/50"],
+.zcc-shell.zcc-dark [class~="bg-red-50/40"] { background-color: rgba(255,107,107,0.10) !important; }
+.zcc-shell.zcc-dark [class~="bg-red-100"],
+.zcc-shell.zcc-dark [class~="bg-red-200"] { background-color: rgba(255,107,107,0.18) !important; }
+.zcc-shell.zcc-dark [class~="hover:bg-red-50"]:hover,
+.zcc-shell.zcc-dark [class~="hover:bg-red-50/40"]:hover,
+.zcc-shell.zcc-dark [class~="hover:bg-red-100"]:hover { background-color: rgba(255,107,107,0.22) !important; }
+.zcc-shell.zcc-dark [class~="border-red-100"],
+.zcc-shell.zcc-dark [class~="border-red-200"],
+.zcc-shell.zcc-dark [class~="border-red-300"] { border-color: rgba(255,107,107,0.35) !important; }
+.zcc-shell.zcc-dark [class~="bg-rose-50"],
+.zcc-shell.zcc-dark [class~="bg-rose-50/50"],
+.zcc-shell.zcc-dark [class~="bg-rose-50/40"] { background-color: rgba(251,113,133,0.10) !important; }
+.zcc-shell.zcc-dark [class~="bg-rose-100"],
+.zcc-shell.zcc-dark [class~="bg-rose-200"] { background-color: rgba(251,113,133,0.18) !important; }
+.zcc-shell.zcc-dark [class~="hover:bg-rose-50"]:hover,
+.zcc-shell.zcc-dark [class~="hover:bg-rose-50/40"]:hover,
+.zcc-shell.zcc-dark [class~="hover:bg-rose-100"]:hover { background-color: rgba(251,113,133,0.22) !important; }
+.zcc-shell.zcc-dark [class~="border-rose-100"],
+.zcc-shell.zcc-dark [class~="border-rose-200"],
+.zcc-shell.zcc-dark [class~="border-rose-300"] { border-color: rgba(251,113,133,0.35) !important; }
+.zcc-shell.zcc-dark [class~="bg-pink-50"],
+.zcc-shell.zcc-dark [class~="bg-pink-50/50"],
+.zcc-shell.zcc-dark [class~="bg-pink-50/40"] { background-color: rgba(244,114,182,0.10) !important; }
+.zcc-shell.zcc-dark [class~="bg-pink-100"],
+.zcc-shell.zcc-dark [class~="bg-pink-200"] { background-color: rgba(244,114,182,0.18) !important; }
+.zcc-shell.zcc-dark [class~="hover:bg-pink-50"]:hover,
+.zcc-shell.zcc-dark [class~="hover:bg-pink-50/40"]:hover,
+.zcc-shell.zcc-dark [class~="hover:bg-pink-100"]:hover { background-color: rgba(244,114,182,0.22) !important; }
+.zcc-shell.zcc-dark [class~="border-pink-100"],
+.zcc-shell.zcc-dark [class~="border-pink-200"],
+.zcc-shell.zcc-dark [class~="border-pink-300"] { border-color: rgba(244,114,182,0.35) !important; }
+.zcc-shell.zcc-dark [class~="bg-amber-50"],
+.zcc-shell.zcc-dark [class~="bg-amber-50/50"],
+.zcc-shell.zcc-dark [class~="bg-amber-50/40"] { background-color: rgba(245,184,61,0.10) !important; }
+.zcc-shell.zcc-dark [class~="bg-amber-100"],
+.zcc-shell.zcc-dark [class~="bg-amber-200"] { background-color: rgba(245,184,61,0.18) !important; }
+.zcc-shell.zcc-dark [class~="hover:bg-amber-50"]:hover,
+.zcc-shell.zcc-dark [class~="hover:bg-amber-50/40"]:hover,
+.zcc-shell.zcc-dark [class~="hover:bg-amber-100"]:hover { background-color: rgba(245,184,61,0.22) !important; }
+.zcc-shell.zcc-dark [class~="border-amber-100"],
+.zcc-shell.zcc-dark [class~="border-amber-200"],
+.zcc-shell.zcc-dark [class~="border-amber-300"] { border-color: rgba(245,184,61,0.35) !important; }
+.zcc-shell.zcc-dark [class~="bg-yellow-50"],
+.zcc-shell.zcc-dark [class~="bg-yellow-50/50"],
+.zcc-shell.zcc-dark [class~="bg-yellow-50/40"] { background-color: rgba(250,204,21,0.10) !important; }
+.zcc-shell.zcc-dark [class~="bg-yellow-100"],
+.zcc-shell.zcc-dark [class~="bg-yellow-200"] { background-color: rgba(250,204,21,0.18) !important; }
+.zcc-shell.zcc-dark [class~="hover:bg-yellow-50"]:hover,
+.zcc-shell.zcc-dark [class~="hover:bg-yellow-50/40"]:hover,
+.zcc-shell.zcc-dark [class~="hover:bg-yellow-100"]:hover { background-color: rgba(250,204,21,0.22) !important; }
+.zcc-shell.zcc-dark [class~="border-yellow-100"],
+.zcc-shell.zcc-dark [class~="border-yellow-200"],
+.zcc-shell.zcc-dark [class~="border-yellow-300"] { border-color: rgba(250,204,21,0.35) !important; }
+.zcc-shell.zcc-dark [class~="bg-orange-50"],
+.zcc-shell.zcc-dark [class~="bg-orange-50/50"],
+.zcc-shell.zcc-dark [class~="bg-orange-50/40"] { background-color: rgba(251,146,60,0.10) !important; }
+.zcc-shell.zcc-dark [class~="bg-orange-100"],
+.zcc-shell.zcc-dark [class~="bg-orange-200"] { background-color: rgba(251,146,60,0.18) !important; }
+.zcc-shell.zcc-dark [class~="hover:bg-orange-50"]:hover,
+.zcc-shell.zcc-dark [class~="hover:bg-orange-50/40"]:hover,
+.zcc-shell.zcc-dark [class~="hover:bg-orange-100"]:hover { background-color: rgba(251,146,60,0.22) !important; }
+.zcc-shell.zcc-dark [class~="border-orange-100"],
+.zcc-shell.zcc-dark [class~="border-orange-200"],
+.zcc-shell.zcc-dark [class~="border-orange-300"] { border-color: rgba(251,146,60,0.35) !important; }
+.zcc-shell.zcc-dark [class~="bg-purple-50"],
+.zcc-shell.zcc-dark [class~="bg-purple-50/50"],
+.zcc-shell.zcc-dark [class~="bg-purple-50/40"] { background-color: rgba(192,132,252,0.10) !important; }
+.zcc-shell.zcc-dark [class~="bg-purple-100"],
+.zcc-shell.zcc-dark [class~="bg-purple-200"] { background-color: rgba(192,132,252,0.18) !important; }
+.zcc-shell.zcc-dark [class~="hover:bg-purple-50"]:hover,
+.zcc-shell.zcc-dark [class~="hover:bg-purple-50/40"]:hover,
+.zcc-shell.zcc-dark [class~="hover:bg-purple-100"]:hover { background-color: rgba(192,132,252,0.22) !important; }
+.zcc-shell.zcc-dark [class~="border-purple-100"],
+.zcc-shell.zcc-dark [class~="border-purple-200"],
+.zcc-shell.zcc-dark [class~="border-purple-300"] { border-color: rgba(192,132,252,0.35) !important; }
+.zcc-shell.zcc-dark [class~="bg-violet-50"],
+.zcc-shell.zcc-dark [class~="bg-violet-50/50"],
+.zcc-shell.zcc-dark [class~="bg-violet-50/40"] { background-color: rgba(167,139,250,0.10) !important; }
+.zcc-shell.zcc-dark [class~="bg-violet-100"],
+.zcc-shell.zcc-dark [class~="bg-violet-200"] { background-color: rgba(167,139,250,0.18) !important; }
+.zcc-shell.zcc-dark [class~="hover:bg-violet-50"]:hover,
+.zcc-shell.zcc-dark [class~="hover:bg-violet-50/40"]:hover,
+.zcc-shell.zcc-dark [class~="hover:bg-violet-100"]:hover { background-color: rgba(167,139,250,0.22) !important; }
+.zcc-shell.zcc-dark [class~="border-violet-100"],
+.zcc-shell.zcc-dark [class~="border-violet-200"],
+.zcc-shell.zcc-dark [class~="border-violet-300"] { border-color: rgba(167,139,250,0.35) !important; }
+.zcc-shell.zcc-dark [class~="bg-[#eaf8f1]"] { background-color: rgba(61,220,151,0.14) !important; }
+.zcc-shell.zcc-dark [class~="bg-[#fff5df]"] { background-color: rgba(245,184,61,0.14) !important; }
+.zcc-shell.zcc-dark [class~="bg-[#fff0f0]"] { background-color: rgba(255,107,107,0.14) !important; }
+.zcc-shell.zcc-dark [class~="bg-[#eff3ff]"],
+.zcc-shell.zcc-dark [class~="bg-[#eaf0ff]"],
+.zcc-shell.zcc-dark [class~="bg-[#e5ebff]"] { background-color: var(--zcc-accent-soft) !important; }
+.zcc-shell.zcc-dark [class~="text-gray-900"],
+.zcc-shell.zcc-dark [class~="text-gray-800"],
+.zcc-shell.zcc-dark [class~="text-black"],
+.zcc-shell.zcc-dark [class~="text-[#1d2430]"],
+.zcc-shell.zcc-dark [class~="text-slate-900"],
+.zcc-shell.zcc-dark [class~="text-slate-800"],
+.zcc-shell.zcc-dark [class~="text-[#111827]"],
+.zcc-shell.zcc-dark [class~="text-[#0B1020]"] { color: var(--zcc-text) !important; }
+.zcc-shell.zcc-dark [class~="text-gray-700"],
+.zcc-shell.zcc-dark [class~="text-gray-600"],
+.zcc-shell.zcc-dark [class~="text-[#667085]"],
+.zcc-shell.zcc-dark [class~="text-slate-700"],
+.zcc-shell.zcc-dark [class~="text-slate-600"],
+.zcc-shell.zcc-dark [class~="text-[#4d4d4d]"] { color: var(--zcc-muted) !important; }
+.zcc-shell.zcc-dark [class~="text-gray-500"],
+.zcc-shell.zcc-dark [class~="text-[#778092]"],
+.zcc-shell.zcc-dark [class~="text-[#8991a0]"],
+.zcc-shell.zcc-dark [class~="text-slate-500"] { color: var(--zcc-muted) !important; }
+.zcc-shell.zcc-dark [class~="text-gray-400"],
+.zcc-shell.zcc-dark [class~="text-gray-300"],
+.zcc-shell.zcc-dark [class~="text-[#98a1b0]"],
+.zcc-shell.zcc-dark [class~="text-slate-400"] { color: var(--zcc-faint) !important; }
+.zcc-shell.zcc-dark [class~="hover:text-gray-900"]:hover,
+.zcc-shell.zcc-dark [class~="hover:text-gray-800"]:hover,
+.zcc-shell.zcc-dark [class~="hover:text-gray-700"]:hover,
+.zcc-shell.zcc-dark [class~="hover:text-[#1d2430]"]:hover,
+.zcc-shell.zcc-dark [class~="hover:text-black"]:hover { color: var(--zcc-text) !important; }
+.zcc-shell.zcc-dark [class~="placeholder-gray-400"]::placeholder,
+.zcc-shell.zcc-dark [class~="placeholder:text-gray-400"]::placeholder { color: var(--zcc-faint) !important; }
+.zcc-shell.zcc-dark [class~="text-blue-600"],
+.zcc-shell.zcc-dark [class~="text-blue-700"],
+.zcc-shell.zcc-dark [class~="text-blue-800"],
+.zcc-shell.zcc-dark [class~="text-blue-900"] { color: #9DB8FF !important; }
+.zcc-shell.zcc-dark [class~="text-indigo-600"],
+.zcc-shell.zcc-dark [class~="text-indigo-700"],
+.zcc-shell.zcc-dark [class~="text-indigo-800"],
+.zcc-shell.zcc-dark [class~="text-indigo-900"] { color: #A5B4FC !important; }
+.zcc-shell.zcc-dark [class~="text-sky-600"],
+.zcc-shell.zcc-dark [class~="text-sky-700"],
+.zcc-shell.zcc-dark [class~="text-sky-800"],
+.zcc-shell.zcc-dark [class~="text-sky-900"] { color: #7DD3FC !important; }
+.zcc-shell.zcc-dark [class~="text-green-600"],
+.zcc-shell.zcc-dark [class~="text-green-700"],
+.zcc-shell.zcc-dark [class~="text-green-800"],
+.zcc-shell.zcc-dark [class~="text-green-900"] { color: #6EE7A8 !important; }
+.zcc-shell.zcc-dark [class~="text-emerald-600"],
+.zcc-shell.zcc-dark [class~="text-emerald-700"],
+.zcc-shell.zcc-dark [class~="text-emerald-800"],
+.zcc-shell.zcc-dark [class~="text-emerald-900"] { color: #6EE7B7 !important; }
+.zcc-shell.zcc-dark [class~="text-teal-600"],
+.zcc-shell.zcc-dark [class~="text-teal-700"],
+.zcc-shell.zcc-dark [class~="text-teal-800"],
+.zcc-shell.zcc-dark [class~="text-teal-900"] { color: #5EEAD4 !important; }
+.zcc-shell.zcc-dark [class~="text-red-600"],
+.zcc-shell.zcc-dark [class~="text-red-700"],
+.zcc-shell.zcc-dark [class~="text-red-800"],
+.zcc-shell.zcc-dark [class~="text-red-900"] { color: #FCA5A5 !important; }
+.zcc-shell.zcc-dark [class~="text-rose-600"],
+.zcc-shell.zcc-dark [class~="text-rose-700"],
+.zcc-shell.zcc-dark [class~="text-rose-800"],
+.zcc-shell.zcc-dark [class~="text-rose-900"] { color: #FDA4AF !important; }
+.zcc-shell.zcc-dark [class~="text-amber-600"],
+.zcc-shell.zcc-dark [class~="text-amber-700"],
+.zcc-shell.zcc-dark [class~="text-amber-800"],
+.zcc-shell.zcc-dark [class~="text-amber-900"] { color: #FCD34D !important; }
+.zcc-shell.zcc-dark [class~="text-yellow-600"],
+.zcc-shell.zcc-dark [class~="text-yellow-700"],
+.zcc-shell.zcc-dark [class~="text-yellow-800"],
+.zcc-shell.zcc-dark [class~="text-yellow-900"] { color: #FDE047 !important; }
+.zcc-shell.zcc-dark [class~="text-orange-600"],
+.zcc-shell.zcc-dark [class~="text-orange-700"],
+.zcc-shell.zcc-dark [class~="text-orange-800"],
+.zcc-shell.zcc-dark [class~="text-orange-900"] { color: #FDBA74 !important; }
+.zcc-shell.zcc-dark [class~="text-purple-600"],
+.zcc-shell.zcc-dark [class~="text-purple-700"],
+.zcc-shell.zcc-dark [class~="text-purple-800"],
+.zcc-shell.zcc-dark [class~="text-purple-900"] { color: #D8B4FE !important; }
+.zcc-shell.zcc-dark [class~="text-violet-600"],
+.zcc-shell.zcc-dark [class~="text-violet-700"],
+.zcc-shell.zcc-dark [class~="text-violet-800"],
+.zcc-shell.zcc-dark [class~="text-violet-900"] { color: #C4B5FD !important; }
+.zcc-shell.zcc-dark [class~="text-pink-600"],
+.zcc-shell.zcc-dark [class~="text-pink-700"],
+.zcc-shell.zcc-dark [class~="text-pink-800"],
+.zcc-shell.zcc-dark [class~="text-pink-900"] { color: #F9A8D4 !important; }
+.zcc-shell.zcc-dark [class~="text-[#024bff]"],
+.zcc-shell.zcc-dark [class~="text-blue-600"],
+.zcc-shell.zcc-dark [class~="text-[#4564c5]"] { color: var(--zcc-accent) !important; }
+.zcc-shell.zcc-dark [class~="text-[#159b65]"] { color: var(--zcc-ok) !important; }
+.zcc-shell.zcc-dark [class~="text-[#d88a00]"] { color: var(--zcc-warn) !important; }
+.zcc-shell.zcc-dark [class~="text-[#d84c4c]"] { color: var(--zcc-danger) !important; }
+.zcc-shell.zcc-dark [class~="border-gray-100"],
+.zcc-shell.zcc-dark [class~="border-gray-200"],
+.zcc-shell.zcc-dark [class~="border-[#e7ebf2]"],
+.zcc-shell.zcc-dark [class~="border-slate-100"],
+.zcc-shell.zcc-dark [class~="border-slate-200"],
+.zcc-shell.zcc-dark [class~="border-[#E5E7EB]"] { border-color: var(--zcc-line) !important; }
+.zcc-shell.zcc-dark [class~="border-gray-300"],
+.zcc-shell.zcc-dark [class~="border-slate-300"],
+.zcc-shell.zcc-dark [class~="border-gray-400"] { border-color: var(--zcc-line-strong) !important; }
+.zcc-shell.zcc-dark [class~="hover:border-gray-300"]:hover,
+.zcc-shell.zcc-dark [class~="hover:border-gray-400"]:hover,
+.zcc-shell.zcc-dark [class~="hover:border-[#c7d5ff]"]:hover { border-color: var(--zcc-accent) !important; }
+.zcc-shell.zcc-dark [class~="divide-gray-100"] > * + *,
+.zcc-shell.zcc-dark [class~="divide-gray-200"] > * + * { border-color: var(--zcc-line) !important; }
+.zcc-shell.zcc-dark [class~="bg-black"],
+.zcc-shell.zcc-dark [class~="bg-gray-900"] { background-color: var(--zcc-accent) !important; color: var(--zcc-on-accent) !important; }
+.zcc-shell.zcc-dark [class~="hover:bg-black"]:hover,
+.zcc-shell.zcc-dark [class~="hover:bg-gray-800"]:hover,
+.zcc-shell.zcc-dark [class~="hover:bg-gray-700"]:hover { background-color: var(--zcc-accent) !important; color: var(--zcc-on-accent) !important; filter: brightness(1.1); }
+.zcc-shell.zcc-dark [class~="bg-[#024bff]"],
+.zcc-shell.zcc-dark [class~="bg-blue-600"] { background-color: var(--zcc-accent) !important; color: var(--zcc-on-accent) !important; }
+.zcc-shell.zcc-dark [class~="hover:bg-[#0140dd]"]:hover,
+.zcc-shell.zcc-dark [class~="hover:bg-blue-700"]:hover,
+.zcc-shell.zcc-dark [class~="hover:bg-[#024bff]"]:hover { background-color: var(--zcc-accent) !important; filter: brightness(1.1); }
+}

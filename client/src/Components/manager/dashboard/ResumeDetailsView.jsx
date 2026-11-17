@@ -30,7 +30,7 @@ const CircularProgress = ({ percentage, size = 160, strokeWidth = 14 }) => {
           cx={size / 2}
           cy={size / 2}
           r={radius}
-          stroke="#e8e8e8"
+          stroke="var(--zcc-track, #e8e8e8)"
           strokeWidth={strokeWidth}
           fill="none"
           strokeLinecap="round"
@@ -392,8 +392,8 @@ const ResumeDetailsView = ({ resumeData, onBack }) => {
         </div>
 
         {/* Original Content - This remains visible on screen */}
-        {/* PDF EXPORT ROOT: Add inline style to force supported background color */}
-        <div className="mt-1" ref={resumeContentRef} style={{ background: '#f9fafb' }}>
+        {/* bg-gray-50 is the same #f9fafb, as a class so the dark console theme can recolour it */}
+        <div className="mt-1 bg-gray-50" ref={resumeContentRef}>
           {/* Header with Name, Title, Skills & Contact */}
           <div className="border-b border-gray-200 py-1 mb-2">
             {/* Top Row: Avatar, Name & Title - Centered */}

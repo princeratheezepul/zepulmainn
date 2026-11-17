@@ -407,6 +407,9 @@ export const getRecruiterProfile = async (req, res) => {
       type: recruiter.type,
       isActive: recruiter.isActive,
       onboardedBy: onboardedBy,
+      assignedCompany: recruiter.assignedCompany || '',
+      manager: recruiter.manager || recruiter.userId?.fullname || recruiter.userId?.username || '',
+      location: recruiter.location || '',
       createdAt: recruiter.createdAt,
       updatedAt: recruiter.updatedAt
     };

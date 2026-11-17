@@ -10,12 +10,12 @@ import nodemailer from "nodemailer";
 import { executeJava, executeCpp, executePython } from "../services/codeExecution.service.js";
 import { sendMeetingInviteEmail } from "../services/email.service.js";
 import { sendWhatsAppMessage } from "../utils/whatsapp.js";
+import { interviewMinutesFor } from "../utils/interviewDuration.js";
 import { isS3Configured, uploadBufferToS3, getSignedImageUrl } from "../utils/s3.js";
 
 const FRONTEND_URL = process.env.FRONTEND_URL || process.env.FRONT_END_URL || "http://localhost:5173";
 const INTERVIEW_LEAD_TIME_MS = 5 * 60 * 1000; // 5 minutes — gives the candidate a moment to read the invite
 const INTERVIEW_WINDOW_MS = 24 * 60 * 60 * 1000; // 24 hours — candidate must take the interview within this window
-const INTERVIEW_DURATION_MINUTES = 10;
 
 const openai = process.env.OPENAI_API ? new OpenAI({ apiKey: process.env.OPENAI_API }) : null;
 
@@ -632,7 +632,8 @@ export const sendInterviewInvite = async (resume) => {
     candidateEmail: resume.email.toLowerCase(),
     scheduledAt: new Date(now + INTERVIEW_LEAD_TIME_MS),
     expiresAt: new Date(now + INTERVIEW_WINDOW_MS),
-    durationMinutes: INTERVIEW_DURATION_MINUTES,
+    // The job's own interview length (5-45 minutes), the same for every candidate.
+    durationMinutes: interviewMinutesFor(job),
     token: crypto.randomBytes(24).toString('hex'),
     status: 'scheduled',
     vapiAssistantId: process.env.VAPI_ASSISTANT_ID || undefined,
@@ -688,11 +689,56 @@ export const sendInterviewToCandidate = async (req, res) => {
       return res.status(403).json({ message: "You can only send interviews for your own jobs." });
     }
 
+    return deliverInterview(resume, res);
+  } catch (error) {
+    console.error("Error sending interview to candidate:", error);
+    return res.status(500).json({ message: "Failed to send the interview." });
+  }
+};
+
+// @desc A recruiter sends the AI interview to a candidate they uploaded, on a job assigned to them
+// @route POST /api/resumes/:resumeId/send-interview
+export const sendInterviewAsRecruiter = async (req, res) => {
+  try {
+    const { resumeId } = req.params;
+    if (!mongoose.isValidObjectId(resumeId)) {
+      return res.status(400).json({ message: "Invalid candidate id." });
+    }
+
+    const resume = await Resume.findById(resumeId).populate('jobId');
+    if (!resume) return res.status(404).json({ message: "Candidate not found." });
+
+    // A recruiter acts only on candidates they put forward, and only while the
+    // job is still assigned to them.
+    const job = resume.jobId;
+    const isUploader = resume.recruiterId && String(resume.recruiterId) === String(req.id);
+    const isAssigned = (job?.assignedRecruiters || []).some((id) => String(id) === String(req.id));
+    if (!isUploader || !isAssigned) {
+      return res.status(403).json({ message: "You can only send interviews to candidates you uploaded on jobs assigned to you." });
+    }
+
+    return deliverInterview(resume, res);
+  } catch (error) {
+    console.error("Error sending interview as recruiter:", error);
+    return res.status(500).json({ message: "Failed to send the interview." });
+  }
+};
+
+// Checks and sending shared by the manager and recruiter routes; access has
+// already been decided by the caller.
+const deliverInterview = async (resume, res) => {
+  try {
     if (resume.status === 'rejected') {
       return res.status(400).json({ message: "This candidate has been rejected." });
     }
-    if (!codingTestDone(resume)) {
+    // Jobs with a coding test interview only those who finished it; jobs
+    // without one interview anyone who confirmed interest in the role.
+    const needsCodingTest = Boolean(resume.jobId?.intake?.codingTest?.required);
+    if (needsCodingTest && !codingTestDone(resume)) {
       return res.status(400).json({ message: "This candidate hasn't finished the coding test yet." });
+    }
+    if (!needsCodingTest && !codingTestDone(resume) && resume.roleConfirmation?.status !== 'accepted') {
+      return res.status(400).json({ message: "This candidate hasn't confirmed interest in the role yet." });
     }
 
     const existing = (await latestInvitesByResume([resume._id])).get(String(resume._id));

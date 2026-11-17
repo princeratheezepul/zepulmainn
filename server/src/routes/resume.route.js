@@ -3,6 +3,7 @@ import { saveResume, saveResumeWithJob, getResumesByJob, searchResumesByJobRole,
 import { verifyRecruiterJWT } from "../middleware/recruiter.auth.middleware.js";
 import { anyAuth } from "../middleware/anyAuth.middleware.js";
 import { openAILimiter } from "../middleware/rateLimiters.js";
+import { sendInterviewAsRecruiter } from "../controllers/assessment.controller.js";
 
 const router = express.Router();
 
@@ -26,6 +27,7 @@ router.patch('/:resumeId', verifyRecruiterJWT, updateResumeStatus);
 router.patch('/:resumeId/request-another-round', anyAuth, requestAnotherRound);
 router.patch('/:resumeId/submit-to-manager', anyAuth, submitToManager);
 router.post('/:resumeId/schedule-interview', anyAuth, scheduleInterview);
+router.post('/:resumeId/send-interview', verifyRecruiterJWT, sendInterviewAsRecruiter);
 router.post('/:resumeId/save-interview-evaluation', verifyRecruiterJWT, saveInterviewEvaluation);
 
 export default router;

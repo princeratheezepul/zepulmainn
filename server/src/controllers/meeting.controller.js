@@ -3,6 +3,7 @@ import OpenAI from "openai";
 import { Meeting } from "../models/meeting.model.js";
 import { Job } from "../models/job.model.js";
 import { intakePromptContext } from "../utils/jobIntake.js";
+import { interviewMinutesFor, capInterviewMinutes } from "../utils/interviewDuration.js";
 import Resume from "../models/resume.model.js";
 import Recruiter from "../models/recruiter.model.js";
 import Scorecard from "../models/scorecard.model.js";
@@ -136,7 +137,8 @@ export const createMeeting = async (req, res) => {
       recruiterId: recruiter._id,
       candidateEmail: candidateEmail.toLowerCase(),
       scheduledAt,
-      durationMinutes: durationMinutes || 40,
+      // Always the job's interview length, so every candidate gets the same time.
+      durationMinutes: interviewMinutesFor(job),
       token,
       status: "scheduled",
       // Optional pre-configured assistant; if not set, service will create one per meeting
@@ -263,9 +265,7 @@ export const rescheduleMeeting = async (req, res) => {
     }
 
     meeting.scheduledAt = scheduledAt;
-    if (durationMinutes) {
-      meeting.durationMinutes = durationMinutes;
-    }
+    // Duration stays the job's interview length; rescheduling only moves the time.
     meeting.status = "scheduled";
     await meeting.save();
 
@@ -400,7 +400,7 @@ export const getMeetingByToken = async (req, res) => {
       meeting: {
         id: meeting._id,
         scheduledAt: meeting.scheduledAt,
-        durationMinutes: meeting.durationMinutes,
+        durationMinutes: capInterviewMinutes(meeting.durationMinutes),
         status: meeting.status,
         token: meeting.token,
         vapiAssistantId: meeting.vapiAssistantId,
@@ -448,7 +448,7 @@ export const startMeeting = async (req, res) => {
       const scheduled = new Date(meeting.scheduledAt);
       const earlyWindowMs = 15 * 60 * 1000; // 15 minutes before scheduled
       const lateWindowMs =
-        (meeting.durationMinutes || 40) * 60 * 1000 + 30 * 60 * 1000; // duration + 30 minute buffer
+        capInterviewMinutes(meeting.durationMinutes) * 60 * 1000 + 30 * 60 * 1000; // duration + 30 minute buffer
 
       if (now.getTime() < scheduled.getTime() - earlyWindowMs) {
         return res
@@ -490,7 +490,7 @@ export const startMeeting = async (req, res) => {
           keyStrength: meeting.resumeId.keyStrength || [],
         }
         : null,
-      durationMinutes: meeting.durationMinutes || 40,
+      durationMinutes: capInterviewMinutes(meeting.durationMinutes),
     };
 
     const { callId, joinConfig } = await startWebCallForMeeting({

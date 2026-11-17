@@ -8,7 +8,7 @@ const ChangeEmail = () => {
     useEffect(() => {
         const changeEmail = async () => {
             try {
-                const res = await fetch(`http://localhost:5880/api/manager/change-email/${id}/${token}`, {
+                const res = await fetch(`${import.meta.env.VITE_BACKEND_URL ?? ''}/api/manager/change-email/${id}/${token}`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

@@ -51,6 +51,20 @@ const JobSchema = new mongoose.Schema(
       default: null,
     },
 
+    // Every ZepDB sourcing search run for this job, oldest first. Shown on the
+    // job's Sourcing & outreach page.
+    sourcingRuns: [{
+      _id: false,
+      at: { type: Date, default: Date.now },
+      filters: String,     // what was searched, e.g. "Backend Engineer · Node, AWS · Pune"
+      widened: { type: Boolean, default: false }, // stricter filters found nothing
+      auto: { type: Boolean, default: false },    // started by the post-create countdown
+      found: { type: Number, default: 0 },        // profiles the search returned
+      strong: { type: Number, default: 0 },       // cleared the bar and were handed back
+      partial: { type: Number, default: 0 },      // scored but below the bar; kept in ZepDB
+      creditsUsed: { type: Number, default: 0 },
+    }],
+
     // Zeus job intake brief: the structured fields captured by the AI intake
     // (chat). Core fields that already exist on the job (title, skills,
     // location, salary, ...) stay where they are; this holds the rest, plus
@@ -94,6 +108,8 @@ const JobSchema = new mongoose.Schema(
         focus: { type: [String], default: [] },
         mustAsk: { type: [String], default: [] },
         dealBreakers: { type: String, default: '' },
+        // AI interview length for every candidate on this job (max 45).
+        durationMin: { type: Number, min: 5, max: 45, default: 10 },
       },
       conditional: {
         confidential: { type: Boolean, default: false },

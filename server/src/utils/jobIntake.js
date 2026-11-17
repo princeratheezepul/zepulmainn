@@ -62,7 +62,7 @@ export const sanitizeIntake = (raw) => {
             durationMin: num(ct.durationMin, 20, 120, 45),
             cutoff: num(ct.cutoff, 0, 100, 70),
         },
-        interview: { focus: list(iv.focus, 5), mustAsk: list(iv.mustAsk, 5), dealBreakers: str(iv.dealBreakers, 500) },
+        interview: { focus: list(iv.focus, 5), mustAsk: list(iv.mustAsk, 5), dealBreakers: str(iv.dealBreakers, 500), durationMin: Math.round(num(iv.durationMin, 5, 45, 10)) },
         conditional: {
             confidential: bool(cd.confidential),
             targetCompanies: list(cd.targetCompanies),

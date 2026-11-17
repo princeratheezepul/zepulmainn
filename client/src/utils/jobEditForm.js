@@ -82,6 +82,7 @@ export const jobToEditForm = (job) => {
     cvStrengthCutoff: job?.cvStrengthCutoff ?? '',
 
     interviewFocus: i.interview?.focus || [],
+    interviewDuration: i.interview?.durationMin ?? 10,
     mustAsk: lines(i.interview?.mustAsk),
     dealBreakers: i.interview?.dealBreakers || '',
 
@@ -148,7 +149,7 @@ export const editFormToPayload = (f) => {
         durationMin: num(f.codingDuration) ?? 45,
         cutoff: num(f.codingCutoff) ?? 70,
       },
-      interview: { focus: f.interviewFocus, mustAsk: toLines(f.mustAsk), dealBreakers: f.dealBreakers },
+      interview: { focus: f.interviewFocus, mustAsk: toLines(f.mustAsk), dealBreakers: f.dealBreakers, durationMin: num(f.interviewDuration) ?? 10 },
       conditional: {
         confidential: f.confidential,
         targetCompanies: f.targetCompanies,
@@ -185,6 +186,10 @@ export const validateEditForm = (f) => {
   const stretch = num(f.stretch);
   if (stretch !== null && max !== null && max > 0 && stretch < max) {
     errors.push(`CTC stretch ceiling (${stretch}) is below the maximum (${max})`);
+  }
+  const interviewMin = num(f.interviewDuration);
+  if (interviewMin === null || interviewMin < 5 || interviewMin > 45) {
+    errors.push('AI interview duration must be between 5 and 45 minutes');
   }
   return errors;
 };

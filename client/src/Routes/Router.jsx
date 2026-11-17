@@ -67,6 +67,7 @@ import { Toaster } from "react-hot-toast";
 import SetPassword from "../Pages/Manager/SetPassword.jsx";
 import AccountManagerSetPassword from "../Pages/AccountManager/SetPassword.jsx";
 import RecruiterJobDetailPage from '../Pages/RecruiterJobDetailPage';
+import ManagerThemeShell from '../Components/manager/dashboard/ManagerThemeShell';
 import ManagerJobDetailPage from '../Pages/Manager/jobs/[jobid]';
 import ManagerDashboard from '../Pages/Manager/ManagerDashboard.jsx';
 import ProRecruiterDashboard from '../Pages/ProRecruiter/ProRecruiterDashboard.jsx';
@@ -322,12 +323,12 @@ const Router = () => {
             } />
             <Route path="/recruiter/:resumeId" element={
               <ProtectedRoute allowedRoles={['recruiter']}>
-                <ResumeRecruiterDetails />
+                <ManagerThemeShell><ResumeRecruiterDetails /></ManagerThemeShell>
               </ProtectedRoute>
             } />
             <Route path="/recruiter/jobs/:jobId" element={
               <ProtectedRoute allowedRoles={['recruiter']}>
-                <RecruiterJobDetailPage />
+                <ManagerThemeShell><RecruiterJobDetailPage /></ManagerThemeShell>
               </ProtectedRoute>
             } />
 
@@ -347,42 +348,42 @@ const Router = () => {
             } />
             <Route path="/manager/myteam" element={
               <ProtectedRoute allowedRoles={['manager']}>
-                <Myteam />
+                <ManagerThemeShell nav="Recruiters"><Myteam /></ManagerThemeShell>
               </ProtectedRoute>
             } />
             <Route path="/manager/listofjobs" element={
               <ProtectedRoute allowedRoles={['manager']}>
-                <ListOfJobs />
+                <ManagerThemeShell nav="Jobs"><ListOfJobs /></ManagerThemeShell>
               </ProtectedRoute>
             } />
             <Route path="/manager/scorecardreviews" element={
               <ProtectedRoute allowedRoles={['manager']}>
-                <ScorecardReviews />
+                <ManagerThemeShell nav="Candidates"><ScorecardReviews /></ManagerThemeShell>
               </ProtectedRoute>
             } />
             <Route path="/manager/settings" element={
               <ProtectedRoute allowedRoles={['manager']}>
-                <Settings />
+                <ManagerThemeShell nav><Settings /></ManagerThemeShell>
               </ProtectedRoute>
             } />
             <Route path="/manager/company" element={
               <ProtectedRoute allowedRoles={['manager']}>
-                <Company />
+                <ManagerThemeShell nav><Company /></ManagerThemeShell>
               </ProtectedRoute>
             } />
             <Route path="/manager/company/jobs/:id/:jobid" element={
               <ProtectedRoute allowedRoles={['manager']}>
-                <AssignJobs />
+                <ManagerThemeShell nav="Jobs"><AssignJobs /></ManagerThemeShell>
               </ProtectedRoute>
             } />
             <Route path="/manager/company/jobs/:id" element={
               <ProtectedRoute allowedRoles={['manager']}>
-                <Jobs />
+                <ManagerThemeShell nav="Jobs"><Jobs /></ManagerThemeShell>
               </ProtectedRoute>
             } />
             <Route path="/manager/recruiters/:id" element={
               <ProtectedRoute allowedRoles={['manager']}>
-                <RecruiterDetails />
+                <ManagerThemeShell nav="Recruiters"><RecruiterDetails /></ManagerThemeShell>
               </ProtectedRoute>
             } />
             <Route path="/manager/jobs/:jobid" element={
@@ -391,6 +392,56 @@ const Router = () => {
               </ProtectedRoute>
             } />
             <Route path="/manager/jobs/:jobid/candidates" element={
+              <ProtectedRoute allowedRoles={['manager']}>
+                <ManagerJobDetailPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/manager/jobs/:jobid/assign" element={
+              <ProtectedRoute allowedRoles={['manager']}>
+                <ManagerJobDetailPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/manager/jobs/:jobid/shortlist" element={
+              <ProtectedRoute allowedRoles={['manager']}>
+                <ManagerJobDetailPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/manager/jobs/:jobid/scorecards" element={
+              <ProtectedRoute allowedRoles={['manager']}>
+                <ManagerJobDetailPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/manager/jobs/:jobid/sourcing" element={
+              <ProtectedRoute allowedRoles={['manager']}>
+                <ManagerJobDetailPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/manager/jobs/:jobid/outreach" element={
+              <ProtectedRoute allowedRoles={['manager']}>
+                <ManagerJobDetailPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/manager/jobs/:jobid/cv" element={
+              <ProtectedRoute allowedRoles={['manager']}>
+                <ManagerJobDetailPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/manager/jobs/:jobid/coding" element={
+              <ProtectedRoute allowedRoles={['manager']}>
+                <ManagerJobDetailPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/manager/jobs/:jobid/interview-links" element={
+              <ProtectedRoute allowedRoles={['manager']}>
+                <ManagerJobDetailPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/manager/jobs/:jobid/interviews" element={
+              <ProtectedRoute allowedRoles={['manager']}>
+                <ManagerJobDetailPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/manager/jobs/:jobid/prep" element={
               <ProtectedRoute allowedRoles={['manager']}>
                 <ManagerJobDetailPage />
               </ProtectedRoute>
@@ -431,6 +482,56 @@ const Router = () => {
                 <ManagerJobDetailPage />
               </ProtectedRoute>
             } />
+            <Route path="/employermanager/jobs/:jobid/assign" element={
+              <ProtectedRoute allowedRoles={['manager']}>
+                <ManagerJobDetailPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/employermanager/jobs/:jobid/shortlist" element={
+              <ProtectedRoute allowedRoles={['manager']}>
+                <ManagerJobDetailPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/employermanager/jobs/:jobid/scorecards" element={
+              <ProtectedRoute allowedRoles={['manager']}>
+                <ManagerJobDetailPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/employermanager/jobs/:jobid/sourcing" element={
+              <ProtectedRoute allowedRoles={['manager']}>
+                <ManagerJobDetailPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/employermanager/jobs/:jobid/outreach" element={
+              <ProtectedRoute allowedRoles={['manager']}>
+                <ManagerJobDetailPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/employermanager/jobs/:jobid/cv" element={
+              <ProtectedRoute allowedRoles={['manager']}>
+                <ManagerJobDetailPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/employermanager/jobs/:jobid/coding" element={
+              <ProtectedRoute allowedRoles={['manager']}>
+                <ManagerJobDetailPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/employermanager/jobs/:jobid/interview-links" element={
+              <ProtectedRoute allowedRoles={['manager']}>
+                <ManagerJobDetailPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/employermanager/jobs/:jobid/interviews" element={
+              <ProtectedRoute allowedRoles={['manager']}>
+                <ManagerJobDetailPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/employermanager/jobs/:jobid/prep" element={
+              <ProtectedRoute allowedRoles={['manager']}>
+                <ManagerJobDetailPage />
+              </ProtectedRoute>
+            } />
 
             {/* A ProRecruiter opens jobs from their own dashboard, so the job
                 page lives under their path too — otherwise "Back to Jobs" has
@@ -441,6 +542,56 @@ const Router = () => {
               </ProtectedRoute>
             } />
             <Route path="/prorecruiter/jobs/:jobid/candidates" element={
+              <ProtectedRoute allowedRoles={['manager']}>
+                <ManagerJobDetailPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/prorecruiter/jobs/:jobid/assign" element={
+              <ProtectedRoute allowedRoles={['manager']}>
+                <ManagerJobDetailPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/prorecruiter/jobs/:jobid/shortlist" element={
+              <ProtectedRoute allowedRoles={['manager']}>
+                <ManagerJobDetailPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/prorecruiter/jobs/:jobid/scorecards" element={
+              <ProtectedRoute allowedRoles={['manager']}>
+                <ManagerJobDetailPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/prorecruiter/jobs/:jobid/sourcing" element={
+              <ProtectedRoute allowedRoles={['manager']}>
+                <ManagerJobDetailPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/prorecruiter/jobs/:jobid/outreach" element={
+              <ProtectedRoute allowedRoles={['manager']}>
+                <ManagerJobDetailPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/prorecruiter/jobs/:jobid/cv" element={
+              <ProtectedRoute allowedRoles={['manager']}>
+                <ManagerJobDetailPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/prorecruiter/jobs/:jobid/coding" element={
+              <ProtectedRoute allowedRoles={['manager']}>
+                <ManagerJobDetailPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/prorecruiter/jobs/:jobid/interview-links" element={
+              <ProtectedRoute allowedRoles={['manager']}>
+                <ManagerJobDetailPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/prorecruiter/jobs/:jobid/interviews" element={
+              <ProtectedRoute allowedRoles={['manager']}>
+                <ManagerJobDetailPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/prorecruiter/jobs/:jobid/prep" element={
               <ProtectedRoute allowedRoles={['manager']}>
                 <ManagerJobDetailPage />
               </ProtectedRoute>

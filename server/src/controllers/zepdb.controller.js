@@ -442,6 +442,8 @@ export const scoreCandidateForJob = async (req, res) => {
       tag,
       resumeDataId: candidate._id,
       name: candidate.name,
+      ...(candidate.emailId ? { email: candidate.emailId } : {}),
+      ...(candidate.phone ? { phone: candidate.phone, countryCode: candidate.countryCode || '91' } : {}),
       title: candidate.role,
       skills: candidate.skills?.points || [],
       experience: `${candidate.experienceYears} years`,
@@ -476,35 +478,8 @@ export const scoreCandidateForJob = async (req, res) => {
       submittedAt: new Date()
     });
 
-    // Create a 24-hour confirmation token
-    const confirmToken = crypto.randomBytes(32).toString('hex');
-    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
-    await CandidateConfirmation.create({
-      token: confirmToken,
-      candidateId: candidate._id,
-      jobId: job._id,
-      resumeId: savedResume._id,
-      scorecardId: savedScorecard._id,
-      expiresAt,
-    });
-    const confirmLink = `${process.env.FRONTEND_URL}/confirm/${confirmToken}`;
-
-    // Send WhatsApp notification if candidate has a phone number
-    if (candidate.phone) {
-      const message = `Hi ${candidate.name}, you have been selected for the role of *${job.jobtitle}*${job.company ? ` at *${job.company}*` : ''}. Please click the link below to confirm if you want to proceed:\n${confirmLink}\n\n(This link expires in 24 hours)`;
-      sendWhatsAppMessage(candidate.phone, message, candidate.countryCode || '91');
-    }
-
-    // Send email notification if candidate has an email
-    if (candidate.emailId) {
-      sendShortlistEmail({
-        to: candidate.emailId,
-        candidateName: candidate.name,
-        jobTitle: job.jobtitle,
-        company: job.company,
-        confirmLink,
-      }).catch(err => console.error('Shortlist email failed:', err.message));
-    }
+    // No invite yet: the manager chooses who to reach out to in the job's
+    // Outreach step (POST /api/manager/resumes/job/:jobId/outreach).
 
     res.status(200).json({
       success: true,

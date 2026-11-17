@@ -181,6 +181,8 @@ If you're ready, let's begin.`;
       "function-call",
       "end-of-call-report",
     ],
+    // Vapi ends the call itself at the interview's length (never past 45 minutes).
+    maxDurationSeconds: Math.min(45, Math.max(1, Number(durationMinutes) || 10)) * 60,
   };
 };
 

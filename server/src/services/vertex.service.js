@@ -112,6 +112,47 @@ const experienceYears = (entries) => {
     return starts.length ? Math.max(0, new Date().getFullYear() - Math.min(...starts)) : 0;
 };
 
+// Country codes tried, longest first, when splitting an international number.
+const DIAL_CODES = ["971", "966", "974", "965", "880", "353", "91", "44", "61", "65", "49", "33", "31", "81", "86", "1"];
+
+/** "+91 98765 43210" -> { phone: "9876543210", countryCode: "91" }. */
+export const splitPhone = (raw) => {
+    const s = String(raw || "").trim();
+    const digits = s.replace(/\D/g, "");
+    if (digits.length < 7) return null;
+    if (s.startsWith("+") || s.startsWith("00")) {
+        const intl = s.startsWith("00") ? digits.slice(2) : digits;
+        const cc = DIAL_CODES.find((c) => intl.startsWith(c) && intl.length - c.length >= 7);
+        return cc ? { phone: intl.slice(cc.length), countryCode: cc } : { phone: intl, countryCode: "" };
+    }
+    // Indian numbers often come as 91XXXXXXXXXX without the plus.
+    if (digits.length === 12 && digits.startsWith("91")) return { phone: digits.slice(2), countryCode: "91" };
+    return { phone: digits, countryCode: "91" };
+};
+
+/**
+ * Phone and email from a lookup profile. The response shape for contact
+ * details isn't documented to us, so read the usual spellings.
+ */
+export const contactFromProfile = (profile) => {
+    const p = profile || {};
+    const pick = (v) => (typeof v === "string" ? v : v?.number || v?.phone || v?.value || v?.email || v?.address || "");
+    const list = (...vals) => vals.flatMap((v) => (Array.isArray(v) ? v : v ? [v] : [])).map(pick).map(text).filter(Boolean);
+    const phones = list(p.mobile_phone, p.mobile_number, p.phone_numbers, p.phones, p.phone, p.phone_number, p.personal_numbers, p.contact?.phone, p.contact?.phones);
+    const emails = list(p.personal_emails, p.emails, p.email, p.work_email, p.recommended_personal_email, p.contact?.email, p.contact?.emails)
+        .filter((e) => /@/.test(e));
+    const phone = phones.map(splitPhone).find(Boolean) || null;
+    return { phone, email: emails[0] || "" };
+};
+
+const contactFields = (profile) => {
+    const { phone, email } = contactFromProfile(profile);
+    return {
+        ...(phone ? { phone: phone.phone, countryCode: phone.countryCode || "91" } : {}),
+        ...(email ? { emailId: email } : {}),
+    };
+};
+
 /** A ResumeData document body for a looked-up profile. */
 export const profileToResumeData = (profile, searchHit) => {
     const history = profile.experience?.length ? profile.experience : profile.job_history;
@@ -137,6 +178,7 @@ export const profileToResumeData = (profile, searchHit) => {
         linkedinUrl: first(profile.linkedin_url, searchHit?.linkedin_url),
         summary: [profile.headline, profile.summary].map(text).filter(Boolean).join("\n"),
         source: "vertex",
+        ...contactFields(profile),
     };
 };
 
