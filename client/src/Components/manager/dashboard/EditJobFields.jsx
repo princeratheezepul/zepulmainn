@@ -108,10 +108,12 @@ const TagInput = ({ value, onChange, max, placeholder }) => {
 };
 
 /**
- * Every field the Zeus AI intake captures, for editing a job after it has been
- * created. Controlled: `form` comes from jobToEditForm, `setForm` updates it.
+ * Every field the Zeus AI intake captures, for creating a job by hand or
+ * editing one later. Controlled: `form` comes from jobToEditForm, `setForm`
+ * updates it. `creating` adds the Company field and marks the fields a new job
+ * must have.
  */
-const EditJobFields = ({ form, setForm }) => {
+const EditJobFields = ({ form, setForm, creating = false }) => {
   const change = (e) => {
     const { name, type, checked, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
@@ -136,6 +138,11 @@ const EditJobFields = ({ form, setForm }) => {
         <Field label="Job Title" required>
           <input name="jobtitle" value={form.jobtitle} onChange={change} className={inputCls} placeholder="e.g. Senior Software Engineer" />
         </Field>
+        {creating && (
+          <Field label="Company">
+            <input name="company" value={form.company || ''} onChange={change} className={inputCls} placeholder="e.g. Acme Corp" />
+          </Field>
+        )}
         <Row cols={3}>
           <Field label="Seniority">
             <select name="seniority" value={form.seniority} onChange={change} className={selectCls}>
@@ -204,7 +211,7 @@ const EditJobFields = ({ form, setForm }) => {
           <Field label="Location">
             <input name="location" value={form.location} onChange={change} className={inputCls} placeholder="e.g. Bengaluru" />
           </Field>
-          <Field label="Work Model">
+          <Field label="Work Model" required={creating}>
             <select name="type" value={form.type} onChange={change} className={selectCls}>
               <option value="">Select model</option>
               {WORK_MODELS.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
@@ -266,7 +273,7 @@ const EditJobFields = ({ form, setForm }) => {
 
       <Section title="Employment & hiring plan">
         <Row>
-          <Field label="Employment Type">
+          <Field label="Employment Type" required={creating}>
             <select name="employmentType" value={form.employmentType} onChange={change} className={selectCls}>
               {employmentTypes.map((t) => <option key={t} value={t}>{t}</option>)}
             </select>
@@ -278,7 +285,7 @@ const EditJobFields = ({ form, setForm }) => {
           )}
         </Row>
         <Row cols={3}>
-          <Field label="Open Positions" hint="1 to 50">
+          <Field label="Open Positions" hint="1 to 50" required={creating}>
             <input name="openpositions" value={form.openpositions} onChange={change} type="number" min="1" max="50" className={inputCls} placeholder="e.g. 3" />
           </Field>
           <Field label="Shortlist Size" hint="1 to 20">
