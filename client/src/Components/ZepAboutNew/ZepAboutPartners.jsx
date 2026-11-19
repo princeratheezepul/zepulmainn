@@ -8,7 +8,7 @@ const ZepAboutPartners = () => {
     let current = 0;
     const cardW = 260;
     function goTo(n) {
-      current = Math.max(0, Math.min(n, 2));
+      current = Math.max(0, Math.min(n, 3));
       if (track) {
         track.style.transform = `translateX(-${current * cardW}px)`;
         track.style.transition = 'transform .45s cubic-bezier(.22,1,.36,1)';
@@ -101,6 +101,17 @@ const ZepAboutPartners = () => {
               </div>
             </div>
 
+            <div className="team-card">
+              <div className="team-card-avatar">
+                <img src="/james-walsh.png" alt="James Walsh" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 15%' }} />
+                <div className="team-card-overlay"></div>
+              </div>
+              <div className="team-card-body">
+                <div className="team-card-name">James Walsh</div>
+                <div className="team-card-role">Director - Sales UK & Ireland</div>
+              </div>
+            </div>
+
           </div>
         </div>
         <div className="team-nav reveal">
@@ -109,6 +120,7 @@ const ZepAboutPartners = () => {
         </div>
         <div className="team-dots reveal">
           <div className="team-dot active"></div>
+          <div className="team-dot"></div>
           <div className="team-dot"></div>
           <div className="team-dot"></div>
         </div>
