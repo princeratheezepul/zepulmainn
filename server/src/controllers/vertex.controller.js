@@ -15,6 +15,7 @@ import {
     getCreditsRemaining,
     searchProfiles,
     lookupProfile,
+    lookupEmail,
     profileToResumeData,
     searchTiersForJob,
     jdTextForJob,
@@ -37,6 +38,7 @@ const toCandidate = (doc, existing, relevance) => ({
     role: doc.role || "N/A",
     experienceYears: doc.experienceYears || 0,
     skills: doc.skills?.points || [],
+    email: doc.emailId || "",
     existing,
     relevance,
 });
@@ -165,6 +167,21 @@ export const sourceCandidatesForJob = async (req, res) => {
         const picked = qualified()
             .sort((a, b) => (b.ats + b.skillMatch * 10 + (b.open ? 2 : 0)) - (a.ats + a.skillMatch * 10 + (a.open ? 2 : 0)))
             .slice(0, VERTEX_SOURCE_LIMIT);
+        // Reveal the email of each picked candidate that doesn't have one yet
+        // (3 credits each, only when found) and save it so it's never paid for twice.
+        await Promise.all(picked.map(async (c) => {
+            if (c.doc.emailId || !c.doc.linkedinUrl) return;
+            try {
+                const { email, creditsUsed: used } = await lookupEmail(c.doc.linkedinUrl);
+                creditsUsed += used;
+                if (email) {
+                    c.doc.emailId = email;
+                    await ResumeData.updateOne({ _id: c.doc._id }, { $set: { emailId: email } });
+                }
+            } catch (e) {
+                console.error("Sourcing email lookup failed:", e.message);
+            }
+        }));
         const found = picked.map((c) => c.doc);
         const scores = new Map(picked.map((c) => [String(c.doc._id), c.ats]));
 

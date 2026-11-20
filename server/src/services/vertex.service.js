@@ -32,8 +32,12 @@ export const VERTEX_LOOKUP_ROUNDS = Number(process.env.VERTEX_LOOKUP_ROUNDS) || 
 // JD search costs 2 credits instead of 1 when it returns results.
 export const SEARCH_CREDITS = 2;
 export const LOOKUP_CREDITS = 1;
+// Personal email reveal: 3 credits, charged only when an email is found. Done
+// only for the candidates handed back, not for every profile looked up.
+export const EMAIL_CREDITS = 3;
 
-export const maxSourcingCredits = () => SEARCH_CREDITS + VERTEX_LOOKUP_BUDGET * VERTEX_LOOKUP_ROUNDS * LOOKUP_CREDITS;
+export const maxSourcingCredits = () =>
+    SEARCH_CREDITS + VERTEX_LOOKUP_BUDGET * VERTEX_LOOKUP_ROUNDS * LOOKUP_CREDITS + VERTEX_SOURCE_LIMIT * EMAIL_CREDITS;
 
 const call = async (path, { method = "GET", body } = {}) => {
     const apiKey = process.env.VERTEX_API_KEY || process.env.DATAVERTEX_API_KEY;
@@ -79,6 +83,22 @@ export const lookupProfile = async (profile) => {
     const contact = data.data?.contacts?.[0];
     return {
         profile: contact?.success ? contact.profile : null,
+        creditsUsed: data.credits?.used || 0,
+    };
+};
+
+/**
+ * Personal email for a LinkedIn profile (`reveal_personal_email`). Returned at
+ * data.contacts[0].profile.personal_email; billed only when one is found.
+ */
+export const lookupEmail = async (linkedinUrl) => {
+    const data = await call("/lookup", {
+        method: "POST",
+        body: { linkedin_url: linkedinUrl, reveal_personal_email: true },
+    });
+    const contact = data.data?.contacts?.[0];
+    return {
+        email: contact?.success ? contactFromProfile(contact.profile).email : "",
         creditsUsed: data.credits?.used || 0,
     };
 };
@@ -139,7 +159,7 @@ export const contactFromProfile = (profile) => {
     const pick = (v) => (typeof v === "string" ? v : v?.number || v?.phone || v?.value || v?.email || v?.address || "");
     const list = (...vals) => vals.flatMap((v) => (Array.isArray(v) ? v : v ? [v] : [])).map(pick).map(text).filter(Boolean);
     const phones = list(p.mobile_phone, p.mobile_number, p.phone_numbers, p.phones, p.phone, p.phone_number, p.personal_numbers, p.contact?.phone, p.contact?.phones);
-    const emails = list(p.personal_emails, p.emails, p.email, p.work_email, p.recommended_personal_email, p.contact?.email, p.contact?.emails)
+    const emails = list(p.personal_email, p.personal_emails, p.emails, p.email, p.work_email, p.recommended_personal_email, p.contact?.email, p.contact?.emails)
         .filter((e) => /@/.test(e));
     const phone = phones.map(splitPhone).find(Boolean) || null;
     return { phone, email: emails[0] || "" };
