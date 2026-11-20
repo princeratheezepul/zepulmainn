@@ -4,7 +4,7 @@ import ResumeData from "../models/resumeData.model.js";
 import { Job } from "../models/job.model.js";
 import { canAccessResume } from "../utils/resourceAccess.js";
 import { requestRoleConfirmation } from "./resume.controller.js";
-import { lookupProfile, contactFromProfile } from "../services/vertex.service.js";
+import { lookupPhone } from "../services/vertex.service.js";
 import { buildMailer } from "../services/email.service.js";
 
 /**
@@ -90,22 +90,16 @@ export const revealPhone = async (req, res) => {
 
     if (!profile?.linkedinUrl) return reply(null, null, "none");
 
-    // One lookup credit.
+    // Phone reveal: 6 credits, charged only when a number is found.
     let found = null;
     try {
-      const { profile: looked } = await lookupProfile({ linkedin_url: profile.linkedinUrl });
-      const contact = contactFromProfile(looked);
-      found = contact.phone;
-      if (contact.email && !profile.emailId) profile.emailId = contact.email;
+      ({ phone: found } = await lookupPhone(profile.linkedinUrl));
     } catch (e) {
       console.error(`[revealPhone] Vertex lookup failed for resume ${resume._id}:`, e.message);
       return res.status(502).json({ message: "Couldn't reach the sourcing provider to fetch the phone number." });
     }
 
-    if (!found) {
-      await profile.save().catch(() => {});
-      return reply(null, null, "none");
-    }
+    if (!found) return reply(null, null, "none");
     profile.phone = found.phone;
     profile.countryCode = found.countryCode || "91";
     await profile.save().catch((e) => console.error("[revealPhone] profile not saved:", e.message));

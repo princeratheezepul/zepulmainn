@@ -103,6 +103,22 @@ export const lookupEmail = async (linkedinUrl) => {
     };
 };
 
+/**
+ * Mobile phone for a LinkedIn profile (`reveal_phone`). Returned at
+ * data.contacts[0].profile.phone_number; 6 credits, billed only when one is found.
+ */
+export const lookupPhone = async (linkedinUrl) => {
+    const data = await call("/lookup", {
+        method: "POST",
+        body: { linkedin_url: linkedinUrl, reveal_phone: true },
+    });
+    const contact = data.data?.contacts?.[0];
+    return {
+        phone: contact?.success ? contactFromProfile(contact.profile).phone : null,
+        creditsUsed: data.credits?.used || 0,
+    };
+};
+
 const text = (v) => (typeof v === "string" ? v.trim() : "");
 const first = (...vals) => vals.map(text).find(Boolean) || "";
 
